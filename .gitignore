@@ -31,6 +31,9 @@
 *.out
 *.app
 
+# Idea
+**/.idea
+
 # cmake
 **/cmake-build-debug
 **/CMakeCache.txt
