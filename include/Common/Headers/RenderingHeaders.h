@@ -9,8 +9,8 @@
 #define RENDERINGHEADERS_H
 
 // OpenGL
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "../../third_party/glew/glew.h"
+#include "../../third_party/glwf/glfw3.h"
 #include "../Rendering/OpenGL.h"
 
 #endif //RENDERINGHEADERS_H

@@ -1,6 +1,6 @@
 //
 // OpenGL.h
-// OpenGL: Implementation of the OpenGL core functionnalities
+// OpenGL: Implementation of the OpenGL core functionalities
 // Author: Antoine Bastide
 // Date: 30/10/2024
 //
@@ -8,8 +8,7 @@
 #ifndef OPENGL_H
 #define OPENGL_H
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "../../Common/Headers/RenderingHeaders.h"
 
 namespace Engine::Rendering {
   class OpenGL {

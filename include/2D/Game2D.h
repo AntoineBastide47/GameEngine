@@ -8,22 +8,25 @@
 #ifndef GAME2D_H
 #define GAME2D_H
 
+#include <string>
+
 #include "../Common/Headers/RenderingHeaders.h"
 
 namespace Engine2D {
   class Game2D {
     public:
-      Game2D(int width, int height, char* title);
+      Game2D(int width, int height, const std::string &title);
+      ~Game2D();
       int Initialize();
-      void Update(float deltaTime);
+      void Update(float deltaTime) const;
       void ProcessInput() const;
-      void Render();
+      void Render() const;
       void Quit();
+      [[nodiscard]] bool IsRunning() const;
     private:
       int width, height;
-      char* title;
-      GLFWwindow* window;
-      ~Game2D();
+      const char* title;
+      GLFWwindow* window = nullptr;
   };
 }
 

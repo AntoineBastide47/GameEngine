@@ -8,33 +8,39 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glfw3 REQUIRED)
 
-# Create the shared library
-add_library(GameEngineLib SHARED
-        Engine/Common/Rendering/OpenGL.cpp
-        Engine/Common/Rendering/OpenGL.h
-        Engine/2D/Game2D.cpp
-        Engine/2D/Game2D.h
-        Engine/Common/Headers/RenderingHeaders.h
-        Engine/Common/Headers/CommonHeaders.h
-        Engine/Common/Headers/PrimitiveTypes.h
-)
+# Find all .cpp and .h files in the Engine directory and its subdirectories
+file(GLOB_RECURSE ENGINE_SOURCES "Engine/*.cpp" "include/*.h")
 
-set_target_properties(GameEngineLib PROPERTIES
-        VERSION 0.0.1               # Library version
-        SOVERSION 0                 # ABI version (major version)
-        OUTPUT_NAME "GameEngineLib" # Set output name without "lib" prefix
-        PREFIX ""                   # Remove default "lib" prefix
-)
+# Create the GameEngineLib as a static library
+add_library(GameEngineLib STATIC ${ENGINE_SOURCES})
 
-# Link OpenGL, GLEW, and GLFW to the GameEngine library
-target_link_libraries(GameEngineLib PRIVATE
+# Make sure a version was indicated
+if (DEFINED VERSION AND NOT "${VERSION}" STREQUAL "")
+    # Check if VERSION matches the pattern [0-9]*.[0-9]*.[0-9]*
+    string(REGEX MATCH "^[0-9]+\\.[0-9]+\\.[0-9]+$" VERSION_FORMAT "${VERSION}")
+
+    if (VERSION_FORMAT)
+        set_target_properties(GameEngineLib PROPERTIES
+            OUTPUT_NAME "GameEngineLib-${VERSION}"
+            PREFIX ""
+        )
+    else()
+        message(FATAL_ERROR "Invalid VERSION format. Expected format: <major>.<minor>.<patch> (e.g., 1.0.0)")
+    endif()
+else ()
+    message(FATAL_ERROR "Missing library version")
+endif ()
+
+# Define paths to the static versions of GLEW and GLFW libraries
+set(GLEW_STATIC_LIB /opt/homebrew/opt/glew/lib/libGLEW.a)
+set(GLFW_STATIC_LIB /opt/homebrew/opt/glfw/lib/libglfw3.a)
+
+# Link OpenGL, GLEW, and GLFW static libraries to GameEngineLib
+target_link_libraries(GameEngineLib PUBLIC
         OpenGL::GL
-        GLEW::GLEW
-        glfw
-)
-
-# If you have additional include directories, you can add them like this:
-target_include_directories(GameEngineLib PRIVATE
-        ${GLEW_INCLUDE_DIRS}
-        ${GLFW_INCLUDE_DIRS}
+        ${GLEW_STATIC_LIB}
+        ${GLFW_STATIC_LIB}
+        "-framework CoreFoundation"
+        "-framework IOKit"
+        "-framework Cocoa"
 )

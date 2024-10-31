@@ -5,10 +5,10 @@
 // Date: 30/10/2024
 //
 
-#include "OpenGL.h"
+#include "../../../include/Common/Rendering/OpenGL.h"
 
 namespace Engine::Rendering {
-  void OpenGL::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+  void OpenGL::framebuffer_size_callback(GLFWwindow* window, const int width, const int height) {
     glViewport(0, 0, width, height);
   }
 }
