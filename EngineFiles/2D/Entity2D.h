@@ -15,9 +15,10 @@
 namespace Engine2D {
   class Game2D;
 
+  // TODO: Add an ID system with generation bits: int id = generation{8}identifier{24}
+  // TODO: When ID is implemented, allow smaller or bigger id's for games with less entities i.e. id is int8, int16, int32 or int64
   /**
-   * @class Entity2D
-   * @brief Represents a 2D entity with a transform, rendering capabilities, and hierarchical structure.
+   * Represents a 2D entity with a transform, rendering capabilities, and hierarchical structure.
    *
    * The Entity2D class provides an interface for creating and managing entities in a 2D game world.
    * Each entity can have a position, rotation, and scale, as well as a renderer and a parent entity.
@@ -31,58 +32,44 @@ namespace Engine2D {
       /** The transform representing the position, rotation, and scale of the entity in the game world. */
       Transform2D transform;
       /** The texture of this entity */
-      Rendering::Texture2D texture;
+      Rendering::Texture2D *texture;
 
       /**
-       * @brief Constructs an Entity2D with a given name.
+       * Constructs an Entity2D with a given name.
        * @param name The name of the entity.
        * @param parent The parent of this entity (optional)
        * @param texture The texture of this entity (optional)
        */
-      explicit Entity2D(std::string name, Entity2D *parent = nullptr, const Rendering::Texture2D& texture = Rendering::Texture2D{});
+      explicit Entity2D(std::string name, Entity2D *parent = nullptr, Rendering::Texture2D *texture = nullptr);
+      /** Equality operator that checks if the current entity is the same as the given entity */
       bool operator==(const Entity2D &entity) const;
 
-      /**
-       * @brief Destructor for the Entity2D class, automatically removes the entity from the game.
-       */
+      /** Destructor for the Entity2D class. */
       virtual ~Entity2D() = default;
 
-      /**
-       * @brief Called during initialization, allowing derived classes to customize behavior.
-       *
-       * This function can be overridden by subclasses to perform additional setup.
-       */
+      /** Called during initialization, allowing derived classes to customize behavior. */
       virtual void Initialize() {}
 
-      /**
-       * @brief Called when the game is processing the user input's, allowing derived classes to customize behavior.
-       *
-       * This function can be overridden by subclasses to perform additional setup.
-       */
+      /** Called when the game is processing the user input's, allowing derived classes to customize behavior. */
       virtual void ProcessInput() {}
 
-      /**
-       * @brief Called when the game is updating, allowing derived classes to customize behavior.
-       *
-       * This function can be overridden by subclasses to perform additional setup.
-       */
+      /** Called when the game is updating, allowing derived classes to customize behavior. */
       virtual void Update() {}
 
-      /**
-       * @brief Called when the game quits, allowing derived classes to customize behavior.
-       *
-       * This function can be overridden by subclasses to perform additional setup.
-       */
+      /** Called when the entity is removed from the game or when the game quits, allowing derived classes to customize behavior.*/
       virtual void Quit() {}
 
       /**
-       * @brief Sets the parent entity of this entity for hierarchical organization.
+       * Sets the parent entity of this entity for hierarchical organization.
        * @param parent A pointer to the new parent Entity2D, or nullptr to remove the parent.
        */
       void SetParent(Entity2D *parent);
 
       friend class Engine2D::Game2D;
     private:
+      /** Whether this entity has been initialized by the game */
+      bool initialized;
+
       /** Initializes the entity, setting its parent to the main parent if none is set. */
       void initialize();
 

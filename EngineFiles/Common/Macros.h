@@ -1,6 +1,5 @@
 //
 // Macros.h
-// Macros: 
 // Author: Antoine Bastide
 // Date: 10/11/2024
 //

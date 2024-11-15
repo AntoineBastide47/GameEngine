@@ -1,8 +1,14 @@
 build_lib:
 	@clear
-	@rm -rf build
-	@mkdir -p build
-	@cmake -B build -S .
-	@cmake --build build
-	@rm -f ./EngineFiles/GameEngineLib-[0-9]*.[0-9]*.[0-9]*.a
-	@mv -f ./build/GameEngineLib-[0-9]*.[0-9]*.[0-9]*.a ./EngineFiles
+	@cmake -B cmake-build-debug -S .
+	@cmake --build cmake-build-debug
+	@rm -f ./EngineFiles/*.a
+	@mv -f ./cmake-build-debug/*.a EngineFiles
+
+build_lib_clean:
+	@clear
+	@rm -rf cmake-build-debug
+	@cmake -B cmake-build-debug -S .
+	@cmake --build cmake-build-debug
+	@rm -f ./EngineFiles/*.a
+	@mv -f ./cmake-build-debug/*.a EngineFiles

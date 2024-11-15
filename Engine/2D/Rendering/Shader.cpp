@@ -1,6 +1,5 @@
 //
 // Shader.cpp
-// Shader: 
 // Author: Antoine Bastide
 // Date: 10/11/2024
 //
@@ -8,6 +7,8 @@
 #include "2D/Rendering/Shader.h"
 
 #include <iostream>
+
+#include "Common/Log.h"
 
 namespace Engine2D::Rendering {
   Shader &Shader::Use() {
@@ -90,7 +91,9 @@ namespace Engine2D::Rendering {
     glUniform3f(glGetUniformLocation(this->id, name), value.x, value.y, value.z);
   }
 
-  void Shader::SetVector4f(const char *name, const float x, const float y, const float z, const float w, const bool useShader) {
+  void Shader::SetVector4f(
+    const char *name, const float x, const float y, const float z, const float w, const bool useShader
+  ) {
     if (useShader)
       this->Use();
     glUniform4f(glGetUniformLocation(this->id, name), x, y, z, w);

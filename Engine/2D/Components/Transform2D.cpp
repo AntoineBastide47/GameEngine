@@ -1,6 +1,5 @@
 //
 // Transform2D.cpp
-// Transform2D: 
 // Author: Antoine Bastide
 // Date: 03/11/2024
 //

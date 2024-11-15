@@ -1,6 +1,5 @@
 //
 // RenderingHeaders.h
-// RenderingHeaders: 
 // Author: Antoine Bastide
 // Date: 10/11/2024
 //

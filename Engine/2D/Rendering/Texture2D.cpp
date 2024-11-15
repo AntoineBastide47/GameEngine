@@ -1,6 +1,5 @@
 //
 // Texture2D.cpp
-// Texture2D: 
 // Author: Antoine Bastide
 // Date: 10/11/2024
 //
@@ -40,5 +39,6 @@ namespace Engine2D::Rendering {
   }
 
   void Texture2D::Bind() const { glBindTexture(GL_TEXTURE_2D, this->id); }
+
   void Texture2D::Unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
 }

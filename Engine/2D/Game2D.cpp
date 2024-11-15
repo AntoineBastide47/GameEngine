@@ -1,6 +1,5 @@
 //
 // Game2D.cpp
-// Game2D: 
 // Author: Antoine Bastide
 // Date: 10/11/2024
 //
@@ -8,8 +7,8 @@
 #include "2D/Game2D.h"
 
 #include <iostream>
+#include <__algorithm/ranges_find_if.h>
 
-#include "2D/ResourceManager.h"
 #include "Common/Macros.h"
 
 namespace Engine2D {
@@ -27,7 +26,7 @@ namespace Engine2D {
     this->deltaTime = 0.0f;
     this->spriteRenderer = nullptr;
     instance = this;
-    this->mainParent = new Entity2D("Main Parent");
+    this->root = new Entity2D("Main Parent");
   }
 
   Game2D *Game2D::Instance() { return instance; }
@@ -109,36 +108,36 @@ namespace Engine2D {
     }
 
     // Create and configure the sprite shader
-    ResourceManager::LoadShader("EngineFiles/Shaders/sprite.vs", "EngineFiles/Shaders/sprite.fs", nullptr, "sprite");
+    ResourceManager::LoadShader("EngineFiles/Shaders/sprite.vs", "EngineFiles/Shaders/sprite.fs", "", "sprite");
     const glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, -1.0f, 1.0f);
-    ResourceManager::GetShader("sprite").SetInteger("sprite", true);
-    ResourceManager::GetShader("sprite").SetMatrix4("projection", projection, true);
+    ResourceManager::GetShader("sprite")->SetInteger("sprite", true);
+    ResourceManager::GetShader("sprite")->SetMatrix4("projection", projection, true);
     spriteRenderer = new Rendering::SpriteRenderer(ResourceManager::GetShader("sprite"));
 
-    for (const auto &entity: entities)
+    for (const auto entity: entities)
       entity->initialize();
   }
 
   void Game2D::processInput() const {
-    for (const auto &entity: entities)
+    for (const auto entity: entities)
       entity->ProcessInput();
   }
 
   void Game2D::update() const {
-    for (const auto &entity: entities)
+    for (const auto entity: entities)
       entity->Update();
   }
 
   void Game2D::render() const {
-    for (const auto &entity: entities)
-      spriteRenderer->DrawSprite(entity);
+    for (const auto entity: entities)
+      if (entity->texture)
+        spriteRenderer->DrawSprite(entity);
   }
+
   void Game2D::quit() {
     // Deallocate all the entity pointers
-    for (auto &entity: entities) {
-      entity->quit();
-      SAFE_DELETE(entity);
-    }
+    for (const auto entity: entities)
+      RemoveEntity(entity);
     entities.clear();
     ResourceManager::Clear();
     SAFE_DELETE(spriteRenderer);
@@ -148,18 +147,30 @@ namespace Engine2D {
       window = nullptr;
     }
     glfwTerminate();
-    // Deallocate the game instance
-    SAFE_DELETE(instance);
+    instance = nullptr;
+  }
+
+  void Game2D::SetGameResourceLoader(const ResourceLoader &resourceLoader) {
+    this->resourceLoader = resourceLoader;
+  }
+
+  cmrc::file Game2D::loadResource(const std::string &path) const {
+    if (resourceLoader)
+      return resourceLoader(path);
+    throw std::runtime_error("ERROR::GAME2D: Resource loader not set.");
   }
 
   void Game2D::AddEntity(Entity2D *entity) {
-    if (!entity || !instance || entity == instance->mainParent)
+    if (!entity || !instance || entity == instance->root)
       return;
     instance->entities.push_back(entity);
+    // If the entity is added while the game is running, initialize it
+    if (!glfwWindowShouldClose(instance->window) && !entity->initialized)
+      entity->Initialize();
   }
 
   void Game2D::RemoveEntity(Entity2D *entity) {
-    if (!entity || !instance || entity == instance->mainParent || instance->entities.empty())
+    if (!entity || !instance || entity == instance->root || instance->entities.empty())
       return;
     const auto it = std::ranges::find_if(instance->entities,
                                          [&entity](const Entity2D *ptr) { return ptr == entity; }
