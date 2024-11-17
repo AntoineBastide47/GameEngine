@@ -39,6 +39,12 @@ namespace Engine2D {
       bool operator==(const Transform2D &other) const;
       /** Inequality operator to compare two Transform2D objects. */
       bool operator!=(const Transform2D &transform) const;
+
+      /** << operator to allow easy printing of a Vector2 object. */
+      friend std::ostream &operator<<(std::ostream &os, const Transform2D &transform);
+
+      /** Converts the current vector to a string with this format: (x, y) */
+      [[nodiscard]] std::string toString() const;
   };
 } // namespace Engine2D
 

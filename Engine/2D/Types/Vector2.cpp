@@ -22,7 +22,9 @@ namespace Engine2D {
   const Vector2 Vector2::Up = Vector2(0.0f, 1.0f);
   const Vector2 Vector2::Down = Vector2(-1.0f, 0.0f);
 
-  Vector2 Vector2::operator+(const Vector2 &v) const { return Vector2{x + v.x, y + v.y}; }
+  Vector2 Vector2::operator+(const Vector2 &v) const {
+    return Vector2{x + v.x, y + v.y};
+  }
 
   Vector2 &Vector2::operator+=(const Vector2 &v) {
     x += v.x;
@@ -30,8 +32,13 @@ namespace Engine2D {
     return *this;
   }
 
-  Vector2 Vector2::operator-() const { return Vector2{-x, -y}; }
-  Vector2 Vector2::operator-(const Vector2 &v) const { return Vector2{x - v.x, y - v.y}; }
+  Vector2 Vector2::operator-() const {
+    return Vector2{-x, -y};
+  }
+
+  Vector2 Vector2::operator-(const Vector2 &v) const {
+    return Vector2{x - v.x, y - v.y};
+  }
 
   Vector2 &Vector2::operator-=(const Vector2 &v) {
     x -= v.x;
@@ -39,9 +46,13 @@ namespace Engine2D {
     return *this;
   }
 
-  float Vector2::operator*(const Vector2 &v) const { return x * v.x + y * v.y; }
+  float Vector2::operator*(const Vector2 &v) const {
+    return x * v.x + y * v.y;
+  }
 
-  Vector2 Vector2::operator*(const float s) const { return Vector2{x * s, y * s}; }
+  Vector2 Vector2::operator*(const float s) const {
+    return Vector2{x * s, y * s};
+  }
 
   Vector2 &Vector2::operator*=(const float s) {
     x *= s;
@@ -76,22 +87,52 @@ namespace Engine2D {
     return x;
   }
 
-  bool Vector2::operator==(const Vector2 &v) const { return x == v.x && y == v.y; }
-  bool Vector2::operator!=(const Vector2 &v) const { return x != v.x || y != v.y; }
-  bool Vector2::operator<(const Vector2 &v) const { return this->SquareMagnitude() < v.SquareMagnitude(); }
-  bool Vector2::operator>(const Vector2 &v) const { return this->SquareMagnitude() > v.SquareMagnitude(); }
-  bool Vector2::operator<=(const Vector2 &v) const { return this->SquareMagnitude() <= v.SquareMagnitude(); }
-  bool Vector2::operator>=(const Vector2 &v) const { return this->SquareMagnitude() >= v.SquareMagnitude(); }
+  Vector2 &Vector2::operator=(const glm::vec2 &other) {
+    x = other.x;
+    y = other.y;
+    return *this;
+  }
+
+  bool Vector2::operator==(const Vector2 &v) const {
+    return x == v.x && y == v.y;
+  }
+
+  bool Vector2::operator!=(const Vector2 &v) const {
+    return x != v.x || y != v.y;
+  }
+
+  bool Vector2::operator<(const Vector2 &v) const {
+    return this->SquareMagnitude() < v.SquareMagnitude();
+  }
+
+  bool Vector2::operator>(const Vector2 &v) const {
+    return this->SquareMagnitude() > v.SquareMagnitude();
+  }
+
+  bool Vector2::operator<=(const Vector2 &v) const {
+    return this->SquareMagnitude() <= v.SquareMagnitude();
+  }
+
+  bool Vector2::operator>=(const Vector2 &v) const {
+    return this->SquareMagnitude() >= v.SquareMagnitude();
+  }
 
   std::ostream &operator<<(std::ostream &os, const Vector2 &vec) {
     os << "(" << vec.x << ", " << vec.y << ")";
     return os;
   }
 
-  std::string Vector2::toString() const { return "(" + std::to_string(x) + ", " + std::to_string(y) + ")"; }
+  std::string Vector2::toString() const {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
 
-  float Vector2::Magnitude() const { return sqrtf(x * x + y * y); }
-  float Vector2::SquareMagnitude() const { return x * x + y * y; }
+  float Vector2::Magnitude() const {
+    return sqrtf(x * x + y * y);
+  }
+
+  float Vector2::SquareMagnitude() const {
+    return x * x + y * y;
+  }
 
   Vector2 Vector2::Normalized() const {
     if (const float magnitude = Magnitude(); magnitude > 0.0f)
@@ -110,10 +151,17 @@ namespace Engine2D {
     return *this;
   }
 
-  float Vector2::Dot(const Vector2 &v) const { return x * v.x + y * v.y; }
+  float Vector2::Dot(const Vector2 &v) const {
+    return x * v.x + y * v.y;
+  }
 
-  Vector2 Vector2::Scaled(const Vector2 &v) const { return Vector2{x * v.x, y * v.y}; }
-  Vector2 Vector2::Perpendicular() const { return Vector2{-y, x}; }
+  Vector2 Vector2::Scaled(const Vector2 &v) const {
+    return Vector2{x * v.x, y * v.y};
+  }
+
+  Vector2 Vector2::Perpendicular() const {
+    return Vector2{-y, x};
+  }
 
   Vector2 Vector2::MoveTowards(const Vector2 &target, const float maxDistanceDelta) const {
     if (maxDistanceDelta <= 0.0f)
@@ -132,11 +180,17 @@ namespace Engine2D {
     LOG_WARNING("Can not normalize a zero \"(0, 0)\" Vector2, resulting operation will default to not modify the Vector2 instance.");
   }
 
-  void Vector2::Scale(const Vector2 &v) { *this = this->Scaled(v); }
+  void Vector2::Scale(const Vector2 &v) {
+    *this = this->Scaled(v);
+  }
 
-  glm::vec2 Vector2::toGLM() const { return glm::vec2{x, y}; }
+  glm::vec2 Vector2::toGLM() const {
+    return glm::vec2{x, y};
+  }
 
-  float Vector2::AngleBetween(const Vector2 &v1, const Vector2 &v2) { return std::abs(SignedAngleBetween(v1, v2)); }
+  float Vector2::AngleBetween(const Vector2 &v1, const Vector2 &v2) {
+    return std::abs(SignedAngleBetween(v1, v2));
+  }
 
   float Vector2::SignedAngleBetween(const Vector2 &v1, const Vector2 &v2) {
     const float v1Mag = v1.Magnitude();

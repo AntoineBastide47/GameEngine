@@ -80,6 +80,8 @@ namespace Engine2D {
        */
       float &operator[](int index);
 
+      /** Assignment operator between a Vector2 and glm::vec2 */
+      Vector2 &operator=(const glm::vec2 &other);
       /** Equality operator for comparing two vectors. */
       bool operator==(const Vector2 &v) const;
       /** Inequality operator for comparing two vectors. */

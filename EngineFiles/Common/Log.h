@@ -13,8 +13,8 @@
 namespace Engine {
   /**
    * Simple logger class that allows the logging of messages, warnings and errors with the current stack trace
-   * It is recommended to use the macros: LOG_WARNING and LOR_ERROR instead of the public functions Warning and Error
-   * of the logger to automatically get the calling function's signature
+   * It is recommended to use the macros: LOG_MESSAGE, LOG_MESSAGE_WITH_TRACE, LOG_WARNING and LOR_ERROR instead of the
+   * public functions Message, Warning and Error of the logger to automatically get the calling function's signature
    */
   // TODO: add HashMap[(log, count)] to check if log was already sent to not pollute the console
   class Log {
@@ -22,9 +22,10 @@ namespace Engine {
       /**
        * Sends the given message to the console with the current stack trace to pinpoint the place it was sent
        * @param msg The message to log
+       * @param funcSignature The signature of the function that logged the error
        * @param showTrace If the current stack trace should be logged, defaults to false
        */
-      static void Message(const std::string &msg, bool showTrace = false);
+      static void Message(const std::string &msg, const std::string &funcSignature, bool showTrace = false);
       /**
        * Sends the given warning to the console with the current stack trace to pinpoint the place it was sent
        * @param funcSignature The signature of the function that logged the warning
@@ -60,6 +61,16 @@ namespace Engine {
   };
 }
 
+/**
+ * Sends the given warning to the console with the current stack trace to pinpoint the place it was sent
+ * @param msg std::string => The message to log
+ */
+#define LOG_MESSAGE(msg) Engine::Log::Message(msg, __PRETTY_FUNCTION__, false)
+/**
+ * Sends the given warning to the console with the current stack trace to pinpoint the place it was sent
+ * @param msg std::string => The message to log
+ */
+#define LOG_MESSAGE_WITH_TRACE(msg) Engine::Log::Message(msg, __PRETTY_FUNCTION__, true)
 /**
  * Sends the given warning to the console with the current stack trace to pinpoint the place it was sent
  * @param msg std::string => The message to log

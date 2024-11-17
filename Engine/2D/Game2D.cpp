@@ -7,32 +7,47 @@
 #include "2D/Game2D.h"
 
 #include <iostream>
+#include <thread>
 #include <__algorithm/ranges_find_if.h>
 
+#include "2D/ResourceManager.h"
 #include "Common/Macros.h"
+#include "Common/RenderingHeaders.h"
+#include "Input/Keyboard.h"
 
 namespace Engine2D {
   Game2D *Game2D::instance = nullptr;
 
-  Game2D::Game2D(const int width, const int height, std::string title) {
+  Game2D::Game2D(const int16 width, const int16 height, std::string title)
+    : width(width), height(height), title(std::move(title)), window(nullptr), deltaTime(0.0f), root(new Entity2D("Root")),
+      spriteRenderer(nullptr), frameRate(0.0f) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
       throw std::invalid_argument("ERROR::GAME2D: Game window size must be greater than zero");
-    this->width = width;
-    this->height = height;
-    this->title = std::move(title);
-    this->window = nullptr;
-    this->deltaTime = 0.0f;
-    this->spriteRenderer = nullptr;
     instance = this;
-    this->root = new Entity2D("Main Parent");
   }
 
-  Game2D *Game2D::Instance() { return instance; }
+  int16 Game2D::Width() {
+    return instance->width;
+  }
+
+  int16 Game2D::Height() {
+    return instance->height;
+  }
+
+  float Game2D::DeltaTime() {
+    return instance->deltaTime;
+  }
+
+  Game2D *Game2D::Instance() {
+    return instance;
+  }
 
   void Game2D::Run() {
     this->initialize();
+
+    const float targetFrameTime = this->frameRate == 0.0f ? 0.0f : 1.0f / this->frameRate;
 
     auto lastTime = std::chrono::high_resolution_clock::now();
 
@@ -43,7 +58,7 @@ namespace Engine2D {
       glfwPollEvents();
 
       // Update the game
-      this->processInput();
+      Engine::Input::Keyboard::processInput();
       this->update();
 
       // Render the game
@@ -52,6 +67,13 @@ namespace Engine2D {
       this->render();
 
       glfwSwapBuffers(window);
+
+      // Calculate frame time and add a delay if the frame was too fast
+      auto frameEndTime = std::chrono::high_resolution_clock::now();
+      if (const float frameDuration = std::chrono::duration<float>(frameEndTime - currentFrameTime).count();
+        frameDuration < targetFrameTime) {
+        std::this_thread::sleep_for(std::chrono::duration<float>(targetFrameTime - frameDuration));
+      }
     }
 
     this->quit();
@@ -80,7 +102,6 @@ namespace Engine2D {
     }
 
     // Set window callbacks
-    glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glViewport(0, 0, width, height);
@@ -107,34 +128,34 @@ namespace Engine2D {
       exit(EXIT_FAILURE);
     }
 
-    // Create and configure the sprite shader
+    // Initialize input system
+    Engine::Input::Keyboard::initialize(this->window);
+
+    // Create and configure the sprite renderer
     ResourceManager::LoadShader("EngineFiles/Shaders/sprite.vs", "EngineFiles/Shaders/sprite.fs", "", "sprite");
     const glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, -1.0f, 1.0f);
     ResourceManager::GetShader("sprite")->SetInteger("sprite", true);
     ResourceManager::GetShader("sprite")->SetMatrix4("projection", projection, true);
     spriteRenderer = new Rendering::SpriteRenderer(ResourceManager::GetShader("sprite"));
 
-    for (const auto entity: entities)
-      entity->initialize();
+    this->Initialize();
   }
 
-  void Game2D::processInput() const {
+  void Game2D::update() {
+    this->Update();
     for (const auto entity: entities)
-      entity->ProcessInput();
-  }
-
-  void Game2D::update() const {
-    for (const auto entity: entities)
-      entity->Update();
+      if (entity->active)
+        entity->update();
   }
 
   void Game2D::render() const {
     for (const auto entity: entities)
-      if (entity->texture)
+      if (entity->active && entity->texture)
         spriteRenderer->DrawSprite(entity);
   }
 
   void Game2D::quit() {
+    this->Quit();
     // Deallocate all the entity pointers
     for (const auto entity: entities)
       RemoveEntity(entity);
@@ -154,6 +175,11 @@ namespace Engine2D {
     this->resourceLoader = resourceLoader;
   }
 
+  void Game2D::Close(const Engine::Input::KeyboardContext context) {
+    if (context.released)
+      glfwSetWindowShouldClose(instance->window, true);
+  }
+
   cmrc::file Game2D::loadResource(const std::string &path) const {
     if (resourceLoader)
       return resourceLoader(path);
@@ -163,37 +189,34 @@ namespace Engine2D {
   void Game2D::AddEntity(Entity2D *entity) {
     if (!entity || !instance || entity == instance->root)
       return;
+
+    // Check if the entity is already in the list
+    for (const auto e: instance->entitiesSearch)
+      if (*e == *entity)
+        return;
+
     instance->entities.push_back(entity);
-    // If the entity is added while the game is running, initialize it
-    if (!glfwWindowShouldClose(instance->window) && !entity->initialized)
-      entity->Initialize();
+    instance->entitiesSearch.insert(entity);
   }
 
   void Game2D::RemoveEntity(Entity2D *entity) {
     if (!entity || !instance || entity == instance->root || instance->entities.empty())
       return;
-    const auto it = std::ranges::find_if(instance->entities,
-                                         [&entity](const Entity2D *ptr) { return ptr == entity; }
-                                        );
-    if (it != instance->entities.end()) {
-      instance->entities.erase(it);
-      entity->Quit();
+    if (const auto itSearch = instance->entitiesSearch.find(entity); itSearch != instance->entitiesSearch.end()) {
+      const auto it = std::ranges::find_if(instance->entities,
+                                           [&entity](const Entity2D *ptr) {
+                                             return ptr == entity;
+                                           }
+                                          );
+      if (it != instance->entities.end()) {
+        instance->entities.erase(it);
+        instance->entitiesSearch.erase(itSearch);
+        entity->Quit();
+      }
     }
   }
 
   void Game2D::framebuffer_size_callback(GLFWwindow *window, const int width, const int height) {
     glViewport(0, 0, width, height);
-  }
-
-  void Game2D::key_callback(GLFWwindow *window, const int key, int scancode, const int action, int mode) {
-    // when a user presses the escape key, we set the WindowShouldClose property to true, closing the application
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-      glfwSetWindowShouldClose(window, true);
-    if (0 <= key && key < 1024) {
-      if (action == GLFW_PRESS)
-        instance->keys[key] = true;
-      else if (action == GLFW_RELEASE)
-        instance->keys[key] = false;
-    }
   }
 }

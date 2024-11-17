@@ -7,7 +7,8 @@
 #include "2D/Rendering/SpriteRenderer.h"
 
 namespace Engine2D::Rendering {
-  SpriteRenderer::SpriteRenderer(Shader *shader) : quadVAO(0) {
+  SpriteRenderer::SpriteRenderer(Shader *shader)
+    : quadVAO(0) {
     if (!shader)
       throw std::invalid_argument("ERROR::SPRITE_RENDERER: NULL shader passed");
     this->shader = shader;
@@ -21,23 +22,24 @@ namespace Engine2D::Rendering {
     }
   }
 
-  void SpriteRenderer::DrawSprite(const Entity2D *entity, const glm::vec3 color) const {
+  void SpriteRenderer::DrawSprite(const Entity2D *entity) const {
     // prepare transformations
     this->shader->Use();
     auto model = glm::mat4(1.0f);
     model = translate(model, glm::vec3(entity->transform.position.toGLM(), 0.0f));
     // first translate (transformations are: scale happens first, then rotation, and then final translation happens; reversed order)
 
-    model = translate(model, glm::vec3(entity->transform.scale.toGLM() * 0.5f, 0.0f));    // move origin of rotation to center of quad
+    model = translate(model, glm::vec3(entity->transform.scale.toGLM() * 0.5f, 0.0f));
+    // move origin of rotation to center of quad
     model = rotate(model, glm::radians(entity->transform.rotation), glm::vec3(0.0f, 0.0f, 1.0f)); // then rotate
-    model = translate(model, glm::vec3(entity->transform.scale.toGLM() * -0.5f, 0.0f));  // move origin back
+    model = translate(model, glm::vec3(entity->transform.scale.toGLM() * -0.5f, 0.0f));           // move origin back
 
     model = scale(model, glm::vec3(entity->transform.scale.toGLM(), 1.0f)); // last scale
 
     this->shader->SetMatrix4("model", model);
 
     // render textured quad
-    this->shader->SetVector3f("spriteColor", color);
+    this->shader->SetVector3f("spriteColor", *entity->textureColor);
 
     glActiveTexture(GL_TEXTURE0);
     entity->texture->Bind();
@@ -69,7 +71,7 @@ namespace Engine2D::Rendering {
 
     glBindVertexArray(this->quadVAO);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), /*(void *) 0*/ nullptr);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
   }

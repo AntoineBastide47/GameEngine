@@ -6,6 +6,7 @@
 
 #ifndef TEXTURE2D_H
 #define TEXTURE2D_H
+#include <glm/vec3.hpp>
 
 namespace Engine2D::Rendering {
   /** A class representing a 2D texture in OpenGL, handling creation, configuration, and binding of textures. */
@@ -34,7 +35,7 @@ namespace Engine2D::Rendering {
       int filterMax;
 
       /** Default Constructor */
-      Texture2D();
+      explicit Texture2D();
 
       /**
        * Sets up the texture with specified width, height, and pixel data.

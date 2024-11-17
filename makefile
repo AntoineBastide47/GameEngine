@@ -1,14 +1,16 @@
+BUILD_FOLDER := cmake-build-debug
+
 build_lib:
 	@clear
-	@cmake -B cmake-build-debug -S .
-	@cmake --build cmake-build-debug
+	@cmake -B $(BUILD_FOLDER) -S .
+	@cmake --build $(BUILD_FOLDER)
 	@rm -f ./EngineFiles/*.a
-	@mv -f ./cmake-build-debug/*.a EngineFiles
+	@mv -f ./$(BUILD_FOLDER)/*.a EngineFiles
 
 build_lib_clean:
 	@clear
-	@rm -rf cmake-build-debug
-	@cmake -B cmake-build-debug -S .
-	@cmake --build cmake-build-debug
+	@rm -rf $(BUILD_FOLDER)
+	@cmake -B $(BUILD_FOLDER) -S .
+	@cmake --build $(BUILD_FOLDER)
 	@rm -f ./EngineFiles/*.a
-	@mv -f ./cmake-build-debug/*.a EngineFiles
+	@mv -f ./$(BUILD_FOLDER)/*.a EngineFiles

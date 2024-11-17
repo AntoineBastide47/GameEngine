@@ -9,7 +9,6 @@
 
 #include "Shader.h"
 #include "2D/Entity2D.h"
-#include "2D/Components/Transform2D.h"
 
 namespace Engine2D::Rendering {
   /**
@@ -34,9 +33,8 @@ namespace Engine2D::Rendering {
        * Uses the shader to render a textured quad for the given entity, allowing for color tinting.
        *
        * @param entity Pointer to an Entity2D object that provides position, rotation, and scaling information.
-       * @param color Color vector (RGB) to tint the sprite, defaults to white (1.0, 1.0, 1.0).
        */
-      void DrawSprite(const Entity2D *entity, glm::vec3 color = glm::vec3(1.0f)) const;
+      void DrawSprite(const Entity2D *entity) const;
     private:
       /** Shader that controls the rendering pipeline for the sprite, including transformations and textures. */
       Shader *shader;

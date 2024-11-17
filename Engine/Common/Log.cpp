@@ -11,7 +11,9 @@
 #include <cpptrace/cpptrace.hpp>
 
 namespace Engine {
-  void Log::Message(const std::string &msg, const bool showTrace) { print(msg, showTrace); }
+  void Log::Message(const std::string &msg, const std::string &funcSignature, const bool showTrace) {
+    print("MESSAGE::" + extractFromFuncSignature(funcSignature) + ": " + msg, showTrace);
+  }
 
   void Log::Warning(const std::string &msg, const std::string &funcSignature) {
     print("WARNING::" + extractFromFuncSignature(funcSignature) + ": " + msg);
@@ -24,9 +26,10 @@ namespace Engine {
 
   void Log::print(const std::string &msg, const bool showTrace) {
     std::cout << std::endl << msg << std::endl;
-    if (showTrace)
+    if (showTrace) {
       cpptrace::generate_trace().print();
-    std::cout << std::endl;
+      std::cout << std::endl;
+    }
   }
 
   std::string Log::extractFromFuncSignature(const std::string &funcSignature) {

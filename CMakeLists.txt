@@ -50,9 +50,13 @@ add_library(GameEngineLib STATIC
     EngineFiles/2D/Entity2D.h
     Engine/Common/Log.cpp
     EngineFiles/Common/Log.h
+    EngineFiles/Common/PrimitiveTypes.h
+    EngineFiles/Common/Event.h
+    Engine/Input/Keyboard.cpp
+    EngineFiles/Input/Keyboard.h
 )
 
-set(VERSION 0.1.1)
+set(VERSION 0.1.2)
 set_target_properties(GameEngineLib PROPERTIES
     OUTPUT_NAME "GameEngineLib-${VERSION}"
     PREFIX ""

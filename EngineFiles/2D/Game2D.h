@@ -9,47 +9,67 @@
 
 #include <functional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 #include <cmrc/cmrc.hpp>
 
-#include "Common/RenderingHeaders.h"
+#include "Common/PrimitiveTypes.h"
+#include "Input/Keyboard.h"
 #include "Rendering/SpriteRenderer.h"
-#include "2D/Entity2D.h"
-#include "2D/ResourceManager.h"
 
 // TODO: Make resource embedding an option
 
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
 namespace Engine2D {
+  class Entity2D;
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Entity2D;
     friend class ResourceManager;
     public:
+      [[nodiscard]] static int16 Width();
+      [[nodiscard]] static int16 Height();
+      [[nodiscard]] static float DeltaTime();
+
+      /**
+       * Start's and Run's the current game
+       * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
+       */
+      void Run();
+      /**
+       * Set's the given resource loader of the game to load embedded resources
+       * @param resourceLoader The resource loader that contains the resources to load
+       * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
+       */
+      void SetGameResourceLoader(const ResourceLoader &resourceLoader);
+
+      static void Close(Engine::Input::KeyboardContext context);
+
+      /** @returns A pointer to currently running game */
+      static Game2D *Instance();
+    protected:
+      // The width of the game window
+      int16 width;
+      // The height of the game window
+      int16 height;
+
       /**
        * Creates a game
        * @param width The width of the game window
        * @param height The height of the game window
        * @param title The title of the game window
        */
-      Game2D(int width, int height, std::string title);
+      Game2D(int16 width, int16 height, std::string title);
       virtual ~Game2D() = default;
 
-      /** Start's and Run's the current game */
-      void Run();
-      /**
-       * Set's the given resource loader of the game to load embedded resources
-       * @param resourceLoader The resource loader that contains the resources to laod
-       */
-      void SetGameResourceLoader(const ResourceLoader &resourceLoader);
-      /** @returns The currently running game */
-      static Game2D *Instance();
+      /** Called during initialization, allowing derived classes to customize behavior. */
+      virtual void Initialize() {}
+      /** Called when the game is updating, allowing derived classes to customize behavior. */
+      virtual void Update() {}
+      /** Called when the game is updating, allowing derived classes to customize behavior. */
+      virtual void Quit() {}
     private:
-      // The width of the game window
-      int width;
-      // The height of the game window
-      int height;
       // The title of the game window
       std::string title;
       // The pointer to the game window
@@ -61,24 +81,22 @@ namespace Engine2D {
 
       // The time during two frames
       float deltaTime;
-      // A list that states which keys were pressed in the current frame
-      bool keys[1024]{};
-      // A list that states which keys were processed in the current frame
-      bool processedKeys[1024]{};
       // The root entity of the game
       // TODO: Replace this with a scene object that has it's own root and list of entities
       Entity2D *root;
       // All the entities currently in the game
       std::vector<Entity2D *> entities;
+      // All the entities currently in the game
+      std::unordered_set<Entity2D *> entitiesSearch;
       // The sprite renderer used to render all the textures of the game
       Rendering::SpriteRenderer *spriteRenderer;
 
+      float frameRate;
+
       /** Initializes all elements of the game */
       void initialize();
-      /** Processes the inputs of all elements of the game */
-      void processInput() const;
       /** Update's all elements of the game */
-      void update() const;
+      void update();
       /** Render's all elements of the game */
       void render() const;
       /** Clean's up the game's variables and stops it from running any longer */
@@ -93,7 +111,6 @@ namespace Engine2D {
       static void RemoveEntity(Entity2D *entity);
 
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-      static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
   };
 } // Engine2D
 
