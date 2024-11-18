@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <thread>
+#include <Input/Mouse.h>
 #include <__algorithm/ranges_find_if.h>
 
 #include "2D/ResourceManager.h"
@@ -18,7 +19,7 @@
 namespace Engine2D {
   Game2D *Game2D::instance = nullptr;
 
-  Game2D::Game2D(const int16 width, const int16 height, std::string title)
+  Game2D::Game2D(const int width, const int height, std::string title)
     : width(width), height(height), title(std::move(title)), window(nullptr), deltaTime(0.0f), root(new Entity2D("Root")),
       spriteRenderer(nullptr), frameRate(0.0f) {
     if (instance)
@@ -28,11 +29,11 @@ namespace Engine2D {
     instance = this;
   }
 
-  int16 Game2D::Width() {
+  int Game2D::Width() {
     return instance->width;
   }
 
-  int16 Game2D::Height() {
+  int Game2D::Height() {
     return instance->height;
   }
 
@@ -57,8 +58,11 @@ namespace Engine2D {
       lastTime = currentFrameTime;
       glfwPollEvents();
 
-      // Update the game
+      // Process the inputs to the game
       Engine::Input::Keyboard::processInput();
+      Engine::Input::Mouse::processInput();
+
+      // Update the game
       this->update();
 
       // Render the game
@@ -103,6 +107,7 @@ namespace Engine2D {
 
     // Set window callbacks
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     glViewport(0, 0, width, height);
     glfwMakeContextCurrent(window);
@@ -130,6 +135,7 @@ namespace Engine2D {
 
     // Initialize input system
     Engine::Input::Keyboard::initialize(this->window);
+    Engine::Input::Mouse::initialize(this->window);
 
     // Create and configure the sprite renderer
     ResourceManager::LoadShader("EngineFiles/Shaders/sprite.vs", "EngineFiles/Shaders/sprite.fs", "", "sprite");
@@ -218,5 +224,9 @@ namespace Engine2D {
 
   void Game2D::framebuffer_size_callback(GLFWwindow *window, const int width, const int height) {
     glViewport(0, 0, width, height);
+  }
+
+  void Game2D::scroll_callback(GLFWwindow *window, double xOffset, const double yOffset) {
+    Engine::Input::Mouse::processScroll(yOffset);
   }
 }

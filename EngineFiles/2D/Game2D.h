@@ -13,7 +13,6 @@
 #include <vector>
 #include <cmrc/cmrc.hpp>
 
-#include "Common/PrimitiveTypes.h"
 #include "Input/Keyboard.h"
 #include "Rendering/SpriteRenderer.h"
 
@@ -28,8 +27,8 @@ namespace Engine2D {
     friend class Entity2D;
     friend class ResourceManager;
     public:
-      [[nodiscard]] static int16 Width();
-      [[nodiscard]] static int16 Height();
+      [[nodiscard]] static int Width();
+      [[nodiscard]] static int Height();
       [[nodiscard]] static float DeltaTime();
 
       /**
@@ -50,9 +49,9 @@ namespace Engine2D {
       static Game2D *Instance();
     protected:
       // The width of the game window
-      int16 width;
+      int width;
       // The height of the game window
-      int16 height;
+      int height;
 
       /**
        * Creates a game
@@ -60,7 +59,7 @@ namespace Engine2D {
        * @param height The height of the game window
        * @param title The title of the game window
        */
-      Game2D(int16 width, int16 height, std::string title);
+      Game2D(int width, int height, std::string title);
       virtual ~Game2D() = default;
 
       /** Called during initialization, allowing derived classes to customize behavior. */
@@ -111,6 +110,7 @@ namespace Engine2D {
       static void RemoveEntity(Entity2D *entity);
 
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+      static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
   };
 } // Engine2D
 

@@ -67,8 +67,7 @@ namespace Engine::Input {
   /**
    * The Keyboard class manages keyboard events, such as key presses and releases,
    * and provides a system for registering callbacks to respond to these events.
-   * It includes static methods for initializing keyboard events and processing
-   * input from the user. Each key has an associated `KeyboardEvent` that can be
+   * Each key has an associated `KeyboardEvent` that can be
    * used to trigger actions when that key is pressed, held, or released.
    */
   class Keyboard {
@@ -105,6 +104,8 @@ namespace Engine::Input {
       static void initialize(GLFWwindow *window);
       /** Processes all the inputs of the current frame of the game and calls the corresponding key events. */
       static void processInput();
+      /** Processes an individual key */
+      static void processKey(int keyCode, KeyboardEvent *event, KeyboardContext ctx);
   };
 }
 

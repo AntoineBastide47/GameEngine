@@ -173,6 +173,24 @@ namespace Engine::Input {
     variableKeyEvents.insert(std::pair('`', &GRAVE_ACCENT));
   }
 
+  void Keyboard::processKey(const int keyCode, KeyboardEvent *event, KeyboardContext ctx) {
+    const int state = glfwGetKey(window, keyCode);
+    const char *keyName = glfwGetKeyName(keyCode, glfwGetKeyScancode(keyCode));
+    const bool isPressed = state == GLFW_PRESS;
+
+    // Get previous state
+    const bool wasPressed = previousKeyStates[keyCode];
+    previousKeyStates[keyCode] = isPressed;
+
+    // Process action if it's valid
+    if (wasPressed || isPressed) {
+      ctx.pressed = !wasPressed && isPressed;
+      ctx.held = wasPressed && isPressed;
+      ctx.released = wasPressed && !isPressed;
+      (keyName && variableKeyEvents.contains(*keyName) ? variableKeyEvents[*keyName] : event)->Trigger(ctx);
+    }
+  }
+
   void Keyboard::processInput() {
     // Update modifier keys
     const bool leftShiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_RELEASE;
@@ -186,274 +204,256 @@ namespace Engine::Input {
     const bool capsLockPressed = glfwGetKey(window, GLFW_KEY_CAPS_LOCK) != GLFW_RELEASE;
     const bool numLockPressed = glfwGetKey(window, GLFW_KEY_NUM_LOCK) != GLFW_RELEASE;
 
-    // For each key of interest
-    auto processKey = [&](const int keyCode, KeyboardEvent *event) {
-      const int state = glfwGetKey(window, keyCode);
-      const char *keyName = glfwGetKeyName(keyCode, glfwGetKeyScancode(keyCode));
-      const bool isPressed = state == GLFW_PRESS;
-
-      // Get previous state
-      const bool wasPressed = previousKeyStates[keyCode];
-      previousKeyStates[keyCode] = isPressed;
-
-      // Process action if it's valid
-      if (wasPressed || isPressed) {
-        const KeyboardContext context = {
-          .pressed = !wasPressed && isPressed,
-          .held = wasPressed && isPressed,
-          .released = wasPressed && !isPressed,
-          .leftShiftPressed = leftShiftPressed,
-          .rightShiftPressed = rightShiftPressed,
-          .leftControlPressed = leftControlPressed,
-          .rightControlPressed = rightControlPressed,
-          .leftAltPressed = leftAltPressed,
-          .rightAltPressed = rightAltPressed,
-          .leftSuperPressed = leftSuperPressed,
-          .rightSuperPressed = rightSuperPressed,
-          .capsLockPressed = capsLockPressed,
-          .numLockPressed = numLockPressed,
-        };
-        (keyName && variableKeyEvents.contains(*keyName) ? variableKeyEvents[*keyName] : event)->Trigger(context);
-      }
+    const KeyboardContext ctx = {
+      .leftShiftPressed = leftShiftPressed,
+      .rightShiftPressed = rightShiftPressed,
+      .leftControlPressed = leftControlPressed,
+      .rightControlPressed = rightControlPressed,
+      .leftAltPressed = leftAltPressed,
+      .rightAltPressed = rightAltPressed,
+      .leftSuperPressed = leftSuperPressed,
+      .rightSuperPressed = rightSuperPressed,
+      .capsLockPressed = capsLockPressed,
+      .numLockPressed = numLockPressed,
     };
 
     for (int keyCode = GLFW_KEY_SPACE; keyCode <= GLFW_KEY_LAST; ++keyCode) {
       switch (keyCode) {
-        case GLFW_KEY_A: processKey(keyCode, &A);
+        case GLFW_KEY_A: processKey(keyCode, &A, ctx);
           break;
-        case GLFW_KEY_B: processKey(keyCode, &B);
+        case GLFW_KEY_B: processKey(keyCode, &B, ctx);
           break;
-        case GLFW_KEY_C: processKey(keyCode, &C);
+        case GLFW_KEY_C: processKey(keyCode, &C, ctx);
           break;
-        case GLFW_KEY_D: processKey(keyCode, &D);
+        case GLFW_KEY_D: processKey(keyCode, &D, ctx);
           break;
-        case GLFW_KEY_E: processKey(keyCode, &E);
+        case GLFW_KEY_E: processKey(keyCode, &E, ctx);
           break;
-        case GLFW_KEY_F: processKey(keyCode, &F);
+        case GLFW_KEY_F: processKey(keyCode, &F, ctx);
           break;
-        case GLFW_KEY_G: processKey(keyCode, &G);
+        case GLFW_KEY_G: processKey(keyCode, &G, ctx);
           break;
-        case GLFW_KEY_H: processKey(keyCode, &H);
+        case GLFW_KEY_H: processKey(keyCode, &H, ctx);
           break;
-        case GLFW_KEY_I: processKey(keyCode, &I);
+        case GLFW_KEY_I: processKey(keyCode, &I, ctx);
           break;
-        case GLFW_KEY_J: processKey(keyCode, &J);
+        case GLFW_KEY_J: processKey(keyCode, &J, ctx);
           break;
-        case GLFW_KEY_K: processKey(keyCode, &K);
+        case GLFW_KEY_K: processKey(keyCode, &K, ctx);
           break;
-        case GLFW_KEY_L: processKey(keyCode, &L);
+        case GLFW_KEY_L: processKey(keyCode, &L, ctx);
           break;
-        case GLFW_KEY_M: processKey(keyCode, &M);
+        case GLFW_KEY_M: processKey(keyCode, &M, ctx);
           break;
-        case GLFW_KEY_N: processKey(keyCode, &N);
+        case GLFW_KEY_N: processKey(keyCode, &N, ctx);
           break;
-        case GLFW_KEY_O: processKey(keyCode, &O);
+        case GLFW_KEY_O: processKey(keyCode, &O, ctx);
           break;
-        case GLFW_KEY_P: processKey(keyCode, &P);
+        case GLFW_KEY_P: processKey(keyCode, &P, ctx);
           break;
-        case GLFW_KEY_Q: processKey(keyCode, &Q);
+        case GLFW_KEY_Q: processKey(keyCode, &Q, ctx);
           break;
-        case GLFW_KEY_R: processKey(keyCode, &R);
+        case GLFW_KEY_R: processKey(keyCode, &R, ctx);
           break;
-        case GLFW_KEY_S: processKey(keyCode, &S);
+        case GLFW_KEY_S: processKey(keyCode, &S, ctx);
           break;
-        case GLFW_KEY_T: processKey(keyCode, &T);
+        case GLFW_KEY_T: processKey(keyCode, &T, ctx);
           break;
-        case GLFW_KEY_U: processKey(keyCode, &U);
+        case GLFW_KEY_U: processKey(keyCode, &U, ctx);
           break;
-        case GLFW_KEY_V: processKey(keyCode, &V);
+        case GLFW_KEY_V: processKey(keyCode, &V, ctx);
           break;
-        case GLFW_KEY_W: processKey(keyCode, &W);
+        case GLFW_KEY_W: processKey(keyCode, &W, ctx);
           break;
-        case GLFW_KEY_X: processKey(keyCode, &X);
+        case GLFW_KEY_X: processKey(keyCode, &X, ctx);
           break;
-        case GLFW_KEY_Y: processKey(keyCode, &Y);
+        case GLFW_KEY_Y: processKey(keyCode, &Y, ctx);
           break;
-        case GLFW_KEY_Z: processKey(keyCode, &Z);
+        case GLFW_KEY_Z: processKey(keyCode, &Z, ctx);
           break;
-        case GLFW_KEY_0: processKey(keyCode, &NUM0);
+        case GLFW_KEY_0: processKey(keyCode, &NUM0, ctx);
           break;
-        case GLFW_KEY_1: processKey(keyCode, &NUM1);
+        case GLFW_KEY_1: processKey(keyCode, &NUM1, ctx);
           break;
-        case GLFW_KEY_2: processKey(keyCode, &NUM2);
+        case GLFW_KEY_2: processKey(keyCode, &NUM2, ctx);
           break;
-        case GLFW_KEY_3: processKey(keyCode, &NUM3);
+        case GLFW_KEY_3: processKey(keyCode, &NUM3, ctx);
           break;
-        case GLFW_KEY_4: processKey(keyCode, &NUM4);
+        case GLFW_KEY_4: processKey(keyCode, &NUM4, ctx);
           break;
-        case GLFW_KEY_5: processKey(keyCode, &NUM5);
+        case GLFW_KEY_5: processKey(keyCode, &NUM5, ctx);
           break;
-        case GLFW_KEY_6: processKey(keyCode, &NUM6);
+        case GLFW_KEY_6: processKey(keyCode, &NUM6, ctx);
           break;
-        case GLFW_KEY_7: processKey(keyCode, &NUM7);
+        case GLFW_KEY_7: processKey(keyCode, &NUM7, ctx);
           break;
-        case GLFW_KEY_8: processKey(keyCode, &NUM8);
+        case GLFW_KEY_8: processKey(keyCode, &NUM8, ctx);
           break;
-        case GLFW_KEY_9: processKey(keyCode, &NUM9);
+        case GLFW_KEY_9: processKey(keyCode, &NUM9, ctx);
           break;
-        case GLFW_KEY_SPACE: processKey(keyCode, &SPACE);
+        case GLFW_KEY_SPACE: processKey(keyCode, &SPACE, ctx);
           break;
-        case GLFW_KEY_APOSTROPHE: processKey(keyCode, &APOSTROPHE);
+        case GLFW_KEY_APOSTROPHE: processKey(keyCode, &APOSTROPHE, ctx);
           break;
-        case GLFW_KEY_COMMA: processKey(keyCode, &COMMA);
+        case GLFW_KEY_COMMA: processKey(keyCode, &COMMA, ctx);
           break;
-        case GLFW_KEY_MINUS: processKey(keyCode, &MINUS);
+        case GLFW_KEY_MINUS: processKey(keyCode, &MINUS, ctx);
           break;
-        case GLFW_KEY_PERIOD: processKey(keyCode, &PERIOD);
+        case GLFW_KEY_PERIOD: processKey(keyCode, &PERIOD, ctx);
           break;
-        case GLFW_KEY_SLASH: processKey(keyCode, &SLASH);
+        case GLFW_KEY_SLASH: processKey(keyCode, &SLASH, ctx);
           break;
-        case GLFW_KEY_SEMICOLON: processKey(keyCode, &SEMICOLON);
+        case GLFW_KEY_SEMICOLON: processKey(keyCode, &SEMICOLON, ctx);
           break;
-        case GLFW_KEY_EQUAL: processKey(keyCode, &EQUAL);
+        case GLFW_KEY_EQUAL: processKey(keyCode, &EQUAL, ctx);
           break;
-        case GLFW_KEY_LEFT_BRACKET: processKey(keyCode, &LEFT_BRACKET);
+        case GLFW_KEY_LEFT_BRACKET: processKey(keyCode, &LEFT_BRACKET, ctx);
           break;
-        case GLFW_KEY_BACKSLASH: processKey(keyCode, &BACKSLASH);
+        case GLFW_KEY_BACKSLASH: processKey(keyCode, &BACKSLASH, ctx);
           break;
-        case GLFW_KEY_RIGHT_BRACKET: processKey(keyCode, &RIGHT_BRACKET);
+        case GLFW_KEY_RIGHT_BRACKET: processKey(keyCode, &RIGHT_BRACKET, ctx);
           break;
-        case GLFW_KEY_GRAVE_ACCENT: processKey(keyCode, &GRAVE_ACCENT);
+        case GLFW_KEY_GRAVE_ACCENT: processKey(keyCode, &GRAVE_ACCENT, ctx);
           break;
-        case GLFW_KEY_ESCAPE: processKey(keyCode, &ESCAPE);
+        case GLFW_KEY_ESCAPE: processKey(keyCode, &ESCAPE, ctx);
           break;
-        case GLFW_KEY_ENTER: processKey(keyCode, &ENTER);
+        case GLFW_KEY_ENTER: processKey(keyCode, &ENTER, ctx);
           break;
-        case GLFW_KEY_TAB: processKey(keyCode, &TAB);
+        case GLFW_KEY_TAB: processKey(keyCode, &TAB, ctx);
           break;
-        case GLFW_KEY_BACKSPACE: processKey(keyCode, &BACKSPACE);
+        case GLFW_KEY_BACKSPACE: processKey(keyCode, &BACKSPACE, ctx);
           break;
-        case GLFW_KEY_INSERT: processKey(keyCode, &INSERT);
+        case GLFW_KEY_INSERT: processKey(keyCode, &INSERT, ctx);
           break;
-        case GLFW_KEY_DELETE: processKey(keyCode, &DELETE);
+        case GLFW_KEY_DELETE: processKey(keyCode, &DELETE, ctx);
           break;
-        case GLFW_KEY_RIGHT: processKey(keyCode, &RIGHT);
+        case GLFW_KEY_RIGHT: processKey(keyCode, &RIGHT, ctx);
           break;
-        case GLFW_KEY_LEFT: processKey(keyCode, &LEFT);
+        case GLFW_KEY_LEFT: processKey(keyCode, &LEFT, ctx);
           break;
-        case GLFW_KEY_DOWN: processKey(keyCode, &DOWN);
+        case GLFW_KEY_DOWN: processKey(keyCode, &DOWN, ctx);
           break;
-        case GLFW_KEY_UP: processKey(keyCode, &UP);
+        case GLFW_KEY_UP: processKey(keyCode, &UP, ctx);
           break;
-        case GLFW_KEY_PAGE_UP: processKey(keyCode, &PAGE_UP);
+        case GLFW_KEY_PAGE_UP: processKey(keyCode, &PAGE_UP, ctx);
           break;
-        case GLFW_KEY_PAGE_DOWN: processKey(keyCode, &PAGE_DOWN);
+        case GLFW_KEY_PAGE_DOWN: processKey(keyCode, &PAGE_DOWN, ctx);
           break;
-        case GLFW_KEY_HOME: processKey(keyCode, &HOME);
+        case GLFW_KEY_HOME: processKey(keyCode, &HOME, ctx);
           break;
-        case GLFW_KEY_END: processKey(keyCode, &END);
+        case GLFW_KEY_END: processKey(keyCode, &END, ctx);
           break;
-        case GLFW_KEY_CAPS_LOCK: processKey(keyCode, &CAPS_LOCK);
+        case GLFW_KEY_CAPS_LOCK: processKey(keyCode, &CAPS_LOCK, ctx);
           break;
-        case GLFW_KEY_SCROLL_LOCK: processKey(keyCode, &SCROLL_LOCK);
+        case GLFW_KEY_SCROLL_LOCK: processKey(keyCode, &SCROLL_LOCK, ctx);
           break;
-        case GLFW_KEY_NUM_LOCK: processKey(keyCode, &NUM_LOCK);
+        case GLFW_KEY_NUM_LOCK: processKey(keyCode, &NUM_LOCK, ctx);
           break;
-        case GLFW_KEY_PRINT_SCREEN: processKey(keyCode, &PRINT_SCREEN);
+        case GLFW_KEY_PRINT_SCREEN: processKey(keyCode, &PRINT_SCREEN, ctx);
           break;
-        case GLFW_KEY_PAUSE: processKey(keyCode, &PAUSE);
+        case GLFW_KEY_PAUSE: processKey(keyCode, &PAUSE, ctx);
           break;
-        case GLFW_KEY_F1: processKey(keyCode, &F1);
+        case GLFW_KEY_F1: processKey(keyCode, &F1, ctx);
           break;
-        case GLFW_KEY_F2: processKey(keyCode, &F2);
+        case GLFW_KEY_F2: processKey(keyCode, &F2, ctx);
           break;
-        case GLFW_KEY_F3: processKey(keyCode, &F3);
+        case GLFW_KEY_F3: processKey(keyCode, &F3, ctx);
           break;
-        case GLFW_KEY_F4: processKey(keyCode, &F4);
+        case GLFW_KEY_F4: processKey(keyCode, &F4, ctx);
           break;
-        case GLFW_KEY_F5: processKey(keyCode, &F5);
+        case GLFW_KEY_F5: processKey(keyCode, &F5, ctx);
           break;
-        case GLFW_KEY_F6: processKey(keyCode, &F6);
+        case GLFW_KEY_F6: processKey(keyCode, &F6, ctx);
           break;
-        case GLFW_KEY_F7: processKey(keyCode, &F7);
+        case GLFW_KEY_F7: processKey(keyCode, &F7, ctx);
           break;
-        case GLFW_KEY_F8: processKey(keyCode, &F8);
+        case GLFW_KEY_F8: processKey(keyCode, &F8, ctx);
           break;
-        case GLFW_KEY_F9: processKey(keyCode, &F9);
+        case GLFW_KEY_F9: processKey(keyCode, &F9, ctx);
           break;
-        case GLFW_KEY_F10: processKey(keyCode, &F10);
+        case GLFW_KEY_F10: processKey(keyCode, &F10, ctx);
           break;
-        case GLFW_KEY_F11: processKey(keyCode, &F11);
+        case GLFW_KEY_F11: processKey(keyCode, &F11, ctx);
           break;
-        case GLFW_KEY_F12: processKey(keyCode, &F12);
+        case GLFW_KEY_F12: processKey(keyCode, &F12, ctx);
           break;
-        case GLFW_KEY_F13: processKey(keyCode, &F13);
+        case GLFW_KEY_F13: processKey(keyCode, &F13, ctx);
           break;
-        case GLFW_KEY_F14: processKey(keyCode, &F14);
+        case GLFW_KEY_F14: processKey(keyCode, &F14, ctx);
           break;
-        case GLFW_KEY_F15: processKey(keyCode, &F15);
+        case GLFW_KEY_F15: processKey(keyCode, &F15, ctx);
           break;
-        case GLFW_KEY_F16: processKey(keyCode, &F16);
+        case GLFW_KEY_F16: processKey(keyCode, &F16, ctx);
           break;
-        case GLFW_KEY_F17: processKey(keyCode, &F17);
+        case GLFW_KEY_F17: processKey(keyCode, &F17, ctx);
           break;
-        case GLFW_KEY_F18: processKey(keyCode, &F18);
+        case GLFW_KEY_F18: processKey(keyCode, &F18, ctx);
           break;
-        case GLFW_KEY_F19: processKey(keyCode, &F19);
+        case GLFW_KEY_F19: processKey(keyCode, &F19, ctx);
           break;
-        case GLFW_KEY_F20: processKey(keyCode, &F20);
+        case GLFW_KEY_F20: processKey(keyCode, &F20, ctx);
           break;
-        case GLFW_KEY_F21: processKey(keyCode, &F21);
+        case GLFW_KEY_F21: processKey(keyCode, &F21, ctx);
           break;
-        case GLFW_KEY_F22: processKey(keyCode, &F22);
+        case GLFW_KEY_F22: processKey(keyCode, &F22, ctx);
           break;
-        case GLFW_KEY_F23: processKey(keyCode, &F23);
+        case GLFW_KEY_F23: processKey(keyCode, &F23, ctx);
           break;
-        case GLFW_KEY_F24: processKey(keyCode, &F24);
+        case GLFW_KEY_F24: processKey(keyCode, &F24, ctx);
           break;
-        case GLFW_KEY_F25: processKey(keyCode, &F25);
+        case GLFW_KEY_F25: processKey(keyCode, &F25, ctx);
           break;
-        case GLFW_KEY_KP_0: processKey(keyCode, &KP_NUM0);
+        case GLFW_KEY_KP_0: processKey(keyCode, &KP_NUM0, ctx);
           break;
-        case GLFW_KEY_KP_1: processKey(keyCode, &KP_NUM1);
+        case GLFW_KEY_KP_1: processKey(keyCode, &KP_NUM1, ctx);
           break;
-        case GLFW_KEY_KP_2: processKey(keyCode, &KP_NUM2);
+        case GLFW_KEY_KP_2: processKey(keyCode, &KP_NUM2, ctx);
           break;
-        case GLFW_KEY_KP_3: processKey(keyCode, &KP_NUM3);
+        case GLFW_KEY_KP_3: processKey(keyCode, &KP_NUM3, ctx);
           break;
-        case GLFW_KEY_KP_4: processKey(keyCode, &KP_NUM4);
+        case GLFW_KEY_KP_4: processKey(keyCode, &KP_NUM4, ctx);
           break;
-        case GLFW_KEY_KP_5: processKey(keyCode, &KP_NUM5);
+        case GLFW_KEY_KP_5: processKey(keyCode, &KP_NUM5, ctx);
           break;
-        case GLFW_KEY_KP_6: processKey(keyCode, &KP_NUM6);
+        case GLFW_KEY_KP_6: processKey(keyCode, &KP_NUM6, ctx);
           break;
-        case GLFW_KEY_KP_7: processKey(keyCode, &KP_NUM7);
+        case GLFW_KEY_KP_7: processKey(keyCode, &KP_NUM7, ctx);
           break;
-        case GLFW_KEY_KP_8: processKey(keyCode, &KP_NUM8);
+        case GLFW_KEY_KP_8: processKey(keyCode, &KP_NUM8, ctx);
           break;
-        case GLFW_KEY_KP_9: processKey(keyCode, &KP_NUM9);
+        case GLFW_KEY_KP_9: processKey(keyCode, &KP_NUM9, ctx);
           break;
-        case GLFW_KEY_KP_DECIMAL: processKey(keyCode, &KP_DECIMAL);
+        case GLFW_KEY_KP_DECIMAL: processKey(keyCode, &KP_DECIMAL, ctx);
           break;
-        case GLFW_KEY_KP_DIVIDE: processKey(keyCode, &KP_DIVIDE);
+        case GLFW_KEY_KP_DIVIDE: processKey(keyCode, &KP_DIVIDE, ctx);
           break;
-        case GLFW_KEY_KP_MULTIPLY: processKey(keyCode, &KP_MULTIPLY);
+        case GLFW_KEY_KP_MULTIPLY: processKey(keyCode, &KP_MULTIPLY, ctx);
           break;
-        case GLFW_KEY_KP_SUBTRACT: processKey(keyCode, &KP_SUBTRACT);
+        case GLFW_KEY_KP_SUBTRACT: processKey(keyCode, &KP_SUBTRACT, ctx);
           break;
-        case GLFW_KEY_KP_ADD: processKey(keyCode, &KP_ADD);
+        case GLFW_KEY_KP_ADD: processKey(keyCode, &KP_ADD, ctx);
           break;
-        case GLFW_KEY_KP_ENTER: processKey(keyCode, &KP_ENTER);
+        case GLFW_KEY_KP_ENTER: processKey(keyCode, &KP_ENTER, ctx);
           break;
-        case GLFW_KEY_KP_EQUAL: processKey(keyCode, &KP_EQUAL);
+        case GLFW_KEY_KP_EQUAL: processKey(keyCode, &KP_EQUAL, ctx);
           break;
-        case GLFW_KEY_LEFT_SHIFT: processKey(keyCode, &LEFT_SHIFT);
+        case GLFW_KEY_LEFT_SHIFT: processKey(keyCode, &LEFT_SHIFT, ctx);
           break;
-        case GLFW_KEY_LEFT_CONTROL: processKey(keyCode, &LEFT_CONTROL);
+        case GLFW_KEY_LEFT_CONTROL: processKey(keyCode, &LEFT_CONTROL, ctx);
           break;
-        case GLFW_KEY_LEFT_ALT: processKey(keyCode, &LEFT_ALT);
+        case GLFW_KEY_LEFT_ALT: processKey(keyCode, &LEFT_ALT, ctx);
           break;
-        case GLFW_KEY_LEFT_SUPER: processKey(keyCode, &LEFT_SUPER);
+        case GLFW_KEY_LEFT_SUPER: processKey(keyCode, &LEFT_SUPER, ctx);
           break;
-        case GLFW_KEY_RIGHT_SHIFT: processKey(keyCode, &RIGHT_SHIFT);
+        case GLFW_KEY_RIGHT_SHIFT: processKey(keyCode, &RIGHT_SHIFT, ctx);
           break;
-        case GLFW_KEY_RIGHT_CONTROL: processKey(keyCode, &RIGHT_CONTROL);
+        case GLFW_KEY_RIGHT_CONTROL: processKey(keyCode, &RIGHT_CONTROL, ctx);
           break;
-        case GLFW_KEY_RIGHT_ALT: processKey(keyCode, &RIGHT_ALT);
+        case GLFW_KEY_RIGHT_ALT: processKey(keyCode, &RIGHT_ALT, ctx);
           break;
-        case GLFW_KEY_RIGHT_SUPER: processKey(keyCode, &RIGHT_SUPER);
+        case GLFW_KEY_RIGHT_SUPER: processKey(keyCode, &RIGHT_SUPER, ctx);
           break;
-        case GLFW_KEY_MENU: processKey(keyCode, &MENU);
+        case GLFW_KEY_MENU: processKey(keyCode, &MENU, ctx);
           break;
         default: break;
       }
