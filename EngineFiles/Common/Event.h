@@ -8,7 +8,6 @@
 #define EVENT_H
 
 #include <functional>
-#include <iostream>
 
 namespace Engine {
   /**
@@ -39,7 +38,7 @@ namespace Engine {
        * @param callback The callback function to add. This should be a non-capturing lambda or function pointer.
        */
       void AddCallback(const Callback &callback) {
-        callbacks.push_back(callback);
+        callbacks.push_back(std::make_shared<Callback>(callback));
       }
 
       /**
@@ -75,13 +74,13 @@ namespace Engine {
        * event. Each callback is executed in the order it was registered.
        */
       void Trigger(Args... args) {
-        for (const auto &callback: callbacks) {
-          callback(args...);
+        for (const std::shared_ptr<Callback> callback: callbacks) {
+          (*callback.get())(args...);
         }
       }
     private:
       /** The list of all callbacks registered to this event */
-      std::vector<Callback> callbacks;
+      std::vector<std::shared_ptr<Callback>> callbacks;
   };
 }
 

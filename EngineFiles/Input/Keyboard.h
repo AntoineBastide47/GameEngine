@@ -7,9 +7,10 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include "Common/RenderingHeaders.h"
-
+#include <ranges>
 #include "Common/Event.h"
+#include "Common/Macros.h"
+#include "Common/RenderingHeaders.h"
 
 namespace Engine2D {
   class Game2D;
@@ -23,43 +24,40 @@ namespace Engine::Input {
    * are active, as well as the state of lock keys like caps lock and num lock.
    */
   struct KeyboardContext {
+    /** Set to true when a key is initially pressed. */
+    bool pressed: 1;
+    /** Set to true if a key is actively pressed down, remaining true as long as the key is held. */
+    bool held: 1;
+    /** Set to true when a key is released after being pressed. */
+    bool released: 1;
+    /** Set to true if the left shift key is currently held down. */
+    bool leftShiftPressed: 1;
+    /** Set to true if the right shift key is currently held down. */
+    bool rightShiftPressed: 1;
+    /** Set to true if the left control key is currently held down. */
+    bool leftControlPressed: 1;
+    /** Set to true if the right control key is currently held down. */
+    bool rightControlPressed: 1;
+    /** Set to true if the left alt/option key is currently held down. */
+    bool leftAltPressed: 1;
+    /** Set to true if the right alt/option key is currently held down. */
+    bool rightAltPressed: 1;
     /**
-     * Set to true when a key is initially pressed, allowing detection of the
-     * initial press event. Typically set to false after the first frame or
-     * processed event.
-     */
-    bool pressed;
-    /**
-     * Set to true if a key is actively pressed down, remaining true as long as
-     * the key is held.
-     */
-    bool held;
-    /**
-     * Set to true when a key is released after being pressed. Allows detection
-     * of the release event and is usually set to false after it has been processed.
-     */
-    bool released;
-    /**
-     * Set to true if either the left or right Shift key is currently held down.
-     */
-    bool shiftPressed;
-    /** Set to true if either the left or right Control key is currently held down. */
-    bool controlPressed;
-    /** Set to true if either the left or right Alt key is currently held down. */
-    bool altPressed;
-    /**
-     * Set to true if the Super key is currently held down.
+     * Set to true if the left Super key is currently held down.
      * - On Windows and Linux, this represents the Windows key (❖).
      * - On macOS, this represents the Command key (⌘).
      */
-    bool superPressed;
-    /** Set to true if Caps Lock is currently active (locked in uppercase mode). */
-    bool capsLockPressed;
+    bool leftSuperPressed: 1;
     /**
-     * Set to true if Num Lock is currently active, enabling the numeric keypad
-     * to enter numbers instead of performing cursor movements.
+     * Set to true if the right Super key is currently held down.
+     * - On Windows and Linux, this represents the Windows key (❖).
+     * - On macOS, this represents the Command key (⌘).
      */
-    bool numLockPressed;
+    bool rightSuperPressed: 1;
+    /** Set to true if Caps Lock is currently held down. */
+    bool capsLockPressed: 1;
+    /** Set to true if Num Lock is currently held down. */
+    bool numLockPressed: 1;
   };
 
   class KeyboardEvent : public Event<KeyboardContext> {
@@ -88,9 +86,18 @@ namespace Engine::Input {
     private:
       /** If any of the keys were pressed last frame */
       static bool previousKeyStates[GLFW_KEY_LAST + 1];
+      /** A map that contains the keyboard events for the keys that can change based on the most common keyboard layouts */
+      static std::unordered_map<char, KeyboardEvent *> variableKeyEvents;
       /** The window pointer required for querying key states. */
       static GLFWwindow *window;
       Keyboard() = default;
+      ~Keyboard() {
+        window = nullptr;
+        for (auto eventPtr: variableKeyEvents | std::views::values)
+          SAFE_DELETE(eventPtr);
+        variableKeyEvents.clear();
+      }
+
       /**
        * This method sets up the internal map of key codes to `KeyboardEvent`
        * instances, enabling each key's events to be tracked and managed.

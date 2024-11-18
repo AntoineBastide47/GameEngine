@@ -56,7 +56,7 @@ add_library(GameEngineLib STATIC
     EngineFiles/Input/Keyboard.h
 )
 
-set(VERSION 0.1.2)
+set(VERSION 0.1.3)
 set_target_properties(GameEngineLib PROPERTIES
     OUTPUT_NAME "GameEngineLib-${VERSION}"
     PREFIX ""
