@@ -8,9 +8,5 @@ build_lib:
 	@mv -f ./$(BUILD_FOLDER)/Engine2D-[0-9]*.[0-9]*.[0-9]*.a EngineFiles
 
 build_lib_clean:
-	@clear
 	@rm -rf $(BUILD_FOLDER)
-	@cmake -B $(BUILD_FOLDER) -S .
-	@cmake --build $(BUILD_FOLDER)
-	@rm -f ./EngineFiles/*.a
-	@mv -f ./$(BUILD_FOLDER)/*.a EngineFiles
+	@make build_lib

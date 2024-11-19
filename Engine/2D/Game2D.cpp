@@ -8,13 +8,14 @@
 
 #include <iostream>
 #include <thread>
-#include <Input/Mouse.h>
 #include <__algorithm/ranges_find_if.h>
 
 #include "2D/ResourceManager.h"
 #include "Common/Macros.h"
 #include "Common/RenderingHeaders.h"
+#include "Input/Gamepad.h"
 #include "Input/Keyboard.h"
+#include "Input/Mouse.h"
 
 namespace Engine2D {
   Game2D *Game2D::instance = nullptr;
@@ -61,6 +62,7 @@ namespace Engine2D {
       // Process the inputs to the game
       Engine::Input::Keyboard::processInput();
       Engine::Input::Mouse::processInput();
+      Engine::Input::Gamepad::processInput();
 
       // Update the game
       this->update();
@@ -181,7 +183,7 @@ namespace Engine2D {
     this->resourceLoader = resourceLoader;
   }
 
-  void Game2D::Close(const Engine::Input::KeyboardContext context) {
+  void Game2D::Close(const Engine::Input::KeyboardAndMouseContext context) {
     if (context.released)
       glfwSetWindowShouldClose(instance->window, true);
   }

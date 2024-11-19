@@ -13,13 +13,21 @@
 #include <vector>
 #include <cmrc/cmrc.hpp>
 
-#include "Input/Keyboard.h"
+#include "Input/InputContexts.h"
 #include "Rendering/SpriteRenderer.h"
 
 // TODO: Make resource embedding an option
 
-using ResourceLoader = std::function<cmrc::file(const std::string &)>;
+namespace Engine::Input {
+  class GamepadStickEvent;
+  class GamepadButtonEvent;
+  class MouseScrollEvent;
+  class MousePositionEvent;
+  class MouseButtonEvent;
+  class KeyboardEvent;
+}
 
+using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 namespace Engine2D {
   class Entity2D;
   /** Game2D is the class that represents a game and manages each part of it. */
@@ -43,7 +51,7 @@ namespace Engine2D {
        */
       void SetGameResourceLoader(const ResourceLoader &resourceLoader);
 
-      static void Close(Engine::Input::KeyboardContext context);
+      static void Close(Engine::Input::KeyboardAndMouseContext context);
 
       /** @returns A pointer to currently running game */
       static Game2D *Instance();
@@ -91,6 +99,8 @@ namespace Engine2D {
       Rendering::SpriteRenderer *spriteRenderer;
 
       float frameRate;
+      float lastKAndMInput = 0.0f;
+      float lastGamepadInput = 0.0f;
 
       /** Initializes all elements of the game */
       void initialize();
@@ -110,7 +120,8 @@ namespace Engine2D {
       static void RemoveEntity(Entity2D *entity);
 
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-      static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
+      static void keyboard_and_mouse_callback(GLFWwindow *window, int button, int action, int mods);
+      static void scroll_callback(GLFWwindow *window, double xOffset, double yOffset);
   };
 } // Engine2D
 

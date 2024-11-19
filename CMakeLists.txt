@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.29)
 project(GameEngine)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Find required packages
 find_package(OpenGL REQUIRED)
@@ -40,7 +38,14 @@ add_library(Engine2D STATIC
     EngineFiles/Input/Keyboard.h
     Engine/Input/Mouse.cpp
     EngineFiles/Input/Mouse.h
+    Engine/Input/Gamepad.cpp
+    EngineFiles/Input/Gamepad.h
+    EngineFiles/Input/InputContexts.h
 )
+
+# Some optimizations
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Include CMakeRC
 include(CMakeRC.cmake)
@@ -55,28 +60,37 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpptrace)
 
-set(VERSION 0.1.4)
+set(VERSION 0.2.0)
 set_target_properties(Engine2D PROPERTIES
     OUTPUT_NAME Engine2D-${VERSION}
     PREFIX ""
 )
 
-# Define paths to the static versions of GLEW and GLFW libraries
-set(GLEW_STATIC_LIB /opt/homebrew/opt/glew/lib/libGLEW.a)
-set(GLFW_STATIC_LIB /opt/homebrew/opt/glfw/lib/libglfw3.a)
-set(GLM_STATIC_LIB /opt/homebrew/opt/glm/lib/libglm.dylib)
-
 target_link_libraries(Engine2D PUBLIC
-    OpenGL::GL
-    ${GLEW_STATIC_LIB}
-    ${GLFW_STATIC_LIB}
-    ${GLM_STATIC_LIB}
-    "-framework CoreFoundation"
-    "-framework IOKit"
-    "-framework Cocoa"
+    ${GLEW_LIBRARIES}
+    ${GLFW3_LIBRARIES}
+    ${OpenGL_LIBRARIES}
+    glm
     assets
     cpptrace::cpptrace
 )
+
+if (APPLE)
+  target_link_libraries(Engine2D PUBLIC
+      "-framework CoreFoundation"
+      "-framework IOKit"
+      "-framework Cocoa"
+  )
+elseif (WIN32)
+  message(AUTHOR_WARNING "Window build platform not supported yet.")
+elseif (UNIX)
+  find_package(Threads REQUIRED)
+  target_link_libraries(Engine2D PUBLIC
+    Threads::Threads
+  )
+else()
+  message(FATAL_ERROR "Unknown build platform.")
+endif ()
 
 target_include_directories(Engine2D PUBLIC
     EngineFiles

@@ -7,7 +7,10 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#include <bitset>
 #include <ranges>
+
+#include "InputContexts.h"
 #include "Common/Event.h"
 #include "Common/Macros.h"
 #include "Common/RenderingHeaders.h"
@@ -17,58 +20,14 @@ namespace Engine2D {
 }
 
 namespace Engine::Input {
-  /**
-   * The KeyboardContext struct provides a snapshot of the state of primary keyboard keys
-   * (pressed, help and release states) and common modifier keys (shift, control, alt, super, etc.).
-   * This struct can be used to manage keyboard input and determine which keys or modifiers
-   * are active, as well as the state of lock keys like caps lock and num lock.
-   */
-  struct KeyboardContext {
-    /** Set to true when a key is initially pressed. */
-    bool pressed: 1;
-    /** Set to true if a key is actively pressed down, remaining true as long as the key is held. */
-    bool held: 1;
-    /** Set to true when a key is released after being pressed. */
-    bool released: 1;
-    /** Set to true if the left shift key is currently held down. */
-    bool leftShiftPressed: 1;
-    /** Set to true if the right shift key is currently held down. */
-    bool rightShiftPressed: 1;
-    /** Set to true if the left control key is currently held down. */
-    bool leftControlPressed: 1;
-    /** Set to true if the right control key is currently held down. */
-    bool rightControlPressed: 1;
-    /** Set to true if the left alt/option key is currently held down. */
-    bool leftAltPressed: 1;
-    /** Set to true if the right alt/option key is currently held down. */
-    bool rightAltPressed: 1;
-    /**
-     * Set to true if the left Super key is currently held down.
-     * - On Windows and Linux, this represents the Windows key (❖).
-     * - On macOS, this represents the Command key (⌘).
-     */
-    bool leftSuperPressed: 1;
-    /**
-     * Set to true if the right Super key is currently held down.
-     * - On Windows and Linux, this represents the Windows key (❖).
-     * - On macOS, this represents the Command key (⌘).
-     */
-    bool rightSuperPressed: 1;
-    /** Set to true if Caps Lock is currently held down. */
-    bool capsLockPressed: 1;
-    /** Set to true if Num Lock is currently held down. */
-    bool numLockPressed: 1;
-  };
-
-  class KeyboardEvent : public Event<KeyboardContext> {
+  class KeyboardEvent : public Event<KeyboardAndMouseContext> {
     friend class Keyboard;
   };
 
   /**
    * The Keyboard class manages keyboard events, such as key presses and releases,
    * and provides a system for registering callbacks to respond to these events.
-   * Each key has an associated `KeyboardEvent` that can be
-   * used to trigger actions when that key is pressed, held, or released.
+   * The keys all have an associated Event that triggers when they are updated.
    */
   class Keyboard {
     public:
@@ -84,12 +43,15 @@ namespace Engine::Input {
       friend class Engine2D::Game2D;
     private:
       /** If any of the keys were pressed last frame */
-      static bool previousKeyStates[GLFW_KEY_LAST + 1];
+      static std::bitset<GLFW_KEY_LAST + 1> previousKeyStates;
       /** A map that contains the keyboard events for the keys that can change based on the most common keyboard layouts */
       static std::unordered_map<char, KeyboardEvent *> variableKeyEvents;
       /** The window pointer required for querying key states. */
       static GLFWwindow *window;
+      /** Reference to the current KeyboardAndMouseButtonContext to prevent heap allocation overhead */
+      static KeyboardAndMouseContext ctx;
       Keyboard() = default;
+
       ~Keyboard() {
         window = nullptr;
         for (auto eventPtr: variableKeyEvents | std::views::values)
@@ -97,15 +59,12 @@ namespace Engine::Input {
         variableKeyEvents.clear();
       }
 
-      /**
-       * This method sets up the internal map of key codes to `KeyboardEvent`
-       * instances, enabling each key's events to be tracked and managed.
-       */
+      /** Initializes the Mouse instance */
       static void initialize(GLFWwindow *window);
       /** Processes all the inputs of the current frame of the game and calls the corresponding key events. */
       static void processInput();
       /** Processes an individual key */
-      static void processKey(int keyCode, KeyboardEvent *event, KeyboardContext ctx);
+      static void processKey(int keyCode, KeyboardEvent *event);
   };
 }
 
