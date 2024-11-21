@@ -50,7 +50,6 @@ namespace Engine2D {
     this->initialize();
 
     const float targetFrameTime = this->frameRate == 0.0f ? 0.0f : 1.0f / this->frameRate;
-
     auto lastTime = std::chrono::high_resolution_clock::now();
 
     while (!glfwWindowShouldClose(window)) {
@@ -225,6 +224,8 @@ namespace Engine2D {
   }
 
   void Game2D::framebuffer_size_callback(GLFWwindow *window, const int width, const int height) {
+    instance->width = width;
+    instance->height = height;
     glViewport(0, 0, width, height);
   }
 

@@ -6,6 +6,10 @@
 
 #include "2D/Rendering/SpriteRenderer.h"
 
+#include <iostream>
+
+#include "2D/Game2D.h"
+
 namespace Engine2D::Rendering {
   SpriteRenderer::SpriteRenderer(Shader *shader)
     : quadVAO(0) {
@@ -23,6 +27,14 @@ namespace Engine2D::Rendering {
   }
 
   void SpriteRenderer::DrawSprite(const Entity2D *entity) const {
+    // Simple check that makes sure the entity is visible
+    const bool visible = !(
+      entity->transform.position.x < 0 || entity->transform.position.y < 0 ||
+      entity->transform.position.x > static_cast<float>(Game2D::Width()) || entity->transform.position.y > static_cast<float>(Game2D::Height())
+    );
+    if (!visible)
+      return;
+
     // prepare transformations
     this->shader->Use();
     auto model = glm::mat4(1.0f);

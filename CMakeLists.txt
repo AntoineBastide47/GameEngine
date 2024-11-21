@@ -82,7 +82,7 @@ if (APPLE)
       "-framework Cocoa"
   )
 elseif (WIN32)
-  message(AUTHOR_WARNING "Window build platform not supported yet.")
+  message(STATUS "Window build platform not supported yet.")
 elseif (UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(Engine2D PUBLIC

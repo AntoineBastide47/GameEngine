@@ -18,15 +18,6 @@
 
 // TODO: Make resource embedding an option
 
-namespace Engine::Input {
-  class GamepadStickEvent;
-  class GamepadButtonEvent;
-  class MouseScrollEvent;
-  class MousePositionEvent;
-  class MouseButtonEvent;
-  class KeyboardEvent;
-}
-
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 namespace Engine2D {
   class Entity2D;
