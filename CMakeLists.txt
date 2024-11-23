@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.29)
 project(GameEngine)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
 find_package(OpenGL REQUIRED)
@@ -41,6 +42,7 @@ add_library(Engine2D STATIC
     Engine/Input/Gamepad.cpp
     EngineFiles/Input/Gamepad.h
     EngineFiles/Input/InputContexts.h
+    EngineFiles/2D/Components/Component2D.h
 )
 
 # Some optimizations
@@ -60,9 +62,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpptrace)
 
-set(VERSION 0.2.0)
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-${VERSION}
+    OUTPUT_NAME Engine2D-0.2.2
     PREFIX ""
 )
 

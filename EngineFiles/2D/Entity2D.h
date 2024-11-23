@@ -9,7 +9,11 @@
 #define ENTITY2D_H
 
 #include <string>
-#include "2D/Components/Transform2D.h"
+#include <typeinfo>
+#include <vector>
+
+#include "Components/Component2D.h"
+#include "Components/Transform2D.h"
 #include "Rendering/Texture2D.h"
 
 using Engine2D::Rendering::Texture2D;
@@ -29,8 +33,6 @@ namespace Engine2D {
     public:
       /** The name of the entity. */
       std::string name;
-      /** The parent entity of this entity, used for hierarchical transformations. */
-      Entity2D *parent;
       /** The transform representing the position, rotation, and scale of the entity in the game world. */
       Transform2D transform;
       /** The texture of this entity */
@@ -51,30 +53,64 @@ namespace Engine2D {
       /** Destructor for the Entity2D class. */
       virtual ~Entity2D() = default;
 
-      /** Called during initialization, allowing derived classes to customize behavior. */
+      /** Called before the first update, allowing derived classes to customize behavior. */
       virtual void Initialize() {}
-      /** Called when the game is updating, allowing derived classes to customize behavior. */
+      /** Called once per frame, allowing derived classes to customize behavior. */
       virtual void Update() {}
       /** Called when the entity is removed from the game or when the game quits, allowing derived classes to customize behavior.*/
       virtual void Quit() {}
 
-      /**
-       * Sets the parent entity of this entity for hierarchical organization.
-       * @param parent A pointer to the new parent Entity2D, or nullptr to remove the parent.
-       */
-      void SetParent(Entity2D *parent);
       /**
        * Makes this entity be updatable and renderable, or not
        * @param newState If true, this entity will be updated and rendered<br>
        *                 If false, this entity won't be updated and rendered
        */
       void SetActive(bool newState);
+      /** @returns True if the current entity is active, False otherwise */
       [[nodiscard]] bool IsActive() const;
+
+      /** Adds the given component to the current entity */
+      void AddComponent(Component2D &component);
+      /** Removes the given component to the current entity */
+      void RemoveComponent(Component2D &component);
+
+      /**
+       * Try's to find a component of the given type on the current entity
+       * @tparam C The type of the component to find, must inherit from Component2D
+       * @return The first component that matches the given type found on the current entity, nullptr if none were found
+       */
+      template<typename C> requires std::is_base_of_v<Component2D, C>
+      [[nodiscard]] C *GetComponent() const {
+        if constexpr (std::is_same_v<C, Transform2D>)
+          return transform;
+        for (auto *component: components)
+          if (typeid(*component) == typeid(C))
+            return dynamic_cast<C *>(component);
+        return nullptr;
+      }
+
+      /**
+       * Try's to find multiple components of the given type on the current entity
+       * @tparam C The type of the component to find, must inherit from Component2D
+       * @return The components that match the given type found on the current entity, nullptr if none were found
+       */
+      template<typename C> requires std::is_base_of_v<Component2D, C>
+      [[nodiscard]] std::vector<C *> GetComponents() const {
+        if constexpr (std::is_same_v<C, Transform2D>)
+          return {transform};
+        std::vector<C *> res;
+        for (auto *component: components)
+          if (typeid(*component) == typeid(C))
+            res.push_back(dynamic_cast<C *>(component));
+        return res;
+      }
     private:
       /** If the current entity is active in the scene, if it is not, it will not be updated and rendered */
       bool active = true;
       /** Whether this entity has been initialized by the game */
       bool initialized = false;
+      /** The components linked to this entity */
+      std::vector<Component2D *> components;
 
       /** Initializes the entity, setting its parent to the main parent if none is set. */
       void initialize();

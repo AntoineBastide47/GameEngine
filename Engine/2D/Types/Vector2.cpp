@@ -60,6 +60,16 @@ namespace Engine2D {
     return *this;
   }
 
+  Vector2 Vector2::operator%(const int s) const {
+    return Vector2{static_cast<float>(std::fmod(x, s)), static_cast<float>(std::fmod(y, s))};
+  }
+
+  Vector2 &Vector2::operator%=(const int s) {
+    x = static_cast<float>(std::fmod(x, s));
+    y = static_cast<float>(std::fmod(y, s));
+    return *this;
+  }
+
   Vector2 Vector2::operator/(const float s) const {
     if (s == 0.0f) {
       LOG_WARNING("Can not divide a Vector2 by 0, resulting operation will default to not modify the Vector2 instance.");
@@ -153,6 +163,16 @@ namespace Engine2D {
 
   float Vector2::Dot(const Vector2 &v) const {
     return x * v.x + y * v.y;
+  }
+
+  Vector2 Vector2::Rotated(const float degrees) const {
+    const float radians = M_PI * degrees / 180.0f;
+    const float cosRadians = std::cos(radians);
+    const float sinRadians = std::sin(radians);
+    return {
+      x * cosRadians - y * sinRadians,
+      x * sinRadians + y * cosRadians
+    };
   }
 
   Vector2 Vector2::Scaled(const Vector2 &v) const {

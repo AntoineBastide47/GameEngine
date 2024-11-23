@@ -87,7 +87,7 @@ namespace Engine2D {
   void Game2D::initialize() {
     // Initialize and Configure GLFW
     if (!glfwInit()) {
-      std::cerr << "ERROR::GAME2D: GLFW could not initialize" << std::endl;
+      std::cerr << "ERROR: GLFW could not initialize" << std::endl;
       this->quit();
       exit(EXIT_FAILURE);
     }
@@ -101,7 +101,7 @@ namespace Engine2D {
     // Create the window
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     if (!window) {
-      std::cerr << "ERROR::GAME2D: Failed to create window" << std::endl;
+      std::cerr << "ERROR: Failed to create window" << std::endl;
       this->quit();
       exit(EXIT_FAILURE);
     }
@@ -129,7 +129,7 @@ namespace Engine2D {
     // Initialize GLEW
     glewExperimental = GL_TRUE;
     if (const GLenum err = glewInit(); err != GLEW_OK) {
-      std::cerr << "ERROR::GAME2D: Failed to initialize GLEW: " << err << std::endl;
+      std::cerr << "ERROR: Failed to initialize GLEW: " << err << std::endl;
       this->quit();
       exit(EXIT_FAILURE);
     }

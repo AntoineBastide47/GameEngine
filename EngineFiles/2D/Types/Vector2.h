@@ -63,6 +63,11 @@ namespace Engine2D {
       /** Scalar multiplication assignment for scaling the vector. */
       Vector2 &operator*=(float s);
 
+      /** Modulo operator for scaling the vector. */
+      Vector2 operator%(int s) const;
+      /** Modulo assignment for scaling the vector. */
+      Vector2 &operator%=(int s);
+
       /**
        * Scalar division operator for scaling the vector.
        * @note Calling this operator will log a warning if the scalar is equal to 0
@@ -120,6 +125,8 @@ namespace Engine2D {
       [[nodiscard]] Vector2 ClampMagnitude(float max) const;
       /** @returns The component-wise multiplication */
       [[nodiscard]] Vector2 Scaled(const Vector2 &v) const;
+      /** @returns The current vector rotated by the given amount of degrees */
+      [[nodiscard]] Vector2 Rotated(float degrees) const;
       /** @returns A vector that is perpendicular to the current vector */
       [[nodiscard]] Vector2 Perpendicular() const;
       /**
@@ -142,6 +149,8 @@ namespace Engine2D {
       void Normalize();
       /** Scales the current vector with v by using component-wise multiplication */
       void Scale(const Vector2 &v);
+      /** Rotates the current vector by the given amount of degrees */
+      void Rotate(float degrees);
 
       /**
        * Converts this Vector2 to a glm::vec2 type for compatibility with OpenGL and GLM libraries.

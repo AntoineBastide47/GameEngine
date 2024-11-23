@@ -21,10 +21,12 @@
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 namespace Engine2D {
   class Entity2D;
+  class Transform2D;
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Entity2D;
     friend class ResourceManager;
+    friend class Transform2D;
     public:
       [[nodiscard]] static int Width();
       [[nodiscard]] static int Height();

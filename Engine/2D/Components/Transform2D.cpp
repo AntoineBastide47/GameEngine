@@ -5,6 +5,9 @@
 //
 
 #include "2D/Components/Transform2D.h"
+#include "2D/Entity2D.h"
+#include "2D/Game2D.h"
+#include "Common/Log.h"
 
 namespace Engine2D {
   Transform2D::Transform2D() : position(Vector2::Zero), rotation(0.0f), scale(Vector2::One) {}
@@ -12,9 +15,161 @@ namespace Engine2D {
   Transform2D::Transform2D(const Vector2 &position, const float &rotation, const Vector2 &scale)
     : position(position), rotation(rotation), scale(scale) {}
 
-  bool Transform2D::operator==(const Transform2D &other) const {
-    return position == other.position && rotation == other.rotation && scale == other.scale;
+  Transform2D::~Transform2D() {
+    RemoveAllChildren();
+    parent = nullptr;
+    parentList.clear();
   }
 
-  bool Transform2D::operator!=(const Transform2D &transform) const { return !(*this == transform); }
+  bool Transform2D::operator==(const Transform2D &other) const {
+    return parent == other.parent && parentList == other.parentList && position == other.position
+           && rotation == other.rotation && scale == other.scale;
+  }
+
+  bool Transform2D::operator!=(const Transform2D &transform) const {
+    return !(*this == transform);
+  }
+
+  std::vector<Entity2D *>::iterator Transform2D::begin() {
+    return childList.begin();
+  }
+
+  std::vector<Entity2D *>::iterator Transform2D::end() {
+    return childList.end();
+  }
+
+  std::vector<Entity2D *>::const_iterator Transform2D::begin() const {
+    return childList.cbegin();
+  }
+
+  std::vector<Entity2D *>::const_iterator Transform2D::end() const {
+    return childList.cend();
+  }
+
+  Vector2 Transform2D::Forward() const {
+    return Vector2::Right.Rotated(rotation).Normalized();
+  }
+
+  Vector2 Transform2D::Up() const {
+    return Vector2::Up.Rotated(rotation).Normalized();
+  }
+
+  void Transform2D::SetParent(Entity2D *parent) {
+    if (this->parent == parent)
+      return;
+
+    // Remove the previous parents
+    parentList.clear();
+
+    // If no parent is specified, set the parent to the root Entity of the scene
+    const auto sceneRoot = Game2D::Instance()->root;
+    if (!parent) {
+      this->parent = sceneRoot;
+      return;
+    }
+
+    // Remove this entity from the child list of its old parent
+    if (this->parent)
+      this->parent->transform.RemoveChild(this->entity);
+
+    // If a parent is given, find all of its parents, exclude the root Entity of the scene
+    while (parent->transform.parent && parent->transform.parent != sceneRoot) {
+      parentList.push_back(parent->transform.parent);
+      parent = parent->transform.parent;
+    }
+    this->parent = parent;
+    this->parent->transform.AddChild(this->entity);
+  }
+
+  Entity2D *Transform2D::GetParent() const {
+    return parent;
+  }
+
+  bool Transform2D::IsChildOf(const Entity2D *entity) const {
+    const Transform2D *current = parent ? &parent->transform : nullptr;
+
+    while (current) {
+      if (current->entity == entity)
+        return true;
+      current = current->parent ? &current->parent->transform : nullptr;
+    }
+    return false;
+  }
+
+  Vector2 Transform2D::WorldPosition() const {
+    Vector2 result = position;
+    const Transform2D *current = parent ? &parent->transform : nullptr;
+
+    while (current) {
+      result = result.Scaled(current->scale);
+      result = result.Rotated(current->rotation);
+      result += current->position;
+      current = &current->parent->transform;
+    }
+
+    return result;
+  }
+
+  float Transform2D::WorldRotation() const {
+    float result = rotation;
+    const Transform2D *current = parent ? &parent->transform : nullptr;
+
+    while (current) {
+      result += current->rotation;
+      current = &current->parent->transform;
+    }
+
+    return result;
+  }
+
+  Vector2 Transform2D::WorldScale() const {
+    Vector2 result = scale;
+    const Transform2D *current = parent ? &parent->transform : nullptr;
+
+    while (current) {
+      result = result.Scaled(current->scale);
+      current = &current->parent->transform;
+    }
+
+    return result;
+  }
+
+  void Transform2D::RemoveAllChildren() {
+    for (const auto child: childList)
+      child->transform.SetParent(nullptr);
+    childList.clear();
+  }
+
+  Entity2D *Transform2D::Find(const std::string &name) const {
+    for (const auto child: childList)
+      if (child->name == name)
+        return child;
+    return nullptr;
+  }
+
+  Entity2D *Transform2D::GetChild(const int index) const {
+    if (index < 0 || index >= childList.size())
+      return LOG_ERROR("Transform2D::GetChild: index out of bounds");
+    return childList.at(index);
+  }
+
+  void Transform2D::MakeFirstChild(Entity2D *child) {
+    this->RemoveChild(child);
+    childList.insert(childList.begin(), child);
+  }
+
+  void Transform2D::MakeLastChild(Entity2D *child) {
+    this->RemoveChild(child);
+    childList.push_back(child);
+  }
+
+  void Transform2D::AddChild(Entity2D *child) {
+    childList.push_back(child);
+  }
+
+  void Transform2D::RemoveChild(Entity2D *child) {
+    if (const auto it = std::ranges::find(childList, child); it != childList.end()) {
+      childList.erase(it);
+    }
+  }
 }
