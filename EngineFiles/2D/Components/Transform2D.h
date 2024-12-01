@@ -20,7 +20,6 @@ namespace Engine2D {
    * of entities in a 2D space. It provides operators for equality comparisons between transforms.
    */
   class Transform2D : public Component2D {
-    friend class Entity2D;
     public:
       /** Position of the transform in 2D space. */
       Vector2 position;
@@ -38,7 +37,7 @@ namespace Engine2D {
        * @param scale Initial scale as a Vector2.
        */
       Transform2D(const Vector2 &position, const float &rotation, const Vector2 &scale);
-      ~Transform2D();
+      ~Transform2D() override;
 
       /** Equality operator to compare two Transform2D objects. */
       bool operator==(const Transform2D &other) const;
@@ -86,8 +85,7 @@ namespace Engine2D {
       /** Puts the given child at the end of list of children attached to the Entity2D this component is attached to */
       void MakeLastChild(Entity2D *child);
     private:
-      /** The entity this transform component is attached to */
-      Entity2D *entity{};
+      using Component2D::Transform;
       /** The parent Entity2D of the entity that this transform is attached to  */
       Entity2D *parent{};
       /** The list of all the parents of the parent of this entity */

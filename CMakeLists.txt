@@ -6,10 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
 find_package(OpenGL REQUIRED)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GLFW REQUIRED glfw3)
-pkg_check_modules(GLEW REQUIRED glew)
-pkg_check_modules(GLM REQUIRED glm)
+find_package(glfw3 REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(GLM REQUIRED)
 
 # Create the Engine2D as a static library
 add_library(Engine2D STATIC
@@ -42,7 +41,24 @@ add_library(Engine2D STATIC
     Engine/Input/Gamepad.cpp
     EngineFiles/Input/Gamepad.h
     EngineFiles/Input/InputContexts.h
+    Engine/2D/Components/Component2D.cpp
     EngineFiles/2D/Components/Component2D.h
+    Engine/3D/Types/Vector3.cpp
+    EngineFiles/3D/Types/Vector3.h
+    Engine/2D/Physics/RectangleCollider.cpp
+    EngineFiles/2D/Physics/RectangleCollider.h
+    Engine/2D/Physics/CircleCollider.cpp
+    EngineFiles/2D/Physics/CircleCollider.h
+    Engine/2D/Physics/Collider2D.cpp
+    EngineFiles/2D/Physics/Collider2D.h
+    Engine/2D/Physics/Collisions.cpp
+    EngineFiles/2D/Physics/Collisions.h
+    Engine/2D/Physics/Physics2D.cpp
+    EngineFiles/2D/Physics/Physics2D.h
+    Engine/2D/Physics/Rigidbody2D.cpp
+    EngineFiles/2D/Physics/Rigidbody2D.h
+    Engine/2D/Rendering/ShapeRenderer.cpp
+    EngineFiles/2D/Rendering/ShapeRenderer.h
 )
 
 # Some optimizations
@@ -51,27 +67,27 @@ set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Include CMakeRC
 include(CMakeRC.cmake)
-cmrc_add_resource_library(assets NAMESPACE resources ${CMAKE_SOURCE_DIR}/Assets)
+cmrc_add_resource_library(assets NAMESPACE engineResources ${CMAKE_SOURCE_DIR}/Assets)
 
 # Include cpptrace to be able to print stack traces
 include(FetchContent)
 FetchContent_Declare(
     cpptrace
     GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
-    GIT_TAG        9269a72c54e0faab981aa8710b65858e2eb1f59c # <HASH or TAG>
+    GIT_TAG 9269a72c54e0faab981aa8710b65858e2eb1f59c
 )
 FetchContent_MakeAvailable(cpptrace)
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-0.2.2
+    OUTPUT_NAME Engine2D-0.2.3
     PREFIX ""
 )
 
 target_link_libraries(Engine2D PUBLIC
-    ${GLEW_LIBRARIES}
-    ${GLFW3_LIBRARIES}
-    ${OpenGL_LIBRARIES}
-    glm
+    OpenGL::GL
+    glfw
+    GLEW::GLEW
+    glm::glm
     assets
     cpptrace::cpptrace
 )
@@ -82,14 +98,11 @@ if (APPLE)
       "-framework IOKit"
       "-framework Cocoa"
   )
+elseif (UNIX)
+  message(STATUS "Linux build platform not supported yet.")
 elseif (WIN32)
   message(STATUS "Window build platform not supported yet.")
-elseif (UNIX)
-  find_package(Threads REQUIRED)
-  target_link_libraries(Engine2D PUBLIC
-    Threads::Threads
-  )
-else()
+else ()
   message(FATAL_ERROR "Unknown build platform.")
 endif ()
 

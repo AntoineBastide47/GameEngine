@@ -126,8 +126,8 @@ namespace Engine2D::Rendering {
       if (!success) {
         glGetShaderInfoLog(object, 1024, nullptr, infoLog);
         std::cerr << "| ERROR::SHADER: Compile-time error: Type: " << type << "\n"
-            << infoLog << "\n -- --------------------------------------------------- -- "
-            << std::endl;
+          << infoLog << "\n -- --------------------------------------------------- -- "
+          << std::endl;
       }
     }
     else {
@@ -135,8 +135,8 @@ namespace Engine2D::Rendering {
       if (!success) {
         glGetProgramInfoLog(object, 1024, nullptr, infoLog);
         std::cerr << "| ERROR::Shader: Link-time error: Type: " << type << "\n"
-            << infoLog << "\n -- --------------------------------------------------- -- "
-            << std::endl;
+          << infoLog << "\n -- --------------------------------------------------- -- "
+          << std::endl;
       }
     }
   }

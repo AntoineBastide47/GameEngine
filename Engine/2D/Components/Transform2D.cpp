@@ -5,6 +5,9 @@
 //
 
 #include "2D/Components/Transform2D.h"
+
+#include <iostream>
+
 #include "2D/Entity2D.h"
 #include "2D/Game2D.h"
 #include "Common/Log.h"
@@ -62,23 +65,28 @@ namespace Engine2D {
     parentList.clear();
 
     // If no parent is specified, set the parent to the root Entity of the scene
-    const auto sceneRoot = Game2D::Instance()->root;
+    const auto sceneRoot = Game2D::Instance() ? Game2D::Instance()->root : nullptr;
     if (!parent) {
+      position = WorldPosition();
+      rotation = WorldRotation();
+      scale = WorldScale();
       this->parent = sceneRoot;
       return;
     }
 
     // Remove this entity from the child list of its old parent
-    if (this->parent)
-      this->parent->transform.RemoveChild(this->entity);
-
-    // If a parent is given, find all of its parents, exclude the root Entity of the scene
-    while (parent->transform.parent && parent->transform.parent != sceneRoot) {
-      parentList.push_back(parent->transform.parent);
-      parent = parent->transform.parent;
-    }
     this->parent = parent;
-    this->parent->transform.AddChild(this->entity);
+    if (this->parent) {
+      this->parent->transform.RemoveChild(this->Entity());
+
+      // If a parent is given, find all of its parents, exclude the root Entity of the scene
+      while (parent->transform.parent && parent->transform.parent != sceneRoot) {
+        parentList.push_back(parent->transform.parent);
+        parent = parent->transform.parent;
+      }
+      this->parent = parent;
+      this->parent->transform.AddChild(this->Entity());
+    }
   }
 
   Entity2D *Transform2D::GetParent() const {
@@ -89,7 +97,7 @@ namespace Engine2D {
     const Transform2D *current = parent ? &parent->transform : nullptr;
 
     while (current) {
-      if (current->entity == entity)
+      if (current->Entity() && current->Entity() == entity)
         return true;
       current = current->parent ? &current->parent->transform : nullptr;
     }
@@ -101,10 +109,8 @@ namespace Engine2D {
     const Transform2D *current = parent ? &parent->transform : nullptr;
 
     while (current) {
-      result = result.Scaled(current->scale);
-      result = result.Rotated(current->rotation);
-      result += current->position;
-      current = &current->parent->transform;
+      result = result.Scaled(current->scale).Rotated(current->rotation) + current->position;
+      current = current->parent ? &current->parent->transform : nullptr;
     }
 
     return result;
@@ -116,7 +122,7 @@ namespace Engine2D {
 
     while (current) {
       result += current->rotation;
-      current = &current->parent->transform;
+      current = current->parent ? &current->parent->transform : nullptr;
     }
 
     return result;
@@ -128,7 +134,7 @@ namespace Engine2D {
 
     while (current) {
       result = result.Scaled(current->scale);
-      current = &current->parent->transform;
+      current = current->parent ? &current->parent->transform : nullptr;
     }
 
     return result;
@@ -136,7 +142,8 @@ namespace Engine2D {
 
   void Transform2D::RemoveAllChildren() {
     for (const auto child: childList)
-      child->transform.SetParent(nullptr);
+      if (child)
+        child->transform.SetParent(nullptr);
     childList.clear();
   }
 
@@ -164,12 +171,15 @@ namespace Engine2D {
   }
 
   void Transform2D::AddChild(Entity2D *child) {
+    if (!child)
+      return;
     childList.push_back(child);
   }
 
   void Transform2D::RemoveChild(Entity2D *child) {
-    if (const auto it = std::ranges::find(childList, child); it != childList.end()) {
+    if (!child)
+      return;
+    if (const auto it = std::ranges::find(childList, child); it != childList.end())
       childList.erase(it);
-    }
   }
 }

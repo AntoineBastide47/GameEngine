@@ -12,15 +12,16 @@
 #include <typeinfo>
 #include <vector>
 
-#include "Components/Component2D.h"
-#include "Components/Transform2D.h"
-#include "Rendering/Texture2D.h"
+#include "2D/Components/Component2D.h"
+#include "2D/Components/Transform2D.h"
+#include "2D/Rendering/Texture2D.h"
 
+namespace Engine2D::Physics {
+  class Collider2D;
+}
 using Engine2D::Rendering::Texture2D;
 
 namespace Engine2D {
-  class Game2D;
-
   // TODO: Add an ID system
   /**
    * Represents a 2D entity with a transform, rendering capabilities, and hierarchical structure.
@@ -29,7 +30,7 @@ namespace Engine2D {
    * Each entity can have a position, rotation, and scale, as well as a renderer and a parent entity.
    */
   class Entity2D {
-    friend class Engine2D::Game2D;
+    friend class Game2D;
     public:
       /** The name of the entity. */
       std::string name;
@@ -59,6 +60,8 @@ namespace Engine2D {
       virtual void Update() {}
       /** Called when the entity is removed from the game or when the game quits, allowing derived classes to customize behavior.*/
       virtual void Quit() {}
+
+      virtual void OnCollision(Physics::Collider2D* collider) {}
 
       /**
        * Makes this entity be updatable and renderable, or not
@@ -104,6 +107,9 @@ namespace Engine2D {
             res.push_back(dynamic_cast<C *>(component));
         return res;
       }
+
+      /** Removes this Entity2D and all it's attached components from the game */
+      void Destroy();
     private:
       /** If the current entity is active in the scene, if it is not, it will not be updated and rendered */
       bool active = true;

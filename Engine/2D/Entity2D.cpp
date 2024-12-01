@@ -5,15 +5,20 @@
 //
 
 #include "2D/Entity2D.h"
+
+#include <iostream>
+
 #include "2D/Game2D.h"
+#include "2D/Physics/Collider2D.h"
+#include "Common/Log.h"
 #include "Common/Macros.h"
 
 namespace Engine2D {
   Entity2D::Entity2D(std::string name, Entity2D *parent, Texture2D *texture)
     : name(std::move(name)), texture(texture), textureColor(new glm::vec3(1.0f)) {
-    Game2D::AddEntity(this); // TODO: Make this work with non pointer constructors
+    Game2D::AddEntity(*this); // TODO: Make this work with non pointer constructors
     components.push_back(&transform);
-    transform.entity = this;
+    transform.SetEntity(this);
     transform.SetParent(parent);
   }
 
@@ -23,6 +28,9 @@ namespace Engine2D {
 
   void Entity2D::SetActive(const bool newState) {
     this->active = newState;
+    for (const auto child: transform)
+      if (child)
+        child->active = newState;
   }
 
   bool Entity2D::IsActive() const {
@@ -30,12 +38,30 @@ namespace Engine2D {
   }
 
   void Entity2D::AddComponent(Component2D &component) {
+    if (typeid(component) == typeid(Transform2D)) {
+      LOG_WARNING("Can not add an additional Transform2D to an entity.");
+      return;
+    }
+
+    component.SetEntity(this);
     components.push_back(&component);
+
+    if (const auto collider = dynamic_cast<Physics::Collider2D *>(&component)) {
+      Game2D::Instance()->physics2D->addCollider(collider);
+    }
   }
 
   void Entity2D::RemoveComponent(Component2D &component) {
     if (const auto it = std::ranges::find(components, &component); it != components.end())
       components.erase(it);
+
+    if (const auto collider = dynamic_cast<Physics::Collider2D *>(&component)) {
+      Game2D::Instance()->physics2D->removeCollider(collider);
+    }
+  }
+
+  void Entity2D::Destroy() {
+    quit();
   }
 
   void Entity2D::initialize() {
@@ -55,6 +81,10 @@ namespace Engine2D {
 
   void Entity2D::quit() {
     this->Quit();
+    for (const auto component: components)
+      RemoveComponent(*component);
+    components.clear();
     SAFE_DELETE(textureColor);
+    Game2D::RemoveEntity(*this);
   }
 }

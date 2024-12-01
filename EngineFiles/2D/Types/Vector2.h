@@ -22,7 +22,7 @@ namespace Engine2D {
       /** Default constructor initializes the vector to (0, 0). */
       Vector2();
       /**
-       * Constructs a vector with specified x and y components.
+       * Constructs a vector with the specified x and y components.
        * @param x The x-component of the vector.
        * @param y The y-component of the vector.
        */
@@ -43,12 +43,12 @@ namespace Engine2D {
       /** Constant for a unit vector pointing down (0, -1). */
       static const Vector2 Down;
 
-      /** Addition operator for adding two vectors. */
+      /** Addition operator for component-wise addition. */
       Vector2 operator+(const Vector2 &v) const;
       /** Addition assignment operator for component-wise addition. */
       Vector2 &operator+=(const Vector2 &v);
 
-      /** Negation operator, returns the vector with both components negated. */
+      /** Negation operator, returns the vector with all it's components negated. */
       Vector2 operator-() const;
       /** Subtraction operator for subtracting two vectors. */
       Vector2 operator-(const Vector2 &v) const;
@@ -59,25 +59,25 @@ namespace Engine2D {
       float operator*(const Vector2 &v) const;
 
       /** Scalar multiplication operator for scaling the vector. */
-      Vector2 operator*(float s) const;
+      Vector2 operator*(float scalar) const;
       /** Scalar multiplication assignment for scaling the vector. */
-      Vector2 &operator*=(float s);
+      Vector2 &operator*=(float scalar);
 
       /** Modulo operator for scaling the vector. */
-      Vector2 operator%(int s) const;
+      Vector2 operator%(float scalar) const;
       /** Modulo assignment for scaling the vector. */
-      Vector2 &operator%=(int s);
+      Vector2 &operator%=(float scalar);
 
       /**
        * Scalar division operator for scaling the vector.
        * @note Calling this operator will log a warning if the scalar is equal to 0
        */
-      Vector2 operator/(float s) const;
+      Vector2 operator/(float scalar) const;
       /**
        * Scalar division assignment for scaling the vector.
        * @note Calling this operator will log a warning if the scalar is equal to 0
        */
-      Vector2 &operator/=(float s);
+      Vector2 &operator/=(float scalar);
 
       /**
        * Array operator to get the elements of the vector by index
@@ -103,16 +103,21 @@ namespace Engine2D {
 
       /** << operator to allow easy printing of a Vector2 object. */
       friend std::ostream &operator<<(std::ostream &os, const Vector2 &vec);
-
       /** Converts the current vector to a string with this format: (x, y) */
       [[nodiscard]] std::string toString() const;
 
       /** @returns The magnitude/length/size of this vector */
       [[nodiscard]] float Magnitude() const;
       /** @returns The squared magnitude/length/size of this vector */
-      [[nodiscard]] float SquareMagnitude() const;
+      [[nodiscard]] float SquaredMagnitude() const;
       /** @returns The dot product between the current vector and v */
       [[nodiscard]] float Dot(const Vector2 &v) const;
+      /** @returns The cross product between the current vector and v */
+      [[nodiscard]] float Cross(const Vector2 &v) const;
+      /** @returns The smallest value between the x and y coordinates */
+      [[nodiscard]] float Min() const;
+      /** @returns The biggets value between the x and y coordinates */
+      [[nodiscard]] float Max() const;
 
       /** @returns The normalized version of the current vector with a magnitude of 1 */
       [[nodiscard]] Vector2 Normalized() const;
@@ -127,8 +132,12 @@ namespace Engine2D {
       [[nodiscard]] Vector2 Scaled(const Vector2 &v) const;
       /** @returns The current vector rotated by the given amount of degrees */
       [[nodiscard]] Vector2 Rotated(float degrees) const;
+      /** @returns The current vector rotated by the given amount of degrees around the given pivot vector */
+      [[nodiscard]] Vector2 Rotated(float degrees, const Vector2 &pivot) const;
       /** @returns A vector that is perpendicular to the current vector */
       [[nodiscard]] Vector2 Perpendicular() const;
+      /** @returns A vector that is perpendicular to the current vector in a counterclockwise direction */
+      [[nodiscard]] Vector2 PerpendicularCounterClockwise() const;
       /**
        * Moves the current vector towards a target vector by a specified maximum distance.
        *
@@ -151,6 +160,8 @@ namespace Engine2D {
       void Scale(const Vector2 &v);
       /** Rotates the current vector by the given amount of degrees */
       void Rotate(float degrees);
+      /** Rotates the current vector by the given amount of degrees around the given pivot vector */
+      void Rotate(float degrees, const Vector2 &pivot);
 
       /**
        * Converts this Vector2 to a glm::vec2 type for compatibility with OpenGL and GLM libraries.
@@ -173,21 +184,19 @@ namespace Engine2D {
        */
       [[nodiscard]] static float SignedAngleBetween(const Vector2 &v1, const Vector2 &v2);
       /**
+       * Computes the squared distance between two vector
+       * @param current The first vector
+       * @param target The second vector
+       * @return The distance separating both vectors squared
+       */
+      [[nodiscard]] static float SquaredDistanceTo(const Vector2 &current, const Vector2 &target);
+      /**
        * Computes the distance between two vector
        * @param current The first vector
        * @param target The second vector
        * @return The distance separating both vectors
        */
       [[nodiscard]] static float DistanceTo(const Vector2 &current, const Vector2 &target);
-
-      /**
-       * Clamp's the magnitude of the given vector to the given max value
-       * @param target The vector to clamp
-       * @param max The maximum magnitude of this vector
-       * @note Calling this method will log a warning if max <= 0
-       * @return The clamped version of the given vector
-       */
-      [[nodiscard]] static Vector2 ClampMagnitude(const Vector2 &target, float max);
       /**
        * Linearly interpolates between two vectors.
        *
@@ -219,23 +228,7 @@ namespace Engine2D {
        *         based on `t` between `current` and `target`.
        */
       [[nodiscard]] static Vector2 LerpUnclamped(const Vector2 &current, const Vector2 &target, float t);
-      /**
-       * Moves a vector towards a target vector by a specified maximum distance.
-       *
-       * This function calculates a new vector that is at most `maxDistanceDelta` units
-       * closer to the `target` vector. If the distance to the target is less than or
-       * equal to `maxDistanceDelta`, it returns the target vector itself.
-       *
-       * @param initial The vector to move
-       * @param target The target vector to move towards.
-       * @param maxDistanceDelta The maximum distance the current vector is allowed to move
-       *                         towards the target. If negative, the function will treat
-       *                         this value as zero to prevent moving away from the target.
-       * @return A new Vector2 that is the result of moving the initial vector towards the
-       *         target by at most `maxDistanceDelta`.
-       */
-      [[nodiscard]] static Vector2 MoveTowards(const Vector2 &initial, const Vector2 &target, float maxDistanceDelta);
   };
-} // namespace Engine2D
+}
 
 #endif // VECTOR2_H

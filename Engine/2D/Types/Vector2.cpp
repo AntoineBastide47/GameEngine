@@ -4,11 +4,10 @@
 // Date: 03/11/2024
 //
 
-#include "2D/Types/Vector2.h"
-
+#include <algorithm>
 #include <iostream>
-#include <__algorithm/clamp.h>
 
+#include "2D/Types/Vector2.h"
 #include "Common/Log.h"
 
 namespace Engine2D {
@@ -18,18 +17,16 @@ namespace Engine2D {
   const Vector2 Vector2::Zero = Vector2(0.0f, 0.0f);
   const Vector2 Vector2::One = Vector2(1.0f, 1.0f);
   const Vector2 Vector2::Right = Vector2(1.0f, 0.0f);
-  const Vector2 Vector2::Left = Vector2(1.0f, 0.0f);
+  const Vector2 Vector2::Left = Vector2(-1.0f, 0.0f);
   const Vector2 Vector2::Up = Vector2(0.0f, 1.0f);
-  const Vector2 Vector2::Down = Vector2(-1.0f, 0.0f);
+  const Vector2 Vector2::Down = Vector2(0.0f, -1.0f);
 
   Vector2 Vector2::operator+(const Vector2 &v) const {
     return Vector2{x + v.x, y + v.y};
   }
 
   Vector2 &Vector2::operator+=(const Vector2 &v) {
-    x += v.x;
-    y += v.y;
-    return *this;
+    return *this = *this + v;
   }
 
   Vector2 Vector2::operator-() const {
@@ -41,51 +38,43 @@ namespace Engine2D {
   }
 
   Vector2 &Vector2::operator-=(const Vector2 &v) {
-    x -= v.x;
-    y -= v.y;
-    return *this;
+    return *this = *this - v;
   }
 
   float Vector2::operator*(const Vector2 &v) const {
     return x * v.x + y * v.y;
   }
 
-  Vector2 Vector2::operator*(const float s) const {
-    return Vector2{x * s, y * s};
+  Vector2 Vector2::operator*(const float scalar) const {
+    return Vector2{x * scalar, y * scalar};
   }
 
-  Vector2 &Vector2::operator*=(const float s) {
-    x *= s;
-    y *= s;
-    return *this;
+  Vector2 &Vector2::operator*=(const float scalar) {
+    return *this = *this * scalar;
   }
 
-  Vector2 Vector2::operator%(const int s) const {
-    return Vector2{static_cast<float>(std::fmod(x, s)), static_cast<float>(std::fmod(y, s))};
+  Vector2 Vector2::operator%(const float scalar) const {
+    return Vector2{std::fmod(x, scalar), std::fmod(y, scalar)};
   }
 
-  Vector2 &Vector2::operator%=(const int s) {
-    x = static_cast<float>(std::fmod(x, s));
-    y = static_cast<float>(std::fmod(y, s));
-    return *this;
+  Vector2 &Vector2::operator%=(const float scalar) {
+    return *this = *this % scalar;
   }
 
-  Vector2 Vector2::operator/(const float s) const {
-    if (s == 0.0f) {
+  Vector2 Vector2::operator/(const float scalar) const {
+    if (scalar == 0.0f) {
       LOG_WARNING("Can not divide a Vector2 by 0, resulting operation will default to not modify the Vector2 instance.");
       return *this;
     }
-    return Vector2{x / s, y / s};
+    return *this * (1.0f / scalar);
   }
 
-  Vector2 &Vector2::operator/=(const float s) {
-    if (s == 0.0f) {
+  Vector2 &Vector2::operator/=(const float scalar) {
+    if (scalar == 0.0f) {
       LOG_WARNING("Can not divide a Vector2 by 0, resulting operation will default to not modify the Vector2 instance.");
       return *this;
     }
-    x /= s;
-    y /= s;
-    return *this;
+    return *this = *this / scalar;
   }
 
   float &Vector2::operator[](const int index) {
@@ -93,7 +82,9 @@ namespace Engine2D {
       return x;
     if (index == 1)
       return y;
-    LOG_WARNING("Vector2 index out of range, resulting operation will default to returning the x component of the Vector2 instance.");
+    LOG_WARNING(
+      "Vector2 index out of range, resulting operation will default to returning the x component of the Vector2 instance."
+    );
     return x;
   }
 
@@ -108,23 +99,23 @@ namespace Engine2D {
   }
 
   bool Vector2::operator!=(const Vector2 &v) const {
-    return x != v.x || y != v.y;
+    return !(*this == v);
   }
 
   bool Vector2::operator<(const Vector2 &v) const {
-    return this->SquareMagnitude() < v.SquareMagnitude();
+    return this->SquaredMagnitude() < v.SquaredMagnitude();
   }
 
   bool Vector2::operator>(const Vector2 &v) const {
-    return this->SquareMagnitude() > v.SquareMagnitude();
+    return this->SquaredMagnitude() > v.SquaredMagnitude();
   }
 
   bool Vector2::operator<=(const Vector2 &v) const {
-    return this->SquareMagnitude() <= v.SquareMagnitude();
+    return this->SquaredMagnitude() <= v.SquaredMagnitude();
   }
 
   bool Vector2::operator>=(const Vector2 &v) const {
-    return this->SquareMagnitude() >= v.SquareMagnitude();
+    return this->SquaredMagnitude() >= v.SquaredMagnitude();
   }
 
   std::ostream &operator<<(std::ostream &os, const Vector2 &vec) {
@@ -137,23 +128,27 @@ namespace Engine2D {
   }
 
   float Vector2::Magnitude() const {
-    return sqrtf(x * x + y * y);
+    return sqrtf(SquaredMagnitude());
   }
 
-  float Vector2::SquareMagnitude() const {
-    return x * x + y * y;
+  float Vector2::SquaredMagnitude() const {
+    return *this * *this;
   }
 
   Vector2 Vector2::Normalized() const {
     if (const float magnitude = Magnitude(); magnitude > 0.0f)
       return *this / magnitude;
-    LOG_WARNING("Can not normalize a zero \"(0, 0)\" Vector2, resulting operation will default to not modify the Vector2 instance.");
+    LOG_WARNING(
+      "Can not normalize a zero \"(0, 0)\" Vector2, resulting operation will default to not modify the Vector2 instance."
+    );
     return *this;
   }
 
   Vector2 Vector2::ClampMagnitude(const float max) const {
     if (max <= 0.0f) {
-      LOG_WARNING("Parameter max must be greater than zero, resulting operation will default to not modify the Vector2 instance.");
+      LOG_WARNING(
+        "Parameter max must be greater than zero, resulting operation will default to not modify the Vector2 instance."
+      );
       return *this;
     }
     if (const float magnitude = Magnitude(); magnitude > max)
@@ -165,14 +160,30 @@ namespace Engine2D {
     return x * v.x + y * v.y;
   }
 
+  float Vector2::Cross(const Vector2 &v) const {
+    return x * v.y - y * v.x;
+  }
+
+  float Vector2::Min() const {
+    return x < y ? x : y;
+  }
+
+  float Vector2::Max() const {
+    return x > y ? x : y;
+  }
+
   Vector2 Vector2::Rotated(const float degrees) const {
+    return Rotated(degrees, Zero);
+  }
+
+  Vector2 Vector2::Rotated(const float degrees, const Vector2 &pivot) const {
     const float radians = M_PI * degrees / 180.0f;
-    const float cosRadians = std::cos(radians);
-    const float sinRadians = std::sin(radians);
-    return {
-      x * cosRadians - y * sinRadians,
-      x * sinRadians + y * cosRadians
-    };
+    const float s = std::sin(radians);
+    const float c = std::cos(radians);
+    const float tx = x - pivot.x;
+    const float ty = y - pivot.y;
+
+    return Vector2{tx * c - ty * s + pivot.x, tx * s + ty * c + pivot.y};
   }
 
   Vector2 Vector2::Scaled(const Vector2 &v) const {
@@ -181,6 +192,10 @@ namespace Engine2D {
 
   Vector2 Vector2::Perpendicular() const {
     return Vector2{-y, x};
+  }
+
+  Vector2 Vector2::PerpendicularCounterClockwise() const {
+    return Vector2{y, -x};
   }
 
   Vector2 Vector2::MoveTowards(const Vector2 &target, const float maxDistanceDelta) const {
@@ -197,11 +212,21 @@ namespace Engine2D {
   void Vector2::Normalize() {
     if (const float magnitude = Magnitude(); magnitude > 0.0f)
       *this /= magnitude;
-    LOG_WARNING("Can not normalize a zero \"(0, 0)\" Vector2, resulting operation will default to not modify the Vector2 instance.");
+    LOG_WARNING(
+      "Can not normalize a zero \"(0, 0)\" Vector2, resulting operation will default to not modify the Vector2 instance."
+    );
   }
 
   void Vector2::Scale(const Vector2 &v) {
     *this = this->Scaled(v);
+  }
+
+  void Vector2::Rotate(const float degrees) {
+    *this = this->Rotated(degrees, Zero);
+  }
+
+  void Vector2::Rotate(const float degrees, const Vector2 &pivot) {
+    *this = this->Rotated(degrees, pivot);
   }
 
   glm::vec2 Vector2::toGLM() const {
@@ -223,18 +248,12 @@ namespace Engine2D {
     return 0.0f;
   }
 
-  float Vector2::DistanceTo(const Vector2 &current, const Vector2 &target) {
-    return std::sqrtf(std::powf(current.x - target.x, 2) + std::powf(current.y - target.y, 2));
+  float Vector2::SquaredDistanceTo(const Vector2 &current, const Vector2 &target) {
+    return std::powf(current.x - target.x, 2) + std::powf(current.y - target.y, 2);
   }
 
-  Vector2 Vector2::ClampMagnitude(const Vector2 &target, const float max) {
-    if (max <= 0.0f) {
-      LOG_WARNING("Parameter max must be greater than zero, resulting operation will default to not modify the Vector2 instance.");
-      return target;
-    }
-    if (const float magnitude = target.Magnitude(); magnitude > max)
-      return target * (max / magnitude);
-    return target;
+  float Vector2::DistanceTo(const Vector2 &current, const Vector2 &target) {
+    return std::sqrtf(SquaredDistanceTo(current, target));
   }
 
   Vector2 Vector2::Lerp(const Vector2 &current, const Vector2 &target, const float t) {
@@ -243,16 +262,5 @@ namespace Engine2D {
 
   Vector2 Vector2::LerpUnclamped(const Vector2 &current, const Vector2 &target, const float t) {
     return current + (target - current) * t;
-  }
-
-  Vector2 Vector2::MoveTowards(const Vector2 &initial, const Vector2 &target, const float maxDistanceDelta) {
-    if (maxDistanceDelta <= 0.0f)
-      return initial;
-    const Vector2 direction = target - initial;
-    // If the target is closer than maxDistanceDelta, clamp to the target
-    if (const float distance = direction.Magnitude(); distance <= maxDistanceDelta || distance == 0.0f)
-      return target;
-    // Normalize direction and move by maxDistanceDelta
-    return initial + direction.Normalized() * maxDistanceDelta;
   }
 }

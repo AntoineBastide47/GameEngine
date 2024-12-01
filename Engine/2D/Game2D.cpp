@@ -4,12 +4,11 @@
 // Date: 10/11/2024
 //
 
-#include "2D/Game2D.h"
-
 #include <iostream>
+#include <random>
 #include <thread>
-#include <__algorithm/ranges_find_if.h>
 
+#include "2D/Game2D.h"
 #include "2D/ResourceManager.h"
 #include "Common/Macros.h"
 #include "Common/RenderingHeaders.h"
@@ -21,8 +20,9 @@ namespace Engine2D {
   Game2D *Game2D::instance = nullptr;
 
   Game2D::Game2D(const int width, const int height, std::string title)
-    : width(width), height(height), title(std::move(title)), window(nullptr), deltaTime(0.0f), root(new Entity2D("Root")),
-      spriteRenderer(nullptr), frameRate(0.0f) {
+    : width(width), height(height), initialWidth(width), initialHeight(height), aspectRatio(Vector2::One),
+      title(std::move(title)), window(nullptr), deltaTime(0.0f), root(new Entity2D("Root")), spriteRenderer(nullptr),
+      shapeRenderer(nullptr), frameRate(0.0f) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -38,8 +38,24 @@ namespace Engine2D {
     return instance->height;
   }
 
+  int Game2D::InitialWidth() {
+    return instance->initialWidth;
+  }
+
+  int Game2D::InitialHeight() {
+    return instance->initialHeight;
+  }
+
+  Vector2 Game2D::AspectRatio() {
+    return instance->aspectRatio;
+  }
+
   float Game2D::DeltaTime() {
     return instance->deltaTime;
+  }
+
+  float Game2D::FixedDeltaTime() {
+    return instance->fixedDeltaTime;
   }
 
   Game2D *Game2D::Instance() {
@@ -99,6 +115,8 @@ namespace Engine2D {
     #endif
 
     // Create the window
+    constexpr bool allowWindowResize = true; // TODO: make this an option in settings
+    glfwWindowHint(GLFW_RESIZABLE, allowWindowResize);
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     if (!window) {
       std::cerr << "ERROR: Failed to create window" << std::endl;
@@ -140,10 +158,19 @@ namespace Engine2D {
 
     // Create and configure the sprite renderer
     ResourceManager::LoadShader("EngineFiles/Shaders/sprite.vs", "EngineFiles/Shaders/sprite.fs", "", "sprite");
-    const glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, -1.0f, 1.0f);
+    const glm::mat4 projection = glm::ortho(
+      -static_cast<float>(width) * 0.5f, static_cast<float>(width) * 0.5f,
+      -static_cast<float>(height) * 0.5f, static_cast<float>(height) * 0.5f,
+      -1.0f, 1.0f
+    );
     ResourceManager::GetShader("sprite")->SetInteger("sprite", true);
     ResourceManager::GetShader("sprite")->SetMatrix4("projection", projection, true);
     spriteRenderer = new Rendering::SpriteRenderer(ResourceManager::GetShader("sprite"));
+
+    // Create and configure the shape renderer
+    ResourceManager::LoadShader("EngineFiles/Shaders/shape.vs", "EngineFiles/Shaders/shape.fs", "", "shape");
+    ResourceManager::GetShader("shape")->SetMatrix4("projection", projection, true);
+    shapeRenderer = new Rendering::ShapeRenderer(ResourceManager::GetShader("shape"));
 
     this->Initialize();
   }
@@ -163,18 +190,21 @@ namespace Engine2D {
 
   void Game2D::quit() {
     this->Quit();
-    // Deallocate all the entity pointers
-    for (const auto entity: entities)
-      RemoveEntity(entity);
-    entities.clear();
-    ResourceManager::Clear();
-    SAFE_DELETE(spriteRenderer);
     // Destroy the window and terminate all OpenGL processes
     if (window) {
       glfwDestroyWindow(window);
       window = nullptr;
     }
     glfwTerminate();
+    // Deallocate all the entity pointers
+    for (const auto entity: entities)
+      RemoveEntity(*entity);
+    entities.clear();
+    ResourceManager::Clear();
+    SAFE_DELETE(spriteRenderer);
+    SAFE_DELETE(shapeRenderer);
+    SAFE_DELETE(physics2D);
+    SAFE_DELETE(root);
     instance = nullptr;
   }
 
@@ -193,32 +223,33 @@ namespace Engine2D {
     throw std::runtime_error("ERROR::GAME2D: Resource loader not set.");
   }
 
-  void Game2D::AddEntity(Entity2D *entity) {
-    if (!entity || !instance || entity == instance->root)
+  void Game2D::AddEntity(Entity2D &entity) {
+    if (!instance || &entity == instance->root)
       return;
 
     // Check if the entity is already in the list
     for (const auto e: instance->entitiesSearch)
-      if (*e == *entity)
+      if (*e == entity)
         return;
 
-    instance->entities.push_back(entity);
-    instance->entitiesSearch.insert(entity);
+    instance->entities.push_back(&entity);
+    instance->entitiesSearch.insert(&entity);
   }
 
-  void Game2D::RemoveEntity(Entity2D *entity) {
-    if (!entity || !instance || entity == instance->root || instance->entities.empty())
+  void Game2D::RemoveEntity(Entity2D &entity) {
+    if (!instance || &entity == instance->root || instance->entities.empty())
       return;
-    if (const auto itSearch = instance->entitiesSearch.find(entity); itSearch != instance->entitiesSearch.end()) {
-      const auto it = std::ranges::find_if(instance->entities,
-                                           [&entity](const Entity2D *ptr) {
-                                             return ptr == entity;
-                                           }
-                                          );
+    if (const auto itSearch = instance->entitiesSearch.find(&entity); itSearch != instance->entitiesSearch.end()) {
+      const auto it = std::ranges::find_if(
+        instance->entities,
+        [&entity](const Entity2D *ptr) {
+          return ptr == &entity;
+        }
+      );
       if (it != instance->entities.end()) {
         instance->entities.erase(it);
         instance->entitiesSearch.erase(itSearch);
-        entity->Quit();
+        entity.Quit();
       }
     }
   }
@@ -226,7 +257,21 @@ namespace Engine2D {
   void Game2D::framebuffer_size_callback(GLFWwindow *window, const int width, const int height) {
     instance->width = width;
     instance->height = height;
-    glViewport(0, 0, width, height);
+
+    // Calculate the proper aspect ratio to use based on window ratio
+    const float ratioX = static_cast<float>(width) / static_cast<float>(InitialWidth());
+    const float ratioY = static_cast<float>(height) / static_cast<float>(InitialHeight());
+    constexpr bool maintainAspectRatio = true; // TODO: make this an option in settings
+    instance->aspectRatio = Vector2{
+      maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX,
+      maintainAspectRatio ? std::min(ratioX, ratioY) : ratioY
+    };
+
+    // Calculate the width and height that will be rendered to
+    const int viewWidth = static_cast<int>(static_cast<float>(InitialWidth()) * instance->aspectRatio.x);
+    const int viewHeight = static_cast<int>(static_cast<float>(InitialHeight()) * instance->aspectRatio.y);
+
+    glViewport((width - viewWidth) >> 1, (height - viewHeight) >> 1, viewWidth, viewHeight);
   }
 
   void Game2D::scroll_callback(GLFWwindow *window, double xOffset, const double yOffset) {

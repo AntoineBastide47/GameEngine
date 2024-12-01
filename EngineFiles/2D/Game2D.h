@@ -30,7 +30,13 @@ namespace Engine2D {
     public:
       [[nodiscard]] static int Width();
       [[nodiscard]] static int Height();
+      [[nodiscard]] static int InitialWidth();
+      [[nodiscard]] static int InitialHeight();
+      [[nodiscard]] static Vector2 AspectRatio();
+
+
       [[nodiscard]] static float DeltaTime();
+      [[nodiscard]] static float FixedDeltaTime();
 
       /**
        * Start's and Run's the current game
@@ -70,6 +76,13 @@ namespace Engine2D {
       /** Called when the game is updating, allowing derived classes to customize behavior. */
       virtual void Quit() {}
     private:
+      // The initial width of the game window
+      int initialWidth;
+      // The initial height of the game window
+      int initialHeight;
+      // The current aspect ratio of the window
+      Vector2 aspectRatio;
+
       // The title of the game window
       std::string title;
       // The pointer to the game window
@@ -81,6 +94,7 @@ namespace Engine2D {
 
       // The time during two frames
       float deltaTime;
+      // The time during two frames
       // The root entity of the game
       // TODO: Replace this with a scene object that has it's own root and list of entities
       Entity2D *root;
@@ -90,10 +104,13 @@ namespace Engine2D {
       std::unordered_set<Entity2D *> entitiesSearch;
       // The sprite renderer used to render all the textures of the game
       Rendering::SpriteRenderer *spriteRenderer;
+      Rendering::ShapeRenderer *shapeRenderer;
+      Physics::Physics2D *physics2D;
 
       float frameRate;
       float lastKAndMInput = 0.0f;
       float lastGamepadInput = 0.0f;
+      float physicsTimeStep = 0.02f;
 
       /** Initializes all elements of the game */
       void initialize();
@@ -108,12 +125,11 @@ namespace Engine2D {
       [[nodiscard]] cmrc::file loadResource(const std::string &path) const;
 
       /** Adds the given entity to the game so that it can be managed i.e. initialized, updated, rendered and quit */
-      static void AddEntity(Entity2D *entity);
+      static void AddEntity(Entity2D &entity);
       /** Removes the given entity from the game so that it will no longer be managed i.e. initialized, updated, rendered and quit */
-      static void RemoveEntity(Entity2D *entity);
+      static void RemoveEntity(Entity2D &entity);
 
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-      static void keyboard_and_mouse_callback(GLFWwindow *window, int button, int action, int mods);
       static void scroll_callback(GLFWwindow *window, double xOffset, double yOffset);
   };
 } // Engine2D

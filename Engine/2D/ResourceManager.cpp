@@ -58,8 +58,10 @@ namespace Engine2D {
 
     // Create the shader
     const auto shader = new Shader();
-    shader->Compile(vertexCode.c_str(), fragmentCode.c_str(),
-                    !gShaderFile.empty() && !geometryCode.empty() ? geometryCode.c_str() : nullptr);
+    shader->Compile(
+      vertexCode.c_str(), fragmentCode.c_str(),
+      !gShaderFile.empty() && !geometryCode.empty() ? geometryCode.c_str() : nullptr
+    );
     return shaders[name] = shader;
   }
 
@@ -94,9 +96,9 @@ namespace Engine2D {
     // Load the data of the image
     int width, height, nrChannels;
     unsigned char *data = stbi_load_from_memory(
-                                                reinterpret_cast<unsigned char *>(content.data()),
-                                                static_cast<int>(content.size()), &width, &height, &nrChannels, 0
-                                               );
+      reinterpret_cast<unsigned char *>(content.data()),
+      static_cast<int>(content.size()), &width, &height, &nrChannels, 0
+    );
     if (!data) {
       stbi_image_free(data);
       return LOG_ERROR("Failed to load image: " + filePath + "\nReason: " + stbi_failure_reason());

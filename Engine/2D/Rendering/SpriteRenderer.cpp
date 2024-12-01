@@ -29,28 +29,30 @@ namespace Engine2D::Rendering {
   void SpriteRenderer::DrawSprite(const Entity2D *entity) const {
     // Simple check that makes sure the entity is visible
     const bool visible = !(
-      entity->transform.position.x < 0 || entity->transform.position.y < 0 ||
-      entity->transform.position.x > static_cast<float>(Game2D::Width()) || entity->transform.position.y > static_cast<float>(Game2D::Height())
+      entity->transform.position.x + entity->transform.scale.x * 0.5f < -static_cast<float>(Game2D::Width()) * 0.5f ||
+      entity->transform.position.y - entity->transform.scale.y * 0.5f > static_cast<float>(Game2D::Height()) * 0.5f ||
+      entity->transform.position.x - entity->transform.scale.x * 0.5f > static_cast<float>(Game2D::Width()) * 0.5f ||
+      entity->transform.position.y + entity->transform.scale.y * 0.5f < -static_cast<float>(Game2D::Height()) * 0.5f
     );
+
     if (!visible)
       return;
 
     // prepare transformations
     this->shader->Use();
     auto model = glm::mat4(1.0f);
-    model = translate(model, glm::vec3(entity->transform.position.toGLM(), 0.0f));
-    // first translate (transformations are: scale happens first, then rotation, and then final translation happens; reversed order)
+    // Translate using WorldPosition
+    model = glm::translate(model, glm::vec3(entity->transform.WorldPosition().toGLM(), 0.0f));
+    // Rotate using WorldRotation
+    model = glm::rotate(model, glm::degrees(-entity->transform.WorldRotation()), glm::vec3(0.0f, 0.0f, 1.0f));
+    // Scale using WorldScale
+    model = glm::scale(model, glm::vec3(-entity->transform.WorldScale().toGLM(), 1.0f));
 
-    model = translate(model, glm::vec3(entity->transform.scale.toGLM() * 0.5f, 0.0f));
-    // move origin of rotation to center of quad
-    model = rotate(model, glm::radians(entity->transform.rotation), glm::vec3(0.0f, 0.0f, 1.0f)); // then rotate
-    model = translate(model, glm::vec3(entity->transform.scale.toGLM() * -0.5f, 0.0f));           // move origin back
-
-    model = scale(model, glm::vec3(entity->transform.scale.toGLM(), 1.0f)); // last scale
-
-    this->shader->SetMatrix4("model", model);
+    // Center the texture
+    //model = glm::translate(model, glm::vec3((-entity->transform.scale * 0.5f).toGLM(), 0.0f));
 
     // render textured quad
+    this->shader->SetMatrix4("model", model);
     this->shader->SetVector3f("spriteColor", *entity->textureColor);
 
     glActiveTexture(GL_TEXTURE0);
@@ -66,13 +68,13 @@ namespace Engine2D::Rendering {
     unsigned int VBO;
     constexpr float vertices[] = {
       // pos      // tex
-      0.0f, 1.0f, 0.0f, 1.0f,
-      1.0f, 0.0f, 1.0f, 0.0f,
-      0.0f, 0.0f, 0.0f, 0.0f,
+      -0.5f, 0.5f, 0.0f, 1.0f,  // Top-left corner
+      0.5f, -0.5f, 1.0f, 0.0f,  // Bottom-right corner
+      -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-left corner
 
-      0.0f, 1.0f, 0.0f, 1.0f,
-      1.0f, 1.0f, 1.0f, 1.0f,
-      1.0f, 0.0f, 1.0f, 0.0f
+      -0.5f, 0.5f, 0.0f, 1.0f, // Top-left corner
+      0.5f, 0.5f, 1.0f, 1.0f,  // Top-right corner
+      0.5f, -0.5f, 1.0f, 0.0f  // Bottom-right corner
     };
 
     glGenVertexArrays(1, &this->quadVAO);
