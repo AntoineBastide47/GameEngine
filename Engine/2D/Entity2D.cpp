@@ -4,20 +4,17 @@
 // Date: 03/11/2024
 //
 
-#include "2D/Entity2D.h"
-
 #include <iostream>
 
+#include "2D/Entity2D.h"
 #include "2D/Game2D.h"
-#include "2D/Physics/Collider2D.h"
+#include "2D/Physics/Rigidbody2D.h"
 #include "Common/Log.h"
-#include "Common/Macros.h"
 
 namespace Engine2D {
   Entity2D::Entity2D(std::string name, Entity2D *parent, Texture2D *texture)
-    : name(std::move(name)), texture(texture), textureColor(new glm::vec3(1.0f)) {
-    Game2D::AddEntity(*this); // TODO: Make this work with non pointer constructors
-    components.push_back(&transform);
+    : name(std::move(name)), texture(texture), textureColor(glm::vec3(1.0f)) {
+    Game2D::AddEntity(this); // TODO: Make this work with non pointer constructors
     transform.SetEntity(this);
     transform.SetParent(parent);
   }
@@ -46,18 +43,16 @@ namespace Engine2D {
     component.SetEntity(this);
     components.push_back(&component);
 
-    if (const auto collider = dynamic_cast<Physics::Collider2D *>(&component)) {
-      Game2D::Instance()->physics2D->addCollider(collider);
-    }
+    if (const auto rigidbody = dynamic_cast<Physics::Rigidbody2D *>(&component))
+      Game2D::Instance()->physics2D->addRigidBody(rigidbody);
   }
 
   void Entity2D::RemoveComponent(Component2D &component) {
     if (const auto it = std::ranges::find(components, &component); it != components.end())
       components.erase(it);
 
-    if (const auto collider = dynamic_cast<Physics::Collider2D *>(&component)) {
-      Game2D::Instance()->physics2D->removeCollider(collider);
-    }
+    if (const auto rigidbody = dynamic_cast<Physics::Rigidbody2D *>(&component))
+      Game2D::Instance()->physics2D->removeRigidbody(rigidbody);
   }
 
   void Entity2D::Destroy() {
@@ -84,7 +79,6 @@ namespace Engine2D {
     for (const auto component: components)
       RemoveComponent(*component);
     components.clear();
-    SAFE_DELETE(textureColor);
-    Game2D::RemoveEntity(*this);
+    Game2D::RemoveEntity(this);
   }
 }

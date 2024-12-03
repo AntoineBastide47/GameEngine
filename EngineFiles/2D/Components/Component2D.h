@@ -8,10 +8,8 @@
 #define COMPONENT2D_H
 
 namespace Engine2D {
-  class Transform2D;
-}
-namespace Engine2D {
   class Entity2D;
+  class Transform2D;
 }
 
 namespace Engine2D {

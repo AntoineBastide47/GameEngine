@@ -9,7 +9,7 @@
 #define ENTITY2D_H
 
 #include <string>
-#include <typeinfo>
+#include <iostream>
 #include <vector>
 
 #include "2D/Components/Component2D.h"
@@ -17,7 +17,7 @@
 #include "2D/Rendering/Texture2D.h"
 
 namespace Engine2D::Physics {
-  class Collider2D;
+  class Rigidbody2D;
 }
 using Engine2D::Rendering::Texture2D;
 
@@ -39,7 +39,7 @@ namespace Engine2D {
       /** The texture of this entity */
       Texture2D *texture;
       /** The color of the texture */
-      glm::vec3 *textureColor;
+      glm::vec3 textureColor;
 
       /**
        * Constructs an Entity2D with a given name.
@@ -61,7 +61,7 @@ namespace Engine2D {
       /** Called when the entity is removed from the game or when the game quits, allowing derived classes to customize behavior.*/
       virtual void Quit() {}
 
-      virtual void OnCollision(Physics::Collider2D* collider) {}
+      virtual void OnCollision(Physics::Rigidbody2D *collider) {}
 
       /**
        * Makes this entity be updatable and renderable, or not
@@ -86,9 +86,12 @@ namespace Engine2D {
       [[nodiscard]] C *GetComponent() const {
         if constexpr (std::is_same_v<C, Transform2D>)
           return transform;
-        for (auto *component: components)
-          if (typeid(*component) == typeid(C))
-            return dynamic_cast<C *>(component);
+        for (const auto component: components) {
+          if (!component)
+            continue;
+          if (C *casted = dynamic_cast<C *>(component))
+            return casted;
+        }
         return nullptr;
       }
 
@@ -103,8 +106,8 @@ namespace Engine2D {
           return {transform};
         std::vector<C *> res;
         for (auto *component: components)
-          if (typeid(*component) == typeid(C))
-            res.push_back(dynamic_cast<C *>(component));
+          if (auto *casted = dynamic_cast<C *>(component))
+            res.push_back(casted);
         return res;
       }
 

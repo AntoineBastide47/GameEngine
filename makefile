@@ -1,6 +1,12 @@
 BUILD_FOLDER := cmake-build-debug
 
-install_dependencies:
+default: help
+
+help:
+	@echo "Available commands:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+install_dependencies: ## Installs all the dependencies required to build the engine and games
 	@if [ "$$(uname)" = "Darwin" ]; then \
   		brew install glew glfw glm; \
   	elif [ "$$(uname)" = "Linux" ]; then \
@@ -9,19 +15,18 @@ install_dependencies:
   	  echo "Dependencies installation is not configured for this system. Please install GLEW, GLFW, and GLM manually."; \
   	fi
 
-
-build_lib:
+build: ## Build's the engine static library
 	@clear; \
 	cmake -B $(BUILD_FOLDER) -S .; \
 	cmake --build $(BUILD_FOLDER); \
 	rm -f ./EngineFiles/*.a; \
 	mv -f ./$(BUILD_FOLDER)/[a-zA-Z0-9]*-[0-9]*.[0-9]*.[0-9]*.a EngineFiles
 
-build_lib_clean:
+build_clean: ## Build's a clean version of the engine static library
 	@rm -rf $(BUILD_FOLDER), \
-	make build_lib
+	make build
 
-create_project:
+create_project: ## Creates a new project
 	@clear
 	@echo "GameEngine Project creation CLI:"
 	@validType=0; \

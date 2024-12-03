@@ -41,11 +41,11 @@ if (APPLE)
       "-framework Cocoa"
   )
 elseif (Unix)
-  message(FATAL_ERROR "Linux build is not yet supported.")
+  message(STATUS "Linux build is not fully supported yet, there could be some errors.")
 elseif (WIN32)
-  message(FATAL_ERROR "Windows build is not yet supported.")
-else()
-  message(FATAL_ERROR "Unknown operating system, please configure the library linking.")
+  message(STATUS "Window build is not fully supported yet, there could be some errors.")
+else ()
+  message(STATUS "Unknown operating system, please configure the library linking.")
 endif()
 
 # Make sure the engine static library is present

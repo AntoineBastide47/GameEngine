@@ -38,22 +38,17 @@ namespace Engine2D::Rendering {
     if (!visible)
       return;
 
-    // prepare transformations
     this->shader->Use();
     auto model = glm::mat4(1.0f);
-    // Translate using WorldPosition
-    model = glm::translate(model, glm::vec3(entity->transform.WorldPosition().toGLM(), 0.0f));
-    // Rotate using WorldRotation
-    model = glm::rotate(model, glm::degrees(-entity->transform.WorldRotation()), glm::vec3(0.0f, 0.0f, 1.0f));
-    // Scale using WorldScale
-    model = glm::scale(model, glm::vec3(-entity->transform.WorldScale().toGLM(), 1.0f));
 
-    // Center the texture
-    //model = glm::translate(model, glm::vec3((-entity->transform.scale * 0.5f).toGLM(), 0.0f));
+    // Transform then scale and finally rotate the identity matrix
+    model = translate(model, glm::vec3(entity->transform.WorldPosition().toGLM(), 0.0f));
+    model = rotate(model, glm::degrees(-entity->transform.WorldRotation()), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = scale(model, glm::vec3(-entity->transform.WorldScale().toGLM(), 1.0f));
 
     // render textured quad
     this->shader->SetMatrix4("model", model);
-    this->shader->SetVector3f("spriteColor", *entity->textureColor);
+    this->shader->SetVector3f("spriteColor", entity->textureColor);
 
     glActiveTexture(GL_TEXTURE0);
     entity->texture->Bind();

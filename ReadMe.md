@@ -11,10 +11,11 @@ To check out what I plan to add to the engine in the future, or what I am curren
 [Trello Board](https://trello.com/invite/b/67376d9fff131de8914e5da1/ATTI005d420929932a037057431249289ba6283CFF05/game-engine)
 
 ## Versioning
-Versions are currently formatted as follows: `[major].[feature].[patch]` (e.g., `1.2.3`)<br>
+Versions are currently formatted as follows: `[major].[feature].[patch].[beta]` (e.g., `1.2.3`)<br>
 - **Major Version:** The first number indicates the major version of the engine. It changes when there are significant updates that may include breaking changes or major new features.
 - **Feature Count:** The second number represents the current feature count. Each time a new feature is fully implemented, this number increases.
 - **Patch Version:** The last number signifies small updates, additions to parts of a feature, or bug fixes.
+- **Beta Version:** Start of a feature, not fully tested and can crash your code. It is not recommended to use it since it is mostly a 'save' of the current engine state.
 
 **Versioning Examples**
 - **Version 0.1.0:** Game loop and texture rendering.
@@ -32,7 +33,7 @@ git clone https://github.com/AntoineBastide47/GameEngine.git
 #### 2. Build the Engine:
 ```bash
 cd GameEngine
-make install_dependencies build_lib
+make install_dependencies build
 ```
 #### 3. Create a Sample Game:
 ```bash
@@ -42,10 +43,19 @@ make create_project
 #### 4. Running the game
 ```bash
 cd your/project/location
-make refresh build_game_run
+make refresh build run
 ```
-The refresh command will copy the engine files into your game project's directory.
 If everything work correctly, you should see a black screen appear once the build phase ended.
+
+#### 5. Make command information
+```bash
+make
+```
+or
+```bash
+make help
+```
+These two commands will give you descriptions for each available make command, be it in the engine or game folder.
 
 ## Learning Objectives
 **C++ Mastery:** Enhance proficiency in modern C++ programming.<br>

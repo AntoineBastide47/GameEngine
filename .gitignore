@@ -34,3 +34,7 @@
 **/*.cbp
 **/CMakeScripts
 **/compile_commands.json
+
+# other
+build_debug/*
+temp/*

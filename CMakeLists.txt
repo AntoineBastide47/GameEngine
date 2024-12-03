@@ -3,6 +3,7 @@ project(GameEngine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_BUILD_TYPE "Debug")
 
 # Find required packages
 find_package(OpenGL REQUIRED)
@@ -43,14 +44,6 @@ add_library(Engine2D STATIC
     EngineFiles/Input/InputContexts.h
     Engine/2D/Components/Component2D.cpp
     EngineFiles/2D/Components/Component2D.h
-    Engine/3D/Types/Vector3.cpp
-    EngineFiles/3D/Types/Vector3.h
-    Engine/2D/Physics/RectangleCollider.cpp
-    EngineFiles/2D/Physics/RectangleCollider.h
-    Engine/2D/Physics/CircleCollider.cpp
-    EngineFiles/2D/Physics/CircleCollider.h
-    Engine/2D/Physics/Collider2D.cpp
-    EngineFiles/2D/Physics/Collider2D.h
     Engine/2D/Physics/Collisions.cpp
     EngineFiles/2D/Physics/Collisions.h
     Engine/2D/Physics/Physics2D.cpp
@@ -61,9 +54,19 @@ add_library(Engine2D STATIC
     EngineFiles/2D/Rendering/ShapeRenderer.h
 )
 
+# Add RTTI
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(-frtti)
+elseif(MSVC)
+  add_compile_options(/GR)
+endif()
+
+
 # Some optimizations
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+  set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif ()
 
 # Include CMakeRC
 include(CMakeRC.cmake)
@@ -99,11 +102,11 @@ if (APPLE)
       "-framework Cocoa"
   )
 elseif (UNIX)
-  message(STATUS "Linux build platform not supported yet.")
+  message(STATUS "Linux build is not fully supported yet, there could be some errors.")
 elseif (WIN32)
-  message(STATUS "Window build platform not supported yet.")
+  message(STATUS "Window build is not fully supported yet, there could be some errors.")
 else ()
-  message(FATAL_ERROR "Unknown build platform.")
+  message(STATUS "Unknown operating system, please configure the library linking.")
 endif ()
 
 target_include_directories(Engine2D PUBLIC
