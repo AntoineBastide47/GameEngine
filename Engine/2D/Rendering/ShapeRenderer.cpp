@@ -10,17 +10,14 @@
 #include "Common/RenderingHeaders.h"
 
 namespace Engine2D::Rendering {
-  ShapeRenderer::ShapeRenderer(Shader *shader)
-    : shader(shader), rectangleVAO(0), rectangleVBO(0) {
-    if (!shader)
-      throw std::invalid_argument("ERROR::SHAPE_RENDERER: NULL shader passed");
-    this->initRenderData();
-  }
+  Shader* ShapeRenderer::shader = nullptr;
+  unsigned int ShapeRenderer::rectangleVAO{};
+  unsigned int ShapeRenderer::rectangleVBO{};
 
   ShapeRenderer::~ShapeRenderer() {
-    if (this->rectangleVAO > 0) {
-      glDeleteVertexArrays(1, &this->rectangleVAO);
-      glDeleteBuffers(1, &this->rectangleVBO);
+    if (rectangleVAO > 0) {
+      glDeleteVertexArrays(1, &rectangleVAO);
+      glDeleteBuffers(1, &rectangleVBO);
     }
   }
 
@@ -37,12 +34,12 @@ namespace Engine2D::Rendering {
       1.0f, 0.0f  // Bottom-right
     };
 
-    glGenVertexArrays(1, &this->rectangleVAO);
-    glGenBuffers(1, &this->rectangleVBO);
+    glGenVertexArrays(1, &rectangleVAO);
+    glGenBuffers(1, &rectangleVBO);
 
-    glBindVertexArray(this->rectangleVAO);
+    glBindVertexArray(rectangleVAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, this->rectangleVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, rectangleVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // Position attribute
@@ -52,30 +49,30 @@ namespace Engine2D::Rendering {
     glBindVertexArray(0);
   }
 
-  void ShapeRenderer::DrawRectangleWireframe(const Vector2 &position, const Vector2 &size, const glm::vec3 &color) const {
-    this->shader->Use();
+  void ShapeRenderer::DrawRectangleWireframe(const Vector2 &position, const Vector2 &size, const glm::vec3 &color) {
+    shader->Use();
     auto model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(position.toGLM(), 0.0f));
     model = glm::scale(model, glm::vec3(size.toGLM(), 1.0f));
-    this->shader->SetMatrix4("model", model);
-    this->shader->SetVector3f("color", color);
+    shader->SetMatrix4("model", model);
+    shader->SetVector3f("color", color);
 
-    glBindVertexArray(this->rectangleVAO);
+    glBindVertexArray(rectangleVAO);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBindVertexArray(0);
   }
 
-  void ShapeRenderer::DrawRectangleFill(const Vector2 &position, const Vector2 &size, const glm::vec3 &color) const {
-    this->shader->Use();
+  void ShapeRenderer::DrawRectangleFill(const Vector2 &position, const Vector2 &size, const glm::vec3 &color) {
+    shader->Use();
     auto model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(position.toGLM(), 0.0f));
     model = glm::scale(model, glm::vec3(size.toGLM(), 1.0f));
-    this->shader->SetMatrix4("model", model);
-    this->shader->SetVector3f("color", color);
+    shader->SetMatrix4("model", model);
+    shader->SetVector3f("color", color);
 
-    glBindVertexArray(this->rectangleVAO);
+    glBindVertexArray(rectangleVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
   }
@@ -83,7 +80,7 @@ namespace Engine2D::Rendering {
   void ShapeRenderer::DrawRectangleFillWithBorder(
     const Vector2 &position, const Vector2 &size, const glm::vec3 &fillColor, const glm::vec3 &borderColor,
     const float borderWidth
-  ) const {
+  ) {
     // Draw filled rectangle
     DrawRectangleFill(position, size, fillColor);
 
@@ -99,7 +96,7 @@ namespace Engine2D::Rendering {
 
   void ShapeRenderer::DrawCircleWireframe(
     const Vector2 &center, const float radius, const glm::vec3 &color, const int segments
-  ) const {
+  ) {
     std::vector<float> vertices;
     for (int i = 0; i <= segments; ++i) {
       const float theta = M_PI * 2.0f * static_cast<float>(i) / static_cast<float>(segments);
@@ -122,10 +119,10 @@ namespace Engine2D::Rendering {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    this->shader->Use();
+    shader->Use();
     const glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(center.toGLM(), 0.0f));
-    this->shader->SetMatrix4("model", model);
-    this->shader->SetVector3f("color", color);
+    shader->SetMatrix4("model", model);
+    shader->SetVector3f("color", color);
 
     glBindVertexArray(vao);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -140,7 +137,7 @@ namespace Engine2D::Rendering {
 
   void ShapeRenderer::DrawCircleFill(
     const Vector2 &center, const float radius, const glm::vec3 &color, const int segments
-  ) const {
+  ) {
     std::vector<float> vertices;
 
     // Center of the circle
@@ -168,10 +165,10 @@ namespace Engine2D::Rendering {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    this->shader->Use();
+    shader->Use();
     const glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(center.toGLM(), 0.0f));
-    this->shader->SetMatrix4("model", model);
-    this->shader->SetVector3f("color", color);
+    shader->SetMatrix4("model", model);
+    shader->SetVector3f("color", color);
 
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLE_FAN, 0, segments + 2);
@@ -186,7 +183,7 @@ namespace Engine2D::Rendering {
     const Vector2 &center, const float radius, const glm::vec3 &fillColor, const glm::vec3 &borderColor,
     const float borderWidth,
     const int segments
-  ) const {
+  ) {
     // Draw filled circle
     DrawCircleFill(center, radius, fillColor, segments);
 
@@ -200,7 +197,7 @@ namespace Engine2D::Rendering {
     glLineWidth(1.0f);
   }
 
-  void ShapeRenderer::DrawPolygonWireframe(const std::vector<Vector2> &vertices, const glm::vec3 &color) const {
+  void ShapeRenderer::DrawPolygonWireframe(const std::vector<Vector2> &vertices, const glm::vec3 &color) {
     std::vector<float> data;
     for (const auto &vertex: vertices) {
       data.push_back(vertex.x);
@@ -220,10 +217,10 @@ namespace Engine2D::Rendering {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    this->shader->Use();
+    shader->Use();
     constexpr auto model = glm::mat4(1.0f);
-    this->shader->SetMatrix4("model", model);
-    this->shader->SetVector3f("color", color);
+    shader->SetMatrix4("model", model);
+    shader->SetVector3f("color", color);
 
     glBindVertexArray(vao);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -236,7 +233,7 @@ namespace Engine2D::Rendering {
     glDeleteVertexArrays(1, &vao);
   }
 
-  void ShapeRenderer::DrawPolygonFill(const std::vector<Vector2> &vertices, const glm::vec3 &color) const {
+  void ShapeRenderer::DrawPolygonFill(const std::vector<Vector2> &vertices, const glm::vec3 &color) {
     // Note: For concave polygons, you need to triangulate the polygon.
     std::vector<float> data;
     for (const auto &vertex: vertices) {
@@ -257,10 +254,10 @@ namespace Engine2D::Rendering {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    this->shader->Use();
+    shader->Use();
     constexpr auto model = glm::mat4(1.0f);
-    this->shader->SetMatrix4("model", model);
-    this->shader->SetVector3f("color", color);
+    shader->SetMatrix4("model", model);
+    shader->SetVector3f("color", color);
 
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(data.size()));
@@ -273,7 +270,7 @@ namespace Engine2D::Rendering {
 
   void ShapeRenderer::DrawPolygonFillWithBorder(
     const std::vector<Vector2> &vertices, const glm::vec3 &fillColor, const glm::vec3 &borderColor, const float borderWidth
-  ) const {
+  ) {
     // Draw filled polygon
     DrawPolygonFill(vertices, fillColor);
 

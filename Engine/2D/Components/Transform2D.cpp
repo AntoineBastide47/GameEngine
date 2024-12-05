@@ -13,10 +13,11 @@
 #include "Common/Log.h"
 
 namespace Engine2D {
-  Transform2D::Transform2D() : position(Vector2::Zero), rotation(0.0f), scale(Vector2::One) {}
-
-  Transform2D::Transform2D(const Vector2 &position, const float &rotation, const Vector2 &scale)
-    : position(position), rotation(rotation), scale(scale) {}
+  Transform2D::Transform2D(const Vector2 &position, const float &rotation, const Vector2 &scale) {
+    this->position = position;
+    this->rotation = rotation;
+    this->scale = scale;
+  }
 
   Transform2D::~Transform2D() {
     RemoveAllChildren();
@@ -105,39 +106,15 @@ namespace Engine2D {
   }
 
   Vector2 Transform2D::WorldPosition() const {
-    Vector2 result = position;
-    const Transform2D *current = parent ? &parent->transform : nullptr;
-
-    while (current) {
-      result = result.Scaled(current->scale).Rotated(current->rotation) + current->position;
-      current = current->parent ? &current->parent->transform : nullptr;
-    }
-
-    return result;
+    return worldPosition;
   }
 
   float Transform2D::WorldRotation() const {
-    float result = rotation;
-    const Transform2D *current = parent ? &parent->transform : nullptr;
-
-    while (current) {
-      result += current->rotation;
-      current = current->parent ? &current->parent->transform : nullptr;
-    }
-
-    return result;
+    return worldRotation;
   }
 
   Vector2 Transform2D::WorldScale() const {
-    Vector2 result = scale;
-    const Transform2D *current = parent ? &parent->transform : nullptr;
-
-    while (current) {
-      result = result.Scaled(current->scale);
-      current = current->parent ? &current->parent->transform : nullptr;
-    }
-
-    return result;
+    return worldScale;
   }
 
   void Transform2D::RemoveAllChildren() {
@@ -168,6 +145,45 @@ namespace Engine2D {
   void Transform2D::MakeLastChild(Entity2D *child) {
     this->RemoveChild(child);
     childList.push_back(child);
+  }
+
+  bool Transform2D::IsInScreenBounds() const {
+    return this->visible;
+  }
+
+  glm::mat4 Transform2D::TransformMatrix() const {
+    return this->matrix;
+  }
+
+  void Transform2D::onTransformChange() {
+    worldPosition = position;
+    worldRotation = rotation;
+    worldScale = scale;
+    const Transform2D *current = parent ? &parent->transform : nullptr;
+
+    while (current) {
+      worldPosition = worldPosition.Scaled(current->scale).Rotated(current->rotation) + current->position;
+      worldRotation += current->rotation;
+      worldScale = worldScale.Scaled(current->scale);
+      current = current->parent ? &current->parent->transform : nullptr;
+    }
+
+    matrix =
+      glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition.toGLM(), 0.0f)) *
+      glm::rotate(glm::mat4(1.0f), glm::degrees(-worldRotation), glm::vec3(0.0f, 0.0f, 1.0f)) *
+      glm::scale(glm::mat4(1.0f), glm::vec3(-worldScale.toGLM(), 1.0f));
+
+    visible = !Game2D::Instance() ? false : !(
+      worldPosition.x - worldScale.x * 0.5f < -Game2D::ViewportWidth() * 0.5f ||
+      worldPosition.y + worldScale.y * 0.5f > Game2D::ViewportHeight() * 0.5f ||
+      worldPosition.x + worldScale.x * 0.5f > Game2D::ViewportWidth() * 0.5f ||
+      worldPosition.y - worldScale.y * 0.5f < -Game2D::ViewportHeight() * 0.5f
+    );
+
+    // Update the children of this transform as they depend on the transform of there parent
+    for (const auto child: childList)
+      if (child)
+        child->transform.onTransformChange();
   }
 
   void Transform2D::AddChild(Entity2D *child) {

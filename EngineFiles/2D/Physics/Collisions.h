@@ -22,6 +22,7 @@ namespace Engine2D::Physics {
         circleScale, Vector2 *normal, float
         *depth
       );
+      static float GetPolygonRadius(const std::vector<Vector2> &polygonVertices, const Vector2 &polygonCenter);
     private:
       static void ProjectVertices(const std::vector<Vector2> &vertices, const Vector2 &axis, float *min, float *max);
       static void ProjectCircle(const Vector2 &circleCenter, const Vector2 &circleScale, const Vector2 &axis, float *min, float *max);

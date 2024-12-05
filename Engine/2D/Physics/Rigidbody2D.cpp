@@ -6,6 +6,7 @@
 
 #include "2D/Physics/Rigidbody2D.h"
 #include "2D/Entity2D.h"
+#include "2D/Rendering/ShapeRenderer.h"
 
 namespace Engine2D::Physics {
   Rigidbody2D::Rigidbody2D(
@@ -13,16 +14,15 @@ namespace Engine2D::Physics {
     const float radius, const float width, const float height, const Rigidbody2DType type
   )
     : density(density), restitution(std::clamp(restitution, 0.0f, 1.0f)), isStatic(isStatic), radius(radius),
-      width(width), height(height), rotationalVelocity(0), mass(0.0f), massInv(0.0f),
-      area(area), type(type) {
-    SetMass(mass);
+      width(width), height(height), area(area), type(type) {
+    this->mass = mass;
   }
 
   std::vector<Vector2> Rigidbody2D::Vertices() const {
     if (type == Rectangle) {
-      const float left = -Transform()->scale.x * 0.5f;
+      const float left = -Transform()->scale->x * 0.5f;
       const float right = -left;
-      const float top = Transform()->scale.y * 0.5f;
+      const float top = Transform()->scale->y * 0.5f;
       const float bottom = -top;
 
       return {
@@ -36,17 +36,7 @@ namespace Engine2D::Physics {
   }
 
   void Rigidbody2D::Step(float fixedDeltaTime) {
-    mass += restitution;
-    mass -= restitution;
-  }
 
-  void Rigidbody2D::SetMass(const float mass) {
-    this->mass = mass;
-    this->massInv = 1.0f / mass;
-  }
-
-  float Rigidbody2D::GetMass() const {
-    return this->mass;
   }
 
   Rigidbody2D::Rigidbody2DType Rigidbody2D::Type() const {

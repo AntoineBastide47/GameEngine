@@ -52,6 +52,7 @@ add_library(Engine2D STATIC
     EngineFiles/2D/Physics/Rigidbody2D.h
     Engine/2D/Rendering/ShapeRenderer.cpp
     EngineFiles/2D/Rendering/ShapeRenderer.h
+    EngineFiles/Common/Property.h
 )
 
 # Add RTTI

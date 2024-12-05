@@ -11,6 +11,7 @@
 
 #include "Component2D.h"
 #include "2D/Types/Vector2.h"
+#include "Common/Property.h"
 
 namespace Engine2D {
   class Entity2D;
@@ -22,14 +23,26 @@ namespace Engine2D {
   class Transform2D : public Component2D {
     public:
       /** Position of the transform in 2D space. */
-      Vector2 position;
+      Engine::Property<Vector2> position{
+        Vector2::Zero, [this] {
+          this->onTransformChange();
+        }
+      };
       /** Rotation of the transform in degrees. */
-      float rotation;
+      Engine::Property<float> rotation{
+        0, [this] {
+          this->onTransformChange();
+        }
+      };
       /** Scale of the transform in 2D space. */
-      Vector2 scale;
+      Engine::Property<Vector2> scale{
+        Vector2::One, [this] {
+          this->onTransformChange();
+        }
+      };
 
       /** Default constructor that initializes position to zero, rotation to 0.0f, and scale to one. */
-      Transform2D();
+      Transform2D() = default;
       /**
        * @brief Parameterized constructor that initializes position, rotation, and scale to specified values.
        * @param position Initial position as a Vector2.
@@ -70,6 +83,10 @@ namespace Engine2D {
       [[nodiscard]] float WorldRotation() const;
       /** @returns The scale of the Entity2D this transform is attached to in world coordinates */
       [[nodiscard]] Vector2 WorldScale() const;
+      /** @returns True if the transform of this entity is in the viewport of the screen, False if not */
+      [[nodiscard]] bool IsInScreenBounds() const;
+      /** @returns The transform matrix of this entity */
+      [[nodiscard]] glm::mat4 TransformMatrix() const;
 
       /** Sets the parent of all the children of the Entity2D this transform is attached to the current scene's root */
       void RemoveAllChildren();
@@ -92,6 +109,20 @@ namespace Engine2D {
       std::vector<Entity2D *> parentList;
       /** The list of all the children of this entity */
       std::vector<Entity2D *> childList;
+
+      /** Position of the transform in 2D space. */
+      Vector2 worldPosition;
+      /** Rotation of the transform in degrees. */
+      float worldRotation{};
+      /** Scale of the transform in 2D space. */
+      Vector2 worldScale;
+      /** If this entity is on screen */
+      bool visible{};
+      /** Transform matrix */
+      glm::mat4 matrix;
+
+      /** Callback function that updates fields of this transform only if any of its public properties are modified */
+      void onTransformChange();
 
       /** Adds the given child to the child list of the current entity's transform */
       void AddChild(Entity2D *child);

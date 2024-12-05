@@ -86,10 +86,8 @@ namespace Engine2D {
       [[nodiscard]] C *GetComponent() const {
         if constexpr (std::is_same_v<C, Transform2D>)
           return transform;
-        for (const auto component: components) {
-          if (!component)
-            continue;
-          if (C *casted = dynamic_cast<C *>(component))
+        for (auto component: components) {
+          if (auto casted = dynamic_cast<C*>(component))
             return casted;
         }
         return nullptr;
@@ -105,9 +103,9 @@ namespace Engine2D {
         if constexpr (std::is_same_v<C, Transform2D>)
           return {transform};
         std::vector<C *> res;
-        for (auto *component: components)
-          if (auto *casted = dynamic_cast<C *>(component))
-            res.push_back(casted);
+        for (auto component: components)
+          if (typeid(component) == typeid(C))
+            res.push_back(dynamic_cast<C*>(component));
         return res;
       }
 

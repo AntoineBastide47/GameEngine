@@ -9,7 +9,11 @@
 #include <thread>
 
 #include "2D/Game2D.h"
+
+#include <iomanip>
+
 #include "2D/ResourceManager.h"
+#include "2D/Physics/Rigidbody2D.h"
 #include "Common/Macros.h"
 #include "Common/RenderingHeaders.h"
 #include "Input/Gamepad.h"
@@ -21,8 +25,8 @@ namespace Engine2D {
 
   Game2D::Game2D(const int width, const int height, std::string title)
     : width(width), height(height), initialWidth(width), initialHeight(height), aspectRatio(Vector2::One),
-      title(std::move(title)), window(nullptr), deltaTime(0.0f), root(new Entity2D("Root")), spriteRenderer(nullptr),
-      shapeRenderer(nullptr), physics2D(nullptr), frameRate(0.0f) {
+      title(std::move(title)), window(nullptr), deltaTime(0), root(new Entity2D("Root")), physics2D(nullptr),
+      frameRate(0) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -65,9 +69,14 @@ namespace Engine2D {
   void Game2D::Run() {
     this->initialize();
 
+    auto nextFrameTime = std::chrono::high_resolution_clock::now();
     const float targetFrameTime = this->frameRate == 0.0f ? 0.0f : 1.0f / this->frameRate;
     auto lastTime = std::chrono::high_resolution_clock::now();
     float physicsAccumulator = 0.0f;
+
+    // Variables for FPS calculation
+    float fpsAccumulator = 0.0f;
+    float frameCounter = 0;
 
     while (!glfwWindowShouldClose(window)) {
       auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -91,12 +100,19 @@ namespace Engine2D {
       this->update();
       this->render();
 
-      // Calculate frame time and add a delay if the frame was too fast
-      auto frameEndTime = std::chrono::high_resolution_clock::now();
-      if (const float frameDuration = std::chrono::duration<float>(frameEndTime - currentFrameTime).count();
-        frameDuration < targetFrameTime) {
-        std::this_thread::sleep_for(std::chrono::duration<float>(targetFrameTime - frameDuration));
+      // FPS calculation
+      fpsAccumulator += deltaTime;
+      frameCounter++;
+      if (fpsAccumulator >= 1.0f) {
+        std::cout << "FPS: " << std::round(frameCounter / fpsAccumulator) << std::endl;
+        fpsAccumulator = 0.0f;
+        frameCounter = 0;
       }
+
+      nextFrameTime += std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+        std::chrono::duration<float>(targetFrameTime)
+      );
+      std::this_thread::sleep_until(nextFrameTime);
     }
 
     this->quit();
@@ -135,7 +151,9 @@ namespace Engine2D {
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetWindowRefreshCallback(window, window_refresh_callback);
     glfwSetWindowPosCallback(window, window_pos_callback);
-    glfwSwapInterval(1);
+
+    constexpr bool vsyncEnabled = false; // TODO: make this an option in settings
+    glfwSwapInterval(vsyncEnabled);
 
     // The official code for "Setting Your Raster Position to a Pixel Location" (i.e. set up a camera for 2D screen)
     glMatrixMode(GL_PROJECTION);
@@ -171,12 +189,14 @@ namespace Engine2D {
     );
     ResourceManager::GetShader("sprite")->SetInteger("sprite", true);
     ResourceManager::GetShader("sprite")->SetMatrix4("projection", projection, true);
-    spriteRenderer = new Rendering::SpriteRenderer(ResourceManager::GetShader("sprite"));
+    Rendering::SpriteRenderer::shader = ResourceManager::GetShader("sprite");
+    Rendering::SpriteRenderer::initRenderData();
 
     // Create and configure the shape renderer
     ResourceManager::LoadShader("EngineFiles/Shaders/shape.vs", "EngineFiles/Shaders/shape.fs", "", "shape");
     ResourceManager::GetShader("shape")->SetMatrix4("projection", projection, true);
-    shapeRenderer = new Rendering::ShapeRenderer(ResourceManager::GetShader("shape"));
+    Rendering::ShapeRenderer::shader = ResourceManager::GetShader("shape");
+    Rendering::ShapeRenderer::initRenderData();
 
     physics2D = new Physics::Physics2D(fixedDeltaTime);
 
@@ -195,9 +215,10 @@ namespace Engine2D {
     glClearColor(0, 0, 0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     // Draw all the entities
+    Rendering::SpriteRenderer::shader->Use();
     for (const auto entity: entities)
-      if (entity->active && entity->texture)
-        spriteRenderer->DrawSprite(entity);
+      if (entity && entity->active && entity->texture)
+        Rendering::SpriteRenderer::DrawSprite(entity);
     // Prepare the next frame
     glfwSwapBuffers(window);
     glFinish();
@@ -220,8 +241,6 @@ namespace Engine2D {
 
     // Deallocate all the game resources
     ResourceManager::Clear();
-    SAFE_DELETE(spriteRenderer);
-    SAFE_DELETE(shapeRenderer);
     SAFE_DELETE(physics2D);
     SAFE_DELETE(root);
     instance = nullptr;
@@ -285,7 +304,7 @@ namespace Engine2D {
     const float ratioY = static_cast<float>(framebufferHeight) / static_cast<float>(instance->initialHeight);
     instance->aspectRatio = Vector2{ratioX, ratioY};
 
-    constexpr bool maintainAspectRatio = true; // TODO: make this an option
+    constexpr bool maintainAspectRatio = true; // TODO: make this an option in settings
     const auto viewportRatio = Vector2{
       maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX,
       maintainAspectRatio ? std::min(ratioX, ratioY) : ratioY

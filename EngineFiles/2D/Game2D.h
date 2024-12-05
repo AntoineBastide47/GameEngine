@@ -110,9 +110,7 @@ namespace Engine2D {
       std::vector<Entity2D *> entities;
       // All the entities currently in the game
       std::unordered_set<Entity2D *> entitiesSearch;
-      // The sprite renderer used to render all the textures of the game
-      Rendering::SpriteRenderer *spriteRenderer;
-      Rendering::ShapeRenderer *shapeRenderer;
+      // Physics simulator
       Physics::Physics2D *physics2D;
 
       float frameRate;

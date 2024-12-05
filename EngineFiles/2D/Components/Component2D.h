@@ -7,7 +7,11 @@
 #ifndef COMPONENT2D_H
 #define COMPONENT2D_H
 
+namespace Engine2D::Rendering {
+  class ShapeRenderer;
+}
 namespace Engine2D {
+  class Game2D;
   class Entity2D;
   class Transform2D;
 }
@@ -20,6 +24,7 @@ namespace Engine2D {
    */
   class Component2D {
     friend class Entity2D;
+    friend class Game2D;
     public:
       /** @returns The entity this component is attached to */
       [[nodiscard]] Entity2D *Entity() const;

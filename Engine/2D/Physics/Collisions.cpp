@@ -29,6 +29,11 @@ namespace Engine2D::Physics {
     const std::vector<Vector2> &verticesA, const Vector2 &positionA, const std::vector<Vector2> &verticesB,
     const Vector2 &positionB, Vector2 *normal, float *depth
   ) {
+    // Early return if the polygons are too for from each other
+    const float totalRadius = (GetPolygonRadius(verticesA, positionA) + GetPolygonRadius(verticesB, positionB)) * 0.5f;
+    if (const float distSquared = Vector2::SquaredDistanceTo(positionA, positionB); distSquared > totalRadius * totalRadius)
+      return false;
+
     float minA, maxA, minB, maxB, axisDepth;
     Vector2 pointA, pointB, axis;
 
@@ -40,7 +45,7 @@ namespace Engine2D::Physics {
       ProjectVertices(verticesA, axis, &minA, &maxA);
       ProjectVertices(verticesB, axis, &minB, &maxB);
 
-      if (minA >= maxB || minB >= maxA)
+      if (minA > maxB || minB > maxA)
         return false;
 
       if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
@@ -57,7 +62,7 @@ namespace Engine2D::Physics {
       ProjectVertices(verticesA, axis, &minA, &maxA);
       ProjectVertices(verticesB, axis, &minB, &maxB);
 
-      if (minA >= maxB || minB >= maxA)
+      if (minA > maxB || minB > maxA)
         return false;
 
       if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
@@ -76,6 +81,11 @@ namespace Engine2D::Physics {
     const std::vector<Vector2> &polygonVertices, const Vector2 &polygonCenter, const Vector2 &circleCenter,
     const Vector2 &circleScale, Vector2 *normal, float *depth
   ) {
+    // Early return if the polygon and circle are too for from each other
+    if (const float distance = circleScale.Magnitude() + GetPolygonRadius(polygonVertices, polygonCenter);
+      Vector2::SquaredDistanceTo(polygonCenter, circleCenter) > distance * distance)
+      return false;
+
     float minA, maxA, minB, maxB, axisDepth;
     Vector2 axis;
 
@@ -87,7 +97,7 @@ namespace Engine2D::Physics {
       ProjectVertices(polygonVertices, axis, &minA, &maxA);
       ProjectCircle(circleCenter, circleScale, axis, &minB, &maxB);
 
-      if (minA >= maxB || minB >= maxA)
+      if (minA > maxB || minB > maxA)
         return false;
 
       if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
@@ -97,12 +107,12 @@ namespace Engine2D::Physics {
     }
 
     const Vector2 closestPoint = ClosestPointOnPolygon(circleCenter, polygonVertices);
-    axis = closestPoint - circleCenter;
+    axis = (closestPoint - circleCenter).Normalized();
 
     ProjectVertices(polygonVertices, axis, &minA, &maxA);
     ProjectCircle(circleCenter, circleScale, axis, &minB, &maxB);
 
-    if (minA >= maxB || minB >= maxA)
+    if (minA > maxB || minB > maxA)
       return false;
 
     if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
@@ -116,11 +126,20 @@ namespace Engine2D::Physics {
     return true;
   }
 
+  float Collisions::GetPolygonRadius(const std::vector<Vector2> &polygonVertices, const Vector2 &polygonCenter) {
+    float radiusSquared = 0.0f;
+    for (const Vector2 &vertex: polygonVertices) {
+      float distanceSquared = (vertex - polygonCenter).SquaredMagnitude();
+      radiusSquared = std::max(radiusSquared, distanceSquared);
+    }
+    return std::sqrt(radiusSquared);
+  }
+
   void Collisions::ProjectVertices(const std::vector<Vector2> &vertices, const Vector2 &axis, float *min, float *max) {
     *min = std::numeric_limits<float>::max();
-    *max = -std::numeric_limits<float>::max();
+    *max = std::numeric_limits<float>::lowest();
 
-    for (auto vertex: vertices) {
+    for (const Vector2 &vertex: vertices) {
       const float projection = vertex * axis;
       *min = std::min(*min, projection);
       *max = std::max(*max, projection);
@@ -130,25 +149,35 @@ namespace Engine2D::Physics {
   void Collisions::ProjectCircle(
     const Vector2 &circleCenter, const Vector2 &circleScale, const Vector2 &axis, float *min, float *max
   ) {
-    const Vector2 direction = axis.Normalized() * circleScale.x * 0.5f;
-
-    *min = (circleCenter + direction) * axis;
-    *max = (circleCenter - direction) * axis;
-
-    if (*min > *max)
-      std::swap(*min, *max);
+    const Vector2 direction = axis * circleScale.x * 0.5f;
+    *min = (circleCenter - direction) * axis;
+    *max = (circleCenter + direction) * axis;
   }
 
   Vector2 Collisions::ClosestPointOnPolygon(const Vector2 &point, const std::vector<Vector2> &vertices) {
-    Vector2 result = Vector2::Zero;
-    float min = std::numeric_limits<float>::max();
+    Vector2 closestPoint;
+    float minDistanceSquared = std::numeric_limits<float>::max();
 
-    for (auto vertex: vertices)
-      if (const float distance = Vector2::DistanceTo(vertex, point); distance < min) {
-        min = distance;
-        result = vertex;
+    for (size_t i = 0; i < vertices.size(); ++i) {
+      const Vector2 &v1 = vertices[i];
+      const Vector2 &v2 = vertices[(i + 1) % vertices.size()];
+      Vector2 edge = v2 - v1;
+      const float edgeLengthSquared = edge.SquaredMagnitude();
+
+      // Avoid division by zero
+      if (edgeLengthSquared < std::numeric_limits<float>::epsilon())
+        continue;
+
+      float t = (point - v1) * edge / edgeLengthSquared;
+      t = std::clamp(t, 0.0f, 1.0f);
+      Vector2 projection = v1 + edge * t;
+
+      if (const float distanceSquared = (point - projection).SquaredMagnitude(); distanceSquared < minDistanceSquared) {
+        minDistanceSquared = distanceSquared;
+        closestPoint = projection;
       }
+    }
 
-    return result;
+    return closestPoint;
   }
 }

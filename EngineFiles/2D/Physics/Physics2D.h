@@ -18,15 +18,12 @@ namespace Engine2D {
 namespace Engine2D::Physics {
   class Rigidbody2D;
   class Physics2D {
-    friend class Rigidbody2D;
     friend class Engine2D::Entity2D;
     public:
       explicit Physics2D(float fixedDeltaTime);
       void simulate();
     private:
       float fixedDeltaTime;
-      Vector2 normal;
-      float depth;
       std::vector<Rigidbody2D *> rigidbodies;
 
       void addRigidBody(Rigidbody2D *rigidbody);
