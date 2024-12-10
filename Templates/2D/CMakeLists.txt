@@ -9,7 +9,7 @@ project({{PROJECT_NAME}})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_BUILD_TYPE "Debug")
 
 # Find required packages
 find_package(OpenGL REQUIRED)
@@ -22,7 +22,7 @@ include(FetchContent)
 FetchContent_Declare(
     cpptrace
     GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
-    GIT_TAG        9269a72c54e0faab981aa8710b65858e2eb1f59c # <HASH or TAG>
+    GIT_TAG        v0.7.3 # <HASH or TAG>
 )
 FetchContent_MakeAvailable(cpptrace)
 
@@ -64,7 +64,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     OpenGL::GL
     glfw
     GLEW::GLEW
-    glm
+    glm::glm
     shaders
     cpptrace::cpptrace
 )
@@ -80,22 +80,24 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  # Some optimizations
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+  target_compile_options(${PROJECT_NAME} PRIVATE
+      -O3                     # General optimization
+      -DNDEBUG                # Disable assertions
+      -finline-functions      # Enable inlining
+      -flto                   # Link-Time Optimization
+      -fomit-frame-pointer    # Free up a register
+      -ffunction-sections     # Enable section-based optimization
+      -fdata-sections         # Enable data section optimization
+  )
+  target_link_options(${PROJECT_NAME} PRIVATE
+      -Wl,-O2                 # Optimize linker
+  )
   set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-  # Enable LTO if supported
-  include(CheckIPOSupported)
-  check_ipo_supported(RESULT ipo_supported OUTPUT error)
-  if(ipo_supported)
-    set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-  else()
-    message(WARNING "LTO is not supported: ${error}")
-  endif()
 
   # Add stripping for Release builds
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${PROJECT_NAME}>)
 endif()
+
 
 ########################################################################################################################
 #                                                                                                                      #

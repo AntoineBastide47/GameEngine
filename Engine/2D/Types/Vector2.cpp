@@ -118,12 +118,24 @@ namespace Engine2D {
     return this->SquaredMagnitude() >= v.SquaredMagnitude();
   }
 
+  Vector2 operator*(const float scalar, const Vector2 &vec) {
+    return vec * scalar;
+  }
+
+  Vector2 operator%(const float scalar, const Vector2 &vec) {
+    return vec % scalar;
+  }
+
+  Vector2 operator/(const float scalar, const Vector2 &vec) {
+    return vec / scalar;
+  }
+
   std::ostream &operator<<(std::ostream &os, const Vector2 &vec) {
     os << "(" << vec.x << ", " << vec.y << ")";
     return os;
   }
 
-  std::string Vector2::toString() const {
+  std::string Vector2::ToString() const {
     return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
   }
 
@@ -249,7 +261,9 @@ namespace Engine2D {
   }
 
   float Vector2::SquaredDistanceTo(const Vector2 &current, const Vector2 &target) {
-    return std::powf(current.x - target.x, 2) + std::powf(current.y - target.y, 2);
+    const float dx = current.x - target.x;
+    const float dy = current.y - target.y;
+    return dx * dx + dy * dy;
   }
 
   float Vector2::DistanceTo(const Vector2 &current, const Vector2 &target) {

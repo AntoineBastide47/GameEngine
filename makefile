@@ -6,7 +6,7 @@ help:
 	@echo "Available commands:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-install_dependencies: ## Installs all the dependencies required to build the engine and games
+install-dependencies: ## Installs all the dependencies required to build the engine and games
 	@if [ "$$(uname)" = "Darwin" ]; then \
   		brew install glew glfw glm; \
   	elif [ "$$(uname)" = "Linux" ]; then \
@@ -22,11 +22,14 @@ build: ## Build's the engine static library
 	rm -f ./EngineFiles/*.a; \
 	mv -f ./$(BUILD_FOLDER)/[a-zA-Z0-9]*-[0-9]*.[0-9]*.[0-9]*.a EngineFiles
 
-build_clean: ## Build's a clean version of the engine static library
-	@rm -rf $(BUILD_FOLDER), \
-	make build
+build-clean: ## Build's the engine static library
+	@clear; \
+	cmake -B $(BUILD_FOLDER) -S .; \
+	cmake --build $(BUILD_FOLDER) --target clean; \
+	rm -f ./EngineFiles/*.a; \
+	mv -f ./$(BUILD_FOLDER)/[a-zA-Z0-9]*-[0-9]*.[0-9]*.[0-9]*.a EngineFiles
 
-create_project: ## Creates a new project
+create-project: ## Creates a new project
 	@clear
 	@echo "GameEngine Project creation CLI:"
 	@validType=0; \
@@ -68,17 +71,14 @@ create_project: ## Creates a new project
 			cp -rp ./Templates/$$type/* "$$location/$$name"; \
 		fi; \
 	done; \
-	full_target="$$location/$$name"; \
-	relative=$$(BASE=$$full_target TARGET=$$(pwd)/EngineFiles perl -e 'use File::Spec; print File::Spec->abs2rel($$ENV{TARGET}, $$ENV{BASE}), "\n"'); \
 	cd "$$location/$$name"; \
 	if [ "$$(uname)" = "Darwin" ]; then \
 		find . -type f -exec sed -i '' "s/{{PROJECT_NAME}}/$$name/g" {} +; \
-		find . -type f -exec sed -i '' "s/{{ENGINE_LOCATION}}/$$(echo $$relative | sed 's/\//\\\//g')/g" {} +; \
 	else \
 		find . -type f -exec sed -i "s/{{PROJECT_NAME}}/$$name/g" {} +; \
-		find . -type f -exec sed -i "s/{{ENGINE_LOCATION}}/$$(echo $$relative | sed 's/\//\\\//g')/g" {} +; \
 	fi; \
 	mv "./GameCode/{{PROJECT_NAME}}.cpp" "./GameCode/$$name.cpp"; \
 	mv "./GameCode/{{PROJECT_NAME}}.h" "./GameCode/$$name.h"; \
+	ln -s $(realpath EngineFiles) "$$location/$$name/EngineFiles"; \
 	echo "Project '$$name' of type '$$type' created at '$$location/$$name'."
 

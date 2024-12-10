@@ -60,12 +60,16 @@ namespace Engine2D {
 
       /** Scalar multiplication operator for scaling the vector. */
       Vector2 operator*(float scalar) const;
+      /** Scalar multiplication operator for scaling the vector. */
+      friend Vector2 operator*(float scalar, const Vector2 &vec);
       /** Scalar multiplication assignment for scaling the vector. */
       Vector2 &operator*=(float scalar);
 
-      /** Modulo operator for scaling the vector. */
+      /** Modulo operator. */
       Vector2 operator%(float scalar) const;
-      /** Modulo assignment for scaling the vector. */
+      /** Modulo operator. */
+      friend Vector2 operator%(float scalar, const Vector2 &vec);
+      /** Modulo assignment. */
       Vector2 &operator%=(float scalar);
 
       /**
@@ -73,6 +77,11 @@ namespace Engine2D {
        * @note Calling this operator will log a warning if the scalar is equal to 0
        */
       Vector2 operator/(float scalar) const;
+      /**
+       * Scalar division operator for scaling the vector.
+       * @note Calling this operator will log a warning if the scalar is equal to 0
+       */
+      friend Vector2 operator/(float scalar, const Vector2 &vec);
       /**
        * Scalar division assignment for scaling the vector.
        * @note Calling this operator will log a warning if the scalar is equal to 0
@@ -104,7 +113,7 @@ namespace Engine2D {
       /** << operator to allow easy printing of a Vector2 object. */
       friend std::ostream &operator<<(std::ostream &os, const Vector2 &vec);
       /** Converts the current vector to a string with this format: (x, y) */
-      [[nodiscard]] std::string toString() const;
+      [[nodiscard]] std::string ToString() const;
 
       /** @returns The magnitude/length/size of this vector */
       [[nodiscard]] float Magnitude() const;
@@ -116,7 +125,7 @@ namespace Engine2D {
       [[nodiscard]] float Cross(const Vector2 &v) const;
       /** @returns The smallest value between the x and y coordinates */
       [[nodiscard]] float Min() const;
-      /** @returns The biggets value between the x and y coordinates */
+      /** @returns The biggest value between the x and y coordinates */
       [[nodiscard]] float Max() const;
 
       /** @returns The normalized version of the current vector with a magnitude of 1 */

@@ -7,8 +7,10 @@
 #ifndef PHYSICS2D_H
 #define PHYSICS2D_H
 
+#include <unordered_set>
 #include <vector>
 
+#include "CollisionManifold.h"
 #include "2D/Types/Vector2.h"
 
 namespace Engine2D {
@@ -20,17 +22,19 @@ namespace Engine2D::Physics {
   class Physics2D {
     friend class Engine2D::Entity2D;
     public:
+      static const Vector2 gravity;
       explicit Physics2D(float fixedDeltaTime);
-      void simulate();
+      void step();
     private:
       float fixedDeltaTime;
       std::vector<Rigidbody2D *> rigidbodies;
+      std::pmr::unordered_set<const Rigidbody2D *> rigidbodiesToRemove;
+      std::vector<Engine::Physics::CollisionManifold> contactList;
 
       void addRigidBody(Rigidbody2D *rigidbody);
       void removeRigidbody(const Rigidbody2D *rigidbody);
-      [[nodiscard]] static bool collide(
-        const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2 *normal, float *depth
-      );
+      static void ResolveCollision(const Engine::Physics::CollisionManifold &contact);
+
   };
 }
 

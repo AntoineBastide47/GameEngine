@@ -9,26 +9,21 @@
 
 #include <functional>
 
-#include "Log.h"
-
 namespace Engine {
   /**
    * The Property class is a templated utility for encapsulating a value along with a callback mechanism that gets triggered
    * whenever the value changes. It allows you to define custom logic that executes whenever the property is updated.
    * @tparam T The type of the value stored in this property
-   * @tparam Args The types of the arguments needed to call the callback function (optional)
    */
-  template<typename T, typename... Args> class Property {
+  template<typename T> class Property {
     public:
-      using Callback = std::function<void(Args...)>;
+      using Callback = std::function<void()>;
 
       /**
        * @param initialValue The initial value to store in the property
        * @param callback The callback called when the value of this property is changed
-       * @param args The arguments needed to call the callback function
        */
-      Property(T initialValue, Callback callback, Args &&... args)
-        : value(initialValue), callback(std::move(callback)), args(std::forward<Args>(args)...) {}
+      Property(T initialValue, Callback callback) : value(initialValue), callback(std::move(callback)) {}
 
       /** Assignment operator */
       Property &operator=(const T &newValue) {
@@ -57,6 +52,10 @@ namespace Engine {
         return value;
       }
 
+      [[nodiscard]] T Get() const {
+        return value;
+      }
+
       /** Equality operator */
       bool operator==(const Property &other) const {
         return value == other.value;
@@ -64,7 +63,17 @@ namespace Engine {
 
       /** Inequality operator */
       bool operator!=(const Property &other) const {
-        return !(*this == other);
+        return value != other.value;
+      }
+
+      /** Equality operator */
+      bool operator==(const T &other) const {
+        return value == other;
+      }
+
+      /** Inequality operator */
+      bool operator!=(const T &other) const {
+        return value != other;
       }
 
       /** Forward operator to access data stored in the value of this property */
@@ -80,12 +89,10 @@ namespace Engine {
     private:
       T value;
       Callback callback;
-      std::tuple<Args...> args;
 
       void notify() const {
-        if (callback) {
-          std::apply(callback, args);
-        }
+        if (callback)
+          callback();
       }
   };
 }

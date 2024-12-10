@@ -19,10 +19,10 @@ namespace Engine2D {
 }
 
 namespace Engine::Input {
-  class GamepadButtonEvent : public Event<KeyAndButtonContext> {
+  class GamepadButtonEvent final : public Event<KeyAndButtonContext> {
     friend class Gamepad;
   };
-  class GamepadStickEvent : public Event<Engine2D::Vector2> {
+  class GamepadStickEvent final : public Event<Engine2D::Vector2> {
     friend class Gamepad;
   };
 
@@ -31,7 +31,7 @@ namespace Engine::Input {
    * and provides a system for registering callbacks to respond to these events.
    * The gamepad left stick, right stick, and button all have an associated Event that triggers when they are updated.
    */
-  class Gamepad {
+  class Gamepad final {
     public:
       static GamepadButtonEvent BUTTON_NORTH, BUTTON_SOUTH, BUTTON_LEFT, BUTTON_RIGHT;
       static GamepadButtonEvent PAD_LEFT, PAD_RIGHT, PAD_NORTH, PAD_SOUTH;

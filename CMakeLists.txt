@@ -3,7 +3,7 @@ project(GameEngine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_BUILD_TYPE "Release")
 
 # Find required packages
 find_package(OpenGL REQUIRED)
@@ -53,6 +53,8 @@ add_library(Engine2D STATIC
     Engine/2D/Rendering/ShapeRenderer.cpp
     EngineFiles/2D/Rendering/ShapeRenderer.h
     EngineFiles/Common/Property.h
+    Engine/2D/Physics/CollisionManifold.cpp
+    EngineFiles/2D/Physics/CollisionManifold.h
 )
 
 # Add RTTI
@@ -63,11 +65,25 @@ elseif(MSVC)
 endif()
 
 
-# Some optimizations
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  target_compile_options(Engine2D PRIVATE
+      -O3                     # General optimization
+      -DNDEBUG                # Disable assertions
+      -finline-functions      # Enable inlining
+      -flto                   # Link-Time Optimization
+      -fomit-frame-pointer    # Free up a register
+      -ffunction-sections     # Enable section-based optimization
+      -fdata-sections         # Enable data section optimization
+  )
+  target_link_options(Engine2D PRIVATE
+      -Wl,-O2                 # Optimize linker
+  )
   set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
-endif ()
+
+  # Add stripping for Release builds
+  # TODO: make this optional ? So crashes can be debuged in release mode
+  add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
+endif()
 
 # Include CMakeRC
 include(CMakeRC.cmake)
@@ -78,12 +94,12 @@ include(FetchContent)
 FetchContent_Declare(
     cpptrace
     GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
-    GIT_TAG 9269a72c54e0faab981aa8710b65858e2eb1f59c
+    GIT_TAG        v0.7.3 # <HASH or TAG>
 )
 FetchContent_MakeAvailable(cpptrace)
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-0.2.3
+    OUTPUT_NAME Engine2D-0.2.4.3
     PREFIX ""
 )
 

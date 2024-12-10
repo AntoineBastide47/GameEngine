@@ -174,13 +174,13 @@ namespace Engine2D {
       glm::scale(glm::mat4(1.0f), glm::vec3(-worldScale.toGLM(), 1.0f));
 
     visible = !Game2D::Instance() ? false : !(
-      worldPosition.x - worldScale.x * 0.5f < -Game2D::ViewportWidth() * 0.5f ||
-      worldPosition.y + worldScale.y * 0.5f > Game2D::ViewportHeight() * 0.5f ||
-      worldPosition.x + worldScale.x * 0.5f > Game2D::ViewportWidth() * 0.5f ||
-      worldPosition.y - worldScale.y * 0.5f < -Game2D::ViewportHeight() * 0.5f
+      worldPosition.x + worldScale.x * 0.5f < -Game2D::ViewportWidth() * 0.5f ||
+      worldPosition.x - worldScale.x * 0.5f > Game2D::ViewportWidth() * 0.5f ||
+      worldPosition.y + worldScale.y * 0.5f < -Game2D::ViewportHeight() * 0.5f ||
+      worldPosition.y - worldScale.y * 0.5f > Game2D::ViewportHeight() * 0.5f
     );
 
-    // Update the children of this transform as they depend on the transform of there parent
+    // Update the children of this transform as they depend on the transform of their parent
     for (const auto child: childList)
       if (child)
         child->transform.onTransformChange();

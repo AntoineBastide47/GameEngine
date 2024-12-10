@@ -19,6 +19,14 @@ namespace Engine {
   // TODO: add HashMap[(log, count)] to check if log was already sent to not pollute the console
   class Log {
     public:
+      /** Print's the given string to the console */
+      static void print(const std::string &message);
+      /** Print's the given string to the console and adds a new line at the end */
+      static void println(const std::string &message);
+      /** Print's the given string to the console */
+      static void print(const char* &message);
+      /** Print's the given string to the console and adds a new line at the end */
+      static void println(const char* &message);
       /**
        * Sends the given message to the console with the current stack trace to pinpoint the place it was sent
        * @param msg The message to log
@@ -46,7 +54,7 @@ namespace Engine {
        * @param msg The message to log
        * @param showTrace If the current stack trace should be logged, defaults to true
        */
-      static void print(const std::string &msg, bool showTrace = true);
+      static void show(const std::string &msg, bool showTrace = true);
 
       /**
        * Takes the complete signature of a function a extracts the parts required to pinpoint the location of the log

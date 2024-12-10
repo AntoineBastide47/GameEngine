@@ -9,7 +9,6 @@
 #define ENTITY2D_H
 
 #include <string>
-#include <iostream>
 #include <vector>
 
 #include "2D/Components/Component2D.h"
@@ -58,6 +57,8 @@ namespace Engine2D {
       virtual void Initialize() {}
       /** Called once per frame, allowing derived classes to customize behavior. */
       virtual void Update() {}
+      /** Called once per physics update, allowing derived classes to customize behavior. */
+      virtual void FixedUpdate() {}
       /** Called when the entity is removed from the game or when the game quits, allowing derived classes to customize behavior.*/
       virtual void Quit() {}
 

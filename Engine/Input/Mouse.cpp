@@ -15,12 +15,8 @@ namespace Engine::Input {
   MouseButtonEvent Mouse::BUTTON_6{};
   MouseButtonEvent Mouse::BUTTON_7{};
   MouseButtonEvent Mouse::BUTTON_8{};
-  MousePositionEvent Mouse::POSITION{};
   MouseScrollEvent Mouse::SCROLL{};
-  KeyboardAndMouseContext Mouse::ctx{};
 
-  double Mouse::x{};
-  double Mouse::y{};
   GLFWwindow *Mouse::window = nullptr;
   std::bitset<GLFW_MOUSE_BUTTON_LAST + 1> Mouse::previousKeyStates{};
 
@@ -36,11 +32,21 @@ namespace Engine::Input {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   }
 
+  Engine2D::Vector2 Mouse::Position() {
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    return  Engine2D::Vector2{static_cast<float>(x), static_cast<float>(y)};
+  }
+
+  Mouse::~Mouse() {
+    window = nullptr;
+  }
+
   void Mouse::initialize(GLFWwindow *window) {
     Mouse::window = window;
   }
 
-  void Mouse::processButton(const int keyCode, MouseButtonEvent *event) {
+  void Mouse::processButton(const int keyCode, MouseButtonEvent *event, KeyboardAndMouseContext &ctx) {
     const int state = glfwGetMouseButton(window, keyCode);
     const bool isPressed = state == GLFW_PRESS;
 
@@ -57,13 +63,8 @@ namespace Engine::Input {
     }
   }
 
-  void Mouse::processPosition() {
-    glfwGetCursorPos(window, &x, &y);
-    POSITION.Trigger(Engine2D::Vector2{static_cast<float>(x), static_cast<float>(y)});
-  }
-
   void Mouse::processInput() {
-    ctx = {
+    KeyboardAndMouseContext ctx = {
       .leftShiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_RELEASE,
       .rightShiftPressed = glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) != GLFW_RELEASE,
       .leftControlPressed = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_RELEASE,
@@ -76,15 +77,14 @@ namespace Engine::Input {
       .numLockPressed = glfwGetKey(window, GLFW_KEY_NUM_LOCK) != GLFW_RELEASE,
     };
 
-    processButton(GLFW_MOUSE_BUTTON_1, &LEFT);
-    processButton(GLFW_MOUSE_BUTTON_2, &RIGHT);
-    processButton(GLFW_MOUSE_BUTTON_3, &MIDDLE);
-    processButton(GLFW_MOUSE_BUTTON_4, &BUTTON_4);
-    processButton(GLFW_MOUSE_BUTTON_5, &BUTTON_5);
-    processButton(GLFW_MOUSE_BUTTON_6, &BUTTON_6);
-    processButton(GLFW_MOUSE_BUTTON_7, &BUTTON_7);
-    processButton(GLFW_MOUSE_BUTTON_8, &BUTTON_8);
-    processPosition();
+    processButton(GLFW_MOUSE_BUTTON_1, &LEFT, ctx);
+    processButton(GLFW_MOUSE_BUTTON_2, &RIGHT, ctx);
+    processButton(GLFW_MOUSE_BUTTON_3, &MIDDLE, ctx);
+    processButton(GLFW_MOUSE_BUTTON_4, &BUTTON_4, ctx);
+    processButton(GLFW_MOUSE_BUTTON_5, &BUTTON_5, ctx);
+    processButton(GLFW_MOUSE_BUTTON_6, &BUTTON_6, ctx);
+    processButton(GLFW_MOUSE_BUTTON_7, &BUTTON_7, ctx);
+    processButton(GLFW_MOUSE_BUTTON_8, &BUTTON_8, ctx);
   }
 
   void Mouse::processScroll(const double scroll) {

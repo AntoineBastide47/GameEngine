@@ -20,7 +20,7 @@ namespace Engine2D {
 }
 
 namespace Engine::Input {
-  class KeyboardEvent : public Event<KeyboardAndMouseContext> {
+  class KeyboardEvent final : public Event<KeyboardAndMouseContext> {
     friend class Keyboard;
   };
 
@@ -29,7 +29,7 @@ namespace Engine::Input {
    * and provides a system for registering callbacks to respond to these events.
    * The keys all have an associated Event that triggers when they are updated.
    */
-  class Keyboard {
+  class Keyboard final {
     public:
       static KeyboardEvent A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, NUM0, NUM1, NUM2,
           NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, SPACE, APOSTROPHE, COMMA, MINUS, PERIOD, SLASH, SEMICOLON, EQUAL,

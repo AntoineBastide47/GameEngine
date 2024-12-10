@@ -17,13 +17,13 @@ namespace Engine2D {
 }
 
 namespace Engine::Input {
-  class MouseButtonEvent : public Event<KeyboardAndMouseContext> {
+  class MouseButtonEvent final : public Event<KeyboardAndMouseContext> {
     friend class Mouse;
   };
-  class MousePositionEvent : public Event<Engine2D::Vector2> {
+  class MousePositionEvent final : public Event<Engine2D::Vector2> {
     friend class Mouse;
   };
-  class MouseScrollEvent : public Event<MouseScroll> {
+  class MouseScrollEvent final : public Event<MouseScroll> {
     friend class Mouse;
   };
 
@@ -32,10 +32,9 @@ namespace Engine::Input {
    * and provides a system for registering callbacks to respond to these events.
    * The mouse position, scroll and button all have an associated Event that triggers when they are updated.
    */
-  class Mouse {
+  class Mouse final {
     public:
       static MouseButtonEvent LEFT, MIDDLE, RIGHT, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8;
-      static MousePositionEvent POSITION;
       static MouseScrollEvent SCROLL;
 
       /** Sets the mouse lock state to false and hidden state to false. */
@@ -44,6 +43,8 @@ namespace Engine::Input {
       static void SetMouseHidden();
       /** Sets the mouse lock state to true and hidden state to true. */
       static void SetMouseDisabled();
+      /** @returns The current position of the mouse on the screen */
+      [[nodiscard]] static Engine2D::Vector2 Position();
 
       friend class Engine2D::Game2D;
     private:
@@ -51,27 +52,16 @@ namespace Engine::Input {
       static std::bitset<GLFW_MOUSE_BUTTON_LAST + 1> previousKeyStates;
       /** The window pointer required for querying mouse states. */
       static GLFWwindow *window;
-      /** Temporary reference to the x position of the mouse */
-      static double x;
-      /** Temporary reference to the y position of the mouse */
-      static double y;
-      /** Reference to the current KeyboardAndMouseButtonContext to prevent heap allocation overhead */
-      static KeyboardAndMouseContext ctx;
 
       Mouse() = default;
-
-      ~Mouse() {
-        window = nullptr;
-      }
+      ~Mouse();
 
       /** Initializes the Mouse instance */
       static void initialize(GLFWwindow *window);
       /** Processes all the inputs of the current frame of the game and calls the corresponding key events. */
       static void processInput();
       /** Processes an individual mouse button */
-      static void processButton(int keyCode, MouseButtonEvent *event);
-      /** Processes the movement of the mouse */
-      static void processPosition();
+      static void processButton(int keyCode, MouseButtonEvent *event, KeyboardAndMouseContext &ctx);
       /** Processes the scrolling of the mouse */
       static void processScroll(double scroll);
   };

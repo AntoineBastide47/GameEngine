@@ -11,20 +11,36 @@
 #include <cpptrace/cpptrace.hpp>
 
 namespace Engine {
+  void Log::print(const std::string &message) {
+    std::cout << message;
+  }
+
+  void Log::println(const std::string &message) {
+    std::cout << message << std::endl;
+  }
+
+  void Log::print(const char *&message) {
+    std::cout << message;
+  }
+
+  void Log::println(const char *&message) {
+    std::cout << message << std::endl;
+  }
+
   void Log::Message(const std::string &msg, const std::string &funcSignature, const bool showTrace) {
-    print("MESSAGE::" + extractFromFuncSignature(funcSignature) + ": " + msg, showTrace);
+    show("MESSAGE::" + extractFromFuncSignature(funcSignature) + ": " + msg, showTrace);
   }
 
   void Log::Warning(const std::string &msg, const std::string &funcSignature) {
-    print("WARNING::" + extractFromFuncSignature(funcSignature) + ": " + msg);
+    show("WARNING::" + extractFromFuncSignature(funcSignature) + ": " + msg);
   }
 
   std::nullptr_t Log::Error(const std::string &msg, const std::string &funcSignature) {
-    print("ERROR::" + extractFromFuncSignature(funcSignature) + ": " + msg);
+    show("ERROR::" + extractFromFuncSignature(funcSignature) + ": " + msg);
     return nullptr;
   }
 
-  void Log::print(const std::string &msg, const bool showTrace) {
+  void Log::show(const std::string &msg, const bool showTrace) {
     std::cout << std::endl << msg << std::endl;
     if (showTrace) {
       cpptrace::generate_trace().print();

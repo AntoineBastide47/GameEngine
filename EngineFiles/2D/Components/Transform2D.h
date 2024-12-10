@@ -113,13 +113,13 @@ namespace Engine2D {
       /** Position of the transform in 2D space. */
       Vector2 worldPosition;
       /** Rotation of the transform in degrees. */
-      float worldRotation{};
+      float worldRotation = 0;
       /** Scale of the transform in 2D space. */
       Vector2 worldScale;
       /** If this entity is on screen */
-      bool visible{};
+      bool visible = false;
       /** Transform matrix */
-      glm::mat4 matrix;
+      glm::mat4 matrix = glm::mat4(1.0f);
 
       /** Callback function that updates fields of this transform only if any of its public properties are modified */
       void onTransformChange();
