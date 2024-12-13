@@ -16,12 +16,14 @@ namespace Engine2D {
     return transform;
   }
 
+  Component2D::Component2D() : entity(nullptr), transform(nullptr) {}
+
   Component2D::~Component2D() {
     transform = nullptr;
     entity = nullptr;
   }
 
-  void Component2D::SetEntity(Entity2D *entity) {
+  void Component2D::setEntity(Entity2D *entity) {
     if (!entity)
       return;
     this->entity = entity;

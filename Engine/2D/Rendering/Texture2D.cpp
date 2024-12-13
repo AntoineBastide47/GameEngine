@@ -31,18 +31,18 @@ namespace Engine2D::Rendering {
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
-  void Texture2D::Clear() {
+  void Texture2D::clear() {
     if (this->id > 0) {
       glDeleteTextures(1, &this->id);
       id = 0;
     }
   }
 
-  void Texture2D::Bind() const {
+  void Texture2D::bind() const {
     glBindTexture(GL_TEXTURE_2D, this->id);
   }
 
-  void Texture2D::Unbind() {
+  void Texture2D::unbind() {
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 }

@@ -4,26 +4,26 @@
 // Date: 14/11/2024
 //
 
-#include "Common/Log.h"
-
 #include <iostream>
 #include <ostream>
 #include <cpptrace/cpptrace.hpp>
 
+#include "Common/Log.h"
+
 namespace Engine {
-  void Log::print(const std::string &message) {
+  void Log::Print(const std::string &message) {
     std::cout << message;
   }
 
-  void Log::println(const std::string &message) {
+  void Log::Println(const std::string &message) {
     std::cout << message << std::endl;
   }
 
-  void Log::print(const char *&message) {
+  void Log::Print(const char *&message) {
     std::cout << message;
   }
 
-  void Log::println(const char *&message) {
+  void Log::Println(const char *&message) {
     std::cout << message << std::endl;
   }
 

@@ -7,11 +7,12 @@
 #ifndef GAMEPAD_H
 #define GAMEPAD_H
 
+#include <bitset>
+
 #include "InputContexts.h"
 #include "2D/Game2D.h"
 #include "2D/Types/Vector2.h"
 #include "Common/Event.h"
-#include "Common/Macros.h"
 #include "Common/RenderingHeaders.h"
 
 namespace Engine2D {
@@ -42,21 +43,19 @@ namespace Engine::Input {
       static GamepadStickEvent LEFT_STICK, RIGHT_STICK;
       friend class Engine2D::Game2D;
     private:
-      /** If any of the gamepad buttons were pressed last frame */
+      /// If any of the gamepad buttons were pressed last frame
       static std::bitset<GLFW_GAMEPAD_BUTTON_DPAD_LEFT + 1> previousKeyStates;
-      /** The current state of the gamepad */
+      /// The current state of the gamepad
       static GLFWgamepadstate *state;
+
       Gamepad() = default;
+      ~Gamepad();
 
-      ~Gamepad() {
-        SAFE_DELETE(state);
-      }
-
-      /** Processes all the inputs of the current frame of the game and calls the corresponding gamepad events. */
+      /// Processes all the inputs of the current frame of the game and calls the corresponding gamepad events.
       static void processInput();
-      /** Processes the given gamepad button input */
+      /// Processes the given gamepad button input
       static void processButton(int keyCode, GamepadButtonEvent *event);
-      /** Processes the given gamepad stick input */
+      /// Processes the given gamepad stick input
       static void processStick(int keyCodeX, int keyCodeY, GamepadStickEvent *event);
   };
 }

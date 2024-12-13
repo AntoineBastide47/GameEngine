@@ -9,45 +9,76 @@
 #include "2D/Physics/Rigidbody2D.h"
 
 namespace Engine2D::Physics {
-  bool Collisions::collide(Rigidbody2D *rigidbodyA, Rigidbody2D *rigidbodyB, Vector2 *normal, float *depth) {
+  bool Collisions::collideAABB(const Rigidbody2D::AABB a, const Rigidbody2D::AABB b) {
+    return !(a.max.x <= b.min.x || b.max.x <= a.min.x || a.max.y <= b.min.y || b.max.y <= a.min.y);
+  }
+
+  bool Collisions::collide(const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2 *normal, float *depth) {
     if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle)
-      return CirclesIntersect(
-        rigidbodyA->Transform()->position, rigidbodyA->Transform()->scale, rigidbodyB->Transform()->position,
-        rigidbodyB->Transform()->scale, normal, depth
+      return circlesIntersect(
+        rigidbodyA->Transform()->WorldPosition(), rigidbodyA->Transform()->WorldHalfScale(),
+        rigidbodyB->Transform()->WorldPosition(), rigidbodyB->Transform()->WorldHalfScale(), normal, depth
       );
     if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() != Rigidbody2D::Circle) {
-      const bool collide = PolygonAndCircleIntersect(
-        rigidbodyB->Vertices(), rigidbodyB->Transform()->position, rigidbodyA->Transform()->position,
-        rigidbodyA->Transform()->scale, normal, depth
+      const bool collide = polygonAndCircleIntersect(
+        rigidbodyB->transformedVertices, rigidbodyB->Transform()->WorldPosition(), rigidbodyA->Transform()->WorldPosition(),
+        rigidbodyA->Transform()->WorldHalfScale(), normal, depth
       );
       *normal = -*normal;
       return collide;
     }
     if (rigidbodyA->Type() != Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle) {
-      return PolygonAndCircleIntersect(
-        rigidbodyA->Vertices(), rigidbodyA->Transform()->position, rigidbodyB->Transform()->position,
-        rigidbodyB->Transform()->scale, normal, depth
+      return polygonAndCircleIntersect(
+        rigidbodyA->transformedVertices, rigidbodyA->Transform()->WorldPosition(), rigidbodyB->Transform()->WorldPosition(),
+        rigidbodyB->Transform()->WorldHalfScale(), normal, depth
       );
     }
-    return PolygonsIntersect(
-      rigidbodyA->Vertices(), rigidbodyA->Transform()->position, rigidbodyB->Vertices(), rigidbodyB->Transform()->position,
+    return polygonsIntersect(
+      rigidbodyA->transformedVertices, rigidbodyA->Transform()->WorldPosition(), rigidbodyB->transformedVertices,
+      rigidbodyB->Transform()->WorldPosition(),
       normal, depth
     );
   }
 
-  void Collisions::FindContactPoints(
-    Rigidbody2D *a, Rigidbody2D *b, Vector2 *contactPoint1, Vector2 *contactPoint2, int *contactCount
+  void Collisions::findContactPoints(
+    const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2 *contactPoint1, Vector2 *contactPoint2,
+    uint8_t *contactCount
   ) {
-
+    if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle) {
+      findCirclesContactPoint(
+        rigidbodyA->Transform()->WorldPosition(), rigidbodyB->Transform()->WorldPosition(),
+        rigidbodyA->Transform()->WorldScale().x, contactPoint1
+      );
+      *contactCount = 1;
+    }
+    else if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() != Rigidbody2D::Circle) {
+      findCircleAndPolygonContactPoint(
+        rigidbodyA->Transform()->WorldPosition(), rigidbodyB->transformedVertices,
+        contactPoint1
+      );
+      *contactCount = 1;
+    }
+    else if (rigidbodyA->Type() != Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle) {
+      findCircleAndPolygonContactPoint(
+        rigidbodyB->Transform()->WorldPosition(), rigidbodyA->transformedVertices,
+        contactPoint1
+      );
+      *contactCount = 1;
+    }
+    else {
+      findPolygonsContactPoint(
+        rigidbodyA->transformedVertices, rigidbodyB->transformedVertices, contactPoint1, contactPoint2, contactCount
+      );
+    }
   }
 
-  bool Collisions::CirclesIntersect(
+  bool Collisions::circlesIntersect(
     const Vector2 &centerA, const Vector2 &scaleA, const Vector2 &centerB, const Vector2 &scaleB, Vector2 *normal,
     float *depth
   ) {
     // Calculate the vector between the circle centers
     const float distance = Vector2::DistanceTo(centerA, centerB);
-    const float combinedRadius = (scaleA.x + scaleB.x) * 0.5f;
+    const float combinedRadius = scaleA.x + scaleB.x;
 
     if (distance >= combinedRadius)
       return false;
@@ -57,15 +88,10 @@ namespace Engine2D::Physics {
     return true;
   }
 
-  bool Collisions::PolygonsIntersect(
+  bool Collisions::polygonsIntersect(
     const std::vector<Vector2> &verticesA, const Vector2 &positionA, const std::vector<Vector2> &verticesB,
     const Vector2 &positionB, Vector2 *normal, float *depth
   ) {
-    // Early return if the polygons are too for from each other
-    const float totalRadius = (getPolygonRadius(verticesA, positionA) + getPolygonRadius(verticesB, positionB)) * 0.5f;
-    if (const float distSquared = Vector2::SquaredDistanceTo(positionA, positionB); distSquared > totalRadius * totalRadius)
-      return false;
-
     float minA, maxA, minB, maxB, axisDepth;
     Vector2 pointA, pointB, axis;
 
@@ -77,7 +103,7 @@ namespace Engine2D::Physics {
       projectVertices(verticesA, axis, &minA, &maxA);
       projectVertices(verticesB, axis, &minB, &maxB);
 
-      if (minA > maxB || minB > maxA)
+      if (minA >= maxB || minB >= maxA)
         return false;
 
       if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
@@ -94,7 +120,7 @@ namespace Engine2D::Physics {
       projectVertices(verticesA, axis, &minA, &maxA);
       projectVertices(verticesB, axis, &minB, &maxB);
 
-      if (minA > maxB || minB > maxA)
+      if (minA >= maxB || minB >= maxA)
         return false;
 
       if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
@@ -109,15 +135,10 @@ namespace Engine2D::Physics {
     return true;
   }
 
-  bool Collisions::PolygonAndCircleIntersect(
+  bool Collisions::polygonAndCircleIntersect(
     const std::vector<Vector2> &polygonVertices, const Vector2 &polygonCenter, const Vector2 &circleCenter,
-    const Vector2 &circleScale, Vector2 *normal, float *depth
+    const Vector2 &circleHalfScale, Vector2 *normal, float *depth
   ) {
-    // Early return if the polygon and circle are too for from each other
-    if (const float distance = circleScale.Magnitude() + getPolygonRadius(polygonVertices, polygonCenter);
-      Vector2::SquaredDistanceTo(polygonCenter, circleCenter) > distance * distance)
-      return false;
-
     float minA, maxA, minB, maxB, axisDepth;
     Vector2 axis;
 
@@ -127,9 +148,9 @@ namespace Engine2D::Physics {
       axis = (pointB - pointA).Perpendicular().Normalized();
 
       projectVertices(polygonVertices, axis, &minA, &maxA);
-      projectCircle(circleCenter, circleScale, axis, &minB, &maxB);
+      projectCircle(circleCenter, circleHalfScale.x, axis, &minB, &maxB);
 
-      if (minA > maxB || minB > maxA)
+      if (minA >= maxB || minB >= maxA)
         return false;
 
       if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
@@ -139,12 +160,12 @@ namespace Engine2D::Physics {
     }
 
     const Vector2 closestPoint = closestPointOnPolygon(circleCenter, polygonVertices);
-    axis = (closestPoint - polygonCenter).Normalized();
+    axis = (closestPoint - circleCenter).Normalized();
 
     projectVertices(polygonVertices, axis, &minA, &maxA);
-    projectCircle(circleCenter, circleScale, axis, &minB, &maxB);
+    projectCircle(circleCenter, circleHalfScale.x, axis, &minB, &maxB);
 
-    if (minA > maxB || minB > maxA)
+    if (minA >= maxB || minB >= maxA)
       return false;
 
     if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
@@ -158,26 +179,11 @@ namespace Engine2D::Physics {
     return true;
   }
 
-  void Collisions::FindContactPoint(
-    const Vector2 &centerA, const Vector2 &centerB, const float radiusA, Vector2 *contactPoint
-  ) {
-    *contactPoint = centerA + (centerB - centerA).Normalized() * radiusA;
-  }
-
-  float Collisions::getPolygonRadius(const std::vector<Vector2> &polygonVertices, const Vector2 &polygonCenter) {
-    float radiusSquared = 0.0f;
-    for (const Vector2 &vertex: polygonVertices) {
-      float distanceSquared = (vertex - polygonCenter).SquaredMagnitude();
-      radiusSquared = std::max(radiusSquared, distanceSquared);
-    }
-    return std::sqrt(radiusSquared);
-  }
-
   void Collisions::projectVertices(const std::vector<Vector2> &vertices, const Vector2 &axis, float *min, float *max) {
     *min = std::numeric_limits<float>::max();
     *max = std::numeric_limits<float>::lowest();
 
-    for (const Vector2 &vertex: vertices) {
+    for (const Vector2 vertex: vertices) {
       const float projection = vertex * axis;
       *min = std::min(*min, projection);
       *max = std::max(*max, projection);
@@ -185,37 +191,119 @@ namespace Engine2D::Physics {
   }
 
   void Collisions::projectCircle(
-    const Vector2 &circleCenter, const Vector2 &circleScale, const Vector2 &axis, float *min, float *max
+    const Vector2 &circleCenter, const float circleHalfScale, const Vector2 &axis, float *min, float *max
   ) {
-    const Vector2 direction = axis * circleScale.x * 0.5f;
-    *min = (circleCenter - direction) * axis;
-    *max = (circleCenter + direction) * axis;
+    const Vector2 direction = axis.Normalized() * circleHalfScale;
+    *min = (circleCenter + direction) * axis;
+    *max = (circleCenter - direction) * axis;
+
+    if (*min > *max)
+      std::swap(*min, *max);
   }
 
-  Vector2 Collisions::closestPointOnPolygon(const Vector2 &point, const std::vector<Vector2> &vertices) {
+  Vector2 Collisions::closestPointOnPolygon(const Vector2 &circleCenter, const std::vector<Vector2> &vertices) {
     Vector2 closestPoint;
     float minDistanceSquared = std::numeric_limits<float>::max();
 
-    for (size_t i = 0; i < vertices.size(); ++i) {
-      const Vector2 &v1 = vertices[i];
-      const Vector2 &v2 = vertices[(i + 1) % vertices.size()];
-      Vector2 edge = v2 - v1;
-      const float edgeLengthSquared = edge.SquaredMagnitude();
-
-      // Avoid division by zero
-      if (edgeLengthSquared < std::numeric_limits<float>::epsilon())
-        continue;
-
-      float t = (point - v1) * edge / edgeLengthSquared;
-      t = std::clamp(t, 0.0f, 1.0f);
-      Vector2 projection = v1 + edge * t;
-
-      if (const float distanceSquared = (point - projection).SquaredMagnitude(); distanceSquared < minDistanceSquared) {
-        minDistanceSquared = distanceSquared;
-        closestPoint = projection;
+    for (const auto vertex: vertices) {
+      if (const float distance = Vector2::DistanceTo(vertex, circleCenter); distance < minDistanceSquared) {
+        minDistanceSquared = distance;
+        closestPoint = vertex;
       }
     }
 
     return closestPoint;
+  }
+
+  void Collisions::findCirclesContactPoint(
+    const Vector2 &centerA, const Vector2 &centerB, const float radiusA, Vector2 *contactPoint
+  ) {
+    *contactPoint = centerA + (centerB - centerA).Normalized() * radiusA;
+  }
+
+  void Collisions::findCircleAndPolygonContactPoint(
+    const Vector2 &circleCenter, const std::vector<Vector2> &vertices, Vector2 *contactPoint
+  ) {
+    float minDistanceSquared = std::numeric_limits<float>::max();
+    for (int i = 0; i < vertices.size(); ++i) {
+      const Vector2 &v1 = vertices[i];
+      const Vector2 &v2 = vertices[(i + 1) % vertices.size()];
+
+      float distanceSquared;
+      Vector2 contact;
+      pointSegmentDistance(circleCenter, v1, v2, &distanceSquared, &contact);
+
+      if (distanceSquared < minDistanceSquared) {
+        minDistanceSquared = distanceSquared;
+        *contactPoint = contact;
+      }
+    }
+  }
+
+  void Collisions::findPolygonsContactPoint(
+    const std::vector<Vector2> &verticesA, const std::vector<Vector2> &verticesB, Vector2 *contactPoint1,
+    Vector2 *contactPoint2,
+    uint8_t *contactCount
+  ) {
+    float minDistanceSquared = std::numeric_limits<float>::max();
+
+    for (size_t i = 0; i < verticesA.size(); ++i) {
+      const Vector2 &p = verticesA[i];
+      for (size_t j = 0; j < verticesB.size(); ++j) {
+        const Vector2 &va = verticesB[j];
+        const Vector2 &vb = verticesB[(j + 1) % verticesB.size()];
+
+        float distanceSquared;
+        Vector2 contact;
+        pointSegmentDistance(p, va, vb, &distanceSquared, &contact);
+
+        if (distanceSquared == minDistanceSquared && Vector2::ApproxEquals(contact, *contactPoint1)) {
+          *contactCount = 2;
+          *contactPoint2 = contact;
+        }
+        else if (distanceSquared < minDistanceSquared) {
+          minDistanceSquared = distanceSquared;
+          *contactCount = 1;
+          *contactPoint1 = contact;
+        }
+      }
+    }
+
+    for (size_t i = 0; i < verticesB.size(); ++i) {
+      const Vector2 &p = verticesB[i];
+      for (size_t j = 0; j < verticesA.size(); ++j) {
+        const Vector2 &va = verticesA[j];
+        const Vector2 &vb = verticesA[(j + 1) % verticesA.size()];
+
+        float distanceSquared;
+        Vector2 contact;
+        pointSegmentDistance(p, va, vb, &distanceSquared, &contact);
+
+        if (distanceSquared == minDistanceSquared && Vector2::ApproxEquals(contact, *contactPoint1)) {
+          *contactCount = 2;
+          *contactPoint2 = contact;
+        }
+        else if (distanceSquared < minDistanceSquared) {
+          minDistanceSquared = distanceSquared;
+          *contactCount = 1;
+          *contactPoint1 = contact;
+        }
+      }
+    }
+  }
+
+  void Collisions::pointSegmentDistance(
+    const Vector2 &p, const Vector2 &pointA, const Vector2 &pointB, float *distanceSquared, Vector2 *closestPoint
+  ) {
+    const Vector2 ab = pointB - pointA;
+    const Vector2 ap = p - pointA;
+
+    if (const float d = ab * ap / ab.SquaredMagnitude(); d < 0)
+      *closestPoint = pointA;
+    else if (d >= 1)
+      *closestPoint = pointB;
+    else
+      *closestPoint = pointA + ab * d;
+    *distanceSquared = Vector2::SquaredDistanceTo(p, *closestPoint);
   }
 }

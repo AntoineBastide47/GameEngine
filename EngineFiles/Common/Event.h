@@ -24,11 +24,11 @@ namespace Engine {
       Event() = default;
       virtual ~Event() = default;
 
-      /** Addition assignment for shorthand call to Event::AddCallbacks */
+      /// Addition assignment for shorthand call to Event::AddCallbacks
       template<typename... Callbacks> void operator+=(const Callbacks &... callback) {
         (AddCallback(callback), ...);
       };
-      /** Addition assignment for shorthand call to Event::RemoveCallbacks */
+      /// Addition assignment for shorthand call to Event::RemoveCallbacks
       template<typename... Callbacks> void operator-=(const Callbacks &... callback) {
         (RemoveCallback(callback), ...);
       }
@@ -69,20 +69,20 @@ namespace Engine {
         (RemoveCallback(callbacks), ...);
       }
     protected:
-      /** Simple function before the Trigger function calls the callbacks */
+      /// Simple function before the Trigger function calls the callbacks
       virtual void preTrigger() {}
       /**
        * Executes each callback function that has been registered with the
        * event. Each callback is executed in the order it was registered.
        */
-      void Trigger(Args... args) {
+      void trigger(Args... args) {
         preTrigger();
         for (const std::shared_ptr<Callback> callback: callbacks) {
           (*callback.get())(args...);
         }
       }
     private:
-      /** The list of all callbacks registered to this event */
+      /// The list of all callbacks registered to this event
       std::vector<std::shared_ptr<Callback>> callbacks;
   };
 }

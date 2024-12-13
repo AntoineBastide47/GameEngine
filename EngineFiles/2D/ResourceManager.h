@@ -57,12 +57,12 @@ namespace Engine2D {
        * @note Calling this method will log an error if the texture with the given name does not exist
        */
       static Texture2D *GetTexture(const std::string &name);
-      /** Deletes all the loaded textures and shaders */
+      /// Deletes all the loaded textures and shaders
       static void Clear();
     private:
-      /** The shaders that have been loaded to memory by the Resource Manager */
+      /// The shaders that have been loaded to memory by the Resource Manager
       static std::map<std::string, Shader *> shaders;
-      /** The textures that have been loaded to memory by the Resource Manager */
+      /// The textures that have been loaded to memory by the Resource Manager
       static std::map<std::string, Texture2D *> textures;
       ResourceManager() = default;
   };

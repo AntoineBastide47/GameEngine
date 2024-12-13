@@ -3,7 +3,6 @@
 // Author: Antoine Bastide
 // Date: 01/12/2024
 //
-#include <iostream>
 
 #include "2D/Rendering/ShapeRenderer.h"
 #include "2D/Rendering/Shader.h"

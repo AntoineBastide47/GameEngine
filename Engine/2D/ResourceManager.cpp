@@ -5,18 +5,16 @@
 //
 
 #include <fstream>
-#include <sstream>
 #include <ranges>
-
-#include <Common/Macros.h>
+#include <sstream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "2D/Rendering/stb_image.h"
 
-#include "2D/Game2D.h"
 #include "2D/ResourceManager.h"
-
+#include "2D/Game2D.h"
 #include "Common/Log.h"
+#include "Common/Macros.h"
 
 namespace Engine2D {
   std::map<std::string, Texture2D *> ResourceManager::textures;
@@ -37,20 +35,20 @@ namespace Engine2D {
 
     std::string geometryCode;
     // Load vertex shader
-    const cmrc::file vertexShaderFile = Game2D::Instance()->loadResource(vShaderFile);
+    const cmrc::file vertexShaderFile = Game2D::instance->loadResource(vShaderFile);
     const auto vertexCode = std::string(vertexShaderFile.begin(), vertexShaderFile.end());
     if (vertexCode.empty())
       return LOG_ERROR("Vertex Shader is empty");
 
     // Load fragment shader
-    const cmrc::file fragmentShaderFile = Game2D::Instance()->loadResource(fShaderFile);
+    const cmrc::file fragmentShaderFile = Game2D::instance->loadResource(fShaderFile);
     const auto fragmentCode = std::string(fragmentShaderFile.begin(), fragmentShaderFile.end());
     if (fragmentCode.empty())
       return LOG_ERROR("Vertex Shader is empty");
 
     // Load geometry shader if provided
     if (!gShaderFile.empty()) {
-      const cmrc::file geometryShaderFile = Game2D::Instance()->loadResource(gShaderFile);
+      const cmrc::file geometryShaderFile = Game2D::instance->loadResource(gShaderFile);
       geometryCode = std::string(geometryShaderFile.begin(), geometryShaderFile.end());
       if (geometryCode.empty())
         LOG_WARNING("Geometry Shader is empty, it won't be used");
@@ -87,7 +85,7 @@ namespace Engine2D {
     }
 
     // Load the image from cmrc
-    const auto file = Game2D::Instance()->loadResource(filePath);
+    const auto file = Game2D::instance->loadResource(filePath);
     std::string content(file.begin(), file.end());
 
     if (content.empty())
@@ -122,7 +120,7 @@ namespace Engine2D {
       SAFE_DELETE(shader);
     }
     for (auto texture: textures | std::views::values) {
-      texture->Clear();
+      texture->clear();
       SAFE_DELETE(texture);
     }
   }

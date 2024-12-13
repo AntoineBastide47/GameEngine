@@ -4,8 +4,10 @@
 // Date: 16/11/2024
 //
 
-#include "Input/Keyboard.h"
 #include <ranges>
+
+#include "Input/Keyboard.h"
+#include "Common/Macros.h"
 
 namespace Engine::Input {
   KeyboardEvent Keyboard::A{};
@@ -132,6 +134,13 @@ namespace Engine::Input {
   std::unordered_map<char, KeyboardEvent *> Keyboard::variableKeyEvents;
   KeyboardAndMouseContext Keyboard::ctx{};
 
+  Keyboard::~Keyboard() {
+    window = nullptr;
+    for (auto eventPtr: variableKeyEvents | std::views::values)
+      SAFE_DELETE(eventPtr);
+    variableKeyEvents.clear();
+  }
+
   void Keyboard::initialize(GLFWwindow *window) {
     Keyboard::window = window;
 
@@ -186,7 +195,7 @@ namespace Engine::Input {
       ctx.pressed = !wasPressed && isPressed;
       ctx.held = wasPressed && isPressed;
       ctx.released = wasPressed && !isPressed;
-      (keyName && variableKeyEvents.contains(*keyName) ? variableKeyEvents[*keyName] : event)->Trigger(ctx);
+      (keyName && variableKeyEvents.contains(*keyName) ? variableKeyEvents[*keyName] : event)->trigger(ctx);
     }
   }
 

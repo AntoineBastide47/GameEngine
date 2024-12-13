@@ -15,6 +15,8 @@ namespace Engine2D {
   class Game2D;
 }
 
+// TODO: width, height, area, radius not used because overriden with transform properties, so make them overrideable by the user by choice
+
 namespace Engine2D::Physics {
   /**
    * @class Rigidbody2D
@@ -27,13 +29,16 @@ namespace Engine2D::Physics {
   class Rigidbody2D : public Component2D {
     friend class Engine2D::Game2D;
     friend class Physics2D;
+    friend class Collisions;
     public:
+      struct AABB {
+        Vector2 min;
+        Vector2 max;
+      };
       enum Rigidbody2DType {
         Circle, Rectangle
       };
 
-      /// Density of the rigid body.
-      float density{};
       /// Coefficient of restitution (bounciness) of the rigid body.
       float restitution{};
       /// Flag indicating whether the body is static (immovable).
@@ -50,13 +55,23 @@ namespace Engine2D::Physics {
       Engine::Property<float> mass = Engine::Property<float>{
         0, [this] {
           if (this->mass < 0.0f)
-            this->mass = 0.0f;
+            this->mass = 0;
           else if (this->mass == 0.0f)
-            this->massInv = 0.0f;
+            this->massInv = 0;
           else
             this->massInv = 1.0f / this->mass;
         }
       };
+      /// Inertia of the rigidbody
+      float inertia{};
+      /// If true, the rigidbody will bounce off the top of the viewport
+      bool bindToViewportTop;
+      /// If true, the rigidbody will bounce off the bottom of the viewport
+      bool bindToViewportBottom;
+      /// If true, the rigidbody will bounce off the left of the viewport
+      bool bindToViewportLeft;
+      /// If true, the rigidbody will bounce off the right of the viewport
+      bool bindToViewportRight;
 
       /// Default constructor.
       Rigidbody2D() = default;
@@ -66,45 +81,42 @@ namespace Engine2D::Physics {
        * @param force The force vector to apply.
        */
       void AddForce(const Vector2 &force);
-
-      /**
-       * Gets the type of the rigid body (Circle or Rectangle).
-       * @return The Rigidbody2DType of the body.
-       */
+      /// @return The Rigidbody2DType of the body.
       [[nodiscard]] Rigidbody2DType Type() const;
-      /** @return A vector containing the vertices of the body. */
-      [[nodiscard]] std::vector<Vector2> Vertices();
-      /** @return A std::array containing the min and max points of the AABB. */
-      [[nodiscard]] std::array<Vector2, 2> GetAABB();
+      /// @returns The points at which this rigidbody collided with another rigidbody
+      [[nodiscard]] std::vector<Vector2> ContactPoints() const;
+      /// Makes this rigidbody bounce off every part of the viewport
+      void BindToViewport();
 
       /**
        * Creates a circular rigid body.
        * @param radius The radius of the circle.
-       * @param mass The mass of the body.
-       * @param density The density of the body.
+       * @param mass The density of the body.
        * @param restitution The coefficient of restitution.
        * @param isStatic Whether the body is static.
        * @return A Rigidbody2D instance representing the circular body.
        */
-      static Rigidbody2D CreateCircleBody(float radius, float mass, float density, float restitution, bool isStatic);
+      static Rigidbody2D *CreateCircleBody(float radius, float mass, float restitution, bool isStatic);
       /**
        * Creates a rectangular rigid body.
        * @param width The width of the rectangle.
        * @param height The height of the rectangle.
-       * @param mass The mass of the body.
-       * @param density The density of the body.
+       * @param mass The density of the body.
        * @param restitution The coefficient of restitution.
        * @param isStatic Whether the body is static.
        * @return A Rigidbody2D instance representing the rectangular body.
        */
-      static Rigidbody2D CreateRectangleBody(
-        float width, float height, float mass, float density, float restitution, bool isStatic
+      static Rigidbody2D *CreateRectangleBody(
+        float width, float height, float mass, float restitution, bool isStatic
       );
     private:
-      /// Rotational velocity of the body.
-      float rotationalVelocity{};
-      /// Inverse of the mass (for fast calculations).
+      bool initialized;
+      /// Angular velocity of the body.
+      float angularVelocity{};
+      /// Inverse of the mass (cached to only use the division when mass changes)
       float massInv{};
+      /// Inverse of the inertia (cached to only use the division when inertia changes)
+      float inertiaInv{};
       /// Area of the rigid body.
       float area{};
       /// Type of the rigid body (Circle or Rectangle).
@@ -113,35 +125,22 @@ namespace Engine2D::Physics {
       Vector2 linearVelocity;
       /// Accumulated force applied to the rigid body.
       Vector2 force;
-      /// Minimum point of the axis-aligned bounding box (AABB).
-      Vector2 aabbMin;
-      /// Maximum point of the axis-aligned bounding box (AABB).
-      Vector2 aabbMax;
+      /// The axis-aligned bounding box  of this rigidbody.
+      AABB aabb;
       /// Vertices of the rigid body (used for rectangles).
-      std::vector<Vector2> vertices;
+      std::vector<Vector2> transformedVertices;
+      /// The points at which this rigidbody collided with another rigidbody
+      std::vector<Vector2> contactPoints;
 
-      /**
-       * Private constructor for initializing rigid bodies with detailed parameters.
-       * @param density The density of the rigid body.
-       * @param mass The mass of the rigid body.
-       * @param restitution The coefficient of restitution.
-       * @param area The area of the rigid body.
-       * @param isStatic Whether the body is static.
-       * @param radius The radius (if it's a Circle).
-       * @param width The width (if it's a Rectangle).
-       * @param height The height (if it's a Rectangle).
-       * @param type The type of the rigid body (Circle or Rectangle).
-       */
       Rigidbody2D(
-        float density, float mass, float restitution, float area, bool isStatic, float radius, float width, float height,
-        Rigidbody2DType type
+        float mass, float inertia, float restitution, float area, bool isStatic, float radius, float width,
+        float height, Rigidbody2DType type
       );
 
-      /**
-       * Simulates the motion of the rigid body for a single physics step.
-       * @param fixedDeltaTime The time step duration.
-       */
-      void Step(float fixedDeltaTime);
+      /** @return A std::array containing the min and max points of the AABB. */
+      [[nodiscard]] AABB getAABB();
+      /// Simulates a step of the physics simulation for the current rigidbody
+      void step(float fixedDeltaTime);
   };
 }
 

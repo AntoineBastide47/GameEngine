@@ -4,10 +4,9 @@
 // Date: 10/11/2024
 //
 
-#include "2D/Rendering/Shader.h"
-
 #include <iostream>
 
+#include "2D/Rendering/Shader.h"
 #include "Common/Log.h"
 
 namespace Engine2D::Rendering {

@@ -7,19 +7,19 @@
 #ifndef VECTOR2_H
 #define VECTOR2_H
 
-#include <ostream>
+#include <string>
 #include <glm/glm.hpp>
 
 namespace Engine2D {
   /** Represents a 2D vector with x and y components and provides common vector operations. */
   class Vector2 {
     public:
-      /** The x-component of the vector. */
+      /// The x-component of the vector.
       float x;
-      /** The y-component of the vector. */
+      /// The y-component of the vector.
       float y;
 
-      /** Default constructor initializes the vector to (0, 0). */
+      /// Default constructor initializes the vector to (0, 0).
       Vector2();
       /**
        * Constructs a vector with the specified x and y components.
@@ -27,50 +27,51 @@ namespace Engine2D {
        * @param y The y-component of the vector.
        */
       Vector2(float x, float y);
-      /** Copy constructor */
-      Vector2(const Vector2 &other) = default;
 
-      /** Constant for a zero vector (0, 0). */
+      /// Constant for a zero vector (0, 0).
       static const Vector2 Zero;
-      /** Constant for a unit vector (1, 1). */
+      /// Constant for a unit vector (1, 1).
       static const Vector2 One;
-      /** Constant for a unit vector pointing to the right (1, 0). */
+      /// Constant for a unit vector pointing to the right (1, 0).
       static const Vector2 Right;
-      /** Constant for a unit vector pointing to the left (-1, 0). */
+      /// Constant for a unit vector pointing to the left (-1, 0).
       static const Vector2 Left;
-      /** Constant for a unit vector pointing up (0, 1). */
+      /// Constant for a unit vector pointing up (0, 1).
       static const Vector2 Up;
-      /** Constant for a unit vector pointing down (0, -1). */
+      /// Constant for a unit vector pointing down (0, -1).
       static const Vector2 Down;
 
-      /** Addition operator for component-wise addition. */
+      /// Addition operator for component-wise addition.
       Vector2 operator+(const Vector2 &v) const;
-      /** Addition assignment operator for component-wise addition. */
+      /// Addition assignment operator for component-wise addition.
       Vector2 &operator+=(const Vector2 &v);
 
-      /** Negation operator, returns the vector with all it's components negated. */
+      /// Negation operator, returns the vector with all it's components negated.
       Vector2 operator-() const;
-      /** Subtraction operator for subtracting two vectors. */
+      /// Subtraction operator for subtracting two vectors.
       Vector2 operator-(const Vector2 &v) const;
-      /** Subtraction assignment operator for component-wise subtraction. */
+      /// Subtraction assignment operator for component-wise subtraction.
       Vector2 &operator-=(const Vector2 &v);
 
-      /** Multiplication operator for dot product. */
+      /// Multiplication operator for dot product.
       float operator*(const Vector2 &v) const;
 
-      /** Scalar multiplication operator for scaling the vector. */
+      /// Scalar multiplication operator for scaling the vector.
       Vector2 operator*(float scalar) const;
-      /** Scalar multiplication operator for scaling the vector. */
+      /// Scalar multiplication operator for scaling the vector.
       friend Vector2 operator*(float scalar, const Vector2 &vec);
-      /** Scalar multiplication assignment for scaling the vector. */
+      /// Scalar multiplication assignment for scaling the vector.
       Vector2 &operator*=(float scalar);
 
-      /** Modulo operator. */
+      /// Modulo operator.
       Vector2 operator%(float scalar) const;
-      /** Modulo operator. */
+      /// Modulo operator.
       friend Vector2 operator%(float scalar, const Vector2 &vec);
-      /** Modulo assignment. */
+      /// Modulo assignment.
       Vector2 &operator%=(float scalar);
+
+      /// Cross product operator
+      float operator^(const Vector2 &v) const;
 
       /**
        * Scalar division operator for scaling the vector.
@@ -94,41 +95,41 @@ namespace Engine2D {
        */
       float &operator[](int index);
 
-      /** Assignment operator between a Vector2 and glm::vec2 */
+      /// Assignment operator between a Vector2 and glm::vec2
       Vector2 &operator=(const glm::vec2 &other);
-      /** Equality operator for comparing two vectors. */
+      /// Strict equality operator for comparing two vectors.
       bool operator==(const Vector2 &v) const;
-      /** Inequality operator for comparing two vectors. */
+      /// Strict inequality operator for comparing two vectors.
       bool operator!=(const Vector2 &v) const;
 
-      /** Comparison operator that checks if the square magnitude of this vector is smaller that the square magnitude of vector v */
+      /// Comparison operator that checks if the square magnitude of this vector is smaller that the square magnitude of vector v
       bool operator<(const Vector2 &v) const;
-      /** Comparison operator that checks if the square magnitude of this vector is greater that the square magnitude of vector v */
+      /// Comparison operator that checks if the square magnitude of this vector is greater that the square magnitude of vector v
       bool operator>(const Vector2 &v) const;
-      /** Comparison operator that checks if the square magnitude of this vector is smaller or equal that the square magnitude of vector v */
+      /// Comparison operator that checks if the square magnitude of this vector is smaller or equal that the square magnitude of vector v
       bool operator<=(const Vector2 &v) const;
-      /** Comparison operator that checks if the square magnitude of this vector is greater or equal that the square magnitude of vector v */
+      /// Comparison operator that checks if the square magnitude of this vector is greater or equal that the square magnitude of vector v
       bool operator>=(const Vector2 &v) const;
 
-      /** << operator to allow easy printing of a Vector2 object. */
+      /// << operator to allow easy printing of a Vector2 object.
       friend std::ostream &operator<<(std::ostream &os, const Vector2 &vec);
-      /** Converts the current vector to a string with this format: (x, y) */
+      /// Converts the current vector to a string with this format: (x, y)
       [[nodiscard]] std::string ToString() const;
 
-      /** @returns The magnitude/length/size of this vector */
+      /// @returns The magnitude/length/size of this vector
       [[nodiscard]] float Magnitude() const;
-      /** @returns The squared magnitude/length/size of this vector */
+      /// @returns The squared magnitude/length/size of this vector
       [[nodiscard]] float SquaredMagnitude() const;
-      /** @returns The dot product between the current vector and v */
+      /// @returns The dot product between the current vector and v
       [[nodiscard]] float Dot(const Vector2 &v) const;
-      /** @returns The cross product between the current vector and v */
+      /// @returns The cross product between the current vector and v
       [[nodiscard]] float Cross(const Vector2 &v) const;
-      /** @returns The smallest value between the x and y coordinates */
+      /// @returns The smallest value between the x and y coordinates
       [[nodiscard]] float Min() const;
-      /** @returns The biggest value between the x and y coordinates */
+      /// @returns The biggest value between the x and y coordinates
       [[nodiscard]] float Max() const;
 
-      /** @returns The normalized version of the current vector with a magnitude of 1 */
+      /// @returns The normalized version of the current vector with a magnitude of 1
       [[nodiscard]] Vector2 Normalized() const;
       /**
        * Clamp's the magnitude of the current vector to the given max value
@@ -137,15 +138,15 @@ namespace Engine2D {
        * @return The clamped version of the current vector
        */
       [[nodiscard]] Vector2 ClampMagnitude(float max) const;
-      /** @returns The component-wise multiplication */
+      /// @returns The component-wise multiplication
       [[nodiscard]] Vector2 Scaled(const Vector2 &v) const;
-      /** @returns The current vector rotated by the given amount of degrees */
+      /// @returns The current vector rotated by the given amount of degrees
       [[nodiscard]] Vector2 Rotated(float degrees) const;
-      /** @returns The current vector rotated by the given amount of degrees around the given pivot vector */
+      /// @returns The current vector rotated by the given amount of degrees around the given pivot vector
       [[nodiscard]] Vector2 Rotated(float degrees, const Vector2 &pivot) const;
-      /** @returns A vector that is perpendicular to the current vector */
+      /// @returns A vector that is perpendicular to the current vector
       [[nodiscard]] Vector2 Perpendicular() const;
-      /** @returns A vector that is perpendicular to the current vector in a counterclockwise direction */
+      /// @returns A vector that is perpendicular to the current vector in a counterclockwise direction
       [[nodiscard]] Vector2 PerpendicularCounterClockwise() const;
       /**
        * Moves the current vector towards a target vector by a specified maximum distance.
@@ -163,13 +164,13 @@ namespace Engine2D {
        */
       [[nodiscard]] Vector2 MoveTowards(const Vector2 &target, float maxDistanceDelta) const;
 
-      /** Normalizes the current vector, giving it a magnitude of 1 */
+      /// Normalizes the current vector, giving it a magnitude of 1
       void Normalize();
-      /** Scales the current vector with v by using component-wise multiplication */
+      /// Scales the current vector with v by using component-wise multiplication
       void Scale(const Vector2 &v);
-      /** Rotates the current vector by the given amount of degrees */
+      /// Rotates the current vector by the given amount of degrees
       void Rotate(float degrees);
-      /** Rotates the current vector by the given amount of degrees around the given pivot vector */
+      /// Rotates the current vector by the given amount of degrees around the given pivot vector
       void Rotate(float degrees, const Vector2 &pivot);
 
       /**
@@ -237,6 +238,13 @@ namespace Engine2D {
        *         based on `t` between `current` and `target`.
        */
       [[nodiscard]] static Vector2 LerpUnclamped(const Vector2 &current, const Vector2 &target, float t);
+      /**
+       * Checks if two vector are approximately equal
+       * @param v1 The target vector
+       * @param v2 The vector to compare to the target
+       * @return True if the vectors have a difference in coordinates less than 0.0005f
+       */
+      [[nodiscard]] static bool ApproxEquals(const Vector2 &v1, const Vector2 &v2);
   };
 }
 

@@ -26,20 +26,20 @@ namespace Engine2D {
     friend class Entity2D;
     friend class Game2D;
     public:
-      /** @returns The entity this component is attached to */
-      [[nodiscard]] Entity2D *Entity() const;
-      /** @returns The transform attached to the entity this component is attached to */
-      [[nodiscard]] Transform2D *Transform() const;
+      Component2D();
       virtual ~Component2D();
-    protected:
-      /**
-       * Sets the entity this component is attached to
-       * @note Only override this if it is absolutely necessary, if not, leave it as so
-       */
-      void SetEntity(Entity2D *entity);
+
+      /// @returns The entity this component is attached to
+      [[nodiscard]] Entity2D *Entity() const;
+      /// @returns The transform attached to the entity this component is attached to
+      [[nodiscard]] Transform2D *Transform() const;
     private:
-      Entity2D *entity{};
-      Transform2D *transform{};
+      /// The entity this component is attached to
+      Entity2D *entity;
+      /// The transform of the entity this component is attached to
+      Transform2D *transform;
+      /// Sets the parent entity this component is attached to
+      void setEntity(Entity2D *entity);
   };
 }
 

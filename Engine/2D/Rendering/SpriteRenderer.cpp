@@ -19,25 +19,27 @@ namespace Engine2D::Rendering {
     }
   }
 
-  void SpriteRenderer::DrawSprite(const Entity2D *entity) {
-    // Simple check that makes sure the entity is visible
-    if (!entity->transform.IsInScreenBounds())
-      return;
+  void SpriteRenderer::drawSprites(const std::map<int, std::vector<Entity2D*>> &entities) {
+    shader->Use();
 
-    // render textured quad
-    shader->SetMatrix4("model", entity->transform.TransformMatrix());
-    shader->SetVector3f("spriteColor", entity->textureColor);
-
-    glActiveTexture(GL_TEXTURE0);
-    if (entity->texture->id != lastBoundTexture) {
+    for (const auto [id, e] : entities) {
+      // Render texture
       glActiveTexture(GL_TEXTURE0);
-      entity->texture->Bind();
-      lastBoundTexture = entity->texture->id;
-    }
+      entities.at(id)[0]->texture->bind();
 
-    glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+      for (const auto entity : e) {
+        if (!entity || !entity->active || !entity->texture || !entity->transform.IsInScreenBounds())
+          continue;
+
+        // render textured quad
+        shader->SetMatrix4("model", entity->transform.TransformMatrix());
+        shader->SetVector3f("spriteColor", entity->textureColor);
+
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+      }
+    }
   }
 
   void SpriteRenderer::initRenderData() {

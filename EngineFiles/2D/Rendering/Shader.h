@@ -7,19 +7,15 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include <string>
 #include "Common/RenderingHeaders.h"
 
 namespace Engine2D::Rendering {
-  /**
-   * Represents an OpenGL shader program, managing shader compilation, linking, and uniform settings.
-   */
+  /// Represents an OpenGL shader program, managing shader compilation, linking, and uniform settings.
   class Shader {
     public:
-      /** Used to reference and manage this shader program within OpenGL. */
+      /// Used to reference and manage this shader program within OpenGL.
       unsigned int id;
 
-      /** Default constructor */
       Shader() = default;
 
       /**
@@ -32,7 +28,6 @@ namespace Engine2D::Rendering {
        * Compiles the shader program from provided source code.
        * Supports vertex, fragment, and optional geometry shaders, compiling each
        * and linking them into a single program.
-       *
        * @param vertexSource Source code for the vertex shader.
        * @param fragmentSource Source code for the fragment shader.
        * @param geometrySource (Optional) Source code for the geometry shader.
@@ -41,7 +36,6 @@ namespace Engine2D::Rendering {
 
       /**
        * Sets a float uniform in the shader program.
-       *
        * @param name Name of the uniform variable in the shader.
        * @param value Float value to set.
        * @param useShader Whether to activate the shader before setting the uniform (default is false).
@@ -50,7 +44,6 @@ namespace Engine2D::Rendering {
 
       /**
        * Sets an integer uniform in the shader program.
-       *
        * @param name Name of the uniform variable in the shader.
        * @param value Integer value to set.
        * @param useShader Whether to activate the shader before setting the uniform (default is false).
@@ -59,7 +52,6 @@ namespace Engine2D::Rendering {
 
       /**
        * Sets a 2D vector uniform in the shader program.
-       *
        * @param name Name of the uniform variable in the shader.
        * @param x X component of the vector.
        * @param y Y component of the vector.
@@ -69,7 +61,6 @@ namespace Engine2D::Rendering {
 
       /**
        * Sets a 2D vector uniform in the shader program.
-       *
        * @param name Name of the uniform variable in the shader.
        * @param value 2D vector value to set.
        * @param useShader Whether to activate the shader before setting the uniform (default is false).
@@ -78,7 +69,6 @@ namespace Engine2D::Rendering {
 
       /**
        * Sets a 3D vector uniform in the shader program.
-       *
        * @param name Name of the uniform variable in the shader.
        * @param x X component of the vector.
        * @param y Y component of the vector.
@@ -89,7 +79,6 @@ namespace Engine2D::Rendering {
 
       /**
        * Sets a 3D vector uniform in the shader program.
-       *
        * @param name Name of the uniform variable in the shader.
        * @param value 3D vector value to set.
        * @param useShader Whether to activate the shader before setting the uniform (default is false).
@@ -98,7 +87,6 @@ namespace Engine2D::Rendering {
 
       /**
        * Sets a 4D vector uniform in the shader program.
-       *
        * @param name Name of the uniform variable in the shader.
        * @param x X component of the vector.
        * @param y Y component of the vector.
@@ -110,7 +98,6 @@ namespace Engine2D::Rendering {
 
       /**
        * Sets a 4D vector uniform in the shader program.
-       *
        * @param name Name of the uniform variable in the shader.
        * @param value 4D vector value to set.
        * @param useShader Whether to activate the shader before setting the uniform (default is false).
@@ -119,7 +106,6 @@ namespace Engine2D::Rendering {
 
       /**
        * Sets a 4x4 matrix uniform in the shader program.
-       *
        * @param name Name of the uniform variable in the shader.
        * @param matrix 4x4 matrix value to set.
        * @param useShader Whether to activate the shader before setting the uniform (default is false).
@@ -129,13 +115,7 @@ namespace Engine2D::Rendering {
       /** Clears the shader program, releasing associated resources. */
       void Clear();
     private:
-      /**
-       * Checks for compilation or linking errors in shader objects.
-       * If an error is found, it logs the error message to the console.
-       *
-       * @param object OpenGL shader or program object to check.
-       * @param type Type of object, either "VERTEX", "FRAGMENT", "GEOMETRY", or "PROGRAM" to specify the error context.
-       */
+      /// Checks for compilation or linking errors in shader objects.
       static void checkCompileErrors(unsigned int object, const std::string &type);
   };
 }

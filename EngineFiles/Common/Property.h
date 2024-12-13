@@ -23,26 +23,75 @@ namespace Engine {
        * @param initialValue The initial value to store in the property
        * @param callback The callback called when the value of this property is changed
        */
-      Property(T initialValue, Callback callback) : value(initialValue), callback(std::move(callback)) {}
+      Property(T initialValue, Callback callback)
+        : value(initialValue), callback(std::move(callback)) {}
 
-      /** Assignment operator */
+      /// Assignment operator
       Property &operator=(const T &newValue) {
         value = newValue;
         notify();
         return *this;
       }
 
-      /** Addition operator */
+      T operator+(const Property &prop) const {
+        return value + prop.value;
+      }
+
+      T operator+(const T &other) const {
+        return value + other;
+      }
+
+      friend T operator+(const T &other, const Property &prop) {
+        return other + prop.value;
+      }
+
+      T operator-(const Property &prop) const {
+        return value - prop.value;
+      }
+
+      T operator-(const T &other) const {
+        return value - other;
+      }
+
+      friend T operator-(const T &other, const Property &prop) {
+        return other - prop.value;
+      }
+
+      T operator*(const Property &prop) const {
+        return value * prop.value;
+      }
+
+      T operator*(const T &other) const {
+        return value * other;
+      }
+
+      friend T operator*(const T &other, const Property &prop) {
+        return other * prop.value;
+      }
+
+      T operator/(const Property &prop) const {
+        return value / prop.value;
+      }
+
+      T operator/(const T &other) const {
+        return value / other;
+      }
+
+      friend T operator/(const T &other, const Property &prop) {
+        return other / prop.value;
+      }
+
+      /// Addition operator
       Property &operator+=(const T &val) {
         return *this = value + val;
       }
 
-      /** Subtraction operator */
+      /// Subtraction operator
       Property &operator-=(const T &val) {
         return *this = value - val;
       }
 
-      /** Multiplication operator */
+      /// Multiplication operator
       Property &operator*=(const T &val) {
         return *this = value * val;
       }
@@ -52,44 +101,44 @@ namespace Engine {
         return value;
       }
 
-      [[nodiscard]] T Get() const {
-        return value;
-      }
-
-      /** Equality operator */
+      /// Equality operator
       bool operator==(const Property &other) const {
         return value == other.value;
       }
 
-      /** Inequality operator */
+      /// Inequality operator
       bool operator!=(const Property &other) const {
         return value != other.value;
       }
 
-      /** Equality operator */
+      /// Equality operator
       bool operator==(const T &other) const {
         return value == other;
       }
 
-      /** Inequality operator */
+      /// Inequality operator
       bool operator!=(const T &other) const {
         return value != other;
       }
 
-      /** Forward operator to access data stored in the value of this property */
+      /// Forward operator to access data stored in the value of this property
       T *operator->() {
         notify();
         return &value;
       }
 
-      /** Forward operator to access data stored in the value of this property */
+      /// Forward operator to access data stored in the value of this property
       const T *operator->() const {
+        notify();
         return &value;
       }
     private:
+      /// The value stored in this property
       T value;
+      /// The callback called when value is changed
       Callback callback;
 
+      /// Calls the callback
       void notify() const {
         if (callback)
           callback();

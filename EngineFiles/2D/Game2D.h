@@ -12,12 +12,12 @@
 #include <vector>
 #include <cmrc/cmrc.hpp>
 
+#include "2D/Physics/Physics2D.h"
 #include "Common/RenderingHeaders.h"
 #include "Input/InputContexts.h"
-#include "Physics/Physics2D.h"
+#include "Types/Vector2.h"
 
 // TODO: Make resource embedding an option
-// TODO: Add check files for inline-able functions and test refactor for performance gain
 
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
@@ -34,6 +34,7 @@ namespace Engine2D {
     friend class ResourceManager;
     friend class Transform2D;
     friend class Physics::Collider2D;
+    friend class Physics::Physics2D;
     public:
       /**
        * Start's and Run's the current game
@@ -47,29 +48,21 @@ namespace Engine2D {
        */
       void SetGameResourceLoader(const ResourceLoader &resourceLoader);
 
-      /** @returns The width of the viewport of the window */
+      /// @returns The width of the viewport of the window
       [[nodiscard]] static float ViewportWidth();
-      /** @returns The height of the viewport of the window */
+      /// @returns The height of the viewport of the window
       [[nodiscard]] static float ViewportHeight();
-      /** @returns The aspect ratio of the viewport */
+      /// @returns The aspect ratio of the viewport
       [[nodiscard]] static Vector2 AspectRatio();
 
-      /** @returns The time span between the current frame and the last frame */
+      /// @returns The time span between the current frame and the last frame
       [[nodiscard]] static float DeltaTime();
-      /** @returns The fixed time span between the physics updates */
+      /// @returns The fixed time span between the physics updates
       [[nodiscard]] static float FixedDeltaTime();
 
-      /** Closes/Quits the game  */
+      /// Closes/Quits the game
       static void Close(Engine::Input::KeyboardAndMouseContext context);
-
-      /** @returns A pointer to currently running game */
-      static Game2D *Instance();
     protected:
-      // The width of the game window
-      int width;
-      // The height of the game window
-      int height;
-
       /**
        * Creates a game
        * @param width The width of the game window
@@ -79,75 +72,81 @@ namespace Engine2D {
       Game2D(int width, int height, std::string title);
       virtual ~Game2D() = default;
 
-      /** Called during initialization, allowing derived classes to customize behavior. */
+      /// Called during initialization, allowing derived classes to customize behavior.
       virtual void Initialize() {}
-      /** Called when the game is updating, allowing derived classes to customize behavior. */
-      virtual void Update() {}
-      /** Called when the game is updating, allowing derived classes to customize behavior. */
-      virtual void Quit() {}
     private:
       static const float screenScaleFactor;
-      // The initial width of the game window
+      /// The initial width of the game window
       int initialWidth;
-      // The initial height of the game window
+      /// The initial height of the game window
       int initialHeight;
-      // The current aspect ratio of the window
+      /// The current aspect ratio of the window
       Vector2 aspectRatio;
 
-      // The title of the game window
+      /// The title of the game window
       std::string title;
-      // The pointer to the game window
+      /// The width of the game window
+      int width;
+      /// The height of the game window
+      int height;
+      /// The pointer to the game window
       GLFWwindow *window;
-      // The current game instance, unique
+
+      /// The current game instance, unique
       static Game2D *instance;
-      // The resource loader for embedded resources
+      /// The resource loader for embedded resources
       ResourceLoader resourceLoader;
 
-      // The time during two frames
-      float deltaTime;
-      // TODO: Replace this with a scene object that has it's own root and list of entities
-      // The root entity of the game
+      /// TODO: Replace this with a scene object that has it's own root and list of entities
+      /// The root entity of the game
       Entity2D *root;
-      // All the entities currently in the game
+      /// All the entities currently in the game
       std::vector<Entity2D *> entities;
-      // Physics simulator
-      Physics::Physics2D *physics2D;
-
+      /// Entities scheduled to be added to the game
       std::vector<Entity2D *> entitiesToAdd;
+      /// Entities scheduled to be removed from the game
       std::vector<Entity2D *> entitiesToRemove;
+      /// The entities of the game grouped by there texture id
+      std::map<int, std::vector<Entity2D *>> entitiesById;
 
-      float frameRate;
-      float renderRate;
+      /// The time during two frames
+      float deltaTime;
+      /// The time scaling factor
+      float timeScale;
+      /// The frame rate at which we want the game to run
+      int targetFrameRate;
+      /// The rate at which the game should update
+      float targetRenderRate;
 
+      /// Physics simulator
+      Physics::Physics2D *physics2D;
+      /// The time since the last physics simulated step
+      float fixedDeltaTime;
+      /// Timer used to check if the game is ready for the next physics update
       float physicsAccumulator;
-      int physicsStepCount;
-      float physicsTimeStep = 0.02f;
-      int8_t maxPhysicsStepsPerSecond = static_cast<int8_t>(std::clamp(
-        static_cast<int>(std::round(1 / physicsTimeStep)), 50, 60
-      ));
 
-      /** Initializes all elements of the game */
+      /// Initializes the game
       void initialize();
-      /** Update's all elements of the game */
-      void update();
-      /** Update's all physics elements of the game */
+      /// Update the game
+      void update() const;
+      /// Simulates a step of the physics simulation
       void fixedUpdate();
-      /** Render's all elements of the game */
+      /// Renders the game
       void render() const;
-      /** Clean's up the game's variables and stops it from running any longer */
+      /// Quits the game
       void quit();
 
-      /** Loads the given resource from the embedded resources */
+      /// Loads the given resource from the embedded resources
       [[nodiscard]] cmrc::file loadResource(const std::string &path) const;
 
-      /** Adds all the entities that are pending to be added to the game */
-      void AddEntities();
-      /** Adds the given entity to the game so that it can be managed i.e. initialized, updated, rendered and quit */
-      static void AddEntity(Entity2D *entity);
-      /** Removes all the entities that are pending to be removed to the game */
-      void RemoveEntities();
-      /** Removes the given entity from the game so that it will no longer be managed i.e. initialized, updated, rendered and quit */
-      static void RemoveEntity(Entity2D *entity);
+      /// Adds all the entity scheduled for adding
+      void addEntities();
+      /// Adds an entity to the game
+      static void addEntity(Entity2D *entity);
+      /// Removes all the entity scheduled for removal
+      void removeEntities();
+      /// Removes an entity from the game
+      static void removeEntity(Entity2D *entity);
 
       // OpenGL callbacks
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);

@@ -61,6 +61,10 @@ namespace Engine2D {
     return *this = *this % scalar;
   }
 
+  float Vector2::operator^(const Vector2 &v) const {
+    return x * v.y - y * v.x;
+  }
+
   Vector2 Vector2::operator/(const float scalar) const {
     if (scalar == 0.0f) {
       LOG_WARNING("Can not divide a Vector2 by 0, resulting operation will default to not modify the Vector2 instance.");
@@ -276,5 +280,11 @@ namespace Engine2D {
 
   Vector2 Vector2::LerpUnclamped(const Vector2 &current, const Vector2 &target, const float t) {
     return current + (target - current) * t;
+  }
+
+  bool Vector2::ApproxEquals(const Vector2 &v1, const Vector2 &v2) {
+    constexpr float epsilonBase = 0.0005f;
+    const float scaledEpsilon = epsilonBase * std::max(1.0f, std::max(std::abs(v1.x), std::abs(v2.x)));
+    return SquaredDistanceTo(v1, v2) < scaledEpsilon * scaledEpsilon;
   }
 }

@@ -12,7 +12,6 @@
 
 #include "InputContexts.h"
 #include "Common/Event.h"
-#include "Common/Macros.h"
 #include "Common/RenderingHeaders.h"
 
 namespace Engine2D {
@@ -42,28 +41,23 @@ namespace Engine::Input {
 
       friend class Engine2D::Game2D;
     private:
-      /** If any of the keys were pressed last frame */
+      /// If any of the keys were pressed last frame
       static std::bitset<GLFW_KEY_LAST + 1> previousKeyStates;
-      /** A map that contains the keyboard events for the keys that can change based on the most common keyboard layouts */
+      /// A map that contains the keyboard events for the keys that can change based on the most common keyboard layouts
       static std::unordered_map<char, KeyboardEvent *> variableKeyEvents;
-      /** The window pointer required for querying key states. */
+      /// The window pointer required for querying key states.
       static GLFWwindow *window;
-      /** Reference to the current KeyboardAndMouseButtonContext to prevent heap allocation overhead */
+      /// Reference to the current KeyboardAndMouseButtonContext to prevent heap allocation overhead
       static KeyboardAndMouseContext ctx;
+
       Keyboard() = default;
+      ~Keyboard();
 
-      ~Keyboard() {
-        window = nullptr;
-        for (auto eventPtr: variableKeyEvents | std::views::values)
-          SAFE_DELETE(eventPtr);
-        variableKeyEvents.clear();
-      }
-
-      /** Initializes the Mouse instance */
+      /// Initializes the Mouse instance
       static void initialize(GLFWwindow *window);
-      /** Processes all the inputs of the current frame of the game and calls the corresponding key events. */
+      /// Processes all the inputs of the current frame of the game and calls the corresponding key events.
       static void processInput();
-      /** Processes an individual key */
+      /// Processes an individual key
       static void processKey(int keyCode, KeyboardEvent *event);
   };
 }

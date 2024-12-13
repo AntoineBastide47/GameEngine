@@ -13,7 +13,8 @@
 #include "Common/Log.h"
 
 namespace Engine2D {
-  Transform2D::Transform2D(const Vector2 &position, const float &rotation, const Vector2 &scale) {
+  Transform2D::Transform2D(const Vector2 &position, const float &rotation, const Vector2 &scale)
+    : parent(nullptr), wasUpdated(false), visible(true), projectionMatrix(glm::mat4(1.0f)) {
     this->position = position;
     this->rotation = rotation;
     this->scale = scale;
@@ -66,7 +67,7 @@ namespace Engine2D {
     parentList.clear();
 
     // If no parent is specified, set the parent to the root Entity of the scene
-    const auto sceneRoot = Game2D::Instance() ? Game2D::Instance()->root : nullptr;
+    const auto sceneRoot = Game2D::instance ? Game2D::instance->root : nullptr;
     if (!parent) {
       position = WorldPosition();
       rotation = WorldRotation();
@@ -78,7 +79,7 @@ namespace Engine2D {
     // Remove this entity from the child list of its old parent
     this->parent = parent;
     if (this->parent) {
-      this->parent->transform.RemoveChild(this->Entity());
+      this->parent->transform.removeChild(this->Entity());
 
       // If a parent is given, find all of its parents, exclude the root Entity of the scene
       while (parent->transform.parent && parent->transform.parent != sceneRoot) {
@@ -86,7 +87,7 @@ namespace Engine2D {
         parent = parent->transform.parent;
       }
       this->parent = parent;
-      this->parent->transform.AddChild(this->Entity());
+      this->parent->transform.addChild(this->Entity());
     }
   }
 
@@ -105,6 +106,17 @@ namespace Engine2D {
     return false;
   }
 
+  bool Transform2D::IsParentOf(const Entity2D *entity) const {
+    for (const auto &child : childList)
+      if (child == entity)
+        return true;
+    return false;
+  }
+
+  bool Transform2D::Changed() const {
+    return wasUpdated;
+  }
+
   Vector2 Transform2D::WorldPosition() const {
     return worldPosition;
   }
@@ -115,6 +127,10 @@ namespace Engine2D {
 
   Vector2 Transform2D::WorldScale() const {
     return worldScale;
+  }
+
+  Vector2 Transform2D::WorldHalfScale() const {
+    return worldScaleHalf;
   }
 
   void Transform2D::RemoveAllChildren() {
@@ -138,12 +154,12 @@ namespace Engine2D {
   }
 
   void Transform2D::MakeFirstChild(Entity2D *child) {
-    this->RemoveChild(child);
+    this->removeChild(child);
     childList.insert(childList.begin(), child);
   }
 
   void Transform2D::MakeLastChild(Entity2D *child) {
-    this->RemoveChild(child);
+    this->removeChild(child);
     childList.push_back(child);
   }
 
@@ -152,10 +168,11 @@ namespace Engine2D {
   }
 
   glm::mat4 Transform2D::TransformMatrix() const {
-    return this->matrix;
+    return this->projectionMatrix;
   }
 
   void Transform2D::onTransformChange() {
+    wasUpdated = true;
     worldPosition = position;
     worldRotation = rotation;
     worldScale = scale;
@@ -167,17 +184,18 @@ namespace Engine2D {
       worldScale = worldScale.Scaled(current->scale);
       current = current->parent ? &current->parent->transform : nullptr;
     }
+    worldScaleHalf = worldScale * 0.5f;
 
-    matrix =
+    projectionMatrix =
       glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition.toGLM(), 0.0f)) *
       glm::rotate(glm::mat4(1.0f), glm::degrees(-worldRotation), glm::vec3(0.0f, 0.0f, 1.0f)) *
       glm::scale(glm::mat4(1.0f), glm::vec3(-worldScale.toGLM(), 1.0f));
 
-    visible = !Game2D::Instance() ? false : !(
-      worldPosition.x + worldScale.x * 0.5f < -Game2D::ViewportWidth() * 0.5f ||
-      worldPosition.x - worldScale.x * 0.5f > Game2D::ViewportWidth() * 0.5f ||
-      worldPosition.y + worldScale.y * 0.5f < -Game2D::ViewportHeight() * 0.5f ||
-      worldPosition.y - worldScale.y * 0.5f > Game2D::ViewportHeight() * 0.5f
+    visible = !Game2D::instance ? false : !(
+      worldPosition.x + worldScaleHalf.x < -Game2D::ViewportWidth() * 0.5f ||
+      worldPosition.x - worldScaleHalf.x > Game2D::ViewportWidth() * 0.5f ||
+      worldPosition.y + worldScaleHalf.y < -Game2D::ViewportHeight() * 0.5f ||
+      worldPosition.y - worldScaleHalf.y > Game2D::ViewportHeight() * 0.5f
     );
 
     // Update the children of this transform as they depend on the transform of their parent
@@ -186,13 +204,13 @@ namespace Engine2D {
         child->transform.onTransformChange();
   }
 
-  void Transform2D::AddChild(Entity2D *child) {
+  void Transform2D::addChild(Entity2D *child) {
     if (!child)
       return;
     childList.push_back(child);
   }
 
-  void Transform2D::RemoveChild(Entity2D *child) {
+  void Transform2D::removeChild(Entity2D *child) {
     if (!child)
       return;
     if (const auto it = std::ranges::find(childList, child); it != childList.end())

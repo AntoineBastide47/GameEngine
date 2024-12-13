@@ -5,6 +5,7 @@
 //
 
 #include "Input/Gamepad.h"
+#include "Common/Macros.h"
 
 namespace Engine::Input {
   GamepadButtonEvent Gamepad::BUTTON_NORTH{};
@@ -29,6 +30,10 @@ namespace Engine::Input {
 
   std::bitset<GLFW_GAMEPAD_BUTTON_DPAD_LEFT + 1> Gamepad::previousKeyStates{};
   GLFWgamepadstate *Gamepad::state = nullptr;
+
+  Gamepad::~Gamepad() {
+    SAFE_DELETE(state);
+  }
 
   void Gamepad::processInput() {
     if (glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
@@ -76,13 +81,13 @@ namespace Engine::Input {
       .held = wasPressed && isPressed,
       .released = wasPressed && !isPressed
     };
-    event->Trigger(ctx);
+    event->trigger(ctx);
   }
 
   void Gamepad::processStick(const int keyCodeX, const int keyCodeY, GamepadStickEvent *event) {
     if (!state)
       return;
 
-    event->Trigger(Engine2D::Vector2{state->axes[keyCodeX], state->axes[keyCodeY]});
+    event->trigger(Engine2D::Vector2{state->axes[keyCodeX], state->axes[keyCodeY]});
   }
 }

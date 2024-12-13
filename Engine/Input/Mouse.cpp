@@ -59,7 +59,7 @@ namespace Engine::Input {
       ctx.pressed = !wasPressed && isPressed;
       ctx.held = wasPressed && isPressed;
       ctx.released = wasPressed && !isPressed;
-      event->Trigger(ctx);
+      event->trigger(ctx);
     }
   }
 
@@ -88,6 +88,6 @@ namespace Engine::Input {
   }
 
   void Mouse::processScroll(const double scroll) {
-    SCROLL.Trigger(MouseScroll{scroll > 0, scroll < 0});
+    SCROLL.trigger(MouseScroll{scroll > 0, scroll < 0});
   }
 }
