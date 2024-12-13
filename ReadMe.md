@@ -63,6 +63,10 @@ These two commands will give you descriptions for each available make command, b
 **Software Architecture:** Apply design patterns and architectural principles.<br>
 **Project Management:** Experience in planning, versioning, and documenting a software project.<br>
 
+## Examples
+For example games that implement the engine, check out: https://github.com/AntoineBastide47/TestGames
+Warning: the game code is subject to change as the engine develops.
+
 ## Limitations
 I am currently building the engine on MacOS, so the engine wont have the best support for Linux and Windows out of the box,
 but I will try my best to make it as cross-platform as possible
