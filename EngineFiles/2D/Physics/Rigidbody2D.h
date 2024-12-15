@@ -33,8 +33,8 @@ namespace Engine2D::Physics {
     friend class Collisions;
     public:
       struct AABB {
-        Vector2 min;
-        Vector2 max;
+        Vector2f min;
+        Vector2f max;
       };
       enum Rigidbody2DType {
         Circle, Rectangle
@@ -89,11 +89,11 @@ namespace Engine2D::Physics {
        * Applies a force to the rigid body.
        * @param force The force vector to apply.
        */
-      void AddForce(const Vector2 &force);
+      void AddForce(const Vector2f &force);
       /// @return The Rigidbody2DType of the body.
       [[nodiscard]] Rigidbody2DType Type() const;
       /// @returns The points at which this rigidbody collided with another rigidbody
-      [[nodiscard]] std::vector<Vector2> ContactPoints() const;
+      [[nodiscard]] std::vector<Vector2f> ContactPoints() const;
       /// Makes this rigidbody bounce off every part of the viewport
       void BindToViewport();
       /// Makes this rigidbody not bounce off every part of the viewport
@@ -141,15 +141,15 @@ namespace Engine2D::Physics {
       /// Type of the rigid body (Circle or Rectangle).
       Rigidbody2DType type;
       /// Linear velocity of the rigid body.
-      Vector2 linearVelocity;
+      Vector2f linearVelocity;
       /// Accumulated force applied to the rigid body.
-      Vector2 force;
+      Vector2f force;
       /// The axis-aligned bounding box  of this rigidbody.
       AABB aabb;
       /// Vertices of the rigid body (used for rectangles).
-      std::vector<Vector2> transformedVertices;
+      std::vector<Vector2f> transformedVertices;
       /// The points at which this rigidbody collided with another rigidbody
-      std::vector<Vector2> contactPoints;
+      std::vector<Vector2f> contactPoints;
 
       Rigidbody2D(
         float mass, float inertia, float restitution, float area, bool isStatic, float radius, float width,

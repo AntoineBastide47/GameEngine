@@ -25,26 +25,25 @@ namespace Engine2D::Rendering {
     friend class Engine2D::Game2D;
     public:
       // Rectangle drawing methods
-      static void DrawRectangleWireframe(const Vector2 &position, const Vector2 &size, const glm::vec3 &color);
-      static void DrawRectangleFill(const Vector2 &position, const Vector2 &size, const glm::vec3 &color);
+      static void DrawRectangleWireframe(Vector2f position, Vector2f size, const glm::vec3 &color);
+      static void DrawRectangleFill(Vector2f position, Vector2f size, const glm::vec3 &color);
       static void DrawRectangleFillWithBorder(
-        const Vector2 &position, const Vector2 &size, const glm::vec3 &fillColor, const glm::vec3 &borderColor,
-        float borderWidth
+        Vector2f position, Vector2f size, const glm::vec3 &fillColor, const glm::vec3 &borderColor, float borderWidth
       );
 
       // Circle drawing methods
-      static void DrawCircleWireframe(const Vector2 &center, float radius, const glm::vec3 &color, int segments = 32);
-      static void DrawCircleFill(const Vector2 &center, float radius, const glm::vec3 &color, int segments = 32);
+      static void DrawCircleWireframe(Vector2f center, float radius, const glm::vec3 &color, int segments = 32);
+      static void DrawCircleFill(Vector2f center, float radius, const glm::vec3 &color, int segments = 32);
       static void DrawCircleFillWithBorder(
-        const Vector2 &center, float radius, const glm::vec3 &fillColor, const glm::vec3 &borderColor, float borderWidth,
+        Vector2f center, float radius, const glm::vec3 &fillColor, const glm::vec3 &borderColor, float borderWidth,
         int segments = 32
       );
 
       // Polygon drawing methods
-      static void DrawPolygonWireframe(const std::vector<Vector2> &vertices, const glm::vec3 &color);
-      static void DrawPolygonFill(const std::vector<Vector2> &vertices, const glm::vec3 &color);
+      static void DrawPolygonWireframe(const std::vector<Vector2f> &vertices, const glm::vec3 &color);
+      static void DrawPolygonFill(const std::vector<Vector2f> &vertices, const glm::vec3 &color);
       static void DrawPolygonFillWithBorder(
-        const std::vector<Vector2> &vertices, const glm::vec3 &fillColor, const glm::vec3 &borderColor, float borderWidth
+        const std::vector<Vector2f> &vertices, const glm::vec3 &fillColor, const glm::vec3 &borderColor, float borderWidth
       );
     private:
       /** Shader that controls the rendering pipeline for the shapes. */

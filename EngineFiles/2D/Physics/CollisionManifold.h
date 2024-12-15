@@ -22,15 +22,15 @@ namespace Engine::Physics {
       /// The second rigidbody involved in the collision
       Engine2D::Physics::Rigidbody2D *rb2;
       /// The normal along which the collision occurs
-      Engine2D::Vector2 normal;
+      Engine2D::Vector2f normal;
       /// The depth of the collision
       float depth;
       /// The first contact point between the two rigidbodies
-      std::vector<Engine2D::Vector2> contactPoints;
+      std::vector<Engine2D::Vector2f> contactPoints;
 
       CollisionManifold(
-        Engine2D::Physics::Rigidbody2D *rb1, Engine2D::Physics::Rigidbody2D *rb2, Engine2D::Vector2 normal, float depth,
-        Engine2D::Vector2 contactPoint1, Engine2D::Vector2 contactPoint2, uint8_t contactCount
+        Engine2D::Physics::Rigidbody2D *rb1, Engine2D::Physics::Rigidbody2D *rb2, Engine2D::Vector2f normal, float depth,
+        Engine2D::Vector2f contactPoint1, Engine2D::Vector2f contactPoint2, uint8_t contactCount
       );
   };
 }

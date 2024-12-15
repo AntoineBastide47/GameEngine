@@ -24,7 +24,7 @@ namespace Engine2D::Physics {
     friend class Engine2D::Game2D;
     public:
       /// Constant gravity vector set to: (0, -9.81)
-      static const Vector2 gravity;
+      static const Vector2f gravity;
     private:
       /// The rate at which the physics engine is updated
       float fixedDeltaTime;
@@ -61,7 +61,7 @@ namespace Engine2D::Physics {
       /// Collision resolution
       void narrowPhase();
       /// Separates the given bodies using the given Minimum Translation Vector to make sure they are not contained in each other
-      static void separateBodies(const Rigidbody2D *rb1, const Rigidbody2D *rb2, Vector2 mtv);
+      static void separateBodies(const Rigidbody2D *rb1, const Rigidbody2D *rb2, Vector2f mtv);
       /// Resolves the collision between two rigidbodies
       static void resolveCollision(const Engine::Physics::CollisionManifold &contact);
   };

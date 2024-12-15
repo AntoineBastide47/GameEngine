@@ -24,8 +24,8 @@ namespace Engine2D {
     friend class Entity2D;
     public:
       /// Position of the transform in 2D space.
-      Engine::Property<Vector2> position{
-        Vector2::Zero, [this] {
+      Engine::Property<Vector2f> position{
+        Vector2f::Zero, [this] {
           this->onTransformChange();
         }
       };
@@ -36,8 +36,8 @@ namespace Engine2D {
         }
       };
       /// Scale of the transform in 2D space.
-      Engine::Property<Vector2> scale{
-        Vector2::One, [this] {
+      Engine::Property<Vector2f> scale{
+        Vector2f::One, [this] {
           this->onTransformChange();
         }
       };
@@ -46,11 +46,11 @@ namespace Engine2D {
       Transform2D() = default;
       /**
        * @brief Parameterized constructor that initializes position, rotation, and scale to specified values.
-       * @param position Initial position as a Vector2.
+       * @param position Initial position as a Vector2f.
        * @param rotation Initial rotation in degrees.
-       * @param scale Initial scale as a Vector2.
+       * @param scale Initial scale as a Vector2f.
        */
-      Transform2D(const Vector2 &position, const float &rotation, const Vector2 &scale);
+      Transform2D(const Vector2f &position, const float &rotation, const Vector2f &scale);
       ~Transform2D() override;
 
       /// Equality operator to compare two Transform2D objects.
@@ -64,9 +64,9 @@ namespace Engine2D {
       [[nodiscard]] std::vector<Entity2D *>::const_iterator end() const;
 
       /// @returns A unit vector representing the forward direction of this entity.
-      [[nodiscard]] Vector2 Forward() const;
+      [[nodiscard]] Vector2f Forward() const;
       /// @returns A unit vector representing the up direction of this entity.
-      [[nodiscard]] Vector2 Up() const;
+      [[nodiscard]] Vector2f Up() const;
 
       /**
        * Sets the parent entity of this entity for hierarchical organization.
@@ -83,13 +83,13 @@ namespace Engine2D {
       /// @returns True if the component's properties were changed last frame
       [[nodiscard]] bool Changed() const;
       /// @returns The position of the Entity2D this transform is attached to in world coordinates
-      [[nodiscard]] Vector2 WorldPosition() const;
+      [[nodiscard]] Vector2f WorldPosition() const;
       /// @returns The rotation of the Entity2D this transform is attached to in world coordinates
       [[nodiscard]] float WorldRotation() const;
       /// @returns The scale of the Entity2D this transform is attached to in world coordinates
-      [[nodiscard]] Vector2 WorldScale() const;
+      [[nodiscard]] Vector2f WorldScale() const;
       /// @returns The scale of the Entity2D this transform is attached to in world coordinates divided by 2
-      [[nodiscard]] Vector2 WorldHalfScale() const;
+      [[nodiscard]] Vector2f WorldHalfScale() const;
       /// @returns True if the transform of this entity is in the viewport of the screen, False if not
       [[nodiscard]] bool IsInScreenBounds() const;
       /// @returns The transform matrix of this entity
@@ -120,13 +120,13 @@ namespace Engine2D {
       /// Is the transform was updated last frame
       bool wasUpdated;
       /// Position of the transform in 2D space.
-      Vector2 worldPosition;
+      Vector2f worldPosition;
       /// Rotation of the transform in degrees.
       float worldRotation = 0;
       /// Scale of the transform in 2D space.
-      Vector2 worldScale;
+      Vector2f worldScale;
       /// Half of the scale of the transform in 2D space.
-      Vector2 worldScaleHalf;
+      Vector2f worldScaleHalf;
       /// If this entity is on screen
       bool visible;
       /// Transform matrix

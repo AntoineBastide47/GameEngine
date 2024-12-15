@@ -10,7 +10,6 @@
 #include "2D/Entity2D.h"
 #include "2D/Game2D.h"
 #include "2D/Physics/Physics2D.h"
-#include "Common/Log.h"
 
 namespace Engine2D::Physics {
   Rigidbody2D::Rigidbody2D(
@@ -72,8 +71,8 @@ namespace Engine2D::Physics {
       };
 
       // Construct the AABB
-      aabb.min = Vector2::One * std::numeric_limits<float>::max();
-      aabb.max = Vector2::One * std::numeric_limits<float>::lowest();
+      aabb.min = Vector2f::One * std::numeric_limits<float>::max();
+      aabb.max = Vector2f::One * std::numeric_limits<float>::lowest();
       for (const auto vertex: transformedVertices) {
         aabb.min.x = std::min(aabb.min.x, vertex.x);
         aabb.min.y = std::min(aabb.min.y, vertex.y);
@@ -89,7 +88,7 @@ namespace Engine2D::Physics {
     this->linearVelocity += (affectedByGravity * Physics2D::gravity * massInv + force) * fixedDeltaTime;
     this->Transform()->position += this->linearVelocity * fixedDeltaTime;
     this->Transform()->rotation += this->angularVelocity * fixedDeltaTime * angularDamping;
-    this->force = Vector2::Zero;
+    this->force = Vector2f::Zero;
 
     // Check if the rigidbody needs to be bound to the viewport
     if (bindToViewportTop || bindToViewportBottom || bindToViewportLeft || bindToViewportRight) {
@@ -119,7 +118,7 @@ namespace Engine2D::Physics {
     }
   }
 
-  void Rigidbody2D::AddForce(const Vector2 &force) {
+  void Rigidbody2D::AddForce(const Vector2f &force) {
     this->force += force;
   }
 
@@ -127,7 +126,7 @@ namespace Engine2D::Physics {
     return this->type;
   }
 
-  std::vector<Vector2> Rigidbody2D::ContactPoints() const {
+  std::vector<Vector2f> Rigidbody2D::ContactPoints() const {
     return contactPoints;
   }
 

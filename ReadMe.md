@@ -15,7 +15,7 @@ Versions are currently formatted as follows: `[major].[feature].[patch].[beta]` 
 - **Major Version:** The first number indicates the major version of the engine. It changes when there are significant updates that may include breaking changes or major new features.
 - **Feature Count:** The second number represents the current feature count. Each time a new feature is fully implemented, this number increases.
 - **Patch Version:** The last number signifies small updates, additions to parts of a feature, or bug fixes.
-- **Beta Version:** Start of a feature, not fully tested and can crash your code. It is not recommended to use it since it is mostly a 'save' of the current engine state.
+- **Beta Version:** Indicates a preliminary update that may include minor changes, early-stage features, or quick fixes. These versions are not fully tested and may be unstable, potentially leading to crashes. They are primarily used to preserve the current state of the engine and are not recommended for regular use.
 
 **Versioning Examples**
 - **Version 0.1.0:** Game loop and texture rendering.

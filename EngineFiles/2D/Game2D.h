@@ -53,7 +53,7 @@ namespace Engine2D {
       /// @returns The height of the viewport of the window
       [[nodiscard]] static float ViewportHeight();
       /// @returns The aspect ratio of the viewport
-      [[nodiscard]] static Vector2 AspectRatio();
+      [[nodiscard]] static Vector2f AspectRatio();
 
       /// @returns The time span between the current frame and the last frame
       [[nodiscard]] static float DeltaTime();
@@ -81,7 +81,7 @@ namespace Engine2D {
       /// The initial height of the game window
       int initialHeight;
       /// The current aspect ratio of the window
-      Vector2 aspectRatio;
+      Vector2f aspectRatio;
 
       /// The title of the game window
       std::string title;

@@ -32,7 +32,7 @@ namespace Engine::Input {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   }
 
-  Engine2D::Vector2 Mouse::Position() {
+  Engine2D::Vector2f Mouse::Position() {
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     return  Engine2D::Vector2{static_cast<float>(x), static_cast<float>(y)};

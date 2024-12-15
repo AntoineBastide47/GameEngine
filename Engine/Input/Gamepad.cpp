@@ -88,6 +88,6 @@ namespace Engine::Input {
     if (!state)
       return;
 
-    event->trigger(Engine2D::Vector2{state->axes[keyCodeX], state->axes[keyCodeY]});
+    event->trigger(Engine2D::Vector2f{state->axes[keyCodeX], state->axes[keyCodeY]});
   }
 }

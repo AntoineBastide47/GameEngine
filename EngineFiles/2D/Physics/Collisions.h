@@ -29,7 +29,7 @@ namespace Engine2D::Physics {
      * @return True if they collide, false if not
      */
     [[nodiscard]] static bool collide(
-      const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2 *normal, float *depth
+      const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2f *normal, float *depth
     );
     /**
      * Computes the number of contact points between two rigidbodies when they collide
@@ -40,52 +40,51 @@ namespace Engine2D::Physics {
      * @param contactCount The number of contact points, either 1 or 2, calculated in the function's body
      */
     static void findContactPoints(
-      const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2 *contactPoint1, Vector2 *contactPoint2,
+      const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2f *contactPoint1, Vector2f *contactPoint2,
       uint8_t *contactCount
     );
 
     /// True if the given circle bodies collide, False if not
     static bool circlesIntersect(
-      const Vector2 &centerA, const Vector2 &scaleA, const Vector2 &centerB, const Vector2 &scaleB, Vector2 *normal,
-      float *depth
+      Vector2f centerA, Vector2f scaleA, Vector2f centerB, Vector2f scaleB, Vector2f *normal, float *depth
     );
     /// True if the given polygon bodies collide, False if not
     static bool polygonsIntersect(
-      const std::vector<Vector2> &verticesA, const Vector2 &positionA, const std::vector<Vector2> &verticesB,
-      const Vector2 &positionB, Vector2 *normal, float *depth
+      const std::vector<Vector2f> &verticesA, Vector2f positionA, const std::vector<Vector2f> &verticesB,
+      Vector2f positionB, Vector2f *normal, float *depth
     );
     /// True if the given polygon body and circle body collide, False if not
     static bool polygonAndCircleIntersect(
-      const std::vector<Vector2> &polygonVertices, const Vector2 &polygonCenter, const Vector2 &circleCenter,
-      const Vector2 &circleHalfScale, Vector2 *normal, float *depth
+      const std::vector<Vector2f> &polygonVertices, Vector2f polygonCenter, Vector2f circleCenter,
+      Vector2f circleHalfScale, Vector2f *normal, float *depth
     );
 
     /// Projects the given vertices onto the given axis
-    static void projectVertices(const std::vector<Vector2> &vertices, const Vector2 &axis, float *min, float *max);
+    static void projectVertices(const std::vector<Vector2f> &vertices, Vector2f axis, float *min, float *max);
     /// Projects the given circle onto the given axis
     static void projectCircle(
-      const Vector2 &circleCenter, float circleHalfScale, const Vector2 &axis, float *min, float *max
+      Vector2f circleCenter, float circleHalfScale, Vector2f axis, float *min, float *max
     );
     /// Returns the closest point to the given point on the given polygon
-    static Vector2 closestPointOnPolygon(const Vector2 &circleCenter, const std::vector<Vector2> &vertices);
+    static Vector2f closestPointOnPolygon(Vector2f circleCenter, const std::vector<Vector2f> &vertices);
 
     /// Finds the contact point between the given circles
     static void findCirclesContactPoint(
-      const Vector2 &centerA, const Vector2 &centerB, float radiusA, Vector2 *contactPoint
+      Vector2f centerA, Vector2f centerB, float radiusA, Vector2f *contactPoint
     );
     /// Finds the contact point between the given circle and polygon
     static void findCircleAndPolygonContactPoint(
-      const Vector2 &circleCenter, const std::vector<Vector2> &vertices, Vector2 *contactPoint
+      Vector2f circleCenter, const std::vector<Vector2f> &vertices, Vector2f *contactPoint
     );
     /// Finds the contact point(s) between the given polygons
     static void findPolygonsContactPoint(
-      const std::vector<Vector2> &verticesA, const std::vector<Vector2> &verticesB, Vector2 *contactPoint1,
-      Vector2 *contactPoint2, uint8_t *contactCount
+      const std::vector<Vector2f> &verticesA, const std::vector<Vector2f> &verticesB, Vector2f *contactPoint1,
+      Vector2f *contactPoint2, uint8_t *contactCount
     );
 
     /// Finds the distance and the closest point on the given segment between the given point and segment
     static void pointSegmentDistance(
-      const Vector2 &p, const Vector2 &pointA, const Vector2 &pointB, float *distanceSquared, Vector2 *closestPoint
+      Vector2f p, Vector2f pointA, Vector2f pointB, float *distanceSquared, Vector2f *closestPoint
     );
   };
 }

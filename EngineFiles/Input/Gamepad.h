@@ -23,7 +23,7 @@ namespace Engine::Input {
   class GamepadButtonEvent final : public Event<KeyAndButtonContext> {
     friend class Gamepad;
   };
-  class GamepadStickEvent final : public Event<Engine2D::Vector2> {
+  class GamepadStickEvent final : public Event<Engine2D::Vector2f> {
     friend class Gamepad;
   };
 

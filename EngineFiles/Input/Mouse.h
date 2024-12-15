@@ -22,7 +22,7 @@ namespace Engine::Input {
   class MouseButtonEvent final : public Event<KeyboardAndMouseContext> {
     friend class Mouse;
   };
-  class MousePositionEvent final : public Event<Engine2D::Vector2> {
+  class MousePositionEvent final : public Event<Engine2D::Vector2f> {
     friend class Mouse;
   };
   class MouseScrollEvent final : public Event<MouseScroll> {
@@ -46,7 +46,7 @@ namespace Engine::Input {
       /// Sets the mouse lock state to true and hidden state to true.
       static void SetMouseDisabled();
       /// @returns The current position of the mouse on the screen
-      [[nodiscard]] static Engine2D::Vector2 Position();
+      [[nodiscard]] static Engine2D::Vector2f Position();
 
       friend class Engine2D::Game2D;
     private:

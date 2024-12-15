@@ -24,7 +24,7 @@ namespace Engine2D {
   const float Game2D::screenScaleFactor{0.1f};
 
   Game2D::Game2D(const int width, const int height, std::string title)
-    : initialWidth(width), initialHeight(height), aspectRatio(Vector2::One), title(std::move(title)), width(width),
+    : initialWidth(width), initialHeight(height), aspectRatio(Vector2f::One), title(std::move(title)), width(width),
       height(height), window(nullptr), root(new Entity2D("Root")), deltaTime(0), timeScale(1), targetFrameRate(0),
       targetRenderRate(0), physics2D(nullptr), fixedDeltaTime(1.0f / 60.0f), physicsAccumulator(0) {
     if (instance)
@@ -42,7 +42,7 @@ namespace Engine2D {
     return screenScaleFactor * static_cast<float>(instance->height) / instance->aspectRatio.y;
   }
 
-  Vector2 Game2D::AspectRatio() {
+  Vector2f Game2D::AspectRatio() {
     return instance->aspectRatio;
   }
 

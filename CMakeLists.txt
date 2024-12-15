@@ -26,7 +26,6 @@ add_library(Engine2D STATIC
     EngineFiles/2D/ResourceManager.h
     Engine/2D/Rendering/SpriteRenderer.cpp
     EngineFiles/2D/Rendering/SpriteRenderer.h
-    Engine/2D/Types/Vector2.cpp
     EngineFiles/2D/Types/Vector2.h
     Engine/2D/Components/Transform2D.cpp
     EngineFiles/2D/Components/Transform2D.h
@@ -101,7 +100,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cpptrace)
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-0.2.6
+    OUTPUT_NAME Engine2D-0.2.6.1
     PREFIX ""
 )
 

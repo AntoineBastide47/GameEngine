@@ -13,7 +13,7 @@
 #include "Common/Log.h"
 
 namespace Engine2D {
-  Transform2D::Transform2D(const Vector2 &position, const float &rotation, const Vector2 &scale)
+  Transform2D::Transform2D(const Vector2f &position, const float &rotation, const Vector2f &scale)
     : parent(nullptr), wasUpdated(false), visible(true), projectionMatrix(glm::mat4(1.0f)) {
     this->position = position;
     this->rotation = rotation;
@@ -51,12 +51,12 @@ namespace Engine2D {
     return childList.cend();
   }
 
-  Vector2 Transform2D::Forward() const {
-    return Vector2::Right.Rotated(rotation).Normalized();
+  Vector2f Transform2D::Forward() const {
+    return Vector2f::Right.Rotated(rotation).Normalized();
   }
 
-  Vector2 Transform2D::Up() const {
-    return Vector2::Up.Rotated(rotation).Normalized();
+  Vector2f Transform2D::Up() const {
+    return Vector2f::Up.Rotated(rotation).Normalized();
   }
 
   void Transform2D::SetParent(Entity2D *parent) {
@@ -117,7 +117,7 @@ namespace Engine2D {
     return wasUpdated;
   }
 
-  Vector2 Transform2D::WorldPosition() const {
+  Vector2f Transform2D::WorldPosition() const {
     return worldPosition;
   }
 
@@ -125,11 +125,11 @@ namespace Engine2D {
     return worldRotation;
   }
 
-  Vector2 Transform2D::WorldScale() const {
+  Vector2f Transform2D::WorldScale() const {
     return worldScale;
   }
 
-  Vector2 Transform2D::WorldHalfScale() const {
+  Vector2f Transform2D::WorldHalfScale() const {
     return worldScaleHalf;
   }
 
