@@ -29,7 +29,7 @@ namespace Engine {
       /// Assignment operator
       Property &operator=(const T &newValue) {
         value = newValue;
-        notify();
+        callback();
         return *this;
       }
 
@@ -96,7 +96,6 @@ namespace Engine {
         return *this = value * val;
       }
 
-      // ReSharper disable once CppNonExplicitConversionOperator
       operator T() const {
         return value;
       }
@@ -123,13 +122,13 @@ namespace Engine {
 
       /// Forward operator to access data stored in the value of this property
       T *operator->() {
-        notify();
+        callback();
         return &value;
       }
 
       /// Forward operator to access data stored in the value of this property
       const T *operator->() const {
-        notify();
+        callback();
         return &value;
       }
     private:
@@ -137,12 +136,6 @@ namespace Engine {
       T value;
       /// The callback called when value is changed
       Callback callback;
-
-      /// Calls the callback
-      void notify() const {
-        if (callback)
-          callback();
-      }
   };
 }
 

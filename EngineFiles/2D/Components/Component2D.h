@@ -26,6 +26,9 @@ namespace Engine2D {
     friend class Entity2D;
     friend class Game2D;
     public:
+      /// Weather or not this component is active in the scene
+      bool active;
+
       Component2D();
       virtual ~Component2D();
 

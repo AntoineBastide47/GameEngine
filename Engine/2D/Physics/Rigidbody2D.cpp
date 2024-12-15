@@ -17,10 +17,11 @@ namespace Engine2D::Physics {
     const float mass, const float inertia, const float restitution, const float area,
     const bool isStatic, const float radius, const float width, const float height, const Rigidbody2DType type
   )
-    : restitution(std::clamp(restitution, 0.0f, 1.0f)), isStatic(isStatic), radius(radius), width(width),
-      height(height), affectedByGravity(true), inertia(inertia), bindToViewportTop(false),
+    : restitution(restitution), angularDamping(1), isStatic(isStatic), radius(radius), width(width),
+      height(height), affectedByGravity(true), staticFriction(0.6f), dynamicFriction(0.4f), bindToViewportTop(false),
       bindToViewportBottom(false), bindToViewportLeft(false), bindToViewportRight(false), initialized(false),
-      inertiaInv(inertia > 0 ? 0 : 1.0f / inertia), area(area), type(type) {
+      angularVelocity(0), massInv(0), inertia(inertia), inertiaInv(inertia > 0 ? 0 : 1.0f / inertia), area(area),
+      type(type) {
     this->mass = mass;
   }
 
@@ -29,6 +30,23 @@ namespace Engine2D::Physics {
     bindToViewportBottom = true;
     bindToViewportLeft = true;
     bindToViewportRight = true;
+  }
+
+  void Rigidbody2D::UnbindFromViewport() {
+    bindToViewportTop = false;
+    bindToViewportBottom = false;
+    bindToViewportLeft = false;
+    bindToViewportRight = false;
+  }
+
+  void Rigidbody2D::NoFriction() {
+    dynamicFriction = 0.0f;
+    staticFriction = 0.0f;
+  }
+
+  void Rigidbody2D::DefaultFriction() {
+    staticFriction = 0.6f;
+    dynamicFriction = 0.4f;
   }
 
   Rigidbody2D::AABB Rigidbody2D::getAABB() {
@@ -70,7 +88,7 @@ namespace Engine2D::Physics {
   void Rigidbody2D::step(const float fixedDeltaTime) {
     this->linearVelocity += (affectedByGravity * Physics2D::gravity * massInv + force) * fixedDeltaTime;
     this->Transform()->position += this->linearVelocity * fixedDeltaTime;
-    this->Transform()->rotation += this->angularVelocity * fixedDeltaTime;
+    this->Transform()->rotation += this->angularVelocity * fixedDeltaTime * angularDamping;
     this->force = Vector2::Zero;
 
     // Check if the rigidbody needs to be bound to the viewport

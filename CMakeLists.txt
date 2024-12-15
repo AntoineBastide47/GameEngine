@@ -3,7 +3,7 @@ project(GameEngine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_BUILD_TYPE "Debug")
 
 # Find required packages
 find_package(OpenGL REQUIRED)
@@ -55,6 +55,8 @@ add_library(Engine2D STATIC
     EngineFiles/Common/Property.h
     Engine/2D/Physics/CollisionManifold.cpp
     EngineFiles/2D/Physics/CollisionManifold.h
+    Engine/Types/float01.cpp
+    EngineFiles/Types/float01.h
 )
 
 # Add RTTI
@@ -82,7 +84,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 
   # Add stripping for Release builds
   # TODO: make this optional ? So crashes can be debuged in release mode
-  add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
+  #add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
 endif()
 
 # Include CMakeRC
@@ -99,7 +101,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cpptrace)
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-0.2.5
+    OUTPUT_NAME Engine2D-0.2.6
     PREFIX ""
 )
 

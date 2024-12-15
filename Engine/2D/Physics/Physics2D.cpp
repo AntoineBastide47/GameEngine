@@ -53,6 +53,8 @@ namespace Engine2D::Physics {
 
   void Physics2D::step() {
     addRigidbodies();
+
+    // Early out if there are no physics components
     if (rigidbodies.empty())
       return;
 
@@ -75,7 +77,7 @@ namespace Engine2D::Physics {
       else {
         if (!rigidbody->isStatic)
           rigidbody->step(fixedDeltaTime);
-        if (rigidbody->Entity() && rigidbody->Entity()->active)
+        if (rigidbody->active && rigidbody->Entity() && rigidbody->Entity()->active)
           activeRigidbodies.push_back(rigidbody);
       }
     }
@@ -135,8 +137,6 @@ namespace Engine2D::Physics {
         contact.rb2->Entity()->OnCollision(contact.rb1);
       }
     }
-    //if (!contactPairs.empty())
-    //  Game2D::instance->timeScale = 0;
   }
 
   void Physics2D::separateBodies(const Rigidbody2D *rb1, const Rigidbody2D *rb2, const Vector2 mtv) {
@@ -152,12 +152,17 @@ namespace Engine2D::Physics {
 
   void Physics2D::resolveCollision(const Engine::Physics::CollisionManifold &contact) {
     const float bounciness = std::min(contact.rb1->restitution, contact.rb2->restitution);
-    std::vector<Vector2> impulses;
+    const float sf = (contact.rb1->staticFriction + contact.rb2->staticFriction) * 0.5f;
+    const float df = (contact.rb1->dynamicFriction + contact.rb2->dynamicFriction) * 0.5f;
+
+    std::array<Vector2, 2> impulses;
+    std::array<Vector2, 2> frictionImpulses;
+    std::array<float, 2> jList;
 
     // Find the impulses to apply
-    for (auto contactPoint: contact.contactPoints) {
-      const Vector2 raPerp = (contactPoint - contact.rb1->Transform()->WorldPosition()).Perpendicular();
-      const Vector2 rbPerp = (contactPoint - contact.rb2->Transform()->WorldPosition()).Perpendicular();
+    for (int i = 0; i < contact.contactPoints.size(); i++) {
+      const Vector2 raPerp = (contact.contactPoints[i] - contact.rb1->Transform()->WorldPosition()).Perpendicular();
+      const Vector2 rbPerp = (contact.contactPoints[i] - contact.rb2->Transform()->WorldPosition()).Perpendicular();
 
       // Find the relative velocity
       const Vector2 angularLinearVelocityA = raPerp * contact.rb1->angularVelocity;
@@ -173,7 +178,8 @@ namespace Engine2D::Physics {
                                   raPerpMag * raPerpMag * contact.rb1->inertiaInv +
                                   rbPerpMag * rbPerpMag * contact.rb2->inertiaInv;
         const float j = -(1 + bounciness) * contactVelocityMag / (denominator * contact.contactPoints.size());
-        impulses.emplace_back(j * contact.normal);
+        jList[i] = j;
+        impulses[i] = j * contact.normal;
       }
     }
 
@@ -186,6 +192,46 @@ namespace Engine2D::Physics {
       contact.rb1->angularVelocity -= impulses[i] ^ ra * contact.rb1->inertiaInv;
       contact.rb2->linearVelocity += impulses[i] * contact.rb2->massInv;
       contact.rb2->angularVelocity += impulses[i] ^ rb * contact.rb2->inertiaInv;
+    }
+
+    // Find the friction impulses to apply
+    for (int i = 0; i < contact.contactPoints.size(); i++) {
+      const Vector2 raPerp = (contact.contactPoints[i] - contact.rb1->Transform()->WorldPosition()).Perpendicular();
+      const Vector2 rbPerp = (contact.contactPoints[i] - contact.rb2->Transform()->WorldPosition()).Perpendicular();
+
+      // Find the relative velocity
+      const Vector2 angularLinearVelocityA = raPerp * contact.rb1->angularVelocity;
+      const Vector2 angularLinearVelocityB = rbPerp * contact.rb2->angularVelocity;
+      const Vector2 relativeVelocity = contact.rb2->linearVelocity + angularLinearVelocityB -
+                                       (contact.rb1->linearVelocity + angularLinearVelocityA);
+
+      Vector2 tangent = relativeVelocity - relativeVelocity * contact.normal * contact.normal;
+      if (Vector2::ApproxEquals(tangent, Vector2::Zero))
+        continue;
+      tangent.Normalize();
+
+      // Compute the impulse
+      const float raPerpMag = raPerp * tangent;
+      const float rbPerpMag = rbPerp * tangent;
+      const float denominator = contact.rb1->massInv + contact.rb2->massInv +
+                                raPerpMag * raPerpMag * contact.rb1->inertiaInv +
+                                rbPerpMag * rbPerpMag * contact.rb2->inertiaInv;
+      if (const float jt = -relativeVelocity * tangent / (denominator * contact.contactPoints.size());
+        std::abs(jt) <= jList[i] * sf)
+        frictionImpulses[i] = jt * contact.normal;
+      else
+        frictionImpulses[i] = -jt * contact.normal * df;
+    }
+
+    // Apply the friction impulses to update the linear and angular velocity
+    for (int i = 0; i < frictionImpulses.size(); i++) {
+      const Vector2 ra = contact.contactPoints[i] - contact.rb1->Transform()->WorldPosition();
+      const Vector2 rb = contact.contactPoints[i] - contact.rb2->Transform()->WorldPosition();
+
+      contact.rb1->linearVelocity -= frictionImpulses[i] * contact.rb1->massInv;
+      contact.rb1->angularVelocity -= frictionImpulses[i] ^ ra * contact.rb1->inertiaInv;
+      contact.rb2->linearVelocity += frictionImpulses[i] * contact.rb2->massInv;
+      contact.rb2->angularVelocity += frictionImpulses[i] ^ rb * contact.rb2->inertiaInv;
     }
   }
 }

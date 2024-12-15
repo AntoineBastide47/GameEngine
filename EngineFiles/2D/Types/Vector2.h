@@ -63,13 +63,6 @@ namespace Engine2D {
       /// Scalar multiplication assignment for scaling the vector.
       Vector2 &operator*=(float scalar);
 
-      /// Modulo operator.
-      Vector2 operator%(float scalar) const;
-      /// Modulo operator.
-      friend Vector2 operator%(float scalar, const Vector2 &vec);
-      /// Modulo assignment.
-      Vector2 &operator%=(float scalar);
-
       /// Cross product operator
       float operator^(const Vector2 &v) const;
 

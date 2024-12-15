@@ -127,6 +127,8 @@ namespace Engine2D {
 
       /// Initializes the game
       void initialize();
+      /// Processes all the inputs to the game
+      static void processInput();
       /// Update the game
       void update() const;
       /// Simulates a step of the physics simulation

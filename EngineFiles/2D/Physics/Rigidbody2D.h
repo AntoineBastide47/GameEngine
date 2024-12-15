@@ -10,6 +10,7 @@
 #include "2D/Components/Component2D.h"
 #include "2D/Types/Vector2.h"
 #include "Common/Property.h"
+#include "Types/float01.h"
 
 namespace Engine2D {
   class Game2D;
@@ -40,19 +41,22 @@ namespace Engine2D::Physics {
       };
 
       /// Coefficient of restitution (bounciness) of the rigid body.
-      float restitution{};
+      Engine::float01 restitution;
+      /// Indicates how much of the angular velocity will be applied during collisions.
+      /// For full rotation set it to 1, for no rotation set it to 0 or values inbetween for different reactions.
+      Engine::float01 angularDamping;
       /// Flag indicating whether the body is static (immovable).
-      bool isStatic{};
+      bool isStatic;
       /// Radius of the body (if it's a Circle).
-      float radius{};
+      float radius;
       /// Width of the body (if it's a Rectangle).
-      float width{};
+      float width;
       /// Height of the body (if it's a Rectangle).
-      float height{};
+      float height;
       /// Flag indicating whether the body is affected by gravity.
-      bool affectedByGravity{};
+      bool affectedByGravity;
       /// Mass of the rigidbody
-      Engine::Property<float> mass = Engine::Property<float>{
+      Engine::Property<float> mass{
         0, [this] {
           if (this->mass < 0.0f)
             this->mass = 0;
@@ -62,8 +66,13 @@ namespace Engine2D::Physics {
             this->massInv = 1.0f / this->mass;
         }
       };
-      /// Inertia of the rigidbody
-      float inertia{};
+      /// The coefficient of the frictional force which acts between the two surfaces when they are in the rest position
+      /// with respect to each other.
+      float staticFriction;
+      /// The coefficient of the frictional force which is created between any two surfaces when they are in a moving
+      /// position.
+      float dynamicFriction;
+
       /// If true, the rigidbody will bounce off the top of the viewport
       bool bindToViewportTop;
       /// If true, the rigidbody will bounce off the bottom of the viewport
@@ -87,6 +96,14 @@ namespace Engine2D::Physics {
       [[nodiscard]] std::vector<Vector2> ContactPoints() const;
       /// Makes this rigidbody bounce off every part of the viewport
       void BindToViewport();
+      /// Makes this rigidbody not bounce off every part of the viewport
+      void UnbindFromViewport();
+      /// Sets the friction coefficients to 0
+      void NoFriction();
+      /// Sets the friction coefficients to there default values:
+      ///  - static: 0.6f
+      ///  - dynamic: 0.4f
+      void DefaultFriction();
 
       /**
        * Creates a circular rigid body.
@@ -112,15 +129,17 @@ namespace Engine2D::Physics {
     private:
       bool initialized;
       /// Angular velocity of the body.
-      float angularVelocity{};
+      float angularVelocity;
       /// Inverse of the mass (cached to only use the division when mass changes)
-      float massInv{};
+      float massInv;
+      /// Inertia of the rigidbody
+      float inertia;
       /// Inverse of the inertia (cached to only use the division when inertia changes)
-      float inertiaInv{};
+      float inertiaInv;
       /// Area of the rigid body.
-      float area{};
+      float area;
       /// Type of the rigid body (Circle or Rectangle).
-      Rigidbody2DType type{};
+      Rigidbody2DType type;
       /// Linear velocity of the rigid body.
       Vector2 linearVelocity;
       /// Accumulated force applied to the rigid body.

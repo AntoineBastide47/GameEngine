@@ -53,14 +53,6 @@ namespace Engine2D {
     return *this = *this * scalar;
   }
 
-  Vector2 Vector2::operator%(const float scalar) const {
-    return Vector2{std::fmod(x, scalar), std::fmod(y, scalar)};
-  }
-
-  Vector2 &Vector2::operator%=(const float scalar) {
-    return *this = *this % scalar;
-  }
-
   float Vector2::operator^(const Vector2 &v) const {
     return x * v.y - y * v.x;
   }
@@ -124,10 +116,6 @@ namespace Engine2D {
 
   Vector2 operator*(const float scalar, const Vector2 &vec) {
     return vec * scalar;
-  }
-
-  Vector2 operator%(const float scalar, const Vector2 &vec) {
-    return vec % scalar;
   }
 
   Vector2 operator/(const float scalar, const Vector2 &vec) {
@@ -228,9 +216,10 @@ namespace Engine2D {
   void Vector2::Normalize() {
     if (const float magnitude = Magnitude(); magnitude > 0.0f)
       *this /= magnitude;
-    LOG_WARNING(
-      "Can not normalize a zero \"(0, 0)\" Vector2, resulting operation will default to not modify the Vector2 instance."
-    );
+    else
+      LOG_WARNING(
+        "Can not normalize a zero \"(0, 0)\" Vector2, resulting operation will default to not modify the Vector2 instance."
+      );
   }
 
   void Vector2::Scale(const Vector2 &v) {

@@ -62,7 +62,7 @@ namespace Engine2D {
     auto nextFrameTime = std::chrono::high_resolution_clock::now();
     float oneSecondTimer = 0.0f;
     float frameCounter = 0;
-    float acc = 0.0f;
+    auto acc = 0.0f;
 
     auto lastTime = std::chrono::high_resolution_clock::now();
     while (!glfwWindowShouldClose(window)) {
@@ -72,26 +72,21 @@ namespace Engine2D {
       lastTime = currentFrameTime;
       glfwPollEvents();
 
-      // Process the inputs to the game
-      Engine::Input::Keyboard::processInput();
-      Engine::Input::Mouse::processInput();
-      Engine::Input::Gamepad::processInput();
-
-      // Update, Simulate and Render the game
       this->addEntities();
+      this->processInput();
       this->update();
       auto start = std::chrono::high_resolution_clock::now();
       this->fixedUpdate();
-      acc += std::chrono::duration<float>(std::chrono::high_resolution_clock::now() - start).count();
+      acc += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count();
       this->removeEntities();
       this->render();
 
       // FPS calculation
       oneSecondTimer += deltaTime;
       frameCounter++;
-      if (oneSecondTimer >= 1.0f) {
-        std::cout << "FPS: " << frameCounter << " TotalPhysics in (μs): " << acc * 1000000 << std::endl;
-        oneSecondTimer -= 1;
+      while (oneSecondTimer >= 1.0f) {
+        std::cout << "FPS: " << frameCounter << " Total Physics in (μs): " << acc << std::endl;
+        oneSecondTimer -= 1.0f;
         frameCounter = 0;
         physicsAccumulator = 0.0f;
         acc = 0.0f;
@@ -199,6 +194,12 @@ namespace Engine2D {
     this->Initialize();
   }
 
+  void Game2D::processInput() {
+    Engine::Input::Keyboard::processInput();
+    Engine::Input::Mouse::processInput();
+    Engine::Input::Gamepad::processInput();
+  }
+
   void Game2D::update() const {
     for (const auto &entity: entities)
       if (entity->active)
@@ -222,7 +223,7 @@ namespace Engine2D {
     glClear(GL_COLOR_BUFFER_BIT);
     Rendering::SpriteRenderer::drawSprites(entitiesById);
 
-    for (const auto rigidbody: physics2D->rigidbodies) {
+    /*for (const auto rigidbody: physics2D->rigidbodies) {
       if (!rigidbody->Transform()->IsInScreenBounds())
         continue;
       if (rigidbody->type == Physics::Rigidbody2D::Circle)
@@ -235,7 +236,7 @@ namespace Engine2D {
           {rigidbody->getAABB().min, rigidbody->getAABB().max}, glm::vec3(1, 0, 0)
         );
       }
-    }
+    }*/
 
     // Prepare the next frame
     glfwSwapBuffers(window);

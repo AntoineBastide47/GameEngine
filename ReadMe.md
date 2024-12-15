@@ -77,6 +77,9 @@ Since this is a personal learning project, contributions are welcomed but may no
 ## License
 This project is licensed under the Apache License Version 2.0.
 
-## Contact
-For any idea suggestions, please open post a comment on the Trello Board linked above.<br>
-For any code suggestions, please open an issue on Github.
+## References
+The following references include a collection of articles and videos that have served as the foundation for building my
+engine. This list will continue to evolve over time. Please note that strictly following these resources alone will not
+result in a complete game engine but can provide valuable insights and guidance for where/how to start.
+ - OpenGL: [Learn OpenGL](https://learnopengl.com/)
+ - Physics Engine: [Two-Bit Coding - Let's Make a Physics Engine](https://www.youtube.com/playlist?list=PLSlpr6o9vURwq3oxVZSimY8iC-cdd3kIs)

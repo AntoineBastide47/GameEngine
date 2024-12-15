@@ -16,7 +16,7 @@ namespace Engine2D {
     return transform;
   }
 
-  Component2D::Component2D() : entity(nullptr), transform(nullptr) {}
+  Component2D::Component2D() : active(true), entity(nullptr), transform(nullptr) {}
 
   Component2D::~Component2D() {
     transform = nullptr;
