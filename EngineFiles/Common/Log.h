@@ -16,7 +16,6 @@ namespace Engine {
    * It is recommended to use the macros: LOG_MESSAGE, LOG_MESSAGE_WITH_TRACE, LOG_WARNING and LOR_ERROR instead of the
    * public functions Message, Warning and Error of the logger to automatically get the calling function's signature
    */
-  // TODO: add HashMap[(log, count)] to check if log was already sent to not pollute the console
   class Log {
     public:
       /// Print's the given string to the console

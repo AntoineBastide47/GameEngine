@@ -21,7 +21,6 @@ namespace Engine2D::Physics {
 using Engine2D::Rendering::Texture2D;
 
 namespace Engine2D {
-  // TODO: Add an ID system
   /**
    * Represents a 2D entity with a transform, rendering capabilities, and hierarchical structure.
    *
@@ -35,8 +34,6 @@ namespace Engine2D {
       std::string name;
       /// The transform representing the position, rotation, and scale of the entity in the game world.
       Transform2D transform;
-      /// The texture of this entity
-      Texture2D *texture;
       /// The color of the texture
       glm::vec3 textureColor;
       /// If the current entity is active in the scene, if it is not, it will not be updated and rendered
@@ -75,6 +72,11 @@ namespace Engine2D {
       /// Removes the given component to the current entity
       void RemoveComponent(Component2D *component);
 
+      /// Sets the texture of the entity to the given texture
+      void SetTexture(Texture2D *texture);
+      /// @returns The pointer to the texture of this entity
+      [[nodiscard]] Texture2D *Texture() const;
+
       /**
        * Try's to find a component of the given type on the current entity
        * @tparam C The type of the component to find, must inherit from Component2D
@@ -112,6 +114,8 @@ namespace Engine2D {
     private:
       /// Whether this entity has been initialized by the game
       bool initialized = false;
+      /// The texture of this entity
+      Texture2D *texture;
       /// The components linked to this entity
       std::vector<Component2D *> components;
 

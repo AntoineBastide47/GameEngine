@@ -56,6 +56,10 @@ add_library(Engine2D STATIC
     EngineFiles/2D/Physics/CollisionManifold.h
     Engine/Types/float01.cpp
     EngineFiles/Types/float01.h
+    Engine/2D/Physics/CollisionGrid.cpp
+    EngineFiles/2D/Physics/CollisionGrid.h
+    EngineFiles/Common/Settings.cpp
+    EngineFiles/Common/Settings.h
 )
 
 # Add RTTI
@@ -82,8 +86,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
   set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
   # Add stripping for Release builds
-  # TODO: make this optional ? So crashes can be debuged in release mode
-  #add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
+  add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
 endif()
 
 # Include CMakeRC
@@ -100,7 +103,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cpptrace)
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-0.2.6.1
+    OUTPUT_NAME Engine2D-0.2.7
     PREFIX ""
 )
 
@@ -128,7 +131,7 @@ else ()
 endif ()
 
 target_include_directories(Engine2D PUBLIC
-    EngineFiles
+    ${CMAKE_SOURCE_DIR}/EngineFiles
     ${OPENGL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}

@@ -163,11 +163,11 @@ namespace Engine2D {
     childList.push_back(child);
   }
 
-  bool Transform2D::IsInScreenBounds() const {
+  bool Transform2D::Visible() const {
     return this->visible;
   }
 
-  glm::mat4 Transform2D::TransformMatrix() const {
+  glm::mat4 Transform2D::WorldMatrix() const {
     return this->projectionMatrix;
   }
 

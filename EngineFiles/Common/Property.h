@@ -21,15 +21,19 @@ namespace Engine {
 
       /**
        * @param initialValue The initial value to store in the property
-       * @param callback The callback called when the value of this property is changed
+       * @param postCallback The callback called after value of this property is changed
+       * @param preCallback The callback called before value of this property is changed
        */
-      Property(T initialValue, Callback callback)
-        : value(initialValue), callback(std::move(callback)) {}
+      explicit Property(
+        T initialValue, const Callback &postCallback, const std::optional<Callback> &preCallback = std::nullopt
+      ) : value(initialValue), preCallback(preCallback), postCallback(postCallback) {}
 
       /// Assignment operator
       Property &operator=(const T &newValue) {
+        if (preCallback)
+          (*preCallback)();
         value = newValue;
-        callback();
+        postCallback();
         return *this;
       }
 
@@ -96,6 +100,11 @@ namespace Engine {
         return *this = value * val;
       }
 
+      /// Division operator
+      Property &operator/=(const T &val) {
+        return *this = value / val;
+      }
+
       operator T() const {
         return value;
       }
@@ -122,20 +131,26 @@ namespace Engine {
 
       /// Forward operator to access data stored in the value of this property
       T *operator->() {
-        callback();
+        if (preCallback)
+          (*preCallback)();
+        postCallback();
         return &value;
       }
 
       /// Forward operator to access data stored in the value of this property
       const T *operator->() const {
-        callback();
+        if (preCallback)
+          (*preCallback)();
+        postCallback();
         return &value;
       }
     private:
       /// The value stored in this property
       T value;
-      /// The callback called when value is changed
-      Callback callback;
+      /// The callback called before value is changed
+      std::optional<Callback> preCallback;
+      /// The callback called after value is changed
+      Callback postCallback;
   };
 }
 

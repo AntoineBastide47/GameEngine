@@ -12,11 +12,13 @@
 #include "2D/Physics/Collisions.h"
 #include "2D/Physics/Rigidbody2D.h"
 #include "Common/Log.h"
+#include "Common/Settings.h"
 
 namespace Engine2D::Physics {
-  const Vector2f Physics2D::gravity{0.0f, -9.81f};
+  Physics2D::Physics2D() : collisionGrid(Engine::Settings::Physics.GetPartitionSize()), collisionGridNeedsResizing(false) {}
 
-  Physics2D::Physics2D(const float fixedDeltaTime) : fixedDeltaTime(fixedDeltaTime) {}
+  // (10, 10): 2700-2800
+  // ( 9,  9):
 
   Physics2D::~Physics2D() {
     rigidbodies.clear();
@@ -59,13 +61,22 @@ namespace Engine2D::Physics {
       return;
 
     simulate();
-    broadPhase();
-    narrowPhase();
-    removeRigidbodies();
+    // Skip the collision detection if there are no active colliders
+    if (!activeRigidbodies.empty()) {
+      if (!Engine::Settings::Physics.GetUseScreenPartitioning())
+        broadPhase();
+      else {
+        if (collisionGridNeedsResizing)
+          collisionGrid.setGridSize(Engine::Settings::Physics.GetPartitionSize());
+        collisionGrid.update(activeRigidbodies);
+        contactPairs = collisionGrid.collisionPairs();
+      }
+      narrowPhase();
+      activeRigidbodies.clear();
+      contactPairs.clear();
+    }
 
-    // Remove the previous data
-    activeRigidbodies.clear();
-    contactPairs.clear();
+    removeRigidbodies();
   }
 
   void Physics2D::simulate() {
@@ -74,13 +85,14 @@ namespace Engine2D::Physics {
     for (const auto rigidbody: rigidbodies) {
       if (!rigidbody)
         foundNull = true;
-      else {
-        if (!rigidbody->isStatic)
-          rigidbody->step(fixedDeltaTime);
-        if (rigidbody->active && rigidbody->Entity() && rigidbody->Entity()->active)
-          activeRigidbodies.push_back(rigidbody);
-      }
+      else if (rigidbody->active && rigidbody->Entity() && rigidbody->Entity()->active)
+        activeRigidbodies.push_back(rigidbody);
     }
+
+    const float fixedDeltaTime = Engine::Settings::Physics.GetFixedDeltaTime();
+    for (const auto rigidbody: activeRigidbodies)
+      if (!rigidbody->isStatic)
+        rigidbody->step(fixedDeltaTime);
 
     // Remove all the null pointers if at least one is found
     if (foundNull)
@@ -116,7 +128,7 @@ namespace Engine2D::Physics {
     for (auto [rb1, rb2]: contactPairs) {
       // More accurate SAT collision check
       Vector2f normal;
-      float depth = std::numeric_limits<float>::max();
+      double depth = std::numeric_limits<double>::max();
       if (Collisions::collide(rb1, rb2, &normal, &depth)) {
         // Move the bodies
         separateBodies(rb1, rb2, normal * depth);
@@ -168,7 +180,7 @@ namespace Engine2D::Physics {
       const Vector2f angularLinearVelocityA = raPerp * contact.rb1->angularVelocity;
       const Vector2f angularLinearVelocityB = rbPerp * contact.rb2->angularVelocity;
       const Vector2f relativeVelocity = contact.rb2->linearVelocity + angularLinearVelocityB -
-                                       (contact.rb1->linearVelocity + angularLinearVelocityA);
+                                        (contact.rb1->linearVelocity + angularLinearVelocityA);
 
       if (const float contactVelocityMag = relativeVelocity * contact.normal; contactVelocityMag <= 0.0f) {
         // Compute the impulse
@@ -203,7 +215,7 @@ namespace Engine2D::Physics {
       const Vector2f angularLinearVelocityA = raPerp * contact.rb1->angularVelocity;
       const Vector2f angularLinearVelocityB = rbPerp * contact.rb2->angularVelocity;
       const Vector2f relativeVelocity = contact.rb2->linearVelocity + angularLinearVelocityB -
-                                       (contact.rb1->linearVelocity + angularLinearVelocityA);
+                                        (contact.rb1->linearVelocity + angularLinearVelocityA);
 
       Vector2f tangent = relativeVelocity - relativeVelocity * contact.normal * contact.normal;
       if (Vector2f::ApproxEquals(tangent, Vector2f::Zero))

@@ -13,6 +13,7 @@
 namespace Engine2D::Physics {
   class Collisions {
     friend class Physics2D;
+    friend class CollisionGrid;
     /**
      * Checks if the given rigidbodies AABB collide
      * @param a The first rigidbody AABB
@@ -29,7 +30,7 @@ namespace Engine2D::Physics {
      * @return True if they collide, false if not
      */
     [[nodiscard]] static bool collide(
-      const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2f *normal, float *depth
+      const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2f *normal, double *depth
     );
     /**
      * Computes the number of contact points between two rigidbodies when they collide
@@ -46,24 +47,24 @@ namespace Engine2D::Physics {
 
     /// True if the given circle bodies collide, False if not
     static bool circlesIntersect(
-      Vector2f centerA, Vector2f scaleA, Vector2f centerB, Vector2f scaleB, Vector2f *normal, float *depth
+      Vector2f centerA, Vector2f scaleA, Vector2f centerB, Vector2f scaleB, Vector2f *normal, double *depth
     );
     /// True if the given polygon bodies collide, False if not
     static bool polygonsIntersect(
       const std::vector<Vector2f> &verticesA, Vector2f positionA, const std::vector<Vector2f> &verticesB,
-      Vector2f positionB, Vector2f *normal, float *depth
+      Vector2f positionB, Vector2f *normal, double *depth
     );
     /// True if the given polygon body and circle body collide, False if not
     static bool polygonAndCircleIntersect(
       const std::vector<Vector2f> &polygonVertices, Vector2f polygonCenter, Vector2f circleCenter,
-      Vector2f circleHalfScale, Vector2f *normal, float *depth
+      Vector2f circleHalfScale, Vector2f *normal, double *depth
     );
 
     /// Projects the given vertices onto the given axis
-    static void projectVertices(const std::vector<Vector2f> &vertices, Vector2f axis, float *min, float *max);
+    static void projectVertices(const std::vector<Vector2f> &vertices, Vector2f axis, double *min, double *max);
     /// Projects the given circle onto the given axis
     static void projectCircle(
-      Vector2f circleCenter, float circleHalfScale, Vector2f axis, float *min, float *max
+      Vector2f circleCenter, float circleHalfScale, Vector2f axis, double *min, double *max
     );
     /// Returns the closest point to the given point on the given polygon
     static Vector2f closestPointOnPolygon(Vector2f circleCenter, const std::vector<Vector2f> &vertices);
@@ -84,7 +85,7 @@ namespace Engine2D::Physics {
 
     /// Finds the distance and the closest point on the given segment between the given point and segment
     static void pointSegmentDistance(
-      Vector2f p, Vector2f pointA, Vector2f pointB, float *distanceSquared, Vector2f *closestPoint
+      Vector2f p, Vector2f pointA, Vector2f pointB, double *distanceSquared, Vector2f *closestPoint
     );
   };
 }

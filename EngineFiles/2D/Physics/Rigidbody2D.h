@@ -16,8 +16,6 @@ namespace Engine2D {
   class Game2D;
 }
 
-// TODO: width, height, area, radius not used because overriden with transform properties, so make them overrideable by the user by choice
-
 namespace Engine2D::Physics {
   /**
    * @class Rigidbody2D
@@ -31,6 +29,7 @@ namespace Engine2D::Physics {
     friend class Engine2D::Game2D;
     friend class Physics2D;
     friend class Collisions;
+    friend class CollisionGrid;
     public:
       struct AABB {
         Vector2f min;
@@ -109,22 +108,20 @@ namespace Engine2D::Physics {
        * Creates a circular rigid body.
        * @param radius The radius of the circle.
        * @param mass The density of the body.
-       * @param restitution The coefficient of restitution.
        * @param isStatic Whether the body is static.
        * @return A Rigidbody2D instance representing the circular body.
        */
-      static Rigidbody2D *CreateCircleBody(float radius, float mass, float restitution, bool isStatic);
+      static Rigidbody2D *CreateCircleBody(float radius, float mass, bool isStatic);
       /**
        * Creates a rectangular rigid body.
        * @param width The width of the rectangle.
        * @param height The height of the rectangle.
        * @param mass The density of the body.
-       * @param restitution The coefficient of restitution.
        * @param isStatic Whether the body is static.
        * @return A Rigidbody2D instance representing the rectangular body.
        */
       static Rigidbody2D *CreateRectangleBody(
-        float width, float height, float mass, float restitution, bool isStatic
+        float width, float height, float mass, bool isStatic
       );
     private:
       bool initialized;
@@ -150,10 +147,11 @@ namespace Engine2D::Physics {
       std::vector<Vector2f> transformedVertices;
       /// The points at which this rigidbody collided with another rigidbody
       std::vector<Vector2f> contactPoints;
+      /// The model matrix of the rigidbody last time it changed
+      glm::mat4 lastModelMatrix;
 
       Rigidbody2D(
-        float mass, float inertia, float restitution, float area, bool isStatic, float radius, float width,
-        float height, Rigidbody2DType type
+        float mass, float inertia, float area, bool isStatic, float radius, float width, float height, Rigidbody2DType type
       );
 
       /** @return A std::array containing the min and max points of the AABB. */

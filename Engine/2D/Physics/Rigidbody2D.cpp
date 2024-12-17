@@ -10,17 +10,18 @@
 #include "2D/Entity2D.h"
 #include "2D/Game2D.h"
 #include "2D/Physics/Physics2D.h"
+#include "Common/Settings.h"
 
 namespace Engine2D::Physics {
   Rigidbody2D::Rigidbody2D(
-    const float mass, const float inertia, const float restitution, const float area,
-    const bool isStatic, const float radius, const float width, const float height, const Rigidbody2DType type
+    const float mass, const float inertia, const float area, const bool isStatic, const float radius, const float width,
+    const float height, const Rigidbody2DType type
   )
-    : restitution(restitution), angularDamping(1), isStatic(isStatic), radius(radius), width(width),
+    : restitution(1), angularDamping(1), isStatic(isStatic), radius(radius), width(width),
       height(height), affectedByGravity(true), staticFriction(0.6f), dynamicFriction(0.4f), bindToViewportTop(false),
       bindToViewportBottom(false), bindToViewportLeft(false), bindToViewportRight(false), initialized(false),
       angularVelocity(0), massInv(0), inertia(inertia), inertiaInv(inertia > 0 ? 0 : 1.0f / inertia), area(area),
-      type(type) {
+      type(type), lastModelMatrix() {
     this->mass = mass;
   }
 
@@ -49,7 +50,7 @@ namespace Engine2D::Physics {
   }
 
   Rigidbody2D::AABB Rigidbody2D::getAABB() {
-    if (initialized && !Transform()->Changed())
+    if (initialized && lastModelMatrix == Transform()->WorldMatrix())
       return aabb;
     if (type == Circle) {
       aabb.min = Transform()->WorldPosition() - Transform()->WorldScale();
@@ -81,11 +82,12 @@ namespace Engine2D::Physics {
       }
     }
     initialized = true;
+    lastModelMatrix = Transform()->WorldMatrix();
     return aabb;
   }
 
   void Rigidbody2D::step(const float fixedDeltaTime) {
-    this->linearVelocity += (affectedByGravity * Physics2D::gravity * massInv + force) * fixedDeltaTime;
+    this->linearVelocity += (affectedByGravity * Engine::Settings::Physics.GetGravity() * massInv + force) * fixedDeltaTime;
     this->Transform()->position += this->linearVelocity * fixedDeltaTime;
     this->Transform()->rotation += this->angularVelocity * fixedDeltaTime * angularDamping;
     this->force = Vector2f::Zero;
@@ -131,20 +133,20 @@ namespace Engine2D::Physics {
   }
 
   Rigidbody2D *Rigidbody2D::CreateCircleBody(
-    const float radius, const float mass, const float restitution, const bool isStatic
+    const float radius, const float mass, const bool isStatic
   ) {
     const float area = static_cast<float>(M_PI * radius * radius);
     const float inertia = 0.5f * mass * radius * radius;
     return new Rigidbody2D{
-      mass, inertia, restitution, area, isStatic, radius, 0.0f, 0.0f, Circle
+      mass, inertia, area, isStatic, radius, 0.0f, 0.0f, Circle
     };
   }
 
   Rigidbody2D *Rigidbody2D::CreateRectangleBody(
-    const float width, const float height, const float mass, const float restitution, const bool isStatic
+    const float width, const float height, const float mass, const bool isStatic
   ) {
     const float area = width * height;
     const float inertia = 1.0f / 12.0f * mass * (width * width + height * height);
-    return new Rigidbody2D{mass, inertia, restitution, area, isStatic, 0.0f, width, height, Rectangle};
+    return new Rigidbody2D{mass, inertia, area, isStatic, 0.0f, width, height, Rectangle};
   }
 }

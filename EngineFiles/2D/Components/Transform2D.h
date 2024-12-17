@@ -90,10 +90,10 @@ namespace Engine2D {
       [[nodiscard]] Vector2f WorldScale() const;
       /// @returns The scale of the Entity2D this transform is attached to in world coordinates divided by 2
       [[nodiscard]] Vector2f WorldHalfScale() const;
-      /// @returns True if the transform of this entity is in the viewport of the screen, False if not
-      [[nodiscard]] bool IsInScreenBounds() const;
+      /// @returns False if the transform of this entity is not entirely in the viewport of the screen, True if not
+      [[nodiscard]] bool Visible() const;
       /// @returns The transform matrix of this entity
-      [[nodiscard]] glm::mat4 TransformMatrix() const;
+      [[nodiscard]] glm::mat4 WorldMatrix() const;
 
       /// Sets the parent of all the children of the Entity2D this transform is attached to the current scene's root
       void RemoveAllChildren();

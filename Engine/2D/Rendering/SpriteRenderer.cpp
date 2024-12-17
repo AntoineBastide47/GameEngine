@@ -25,14 +25,14 @@ namespace Engine2D::Rendering {
     for (const auto [id, e] : entities) {
       // Render texture
       glActiveTexture(GL_TEXTURE0);
-      entities.at(id)[0]->texture->bind();
+      entities.at(id)[0]->Texture()->bind();
 
       for (const auto entity : e) {
-        if (!entity || !entity->active || !entity->texture || !entity->transform.IsInScreenBounds())
+        if (!entity || !entity->active || !entity->Texture() || !entity->transform.Visible())
           continue;
 
         // render textured quad
-        shader->SetMatrix4("model", entity->transform.TransformMatrix());
+        shader->SetMatrix4("model", entity->transform.WorldMatrix());
         shader->SetVector3f("spriteColor", entity->textureColor);
 
         glBindVertexArray(quadVAO);

@@ -17,17 +17,17 @@
 #include "Input/InputContexts.h"
 #include "Types/Vector2.h"
 
-// TODO: Make resource embedding an option
-
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
+
+namespace Engine {
+  class Settings;
+}
 
 namespace Engine2D::Physics {
   class Collider2D;
 }
 
 namespace Engine2D {
-  class Entity2D;
-  class Transform2D;
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Entity2D;
@@ -35,6 +35,7 @@ namespace Engine2D {
     friend class Transform2D;
     friend class Physics::Collider2D;
     friend class Physics::Physics2D;
+    friend class Engine::Settings;
     public:
       /**
        * Start's and Run's the current game
@@ -76,10 +77,6 @@ namespace Engine2D {
       virtual void Initialize() {}
     private:
       static const float screenScaleFactor;
-      /// The initial width of the game window
-      int initialWidth;
-      /// The initial height of the game window
-      int initialHeight;
       /// The current aspect ratio of the window
       Vector2f aspectRatio;
 
@@ -97,7 +94,6 @@ namespace Engine2D {
       /// The resource loader for embedded resources
       ResourceLoader resourceLoader;
 
-      /// TODO: Replace this with a scene object that has it's own root and list of entities
       /// The root entity of the game
       Entity2D *root;
       /// All the entities currently in the game
@@ -113,15 +109,13 @@ namespace Engine2D {
       float deltaTime;
       /// The time scaling factor
       float timeScale;
-      /// The frame rate at which we want the game to run
-      int targetFrameRate;
+      /// The frame rate targeted by the engine
+      float targetFrameRate;
       /// The rate at which the game should update
       float targetRenderRate;
 
       /// Physics simulator
       Physics::Physics2D *physics2D;
-      /// The time since the last physics simulated step
-      float fixedDeltaTime;
       /// Timer used to check if the game is ready for the next physics update
       float physicsAccumulator;
 

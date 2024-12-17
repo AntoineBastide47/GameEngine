@@ -15,6 +15,7 @@
 #include "2D/Rendering/SpriteRenderer.h"
 #include "Common/Macros.h"
 #include "Common/RenderingHeaders.h"
+#include "Common/Settings.h"
 #include "Input/Gamepad.h"
 #include "Input/Keyboard.h"
 #include "Input/Mouse.h"
@@ -24,9 +25,9 @@ namespace Engine2D {
   const float Game2D::screenScaleFactor{0.1f};
 
   Game2D::Game2D(const int width, const int height, std::string title)
-    : initialWidth(width), initialHeight(height), aspectRatio(Vector2f::One), title(std::move(title)), width(width),
-      height(height), window(nullptr), root(new Entity2D("Root")), deltaTime(0), timeScale(1), targetFrameRate(0),
-      targetRenderRate(0), physics2D(nullptr), fixedDeltaTime(1.0f / 60.0f), physicsAccumulator(0) {
+    : aspectRatio(Vector2f::One), title(std::move(title)), width(width), height(height), window(nullptr),
+      root(new Entity2D("Root")), deltaTime(0), timeScale(1), targetRenderRate(0), physics2D(nullptr),
+      physicsAccumulator(0) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -51,14 +52,15 @@ namespace Engine2D {
   }
 
   float Game2D::FixedDeltaTime() {
-    return instance->fixedDeltaTime;
+    return Engine::Settings::Physics.GetFixedDeltaTime();
   }
 
   void Game2D::Run() {
     this->initialize();
 
     // Variables for FPS calculation
-    targetRenderRate = this->targetFrameRate == 0 ? 0.0f : 1.0f / this->targetFrameRate;
+    targetFrameRate = Engine::Settings::Graphics.GetTargetFrameRate();
+    targetRenderRate = targetFrameRate == 0 ? 0.0f : 1.0f / targetFrameRate;
     auto nextFrameTime = std::chrono::high_resolution_clock::now();
     float oneSecondTimer = 0.0f;
     float frameCounter = 0;
@@ -77,7 +79,8 @@ namespace Engine2D {
       this->update();
       auto start = std::chrono::high_resolution_clock::now();
       this->fixedUpdate();
-      acc += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count();
+      acc += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).
+        count();
       this->removeEntities();
       this->render();
 
@@ -122,8 +125,7 @@ namespace Engine2D {
     #endif
 
     // Set window hints
-    constexpr bool allowWindowResize = true; // TODO: make this an option in settings
-    glfwWindowHint(GLFW_RESIZABLE, allowWindowResize);
+    glfwWindowHint(GLFW_RESIZABLE, Engine::Settings::Window.GetAllowResize());
 
     // Create the window
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
@@ -141,8 +143,7 @@ namespace Engine2D {
     glfwSetWindowRefreshCallback(window, window_refresh_callback);
     glfwSetWindowPosCallback(window, window_pos_callback);
 
-    constexpr bool vsyncEnabled = false; // TODO: make this an option in settings
-    glfwSwapInterval(vsyncEnabled);
+    glfwSwapInterval(Engine::Settings::Graphics.GetVsyncEnabled());
 
     // The official code for "Setting Your Raster Position to a Pixel Location" (i.e. set up a camera for 2D screen)
     glMatrixMode(GL_PROJECTION);
@@ -189,7 +190,7 @@ namespace Engine2D {
     Rendering::ShapeRenderer::shader = ResourceManager::GetShader("shape");
     Rendering::ShapeRenderer::initRenderData();
 
-    physics2D = new Physics::Physics2D(fixedDeltaTime);
+    physics2D = new Physics::Physics2D();
 
     this->Initialize();
   }
@@ -208,12 +209,12 @@ namespace Engine2D {
 
   void Game2D::fixedUpdate() {
     physicsAccumulator += deltaTime;
-    while (physicsAccumulator >= fixedDeltaTime) {
+    while (physicsAccumulator >= Engine::Settings::Physics.GetFixedDeltaTime()) {
       for (const auto entity: entities)
         if (entity->active)
           entity->FixedUpdate();
       physics2D->step();
-      physicsAccumulator -= fixedDeltaTime;
+      physicsAccumulator -= Engine::Settings::Physics.GetFixedDeltaTime();
     }
   }
 
@@ -301,23 +302,27 @@ namespace Engine2D {
 
   void Game2D::removeEntities() {
     for (auto entity: entitiesToRemove) {
+      // If the entity has a texture, remove it from the draw list
+      if (entity->texture) {
+        const auto it2 = std::ranges::find_if(
+          entitiesById[entity->texture->id],
+          [&entity](const Entity2D *ptr) {
+            return ptr == entity;
+          }
+        );
+        if (it2 != entitiesById[entity->texture->id].end())
+          entitiesById[entity->texture->id].erase(it2);
+      }
+      // Remove the entity from the game
       const auto it = std::ranges::find_if(
         entities,
         [&entity](const Entity2D *ptr) {
           return ptr == entity;
         }
       );
-      const auto it2 = std::ranges::find_if(
-        entitiesById[entity->texture->id],
-        [&entity](const Entity2D *ptr) {
-          return ptr == entity;
-        }
-      );
-      if (it2 != entitiesById[entity->texture->id].end())
-        entitiesById[entity->texture->id].erase(it2);
       if (it != entities.end()) {
         entities.erase(it);
-        entity->Quit();
+        entity->quit();
       }
     }
     instance->entitiesToRemove.clear();
@@ -335,20 +340,22 @@ namespace Engine2D {
     instance->width = framebufferWidth;
     instance->height = framebufferHeight;
 
+    const Vector2<size_t> initialSize = Engine::Settings::Window.GetScreenResolution();
+
     // Calculate the proper aspect ratio
-    const float ratioX = static_cast<float>(framebufferWidth) / static_cast<float>(instance->initialWidth);
-    const float ratioY = static_cast<float>(framebufferHeight) / static_cast<float>(instance->initialHeight);
+    const float ratioX = static_cast<float>(framebufferWidth) / static_cast<float>(initialSize.x);
+    const float ratioY = static_cast<float>(framebufferHeight) / static_cast<float>(initialSize.y);
     instance->aspectRatio = Vector2{ratioX, ratioY};
 
-    constexpr bool maintainAspectRatio = true; // TODO: make this an option in settings
+    const bool maintainAspectRatio = Engine::Settings::Graphics.GetMaintainAspectRatio();
     const auto viewportRatio = Vector2{
       maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX,
       maintainAspectRatio ? std::min(ratioX, ratioY) : ratioY
     };
 
     // Calculate the viewport dimensions
-    const int viewWidth = static_cast<int>(static_cast<float>(instance->initialWidth) * viewportRatio.x);
-    const int viewHeight = static_cast<int>(static_cast<float>(instance->initialHeight) * viewportRatio.y);
+    const int viewWidth = static_cast<int>(static_cast<float>(initialSize.x) * viewportRatio.x);
+    const int viewHeight = static_cast<int>(static_cast<float>(initialSize.y) * viewportRatio.y);
 
     // Center the viewport
     glViewport((framebufferWidth - viewWidth) >> 1, (framebufferHeight - viewHeight) >> 1, viewWidth, viewHeight);
