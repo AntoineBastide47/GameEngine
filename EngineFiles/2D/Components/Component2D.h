@@ -7,6 +7,8 @@
 #ifndef COMPONENT2D_H
 #define COMPONENT2D_H
 
+#include <memory>
+
 namespace Engine2D::Rendering {
   class ShapeRenderer;
 }
@@ -22,7 +24,7 @@ namespace Engine2D {
    * If you need to create a component and want to link it to an Entity2D using Entity2D::AddComponent(), your component will
    * need to inherit from this class for it to work.
    */
-  class Component2D {
+  class Component2D : protected std::enable_shared_from_this<Component2D> {
     friend class Entity2D;
     friend class Game2D;
     public:
@@ -33,16 +35,16 @@ namespace Engine2D {
       virtual ~Component2D();
 
       /// @returns The entity this component is attached to
-      [[nodiscard]] Entity2D *Entity() const;
+      [[nodiscard]] std::shared_ptr<Entity2D> &Entity();
       /// @returns The transform attached to the entity this component is attached to
       [[nodiscard]] Transform2D *Transform() const;
     private:
       /// The entity this component is attached to
-      Entity2D *entity;
+      std::shared_ptr<Entity2D> entity;
       /// The transform of the entity this component is attached to
       Transform2D *transform;
       /// Sets the parent entity this component is attached to
-      void setEntity(Entity2D *entity);
+      void setEntity(const std::shared_ptr<Entity2D> &entity);
   };
 }
 

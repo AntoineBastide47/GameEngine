@@ -9,13 +9,14 @@
 
 #include <functional>
 #include <string>
-#include <vector>
+#include <unordered_set>
 #include <cmrc/cmrc.hpp>
 
+#include "2D/Entity2D.h"
 #include "2D/Physics/Physics2D.h"
+#include "2D/Types/Vector2.h"
 #include "Common/RenderingHeaders.h"
 #include "Input/InputContexts.h"
-#include "Types/Vector2.h"
 
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
@@ -37,6 +38,28 @@ namespace Engine2D {
     friend class Physics::Physics2D;
     friend class Engine::Settings;
     public:
+      /// @returns The width of the viewport of the window
+      [[nodiscard]] static float ViewportWidth();
+      /// @returns The height of the viewport of the window
+      [[nodiscard]] static float ViewportHeight();
+      /// @returns The aspect ratio of the viewport
+      [[nodiscard]] static Vector2f AspectRatio();
+      /// @returns The time span between the current frame and the last frame
+      [[nodiscard]] static float DeltaTime();
+      /// @returns The fixed time span between the physics updates
+      [[nodiscard]] static float FixedDeltaTime();
+      /// @returns The entity with the given name if it was found, nullptr if not
+      template<typename T> requires std::is_base_of_v<Entity2D, T>
+      static std::shared_ptr<T> Find(const std::string &name) {
+        for (const auto entity: instance->entitiesToAdd)
+          if (entity->name == name)
+            return std::static_pointer_cast<T>(entity);
+        for (const auto entity: instance->entities)
+          if (entity->name == name)
+            return std::static_pointer_cast<T>(entity);
+        return nullptr;
+      }
+
       /**
        * Start's and Run's the current game
        * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
@@ -47,22 +70,18 @@ namespace Engine2D {
        * @param resourceLoader The resource loader that contains the resources to load
        * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
        */
-      void SetGameResourceLoader(const ResourceLoader &resourceLoader);
-
-      /// @returns The width of the viewport of the window
-      [[nodiscard]] static float ViewportWidth();
-      /// @returns The height of the viewport of the window
-      [[nodiscard]] static float ViewportHeight();
-      /// @returns The aspect ratio of the viewport
-      [[nodiscard]] static Vector2f AspectRatio();
-
-      /// @returns The time span between the current frame and the last frame
-      [[nodiscard]] static float DeltaTime();
-      /// @returns The fixed time span between the physics updates
-      [[nodiscard]] static float FixedDeltaTime();
+      void SetGameResourceLoader(ResourceLoader resourceLoader);
 
       /// Closes/Quits the game
       static void Close(Engine::Input::KeyboardAndMouseContext context);
+      /// Adds an entity to the game
+      template<typename T> requires std::is_base_of_v<Entity2D, T>
+      static void AddEntity(std::string name = "Entity") {
+        if (instance) {
+          std::shared_ptr<T> entity = std::make_shared<T>(name);
+          instance->entitiesToAdd.insert(std::move(entity));
+        }
+      }
     protected:
       /**
        * Creates a game
@@ -95,15 +114,15 @@ namespace Engine2D {
       ResourceLoader resourceLoader;
 
       /// The root entity of the game
-      Entity2D *root;
+      std::shared_ptr<Entity2D> root;
       /// All the entities currently in the game
-      std::vector<Entity2D *> entities;
+      std::unordered_set<std::shared_ptr<Entity2D> > entities;
       /// Entities scheduled to be added to the game
-      std::vector<Entity2D *> entitiesToAdd;
+      std::unordered_set<std::shared_ptr<Entity2D> > entitiesToAdd;
       /// Entities scheduled to be removed from the game
-      std::vector<Entity2D *> entitiesToRemove;
+      std::unordered_set<std::shared_ptr<Entity2D> > entitiesToRemove;
       /// The entities of the game grouped by there texture id
-      std::map<int, std::vector<Entity2D *>> entitiesById;
+      std::map<int, std::unordered_set<std::shared_ptr<Entity2D> > > entitiesToRender;
 
       /// The time during two frames
       float deltaTime;
@@ -124,7 +143,7 @@ namespace Engine2D {
       /// Processes all the inputs to the game
       static void processInput();
       /// Update the game
-      void update() const;
+      void update();
       /// Simulates a step of the physics simulation
       void fixedUpdate();
       /// Renders the game
@@ -137,12 +156,10 @@ namespace Engine2D {
 
       /// Adds all the entity scheduled for adding
       void addEntities();
-      /// Adds an entity to the game
-      static void addEntity(Entity2D *entity);
       /// Removes all the entity scheduled for removal
       void removeEntities();
       /// Removes an entity from the game
-      static void removeEntity(Entity2D *entity);
+      static void removeEntity(const std::shared_ptr<Entity2D> &entity);
 
       // OpenGL callbacks
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);

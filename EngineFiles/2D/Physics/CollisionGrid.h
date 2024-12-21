@@ -21,13 +21,13 @@ namespace Engine2D::Physics {
     Vector2f topRight;
     Vector2f cellSize;
     Vector2<size_t> gridSize;
-    std::vector<std::vector<std::vector<Rigidbody2D *> > > grid;
+    std::vector<std::vector<std::vector<std::shared_ptr<Rigidbody2D>> > > grid;
 
     explicit CollisionGrid(Vector2<size_t> gridSize);
     void setGridSize(Vector2<size_t> gridSize);
 
-    void update(const std::vector<Rigidbody2D *> &rigidbodies);
-    std::vector<std::tuple<Rigidbody2D *, Rigidbody2D *> > collisionPairs() const;
+    void update(const std::vector<std::shared_ptr<Rigidbody2D>> &rigidbodies);
+    std::vector<std::tuple<std::shared_ptr<Rigidbody2D>, std::shared_ptr<Rigidbody2D>>> collisionPairs() const;
   };
 }
 

@@ -46,12 +46,6 @@ namespace Engine2D::Physics {
       Engine::float01 angularDamping;
       /// Flag indicating whether the body is static (immovable).
       bool isStatic;
-      /// Radius of the body (if it's a Circle).
-      float radius;
-      /// Width of the body (if it's a Rectangle).
-      float width;
-      /// Height of the body (if it's a Rectangle).
-      float height;
       /// Flag indicating whether the body is affected by gravity.
       bool affectedByGravity;
       /// Mass of the rigidbody
@@ -82,7 +76,7 @@ namespace Engine2D::Physics {
       bool bindToViewportRight;
 
       /// Default constructor.
-      Rigidbody2D() = default;
+      Rigidbody2D();
 
       /**
        * Applies a force to the rigid body.
@@ -104,25 +98,8 @@ namespace Engine2D::Physics {
       ///  - dynamic: 0.4f
       void DefaultFriction();
 
-      /**
-       * Creates a circular rigid body.
-       * @param radius The radius of the circle.
-       * @param mass The density of the body.
-       * @param isStatic Whether the body is static.
-       * @return A Rigidbody2D instance representing the circular body.
-       */
-      static Rigidbody2D *CreateCircleBody(float radius, float mass, bool isStatic);
-      /**
-       * Creates a rectangular rigid body.
-       * @param width The width of the rectangle.
-       * @param height The height of the rectangle.
-       * @param mass The density of the body.
-       * @param isStatic Whether the body is static.
-       * @return A Rigidbody2D instance representing the rectangular body.
-       */
-      static Rigidbody2D *CreateRectangleBody(
-        float width, float height, float mass, bool isStatic
-      );
+      // Temporary until collider class
+      void SetType(Rigidbody2DType type, float mass, Vector2f dimensions, float radius);
     private:
       bool initialized;
       /// Angular velocity of the body.
@@ -133,8 +110,6 @@ namespace Engine2D::Physics {
       float inertia;
       /// Inverse of the inertia (cached to only use the division when inertia changes)
       float inertiaInv;
-      /// Area of the rigid body.
-      float area;
       /// Type of the rigid body (Circle or Rectangle).
       Rigidbody2DType type;
       /// Linear velocity of the rigid body.
@@ -149,10 +124,6 @@ namespace Engine2D::Physics {
       std::vector<Vector2f> contactPoints;
       /// The model matrix of the rigidbody last time it changed
       glm::mat4 lastModelMatrix;
-
-      Rigidbody2D(
-        float mass, float inertia, float area, bool isStatic, float radius, float width, float height, Rigidbody2DType type
-      );
 
       /** @return A std::array containing the min and max points of the AABB. */
       [[nodiscard]] AABB getAABB();

@@ -14,13 +14,12 @@
 #include "2D/ResourceManager.h"
 #include "2D/Game2D.h"
 #include "Common/Log.h"
-#include "Common/Macros.h"
 
 namespace Engine2D {
-  std::map<std::string, Texture2D *> ResourceManager::textures;
-  std::map<std::string, Shader *> ResourceManager::shaders;
+  std::map<std::string, std::shared_ptr<Texture2D>> ResourceManager::textures;
+  std::map<std::string, std::shared_ptr<Shader>> ResourceManager::shaders;
 
-  Shader *ResourceManager::LoadShader(
+  std::shared_ptr<Shader> ResourceManager::LoadShader(
     const std::string &vShaderFile, const std::string &fShaderFile, const std::string &gShaderFile,
     const std::string &name
   ) {
@@ -55,7 +54,7 @@ namespace Engine2D {
     }
 
     // Create the shader
-    const auto shader = new Shader();
+    const auto shader = std::make_shared<Shader>();
     shader->Compile(
       vertexCode.c_str(), fragmentCode.c_str(),
       !gShaderFile.empty() && !geometryCode.empty() ? geometryCode.c_str() : nullptr
@@ -63,13 +62,13 @@ namespace Engine2D {
     return shaders[name] = shader;
   }
 
-  Shader *ResourceManager::GetShader(const std::string &name) {
+  std::shared_ptr<Shader> ResourceManager::GetShader(const std::string &name) {
     if (const auto it = shaders.find(name); it != shaders.end())
       return it->second;
     return LOG_ERROR("Unknown shader: " + name);
   }
 
-  Texture2D *ResourceManager::LoadTexture(const std::string &filePath, const bool alpha, const std::string &name) {
+  std::shared_ptr<Texture2D> ResourceManager::LoadTexture(const std::string &filePath, const bool alpha, const std::string &name) {
     if (filePath.empty())
       return LOG_ERROR("File path is required to load a texture");
     if (name.empty())
@@ -78,7 +77,7 @@ namespace Engine2D {
       return textures[name];
 
     // Create the texture
-    const auto texture = new Texture2D();
+    const auto texture = std::make_shared<Texture2D>();
     if (alpha) {
       texture->imageFormat = GL_RGBA;
       texture->internalFormat = GL_RGBA;
@@ -108,20 +107,18 @@ namespace Engine2D {
     return textures[name] = texture;
   }
 
-  Texture2D *ResourceManager::GetTexture(const std::string &name) {
+  std::shared_ptr<Texture2D> ResourceManager::GetTexture(const std::string &name) {
     if (const auto it = textures.find(name); it != textures.end())
       return it->second;
     return LOG_ERROR("Unknown texture: " + name);
   }
 
   void ResourceManager::Clear() {
-    for (auto shader: shaders | std::views::values) {
+    for (const auto shader: shaders | std::views::values)
       shader->Clear();
-      SAFE_DELETE(shader);
-    }
-    for (auto texture: textures | std::views::values) {
+    shaders.clear();
+    for (const auto texture: textures | std::views::values)
       texture->clear();
-      SAFE_DELETE(texture);
-    }
+    textures.clear();
   }
 }

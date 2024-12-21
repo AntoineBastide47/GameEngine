@@ -19,8 +19,6 @@ namespace Engine {
         public:
           /// Changes the current screen resolution to the new value
           static void SetScreenResolution(Engine2D::Vector2<size_t> newValue);
-          /// If true, the window will use the name of the scene for it's title
-          static void SetUseSceneNameForTitle(bool newState);
           /// Changes the title of the window
           static void SetTitle(const std::string &newTitle);
           /// If true, allows window resizing
@@ -28,15 +26,12 @@ namespace Engine {
 
           /// @returns The initial screen resolution (before any resizing)
           [[nodiscard]] static Engine2D::Vector2<size_t> GetScreenResolution();
-          /// @returns True if the window will use the name of the scene for it's title, false if not
-          [[nodiscard]] static bool GetUseSceneNameForTitle();
           /// @returns The title of the window
           [[nodiscard]] static std::string GetTitle();
           /// @returns True if the user can resize the window, false if not
           [[nodiscard]] static bool GetAllowResize();
         private:
           static Engine2D::Vector2<size_t> resolution;
-          static bool useSceneNameForTitle;
           static std::string title;
           static bool allowResize;
 
@@ -71,6 +66,10 @@ namespace Engine {
         public:
           /// Changes the rate at which the physics simulations are run, clamped between 0.02f and 0.33f (50 or 60 times a second).
           static void SetFixedDeltaTime(float newValue);
+          /// Changes whether the physics engine should globally enable or disable friction.
+          /// If false, friction will never affect rigidbodies.
+          /// If true, friction will be applied to rigidbodies using there static and dynamic coefficients.
+          static void SetFrictionEnabled(bool newState);
           /// Changes if the physics engine should use spacial partitioning to resolve collisions or not.
           /// It does not always lead to a performance boost, consider using it if you have a lot of dynamic colliders on screen.
           static void SetUseScreenPartitioning(bool newState);
@@ -83,6 +82,8 @@ namespace Engine {
 
           /// @returns The rate at which the physics simulations are run
           [[nodiscard]] static float GetFixedDeltaTime();
+          /// @returns True if friction is globally enabled, false if not
+          [[nodiscard]] static float GetFrictionEnabled();
           /// @returns True if the physics engine is currently using screen partitioning, false if not
           [[nodiscard]] static bool GetUseScreenPartitioning();
           /// @return The size of the screen partitioning used by the physics engine
@@ -91,6 +92,7 @@ namespace Engine {
           [[nodiscard]] static Engine2D::Vector2f GetGravity();
         private:
           static float fixedDeltaTime;
+          static bool frictionEnabled;
           static bool useScreenPartitioning;
           static Engine2D::Vector2<size_t> partitionSize;
           static Engine2D::Vector2f gravity;

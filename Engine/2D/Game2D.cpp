@@ -25,8 +25,8 @@ namespace Engine2D {
   const float Game2D::screenScaleFactor{0.1f};
 
   Game2D::Game2D(const int width, const int height, std::string title)
-    : aspectRatio(Vector2f::One), title(std::move(title)), width(width), height(height), window(nullptr),
-      root(new Entity2D("Root")), deltaTime(0), timeScale(1), targetRenderRate(0), physics2D(nullptr),
+    : aspectRatio(Vector2f::One), title(std::move(title)), width(width), height(height), window(nullptr), deltaTime(0),
+      timeScale(1), targetFrameRate(0), targetRenderRate(0), physics2D(nullptr),
       physicsAccumulator(0) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
@@ -64,7 +64,6 @@ namespace Engine2D {
     auto nextFrameTime = std::chrono::high_resolution_clock::now();
     float oneSecondTimer = 0.0f;
     float frameCounter = 0;
-    auto acc = 0.0f;
 
     auto lastTime = std::chrono::high_resolution_clock::now();
     while (!glfwWindowShouldClose(window)) {
@@ -77,10 +76,7 @@ namespace Engine2D {
       this->addEntities();
       this->processInput();
       this->update();
-      auto start = std::chrono::high_resolution_clock::now();
       this->fixedUpdate();
-      acc += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).
-        count();
       this->removeEntities();
       this->render();
 
@@ -88,11 +84,10 @@ namespace Engine2D {
       oneSecondTimer += deltaTime;
       frameCounter++;
       while (oneSecondTimer >= 1.0f) {
-        std::cout << "FPS: " << frameCounter << " Total Physics in (μs): " << acc << std::endl;
+        std::cout << "FPS: " << frameCounter << std::endl;
         oneSecondTimer -= 1.0f;
         frameCounter = 0;
         physicsAccumulator = 0.0f;
-        acc = 0.0f;
       }
 
       // Limit the frame rate if needed
@@ -108,6 +103,15 @@ namespace Engine2D {
     }
 
     this->quit();
+  }
+
+  void Game2D::SetGameResourceLoader(ResourceLoader resourceLoader) {
+    this->resourceLoader = std::move(resourceLoader);
+  }
+
+  void Game2D::Close(const Engine::Input::KeyboardAndMouseContext context) {
+    if (context.released)
+      glfwSetWindowShouldClose(instance->window, true);
   }
 
   void Game2D::initialize() {
@@ -191,6 +195,7 @@ namespace Engine2D {
     Rendering::ShapeRenderer::initRenderData();
 
     physics2D = new Physics::Physics2D();
+    AddEntity<Entity2D>("Root");
 
     this->Initialize();
   }
@@ -201,10 +206,21 @@ namespace Engine2D {
     Engine::Input::Gamepad::processInput();
   }
 
-  void Game2D::update() const {
-    for (const auto &entity: entities)
-      if (entity->active)
+  void Game2D::update() {
+    bool foundNull = false;
+    for (const auto &entity: entities) {
+      if (entity && entity->active)
         entity->update();
+      else if (!entity)
+        foundNull = true;
+    }
+    if (foundNull)
+      for (auto it = entities.begin(); it != entities.end();) {
+        if (*it == nullptr)
+          it = entities.erase(it);
+        else
+          ++it;
+      }
   }
 
   void Game2D::fixedUpdate() {
@@ -222,7 +238,7 @@ namespace Engine2D {
     // Clear previous frame
     glClearColor(0, 0, 0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    Rendering::SpriteRenderer::drawSprites(entitiesById);
+    Rendering::SpriteRenderer::drawSprites(entitiesToRender);
 
     /*for (const auto rigidbody: physics2D->rigidbodies) {
       if (!rigidbody->Transform()->IsInScreenBounds())
@@ -245,6 +261,16 @@ namespace Engine2D {
   }
 
   void Game2D::quit() {
+    // Remove all the entities from the game
+    entitiesToAdd.clear();
+    entitiesToRemove.clear();
+    entitiesToRemove.swap(entities);
+    removeEntities();
+
+    // Deallocate all the game resources
+    ResourceManager::Clear();
+    SAFE_DELETE(physics2D);
+
     // Destroy the window and terminate all OpenGL processes
     if (window) {
       glfwDestroyWindow(window);
@@ -252,25 +278,7 @@ namespace Engine2D {
     }
     glfwTerminate();
 
-    // Remove all the entities from the game
-    for (const auto entity: entities)
-      removeEntity(entity);
-    entities.clear();
-
-    // Deallocate all the game resources
-    ResourceManager::Clear();
-    SAFE_DELETE(physics2D);
-    SAFE_DELETE(root);
     instance = nullptr;
-  }
-
-  void Game2D::SetGameResourceLoader(const ResourceLoader &resourceLoader) {
-    this->resourceLoader = resourceLoader;
-  }
-
-  void Game2D::Close(const Engine::Input::KeyboardAndMouseContext context) {
-    if (context.released)
-      glfwSetWindowShouldClose(instance->window, true);
   }
 
   cmrc::file Game2D::loadResource(const std::string &path) const {
@@ -281,56 +289,33 @@ namespace Engine2D {
 
   void Game2D::addEntities() {
     for (auto entity: entitiesToAdd) {
-      entities.push_back(entity);
+      entities.insert(entity);
       if (entity->texture)
-        entitiesById[entity->texture->id].push_back(entity);
+        entitiesToRender[entity->texture->id].insert(entity);
     }
     entitiesToAdd.clear();
   }
 
-  void Game2D::addEntity(Entity2D *entity) {
-    if (!entity || !instance || !instance->root || entity == instance->root)
-      return;
-
-    // Check if the entity is already in the list
-    for (const auto e: instance->entities)
-      if (*e == *entity)
-        return;
-
-    instance->entitiesToAdd.push_back(entity);
-  }
-
   void Game2D::removeEntities() {
-    for (auto entity: entitiesToRemove) {
+    for (auto it = instance->entitiesToRemove.begin(); it != instance->entitiesToRemove.end();) {
+      auto entity = *it;
+
       // If the entity has a texture, remove it from the draw list
-      if (entity->texture) {
-        const auto it2 = std::ranges::find_if(
-          entitiesById[entity->texture->id],
-          [&entity](const Entity2D *ptr) {
-            return ptr == entity;
-          }
-        );
-        if (it2 != entitiesById[entity->texture->id].end())
-          entitiesById[entity->texture->id].erase(it2);
-      }
+      if (entity->texture)
+        entitiesToRender[entity->texture->id].erase(entity);
+
       // Remove the entity from the game
-      const auto it = std::ranges::find_if(
-        entities,
-        [&entity](const Entity2D *ptr) {
-          return ptr == entity;
-        }
-      );
-      if (it != entities.end()) {
-        entities.erase(it);
-        entity->quit();
-      }
+      if (entities.erase(entity) > 0)
+        entity->destroy();
+
+      // Erase the entity and update the iterator
+      it = instance->entitiesToRemove.erase(it);
     }
-    instance->entitiesToRemove.clear();
   }
 
-  void Game2D::removeEntity(Entity2D *entity) {
+  void Game2D::removeEntity(const std::shared_ptr<Entity2D> &entity) {
     if (entity && instance && entity != instance->root && !instance->entities.empty())
-      instance->entitiesToRemove.push_back(entity);
+      instance->entitiesToRemove.insert(entity);
   }
 
   void Game2D::framebuffer_size_callback(GLFWwindow *window, const int, const int) {

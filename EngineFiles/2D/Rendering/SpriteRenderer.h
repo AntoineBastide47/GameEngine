@@ -8,6 +8,8 @@
 #define SPRITERENDERER_H
 
 #include <map>
+#include <map>
+#include <unordered_set>
 
 #include "Shader.h"
 #include "2D/Entity2D.h"
@@ -21,7 +23,7 @@ namespace Engine2D::Rendering {
   class SpriteRenderer {
     friend class Engine2D::Game2D;
     /// Shader that controls the rendering pipeline for the sprite, including transformations and textures.
-    static Shader *shader;
+    static std::shared_ptr<Shader> shader;
     /// Stores the vertex configuration for the quad, making rendering efficient.
     static unsigned int quadVAO;
     /// The id of the previously drawn texture
@@ -36,7 +38,7 @@ namespace Engine2D::Rendering {
      */
     static void initRenderData();
     /// Renders all the given entities
-    static void drawSprites(const std::map<int, std::vector<Entity2D *> > &entities);
+    static void drawSprites(const std::map<int, std::unordered_set<std::shared_ptr<Entity2D>>> &entities);
   };
 }
 

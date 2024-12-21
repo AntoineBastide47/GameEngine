@@ -11,42 +11,38 @@
 #include "2D/Game2D.h"
 #include "2D/Physics/Collisions.h"
 #include "2D/Physics/Rigidbody2D.h"
-#include "Common/Log.h"
 #include "Common/Settings.h"
 
 namespace Engine2D::Physics {
   Physics2D::Physics2D() : collisionGrid(Engine::Settings::Physics.GetPartitionSize()), collisionGridNeedsResizing(false) {}
-
-  // (10, 10): 2700-2800
-  // ( 9,  9):
 
   Physics2D::~Physics2D() {
     rigidbodies.clear();
     rigidbodiesToRemove.clear();
   }
 
-  void Physics2D::addRigidBody(Rigidbody2D *rigidbody) {
+  void Physics2D::addRigidBody(const std::shared_ptr<Rigidbody2D> &rigidbody) {
     if (rigidbody)
-      rigidbodiesToAdd.push_back(rigidbody);
+      rigidbodiesToAdd.insert(rigidbody);
   }
 
   void Physics2D::addRigidbodies() {
     // Add all the new rigidbodies to the physics world
     if (!rigidbodiesToAdd.empty())
       for (auto rigidbody: rigidbodiesToAdd)
-        rigidbodies.push_back(rigidbody);
+        rigidbodies.insert(rigidbody);
     rigidbodiesToAdd.clear();
   }
 
-  void Physics2D::removeRigidbody(Rigidbody2D *rigidbody) {
+  void Physics2D::removeRigidbody(const std::shared_ptr<Rigidbody2D> &rigidbody) {
     if (rigidbody)
-      rigidbodiesToRemove.push_back(rigidbody);
+      rigidbodiesToRemove.insert(rigidbody);
   }
 
   void Physics2D::removeRigidbodies() {
     // Remove all the rigidbodies that no longer need to be simulated
     if (!rigidbodiesToRemove.empty()) {
-      for (const Rigidbody2D *rigidbody: rigidbodiesToRemove)
+      for (const std::shared_ptr rigidbody: rigidbodiesToRemove)
         if (auto it = std::ranges::find(rigidbodies, rigidbody); it != rigidbodies.end())
           rigidbodies.erase(it);
       rigidbodiesToRemove.clear();
@@ -96,20 +92,21 @@ namespace Engine2D::Physics {
 
     // Remove all the null pointers if at least one is found
     if (foundNull)
-      std::erase_if(
-        rigidbodies, [](const Rigidbody2D *ptr) {
-          return ptr == nullptr;
-        }
-      );
+      for (auto it = rigidbodies.begin(); it != rigidbodies.end();) {
+        if (*it == nullptr)
+          it = rigidbodies.erase(it);
+        else
+          ++it;
+      }
   }
 
   void Physics2D::broadPhase() {
     // Check collisions for all the rigidbodies that are active
     for (int i = 0; i < activeRigidbodies.size() - 1; i++) {
-      Rigidbody2D *rb1 = activeRigidbodies[i];
+      std::shared_ptr<Rigidbody2D> rb1 = activeRigidbodies[i];
       const Rigidbody2D::AABB rb1AABB = rb1->getAABB();
       for (int j = i + 1; j < activeRigidbodies.size(); j++) {
-        Rigidbody2D *rb2 = activeRigidbodies[j];
+        std::shared_ptr<Rigidbody2D> rb2 = activeRigidbodies[j];
         // Do nothing if both colliders are static
         if (rb1->isStatic && rb2->isStatic)
           continue;
@@ -119,7 +116,7 @@ namespace Engine2D::Physics {
           continue;
 
         // Save the indices of the bodies that collided
-        contactPairs.emplace_back(rb1, rb2);
+        contactPairs.push_back({rb1, rb2});
       }
     }
   }
@@ -151,7 +148,9 @@ namespace Engine2D::Physics {
     }
   }
 
-  void Physics2D::separateBodies(const Rigidbody2D *rb1, const Rigidbody2D *rb2, const Vector2f mtv) {
+  void Physics2D::separateBodies(
+    const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, const Vector2f mtv
+  ) {
     if (rb1->isStatic)
       rb2->Transform()->position -= mtv;
     else if (rb2->isStatic)
@@ -164,11 +163,7 @@ namespace Engine2D::Physics {
 
   void Physics2D::resolveCollision(const Engine::Physics::CollisionManifold &contact) {
     const float bounciness = std::min(contact.rb1->restitution, contact.rb2->restitution);
-    const float sf = (contact.rb1->staticFriction + contact.rb2->staticFriction) * 0.5f;
-    const float df = (contact.rb1->dynamicFriction + contact.rb2->dynamicFriction) * 0.5f;
-
     std::array<Vector2f, 2> impulses;
-    std::array<Vector2f, 2> frictionImpulses;
     std::array<float, 2> jList;
 
     // Find the impulses to apply
@@ -206,44 +201,50 @@ namespace Engine2D::Physics {
       contact.rb2->angularVelocity += impulses[i] ^ rb * contact.rb2->inertiaInv;
     }
 
-    // Find the friction impulses to apply
-    for (int i = 0; i < contact.contactPoints.size(); i++) {
-      const Vector2f raPerp = (contact.contactPoints[i] - contact.rb1->Transform()->WorldPosition()).Perpendicular();
-      const Vector2f rbPerp = (contact.contactPoints[i] - contact.rb2->Transform()->WorldPosition()).Perpendicular();
+    if (Engine::Settings::Physics.GetFrictionEnabled()) {
+      const float sf = (contact.rb1->staticFriction + contact.rb2->staticFriction) * 0.5f;
+      const float df = (contact.rb1->dynamicFriction + contact.rb2->dynamicFriction) * 0.5f;
+      std::array<Vector2f, 2> frictionImpulses;
 
-      // Find the relative velocity
-      const Vector2f angularLinearVelocityA = raPerp * contact.rb1->angularVelocity;
-      const Vector2f angularLinearVelocityB = rbPerp * contact.rb2->angularVelocity;
-      const Vector2f relativeVelocity = contact.rb2->linearVelocity + angularLinearVelocityB -
-                                        (contact.rb1->linearVelocity + angularLinearVelocityA);
+      // Find the friction impulses to apply
+      for (int i = 0; i < contact.contactPoints.size(); i++) {
+        const Vector2f raPerp = (contact.contactPoints[i] - contact.rb1->Transform()->WorldPosition()).Perpendicular();
+        const Vector2f rbPerp = (contact.contactPoints[i] - contact.rb2->Transform()->WorldPosition()).Perpendicular();
 
-      Vector2f tangent = relativeVelocity - relativeVelocity * contact.normal * contact.normal;
-      if (Vector2f::ApproxEquals(tangent, Vector2f::Zero))
-        continue;
-      tangent.Normalize();
+        // Find the relative velocity
+        const Vector2f angularLinearVelocityA = raPerp * contact.rb1->angularVelocity;
+        const Vector2f angularLinearVelocityB = rbPerp * contact.rb2->angularVelocity;
+        const Vector2f relativeVelocity = contact.rb2->linearVelocity + angularLinearVelocityB -
+                                          (contact.rb1->linearVelocity + angularLinearVelocityA);
 
-      // Compute the impulse
-      const float raPerpMag = raPerp * tangent;
-      const float rbPerpMag = rbPerp * tangent;
-      const float denominator = contact.rb1->massInv + contact.rb2->massInv +
-                                raPerpMag * raPerpMag * contact.rb1->inertiaInv +
-                                rbPerpMag * rbPerpMag * contact.rb2->inertiaInv;
-      if (const float jt = -relativeVelocity * tangent / (denominator * contact.contactPoints.size());
-        std::abs(jt) <= jList[i] * sf)
-        frictionImpulses[i] = jt * contact.normal;
-      else
-        frictionImpulses[i] = -jt * contact.normal * df;
-    }
+        Vector2f tangent = relativeVelocity - relativeVelocity * contact.normal * contact.normal;
+        if (Vector2f::ApproxEquals(tangent, Vector2f::Zero))
+          continue;
+        tangent.Normalize();
 
-    // Apply the friction impulses to update the linear and angular velocity
-    for (int i = 0; i < frictionImpulses.size(); i++) {
-      const Vector2f ra = contact.contactPoints[i] - contact.rb1->Transform()->WorldPosition();
-      const Vector2f rb = contact.contactPoints[i] - contact.rb2->Transform()->WorldPosition();
+        // Compute the impulse
+        const float raPerpMag = raPerp * tangent;
+        const float rbPerpMag = rbPerp * tangent;
+        const float denominator = contact.rb1->massInv + contact.rb2->massInv +
+                                  raPerpMag * raPerpMag * contact.rb1->inertiaInv +
+                                  rbPerpMag * rbPerpMag * contact.rb2->inertiaInv;
+        if (const float jt = -relativeVelocity * tangent / (denominator * contact.contactPoints.size());
+          std::abs(jt) <= jList[i] * sf)
+          frictionImpulses[i] = jt * contact.normal;
+        else
+          frictionImpulses[i] = -jt * contact.normal * df;
+      }
 
-      contact.rb1->linearVelocity -= frictionImpulses[i] * contact.rb1->massInv;
-      contact.rb1->angularVelocity -= frictionImpulses[i] ^ ra * contact.rb1->inertiaInv;
-      contact.rb2->linearVelocity += frictionImpulses[i] * contact.rb2->massInv;
-      contact.rb2->angularVelocity += frictionImpulses[i] ^ rb * contact.rb2->inertiaInv;
+      // Apply the friction impulses to update the linear and angular velocity
+      for (int i = 0; i < frictionImpulses.size(); i++) {
+        const Vector2f ra = contact.contactPoints[i] - contact.rb1->Transform()->WorldPosition();
+        const Vector2f rb = contact.contactPoints[i] - contact.rb2->Transform()->WorldPosition();
+
+        contact.rb1->linearVelocity -= frictionImpulses[i] * contact.rb1->massInv;
+        contact.rb1->angularVelocity -= frictionImpulses[i] ^ ra * contact.rb1->inertiaInv;
+        contact.rb2->linearVelocity += frictionImpulses[i] * contact.rb2->massInv;
+        contact.rb2->angularVelocity += frictionImpulses[i] ^ rb * contact.rb2->inertiaInv;
+      }
     }
   }
 }

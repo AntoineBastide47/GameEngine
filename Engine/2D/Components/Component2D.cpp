@@ -8,11 +8,11 @@
 #include "2D/Entity2D.h"
 
 namespace Engine2D {
-  Entity2D *Component2D::Entity() const {
+  std::shared_ptr<Entity2D> &Component2D::Entity() {
     return entity;
   }
 
-  Transform2D * Component2D::Transform() const {
+  Transform2D *Component2D::Transform() const {
     return transform;
   }
 
@@ -23,7 +23,7 @@ namespace Engine2D {
     entity = nullptr;
   }
 
-  void Component2D::setEntity(Entity2D *entity) {
+  void Component2D::setEntity(const std::shared_ptr<Entity2D> &entity) {
     if (!entity)
       return;
     this->entity = entity;

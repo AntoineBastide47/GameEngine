@@ -8,7 +8,7 @@
 #include "2D/Game2D.h"
 
 namespace Engine2D::Rendering {
-  Shader *SpriteRenderer::shader = nullptr;
+  std::shared_ptr<Shader> SpriteRenderer::shader = nullptr;
   unsigned int SpriteRenderer::quadVAO{};
   unsigned int SpriteRenderer::lastBoundTexture{};
 
@@ -19,15 +19,18 @@ namespace Engine2D::Rendering {
     }
   }
 
-  void SpriteRenderer::drawSprites(const std::map<int, std::vector<Entity2D*>> &entities) {
-    shader->Use();
+  void SpriteRenderer::drawSprites(const std::map<int, std::unordered_set<std::shared_ptr<Entity2D> > > &entities) {
+    if (!shader)
+      return;
 
-    for (const auto [id, e] : entities) {
+    shader->Use();
+    for (const auto [id, e]: entities) {
       // Render texture
       glActiveTexture(GL_TEXTURE0);
-      entities.at(id)[0]->Texture()->bind();
+      if (auto it = entities.at(id).begin(); it != entities.at(id).end())
+        (*it)->Texture()->bind();
 
-      for (const auto entity : e) {
+      for (const auto entity: e) {
         if (!entity || !entity->active || !entity->Texture() || !entity->transform.Visible())
           continue;
 

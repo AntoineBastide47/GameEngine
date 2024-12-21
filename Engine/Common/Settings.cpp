@@ -4,13 +4,13 @@
 // Date: 16/12/2024
 //
 
-#include "Settings.h"
+#include "Common/Settings.h"
 #include "2D/Game2D.h"
+#include "2D/Physics/Physics2D.h"
 #include "Common/RenderingHeaders.h"
 
 namespace Engine {
   Engine2D::Vector2<size_t> Settings::WindowSettings::resolution = Engine2D::Vector2<size_t>{800, 600};
-  bool Settings::WindowSettings::useSceneNameForTitle = false;
   std::string Settings::WindowSettings::title = "Game Window";
   bool Settings::WindowSettings::allowResize = true;
 
@@ -19,6 +19,7 @@ namespace Engine {
   unsigned int Settings::GraphicsSettings::targetFrameRate = 0;
 
   float Settings::PhysicsSettings::fixedDeltaTime = 0.02f;
+  bool Settings::PhysicsSettings::frictionEnabled = true;
   bool Settings::PhysicsSettings::useScreenPartitioning = false;
   Engine2D::Vector2<size_t> Settings::PhysicsSettings::partitionSize = Engine2D::Vector2<size_t>{4, 4};
   Engine2D::Vector2f Settings::PhysicsSettings::gravity = Engine2D::Vector2f(0.0f, -9.81f);
@@ -26,10 +27,6 @@ namespace Engine {
   void Settings::WindowSettings::SetScreenResolution(const Engine2D::Vector2<size_t> newValue) {
     resolution = newValue;
     glfwSetWindowSize(Engine2D::Game2D::instance->window, newValue.x, newValue.y);
-  }
-
-  void Settings::WindowSettings::SetUseSceneNameForTitle(const bool newState) {
-    useSceneNameForTitle = newState;
   }
 
   void Settings::WindowSettings::SetTitle(const std::string &newTitle) {
@@ -72,6 +69,10 @@ namespace Engine {
     fixedDeltaTime = std::clamp(newValue, min, max);
   }
 
+  void Settings::PhysicsSettings::SetFrictionEnabled(bool newState) {
+    frictionEnabled = newState;
+  }
+
   void Settings::PhysicsSettings::SetUseScreenPartitioning(const bool newState) {
     useScreenPartitioning = newState;
   }
@@ -87,10 +88,6 @@ namespace Engine {
 
   Engine2D::Vector2<size_t> Settings::WindowSettings::GetScreenResolution() {
     return resolution;
-  }
-
-  bool Settings::WindowSettings::GetUseSceneNameForTitle() {
-    return useSceneNameForTitle;
   }
 
   std::string Settings::WindowSettings::GetTitle() {
@@ -115,6 +112,10 @@ namespace Engine {
 
   float Settings::PhysicsSettings::GetFixedDeltaTime() {
     return fixedDeltaTime;
+  }
+
+  float Settings::PhysicsSettings::GetFrictionEnabled() {
+    return frictionEnabled;
   }
 
   bool Settings::PhysicsSettings::GetUseScreenPartitioning() {

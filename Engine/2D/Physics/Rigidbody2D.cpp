@@ -9,34 +9,21 @@
 #include "2D/Physics/Rigidbody2D.h"
 #include "2D/Entity2D.h"
 #include "2D/Game2D.h"
-#include "2D/Physics/Physics2D.h"
 #include "Common/Settings.h"
 
 namespace Engine2D::Physics {
-  Rigidbody2D::Rigidbody2D(
-    const float mass, const float inertia, const float area, const bool isStatic, const float radius, const float width,
-    const float height, const Rigidbody2DType type
-  )
-    : restitution(1), angularDamping(1), isStatic(isStatic), radius(radius), width(width),
-      height(height), affectedByGravity(true), staticFriction(0.6f), dynamicFriction(0.4f), bindToViewportTop(false),
-      bindToViewportBottom(false), bindToViewportLeft(false), bindToViewportRight(false), initialized(false),
-      angularVelocity(0), massInv(0), inertia(inertia), inertiaInv(inertia > 0 ? 0 : 1.0f / inertia), area(area),
-      type(type), lastModelMatrix() {
-    this->mass = mass;
-  }
+  Rigidbody2D::Rigidbody2D()
+    : restitution(1), angularDamping(1), isStatic(false), affectedByGravity(true), staticFriction(0.6f),
+      dynamicFriction(0.4f), bindToViewportTop(false), bindToViewportBottom(false), bindToViewportLeft(false),
+      bindToViewportRight(false), initialized(false), angularVelocity(0), massInv(0), inertia(0), inertiaInv(0),
+      type(Circle), lastModelMatrix() {}
 
   void Rigidbody2D::BindToViewport() {
-    bindToViewportTop = true;
-    bindToViewportBottom = true;
-    bindToViewportLeft = true;
-    bindToViewportRight = true;
+    bindToViewportTop = bindToViewportBottom = bindToViewportLeft = bindToViewportRight = true;
   }
 
   void Rigidbody2D::UnbindFromViewport() {
-    bindToViewportTop = false;
-    bindToViewportBottom = false;
-    bindToViewportLeft = false;
-    bindToViewportRight = false;
+    bindToViewportTop = bindToViewportBottom = bindToViewportLeft = bindToViewportRight = false;
   }
 
   void Rigidbody2D::NoFriction() {
@@ -132,21 +119,21 @@ namespace Engine2D::Physics {
     return contactPoints;
   }
 
-  Rigidbody2D *Rigidbody2D::CreateCircleBody(
-    const float radius, const float mass, const bool isStatic
+  void Rigidbody2D::SetType(
+    const Rigidbody2DType type, const float mass, const Vector2f dimensions, const float radius
   ) {
-    const float area = static_cast<float>(M_PI * radius * radius);
-    const float inertia = 0.5f * mass * radius * radius;
-    return new Rigidbody2D{
-      mass, inertia, area, isStatic, radius, 0.0f, 0.0f, Circle
-    };
-  }
-
-  Rigidbody2D *Rigidbody2D::CreateRectangleBody(
-    const float width, const float height, const float mass, const bool isStatic
-  ) {
-    const float area = width * height;
-    const float inertia = 1.0f / 12.0f * mass * (width * width + height * height);
-    return new Rigidbody2D{mass, inertia, area, isStatic, 0.0f, width, height, Rectangle};
+    this->type = type;
+    this->mass = mass;
+    switch (type) {
+      case Rectangle: inertia = 1.0f / 12.0f * mass * dimensions * dimensions;
+        inertiaInv = 1.0f / inertia;
+        break;
+      case Circle: inertia = 0.5f * mass * radius * radius;
+        inertiaInv = 1.0f / inertia;
+        break;
+      default: inertia = 0;
+        inertiaInv = 0;
+        break;
+    }
   }
 }

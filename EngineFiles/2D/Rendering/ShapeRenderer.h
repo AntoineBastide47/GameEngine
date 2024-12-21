@@ -47,7 +47,7 @@ namespace Engine2D::Rendering {
       );
     private:
       /** Shader that controls the rendering pipeline for the shapes. */
-      static Shader *shader;
+      static std::shared_ptr<Shader> shader;
       /** Stores the vertex configuration for the rectangle. */
       static unsigned int rectangleVAO, rectangleVBO;
 

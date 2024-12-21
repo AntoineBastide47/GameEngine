@@ -50,7 +50,7 @@ endif()
 
 # Make sure the engine static library is present
 if (NOT ENGINE_LIB)
-  message(FATAL_ERROR "The Game Engine's 2D static library was not found in the folder EngineFiles. To copy it from it's current location to the EngineFiles, please run this command in your terminal: make refresh")
+  message(FATAL_ERROR "The Game Engine's 2D static library was not found in the folder EngineFiles. Make sure you built the engine using `make build` in the engine's file location before creating your project.")
 endif ()
 
 # Embed the shaders into the executable

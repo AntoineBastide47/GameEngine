@@ -8,7 +8,7 @@
 
 namespace Engine::Physics {
   CollisionManifold::CollisionManifold(
-    Engine2D::Physics::Rigidbody2D *rb1, Engine2D::Physics::Rigidbody2D *rb2, const Engine2D::Vector2f normal,
+    const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, const Engine2D::Vector2f normal,
     const double depth, const Engine2D::Vector2f contactPoint1, const Engine2D::Vector2f contactPoint2,
     const uint8_t contactCount
   )

@@ -14,13 +14,16 @@
 namespace Engine2D::Physics {
   class Rigidbody2D;
 }
+
+using namespace Engine2D::Physics;
+
 namespace Engine::Physics {
   class CollisionManifold {
     public:
       /// The first rigidbody involved in the collision
-      Engine2D::Physics::Rigidbody2D *rb1;
+      std::shared_ptr<Rigidbody2D> rb1;
       /// The second rigidbody involved in the collision
-      Engine2D::Physics::Rigidbody2D *rb2;
+      std::shared_ptr<Rigidbody2D> rb2;
       /// The normal along which the collision occurs
       Engine2D::Vector2f normal;
       /// The depth of the collision
@@ -29,8 +32,8 @@ namespace Engine::Physics {
       std::vector<Engine2D::Vector2f> contactPoints;
 
       CollisionManifold(
-        Engine2D::Physics::Rigidbody2D *rb1, Engine2D::Physics::Rigidbody2D *rb2, Engine2D::Vector2f normal, double depth,
-        Engine2D::Vector2f contactPoint1, Engine2D::Vector2f contactPoint2, uint8_t contactCount
+        const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, Engine2D::Vector2f normal,
+        double depth, Engine2D::Vector2f contactPoint1, Engine2D::Vector2f contactPoint2, uint8_t contactCount
       );
   };
 }

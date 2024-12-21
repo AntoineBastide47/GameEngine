@@ -30,7 +30,8 @@ namespace Engine2D::Physics {
      * @return True if they collide, false if not
      */
     [[nodiscard]] static bool collide(
-      const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2f *normal, double *depth
+      const std::shared_ptr<Rigidbody2D> &rigidbodyA, const std::shared_ptr<Rigidbody2D> &rigidbodyB, Vector2f *normal,
+      double *depth
     );
     /**
      * Computes the number of contact points between two rigidbodies when they collide
@@ -41,8 +42,8 @@ namespace Engine2D::Physics {
      * @param contactCount The number of contact points, either 1 or 2, calculated in the function's body
      */
     static void findContactPoints(
-      const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2f *contactPoint1, Vector2f *contactPoint2,
-      uint8_t *contactCount
+      const std::shared_ptr<Rigidbody2D> &rigidbodyA, const std::shared_ptr<Rigidbody2D> &rigidbodyB,
+      Vector2f *contactPoint1, Vector2f *contactPoint2, uint8_t *contactCount
     );
 
     /// True if the given circle bodies collide, False if not

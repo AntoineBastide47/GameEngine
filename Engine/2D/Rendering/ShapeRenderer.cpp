@@ -9,7 +9,7 @@
 #include "Common/RenderingHeaders.h"
 
 namespace Engine2D::Rendering {
-  Shader* ShapeRenderer::shader = nullptr;
+  std::shared_ptr<Shader> ShapeRenderer::shader = nullptr;
   unsigned int ShapeRenderer::rectangleVAO{};
   unsigned int ShapeRenderer::rectangleVBO{};
 

@@ -58,19 +58,11 @@ add_library(Engine2D STATIC
     EngineFiles/Types/float01.h
     Engine/2D/Physics/CollisionGrid.cpp
     EngineFiles/2D/Physics/CollisionGrid.h
-    EngineFiles/Common/Settings.cpp
+    Engine/Common/Settings.cpp
     EngineFiles/Common/Settings.h
 )
 
-# Add RTTI
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  add_compile_options(-frtti)
-elseif(MSVC)
-  add_compile_options(/GR)
-endif()
-
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
   target_compile_options(Engine2D PRIVATE
       -O3                     # General optimization
       -DNDEBUG                # Disable assertions
@@ -87,7 +79,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 
   # Add stripping for Release builds
   add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
-endif()
+endif ()
 
 # Include CMakeRC
 include(CMakeRC.cmake)
@@ -98,7 +90,7 @@ include(FetchContent)
 FetchContent_Declare(
     cpptrace
     GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
-    GIT_TAG        v0.7.3 # <HASH or TAG>
+    GIT_TAG v0.7.3 # <HASH or TAG>
 )
 FetchContent_MakeAvailable(cpptrace)
 

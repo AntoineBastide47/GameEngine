@@ -13,7 +13,10 @@ namespace Engine2D::Physics {
     return !(a.max.x <= b.min.x || b.max.x <= a.min.x || a.max.y <= b.min.y || b.max.y <= a.min.y);
   }
 
-  bool Collisions::collide(const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2f *normal, double *depth) {
+  bool Collisions::collide(
+    const std::shared_ptr<Rigidbody2D> &rigidbodyA, const std::shared_ptr<Rigidbody2D> &rigidbodyB, Vector2f *normal,
+    double *depth
+  ) {
     if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle)
       return circlesIntersect(
         rigidbodyA->Transform()->WorldPosition(), rigidbodyA->Transform()->WorldHalfScale(),
@@ -41,8 +44,8 @@ namespace Engine2D::Physics {
   }
 
   void Collisions::findContactPoints(
-    const Rigidbody2D *rigidbodyA, const Rigidbody2D *rigidbodyB, Vector2f *contactPoint1, Vector2f *contactPoint2,
-    uint8_t *contactCount
+    const std::shared_ptr<Rigidbody2D> &rigidbodyA, const std::shared_ptr<Rigidbody2D> &rigidbodyB, Vector2f *contactPoint1,
+    Vector2f *contactPoint2, uint8_t *contactCount
   ) {
     if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle) {
       findCirclesContactPoint(

@@ -1,6 +1,5 @@
 //
 // Entity2D.h
-// Entity2D: Represents a 2D entity with transform, rendering, and hierarchical capabilities
 // Author: Antoine Bastide
 // Date: 03/11/2024
 //
@@ -9,7 +8,9 @@
 #define ENTITY2D_H
 
 #include <string>
+#include <unordered_set>
 #include <vector>
+#include <glm/glm.hpp>
 
 #include "2D/Components/Component2D.h"
 #include "2D/Components/Transform2D.h"
@@ -27,7 +28,7 @@ namespace Engine2D {
    * The Entity2D class provides an interface for creating and managing entities in a 2D game world.
    * Each entity can have a position, rotation, and scale, as well as a renderer and a parent entity.
    */
-  class Entity2D {
+  class Entity2D : public std::enable_shared_from_this<Entity2D> {
     friend class Game2D;
     public:
       /// The name of the entity.
@@ -42,15 +43,14 @@ namespace Engine2D {
       /**
        * Constructs an Entity2D with a given name.
        * @param name The name of the entity.
-       * @param parent The parent of this entity (optional)
-       * @param texture The texture of this entity (optional)
        */
-      explicit Entity2D(std::string name, Entity2D *parent = nullptr, Texture2D *texture = nullptr);
+      explicit Entity2D(std::string name);
+      virtual ~Entity2D() = default;
+
       /// Equality operator that checks if the current entity is the same as the given entity
       bool operator==(const Entity2D &entity) const;
-
-      /// Destructor for the Entity2D class.
-      virtual ~Entity2D() = default;
+      /// Inequality operator that checks if the current entity is the same as the given entity
+      bool operator!=(const Entity2D &entity) const;
 
       /// Called before the first update, allowing derived classes to customize behavior.
       virtual void Initialize() {}
@@ -59,53 +59,59 @@ namespace Engine2D {
       /// Called once per physics update, allowing derived classes to customize behavior.
       virtual void FixedUpdate() {}
       /// Called when the entity is removed from the game or when the game quits, allowing derived classes to customize behavior.
-      virtual void Quit() {}
+      virtual void OnDestroy() {}
       /// Called when this entity collides with another entity, required the entity to have a Rigidbody2D component
-      virtual void OnCollision(Physics::Rigidbody2D *collider) {}
+      virtual void OnCollision(const std::shared_ptr<Physics::Rigidbody2D> &collider) {}
 
       /// Adds the given component to the current entity
-      void AddComponent(Component2D &component);
+      template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
+      void AddComponent() {
+        auto component = std::make_shared<T>();
+        component->setEntity(shared_from_this());
+        components.insert(component);
+        forwardComponent(component);
+      }
+
       /// Removes the given component to the current entity
-      void RemoveComponent(Component2D &component);
-      /// Adds the given component to the current entity
-      void AddComponent(Component2D *component);
-      /// Removes the given component to the current entity
-      void RemoveComponent(Component2D *component);
+      template<typename T> requires std::is_base_of_v<Component2D, T>
+      void RemoveComponent(const std::shared_ptr<T> &component) {
+        unforwardComponent(component);
+        components.erase(component);
+      }
 
       /// Sets the texture of the entity to the given texture
-      void SetTexture(Texture2D *texture);
+      void SetTexture(const std::shared_ptr<Texture2D> &texture);
       /// @returns The pointer to the texture of this entity
-      [[nodiscard]] Texture2D *Texture() const;
+      [[nodiscard]] std::shared_ptr<Texture2D> Texture() const;
 
       /**
        * Try's to find a component of the given type on the current entity
-       * @tparam C The type of the component to find, must inherit from Component2D
+       * @tparam T The type of the component to find, must inherit from Component2D
        * @return The first component that matches the given type found on the current entity, nullptr if none were found
        */
-      template<typename C> requires std::is_base_of_v<Component2D, C>
-      [[nodiscard]] C *GetComponent() const {
-        if constexpr (std::is_same_v<C, Transform2D>)
+      template<typename T> requires std::is_base_of_v<Component2D, T>
+      [[nodiscard]] std::shared_ptr<T> GetComponent() const {
+        if constexpr (std::is_same_v<T, Transform2D>)
           return transform;
-        for (auto component: components) {
-          if (auto casted = dynamic_cast<C *>(component))
+        for (auto component: components)
+          if (auto casted = std::static_pointer_cast<T>(component))
             return casted;
-        }
         return nullptr;
       }
 
       /**
        * Try's to find multiple components of the given type on the current entity
-       * @tparam C The type of the component to find, must inherit from Component2D
+       * @tparam T The type of the component to find, must inherit from Component2D
        * @return The components that match the given type found on the current entity, nullptr if none were found
        */
-      template<typename C> requires std::is_base_of_v<Component2D, C>
-      [[nodiscard]] std::vector<C *> GetComponents() const {
-        if constexpr (std::is_same_v<C, Transform2D>)
+      template<typename T> requires std::is_base_of_v<Component2D, T>
+      [[nodiscard]] std::unordered_set<std::shared_ptr<T> > GetComponents() const {
+        if constexpr (std::is_same_v<T, Transform2D>)
           return {transform};
-        std::vector<C *> res;
+        std::unordered_set<std::shared_ptr<T> > res;
         for (auto component: components)
-          if (typeid(component) == typeid(C))
-            res.push_back(dynamic_cast<C *>(component));
+          if (typeid(component) == typeid(T))
+            res.insert(std::static_pointer_cast<T>(component));
         return res;
       }
 
@@ -113,19 +119,23 @@ namespace Engine2D {
       void Destroy();
     private:
       /// Whether this entity has been initialized by the game
-      bool initialized = false;
+      bool initialized;
       /// The texture of this entity
-      Texture2D *texture;
+      std::shared_ptr<Texture2D> texture;
       /// The components linked to this entity
-      std::vector<Component2D *> components;
+      std::unordered_set<std::shared_ptr<Component2D> > components;
 
       /// Initializes the entity, setting its parent to the main parent if none is set.
       void initialize();
       /// Called when the game is updating, allowing derived classes to customize behavior.
       void update();
       /// Cleans up resources when the game ends
-      void quit();
+      void destroy();
+      /// Checks if the given component needs to be sent to other classes
+      static void forwardComponent(const std::shared_ptr<Component2D> &component);
+      /// Checks if the given component needs to be removed from other classes
+      static void recallComponent(const std::shared_ptr<Component2D> &component);
   };
-} // namespace Engine2D
+}
 
 #endif // ENTITY2D_H
