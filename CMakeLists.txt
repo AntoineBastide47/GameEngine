@@ -95,7 +95,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cpptrace)
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-0.2.7
+    OUTPUT_NAME Engine2D-0.3.8
     PREFIX ""
 )
 

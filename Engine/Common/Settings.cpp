@@ -10,35 +10,29 @@
 #include "Common/RenderingHeaders.h"
 
 namespace Engine {
-  Engine2D::Vector2<size_t> Settings::WindowSettings::resolution = Engine2D::Vector2<size_t>{800, 600};
-  std::string Settings::WindowSettings::title = "Game Window";
-  bool Settings::WindowSettings::allowResize = true;
+  Engine2D::Vector2<size_t> Settings::Window::resolution = Engine2D::Vector2<size_t>{800, 600};
+  std::string Settings::Window::title = "Game Window";
+  bool Settings::Window::allowResize = true;
 
-  bool Settings::GraphicsSettings::vsyncEnabled = false;
-  bool Settings::GraphicsSettings::maintainAspectRatio = true;
-  unsigned int Settings::GraphicsSettings::targetFrameRate = 0;
-
-  float Settings::PhysicsSettings::fixedDeltaTime = 0.02f;
-  bool Settings::PhysicsSettings::frictionEnabled = true;
-  bool Settings::PhysicsSettings::useScreenPartitioning = false;
-  Engine2D::Vector2<size_t> Settings::PhysicsSettings::partitionSize = Engine2D::Vector2<size_t>{4, 4};
-  Engine2D::Vector2f Settings::PhysicsSettings::gravity = Engine2D::Vector2f(0.0f, -9.81f);
-
-  void Settings::WindowSettings::SetScreenResolution(const Engine2D::Vector2<size_t> newValue) {
+  void Settings::Window::SetScreenResolution(const Engine2D::Vector2<size_t> newValue) {
     resolution = newValue;
     glfwSetWindowSize(Engine2D::Game2D::instance->window, newValue.x, newValue.y);
   }
 
-  void Settings::WindowSettings::SetTitle(const std::string &newTitle) {
+  void Settings::Window::SetTitle(const std::string &newTitle) {
     title = std::move(newTitle);
     glfwSetWindowTitle(Engine2D::Game2D::instance->window, title.c_str());
   }
 
-  void Settings::WindowSettings::SetAllowResize(const bool newState) {
+  void Settings::Window::SetAllowResize(const bool newState) {
     allowResize = newState;
   }
 
-  void Settings::GraphicsSettings::SetVsyncEnabled(const bool newState) {
+  bool Settings::Graphics::vsyncEnabled = false;
+  bool Settings::Graphics::maintainAspectRatio = true;
+  unsigned int Settings::Graphics::targetFrameRate = 0;
+
+  void Settings::Graphics::SetVsyncEnabled(const bool newState) {
     vsyncEnabled = newState;
     glfwSwapInterval(vsyncEnabled);
 
@@ -50,11 +44,11 @@ namespace Engine {
     }
   }
 
-  void Settings::GraphicsSettings::SetMaintainAspectRatio(const bool newState) {
+  void Settings::Graphics::SetMaintainAspectRatio(const bool newState) {
     maintainAspectRatio = newState;
   }
 
-  void Settings::GraphicsSettings::SetTargetFrameRate(const unsigned int newValue) {
+  void Settings::Graphics::SetTargetFrameRate(const unsigned int newValue) {
     targetFrameRate = newValue;
 
     if (targetFrameRate > 0) {
@@ -63,70 +57,122 @@ namespace Engine {
     }
   }
 
-  void Settings::PhysicsSettings::SetFixedDeltaTime(const float newValue) {
+  float Settings::Physics::fixedDeltaTime = 0.02f;
+  bool Settings::Physics::frictionEnabled = true;
+  bool Settings::Physics::useScreenPartitioning = false;
+  Engine2D::Vector2<size_t> Settings::Physics::partitionSize = Engine2D::Vector2<size_t>{4, 4};
+  Engine2D::Vector2f Settings::Physics::gravity = Engine2D::Vector2f(0.0f, -9.81f);
+
+  void Settings::Physics::SetFixedDeltaTime(const float newValue) {
     constexpr float min = 1.0f / 50.0f;
     constexpr float max = 1.0f / 60.0f;
     fixedDeltaTime = std::clamp(newValue, min, max);
   }
 
-  void Settings::PhysicsSettings::SetFrictionEnabled(bool newState) {
+  void Settings::Physics::SetFrictionEnabled(bool newState) {
     frictionEnabled = newState;
   }
 
-  void Settings::PhysicsSettings::SetUseScreenPartitioning(const bool newState) {
+  void Settings::Physics::SetUseScreenPartitioning(const bool newState) {
     useScreenPartitioning = newState;
   }
 
-  void Settings::PhysicsSettings::SetPartitionSize(const Engine2D::Vector2<size_t> newValue) {
+  void Settings::Physics::SetPartitionSize(const Engine2D::Vector2<size_t> newValue) {
     partitionSize = newValue;
     Engine2D::Game2D::instance->physics2D->collisionGridNeedsResizing = true;
   }
 
-  void Settings::PhysicsSettings::SetGravity(const Engine2D::Vector2f newValue) {
+  void Settings::Physics::SetGravity(const Engine2D::Vector2f newValue) {
     gravity = newValue;
   }
 
-  Engine2D::Vector2<size_t> Settings::WindowSettings::GetScreenResolution() {
+  Engine2D::Vector2<size_t> Settings::Window::GetScreenResolution() {
     return resolution;
   }
 
-  std::string Settings::WindowSettings::GetTitle() {
+  std::string Settings::Window::GetTitle() {
     return title;
   }
 
-  bool Settings::WindowSettings::GetAllowResize() {
+  bool Settings::Window::GetAllowResize() {
     return allowResize;
   }
 
-  bool Settings::GraphicsSettings::GetVsyncEnabled() {
+  bool Settings::Graphics::GetVsyncEnabled() {
     return vsyncEnabled;
   }
 
-  bool Settings::GraphicsSettings::GetMaintainAspectRatio() {
+  bool Settings::Graphics::GetMaintainAspectRatio() {
     return maintainAspectRatio;
   }
 
-  unsigned int Settings::GraphicsSettings::GetTargetFrameRate() {
+  unsigned int Settings::Graphics::GetTargetFrameRate() {
     return targetFrameRate;
   }
 
-  float Settings::PhysicsSettings::GetFixedDeltaTime() {
+  float Settings::Physics::GetFixedDeltaTime() {
     return fixedDeltaTime;
   }
 
-  float Settings::PhysicsSettings::GetFrictionEnabled() {
+  float Settings::Physics::GetFrictionEnabled() {
     return frictionEnabled;
   }
 
-  bool Settings::PhysicsSettings::GetUseScreenPartitioning() {
+  bool Settings::Physics::GetUseScreenPartitioning() {
     return useScreenPartitioning;
   }
 
-  Engine2D::Vector2<size_t> Settings::PhysicsSettings::GetPartitionSize() {
+  Engine2D::Vector2<size_t> Settings::Physics::GetPartitionSize() {
     return partitionSize;
   }
 
-  Engine2D::Vector2f Settings::PhysicsSettings::GetGravity() {
+  Engine2D::Vector2f Settings::Physics::GetGravity() {
     return gravity;
+  }
+
+  bool Settings::Input::allowMouseInput = true;
+  bool Settings::Input::allowKeyboardInput = true;
+  bool Settings::Input::allowGamepadInput = true;
+  float Settings::Input::gamepadStickThreshold = 0.15f;
+  float Settings::Input::gamepadTriggerThreshold = -1.0f;
+
+  void Settings::Input::SetAllowMouseInput(const bool newState) {
+    allowMouseInput = newState;
+  }
+
+  void Settings::Input::SetAllowKeyboardInput(const bool newState) {
+    allowKeyboardInput = newState;
+  }
+
+  void Settings::Input::SetAllowGamepadInput(const bool newState) {
+    allowGamepadInput = newState;
+  }
+
+  void Settings::Input::SetGamepadStickThreshold(const float newValue) {
+    gamepadStickThreshold = std::clamp(newValue, -1.0f, 1.0f);
+  }
+
+  void Settings::Input::SetGamepadTriggerThreshold(const float newValue) {
+    gamepadTriggerThreshold = std::clamp(newValue, -1.0f, 1.0f);
+  }
+
+  bool Settings::Input::GetAllowMouseInput() {
+    return allowMouseInput;
+  }
+
+  bool Settings::Input::GetAllowKeyboardInput() {
+    return allowKeyboardInput;
+  }
+
+  bool Settings::Input::GetAllowGamepadInput() {
+    return allowGamepadInput;
+  }
+
+  float Settings::Input::GetGamepadStickThreshold() {
+    return gamepadStickThreshold;
+  }
+
+  float Settings::Input::GetGamepadTriggerThreshold() {
+    return gamepadTriggerThreshold;
   }
 }

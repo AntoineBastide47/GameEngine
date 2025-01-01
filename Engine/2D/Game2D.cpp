@@ -10,7 +10,6 @@
 
 #include "2D/Game2D.h"
 #include "2D/ResourceManager.h"
-#include "2D/Physics/Rigidbody2D.h"
 #include "2D/Rendering/ShapeRenderer.h"
 #include "2D/Rendering/SpriteRenderer.h"
 #include "Common/Macros.h"
@@ -52,14 +51,14 @@ namespace Engine2D {
   }
 
   float Game2D::FixedDeltaTime() {
-    return Engine::Settings::Physics.GetFixedDeltaTime();
+    return Engine::Settings::Physics::GetFixedDeltaTime();
   }
 
   void Game2D::Run() {
     this->initialize();
 
     // Variables for FPS calculation
-    targetFrameRate = Engine::Settings::Graphics.GetTargetFrameRate();
+    targetFrameRate = Engine::Settings::Graphics::GetTargetFrameRate();
     targetRenderRate = targetFrameRate == 0 ? 0.0f : 1.0f / targetFrameRate;
     auto nextFrameTime = std::chrono::high_resolution_clock::now();
     float oneSecondTimer = 0.0f;
@@ -74,10 +73,10 @@ namespace Engine2D {
       glfwPollEvents();
 
       this->addEntities();
-      this->processInput();
-      this->update();
-      this->fixedUpdate();
       this->removeEntities();
+      this->processInput();
+      this->fixedUpdate();
+      this->update();
       this->render();
 
       // FPS calculation
@@ -129,7 +128,7 @@ namespace Engine2D {
     #endif
 
     // Set window hints
-    glfwWindowHint(GLFW_RESIZABLE, Engine::Settings::Window.GetAllowResize());
+    glfwWindowHint(GLFW_RESIZABLE, Engine::Settings::Window::GetAllowResize());
 
     // Create the window
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
@@ -147,7 +146,7 @@ namespace Engine2D {
     glfwSetWindowRefreshCallback(window, window_refresh_callback);
     glfwSetWindowPosCallback(window, window_pos_callback);
 
-    glfwSwapInterval(Engine::Settings::Graphics.GetVsyncEnabled());
+    glfwSwapInterval(Engine::Settings::Graphics::GetVsyncEnabled());
 
     // The official code for "Setting Your Raster Position to a Pixel Location" (i.e. set up a camera for 2D screen)
     glMatrixMode(GL_PROJECTION);
@@ -201,9 +200,12 @@ namespace Engine2D {
   }
 
   void Game2D::processInput() {
-    Engine::Input::Keyboard::processInput();
-    Engine::Input::Mouse::processInput();
-    Engine::Input::Gamepad::processInput();
+    if (Engine::Settings::Input::GetAllowMouseInput())
+      Engine::Input::Mouse::processInput();
+    if (Engine::Settings::Input::GetAllowKeyboardInput())
+      Engine::Input::Keyboard::processInput();
+    if (Engine::Settings::Input::GetAllowGamepadInput())
+      Engine::Input::Gamepad::processInput();
   }
 
   void Game2D::update() {
@@ -225,12 +227,12 @@ namespace Engine2D {
 
   void Game2D::fixedUpdate() {
     physicsAccumulator += deltaTime;
-    while (physicsAccumulator >= Engine::Settings::Physics.GetFixedDeltaTime()) {
+    while (physicsAccumulator >= Engine::Settings::Physics::GetFixedDeltaTime()) {
       for (const auto entity: entities)
         if (entity->active)
           entity->FixedUpdate();
       physics2D->step();
-      physicsAccumulator -= Engine::Settings::Physics.GetFixedDeltaTime();
+      physicsAccumulator -= Engine::Settings::Physics::GetFixedDeltaTime();
     }
   }
 
@@ -325,14 +327,14 @@ namespace Engine2D {
     instance->width = framebufferWidth;
     instance->height = framebufferHeight;
 
-    const Vector2<size_t> initialSize = Engine::Settings::Window.GetScreenResolution();
+    const Vector2<size_t> initialSize = Engine::Settings::Window::GetScreenResolution();
 
     // Calculate the proper aspect ratio
     const float ratioX = static_cast<float>(framebufferWidth) / static_cast<float>(initialSize.x);
     const float ratioY = static_cast<float>(framebufferHeight) / static_cast<float>(initialSize.y);
     instance->aspectRatio = Vector2{ratioX, ratioY};
 
-    const bool maintainAspectRatio = Engine::Settings::Graphics.GetMaintainAspectRatio();
+    const bool maintainAspectRatio = Engine::Settings::Graphics::GetMaintainAspectRatio();
     const auto viewportRatio = Vector2{
       maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX,
       maintainAspectRatio ? std::min(ratioX, ratioY) : ratioY

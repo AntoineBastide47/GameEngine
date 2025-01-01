@@ -74,7 +74,7 @@ namespace Engine2D::Physics {
   }
 
   void Rigidbody2D::step(const float fixedDeltaTime) {
-    this->linearVelocity += (affectedByGravity * Engine::Settings::Physics.GetGravity() * massInv + force) * fixedDeltaTime;
+    this->linearVelocity += (affectedByGravity * Engine::Settings::Physics::GetGravity() + force) * massInv * fixedDeltaTime;
     this->Transform()->position += this->linearVelocity * fixedDeltaTime;
     this->Transform()->rotation += this->angularVelocity * fixedDeltaTime * angularDamping;
     this->force = Vector2f::Zero;

@@ -14,7 +14,7 @@ namespace Engine {
   class Settings {
     public:
       /// Static class containing all the settings related to the window
-      class WindowSettings {
+      class Window {
         friend class Settings;
         public:
           /// Changes the current screen resolution to the new value
@@ -35,11 +35,11 @@ namespace Engine {
           static std::string title;
           static bool allowResize;
 
-          WindowSettings() = default;
+          Window() = default;
       };
 
       /// Static class containing all the settings related to the graphics
-      class GraphicsSettings {
+      class Graphics {
         friend class Settings;
         public:
           /// If true, the render rate will match the refresh rate of the current monitor the screen is running on
@@ -57,11 +57,11 @@ namespace Engine {
           static bool maintainAspectRatio;
           static unsigned int targetFrameRate;
 
-          GraphicsSettings() = default;
+          Graphics() = default;
       };
 
       /// Static class containing all the settings related to the physics engine
-      class PhysicsSettings {
+      class Physics {
         friend class Settings;
         public:
           /// Changes the rate at which the physics simulations are run, clamped between 0.02f and 0.33f (50 or 60 times a second).
@@ -97,15 +97,52 @@ namespace Engine {
           static Engine2D::Vector2<size_t> partitionSize;
           static Engine2D::Vector2f gravity;
 
-          PhysicsSettings() = default;
+          Physics() = default;
+      };
+      class Input {
+        friend class Settings;
+        public:
+          /// Changes if the game allows mouse inputs or not
+          static void SetAllowMouseInput(bool newState);
+          /// Changes if the game allows mouse keyboard or not
+          static void SetAllowKeyboardInput(bool newState);
+          /// Changes if the game allows mouse gamepad or not
+          static void SetAllowGamepadInput(bool newState);
+          /// Changes the minimal value the sticks x and y must take to be considered as moved, clamped between -1.0f and 1.0f.
+          static void SetGamepadStickThreshold(float newValue);
+          /// Changes the minimal value the left and right triggers must take to be considered pressed, clamped between -1.0f and 1.0f.
+          static void SetGamepadTriggerThreshold(float newValue);
+
+          /// @returns True if the game allows mouse input, False if not
+          [[nodiscard]] static bool GetAllowMouseInput();
+          /// @returns True if the game allows keyboard input, False if not
+          [[nodiscard]] static bool GetAllowKeyboardInput();
+          /// @returns True if the game allows gamepad input, False if not
+          [[nodiscard]] static bool GetAllowGamepadInput();
+          /// @returns The value of the stick threshold of the gamepad
+          [[nodiscard]] static float GetGamepadStickThreshold();
+          /// @returns The value of the trigger threshold of the gamepad
+          [[nodiscard]] static float GetGamepadTriggerThreshold();
+        private:
+          static bool allowMouseInput;
+          static bool allowKeyboardInput;
+          static bool allowGamepadInput;
+          static float gamepadStickThreshold;
+          static float gamepadTriggerThreshold;
+
+          Input() = default;
       };
 
+    /*
       /// All the settings related to the window
       static WindowSettings Window;
       /// All the settings related to the graphics
       static GraphicsSettings Graphics;
       /// All the settings related to the physics engine
       static PhysicsSettings Physics;
+      /// All the settings related to the input system
+      static InputSettings Input;
+    */
     private:
       Settings() = default;
   };

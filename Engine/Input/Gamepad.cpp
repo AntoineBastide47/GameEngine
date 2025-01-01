@@ -5,7 +5,7 @@
 //
 
 #include "Input/Gamepad.h"
-#include "Common/Macros.h"
+#include "Common/Settings.h"
 
 namespace Engine::Input {
   GamepadButtonEvent Gamepad::BUTTON_NORTH{};
@@ -28,16 +28,12 @@ namespace Engine::Input {
   GamepadStickEvent Gamepad::LEFT_STICK{};
   GamepadStickEvent Gamepad::RIGHT_STICK{};
 
-  std::bitset<GLFW_GAMEPAD_BUTTON_DPAD_LEFT + 1> Gamepad::previousKeyStates{};
-  GLFWgamepadstate *Gamepad::state = nullptr;
-
-  Gamepad::~Gamepad() {
-    SAFE_DELETE(state);
-  }
+  std::bitset<GLFW_GAMEPAD_BUTTON_DPAD_LEFT + 3> Gamepad::previousKeyStates{};
+  GLFWgamepadstate Gamepad::state{};
 
   void Gamepad::processInput() {
     if (glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
-      if (glfwGetGamepadState(GLFW_JOYSTICK_1, state)) {
+      if (glfwGetGamepadState(GLFW_JOYSTICK_1, &state)) {
         processButton(GLFW_GAMEPAD_BUTTON_A, &BUTTON_SOUTH);
         processButton(GLFW_GAMEPAD_BUTTON_B, &BUTTON_RIGHT);
         processButton(GLFW_GAMEPAD_BUTTON_X, &BUTTON_LEFT);
@@ -61,20 +57,20 @@ namespace Engine::Input {
         processStick(GLFW_GAMEPAD_AXIS_LEFT_X, GLFW_GAMEPAD_AXIS_LEFT_Y, &LEFT_STICK);
         processStick(GLFW_GAMEPAD_AXIS_RIGHT_X, GLFW_GAMEPAD_AXIS_RIGHT_Y, &RIGHT_STICK);
 
-        processButton(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, &LEFT_TRIGGER);
-        processButton(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, &RIGHT_TRIGGER);
+        processButton(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, &LEFT_TRIGGER, true);
+        processButton(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, &RIGHT_TRIGGER, true);
       }
     }
   }
 
-  void Gamepad::processButton(const int keyCode, GamepadButtonEvent *event) {
-    if (!state)
-      return;
-
+  void Gamepad::processButton(const int keyCode, GamepadButtonEvent *event, const bool useAxes) {
     // Get previous state
-    const bool isPressed = state->buttons[keyCode] == GLFW_PRESS;
-    const bool wasPressed = previousKeyStates[keyCode];
-    previousKeyStates[keyCode] = isPressed;
+    const bool isPressed = useAxes
+                             ? state.axes[keyCode] > Settings::Input::GetGamepadTriggerThreshold()
+                             : state.buttons[keyCode] == GLFW_PRESS;
+    const int updatedKeyCode = useAxes ? GLFW_GAMEPAD_BUTTON_LAST + keyCode - GLFW_GAMEPAD_AXIS_LEFT_TRIGGER + 1 : keyCode;
+    const bool wasPressed = previousKeyStates[updatedKeyCode];
+    previousKeyStates[updatedKeyCode] = isPressed;
 
     const KeyAndButtonContext ctx = {
       .pressed = !wasPressed && isPressed,
@@ -85,9 +81,13 @@ namespace Engine::Input {
   }
 
   void Gamepad::processStick(const int keyCodeX, const int keyCodeY, GamepadStickEvent *event) {
-    if (!state)
-      return;
+    const float x = axisTriggered(state.axes[keyCodeX]) ? state.axes[keyCodeX] : 0.0f;
+    const float y = axisTriggered(state.axes[keyCodeY]) ? state.axes[keyCodeY] : 0.0f;
+    event->trigger(Engine2D::Vector2f{x, y});
+  }
 
-    event->trigger(Engine2D::Vector2f{state->axes[keyCodeX], state->axes[keyCodeY]});
+  bool Gamepad::axisTriggered(const float value) {
+    const float axisThreshold = Settings::Input::GetGamepadStickThreshold();
+    return value < -axisThreshold || axisThreshold < value;
   }
 }

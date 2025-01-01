@@ -14,7 +14,7 @@
 #include "Common/Settings.h"
 
 namespace Engine2D::Physics {
-  Physics2D::Physics2D() : collisionGrid(Engine::Settings::Physics.GetPartitionSize()), collisionGridNeedsResizing(false) {}
+  Physics2D::Physics2D() : collisionGrid(Engine::Settings::Physics::GetPartitionSize()), collisionGridNeedsResizing(false) {}
 
   Physics2D::~Physics2D() {
     rigidbodies.clear();
@@ -58,8 +58,9 @@ namespace Engine2D::Physics {
 
     simulate();
     // Skip the collision detection if there are no active colliders
-    if (!activeRigidbodies.empty()) {
-      if (!Engine::Settings::Physics.GetUseScreenPartitioning())
+    findActiveColliders();
+    if (!activeColliders.empty()) {
+      if (!Engine::Settings::Physics::GetUseScreenPartitioning())
         broadPhase();
       else {
         if (collisionGridNeedsResizing)
@@ -78,6 +79,7 @@ namespace Engine2D::Physics {
   void Physics2D::simulate() {
     // Simulate a step for each rigidbody, check for null pointers and get all the active rigidbodies
     bool foundNull = false;
+    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
     for (const auto rigidbody: rigidbodies) {
       if (!rigidbody)
         foundNull = true;

@@ -33,6 +33,7 @@ namespace Engine::Input {
    * The gamepad left stick, right stick, and button all have an associated Event that triggers when they are updated.
    */
   class Gamepad final {
+    friend class Engine2D::Game2D;
     public:
       static GamepadButtonEvent BUTTON_NORTH, BUTTON_SOUTH, BUTTON_LEFT, BUTTON_RIGHT;
       static GamepadButtonEvent PAD_LEFT, PAD_RIGHT, PAD_NORTH, PAD_SOUTH;
@@ -41,22 +42,22 @@ namespace Engine::Input {
       static GamepadButtonEvent START_BUTTON, SELECT_BUTTON;
       static GamepadButtonEvent LEFT_STICK_BUTTON, RIGHT_STICK_BUTTON, CENTER_BUTTON;
       static GamepadStickEvent LEFT_STICK, RIGHT_STICK;
-      friend class Engine2D::Game2D;
     private:
       /// If any of the gamepad buttons were pressed last frame
-      static std::bitset<GLFW_GAMEPAD_BUTTON_DPAD_LEFT + 1> previousKeyStates;
+      static std::bitset<GLFW_GAMEPAD_BUTTON_DPAD_LEFT + 2 + 1> previousKeyStates;
       /// The current state of the gamepad
-      static GLFWgamepadstate *state;
+      static GLFWgamepadstate state;
 
       Gamepad() = default;
-      ~Gamepad();
 
       /// Processes all the inputs of the current frame of the game and calls the corresponding gamepad events.
       static void processInput();
       /// Processes the given gamepad button input
-      static void processButton(int keyCode, GamepadButtonEvent *event);
+      static void processButton(int keyCode, GamepadButtonEvent *event, bool useAxes = false);
       /// Processes the given gamepad stick input
       static void processStick(int keyCodeX, int keyCodeY, GamepadStickEvent *event);
+      /// True if the axe was greater than the axisThreshold value, False if not
+      static bool axisTriggered(float value);
   };
 }
 

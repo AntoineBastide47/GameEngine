@@ -96,6 +96,14 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 
   # Add stripping for Release builds
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${PROJECT_NAME}>)
+elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # Enable Address Sanitizer
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    set(SANITIZER_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SANITIZER_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SANITIZER_FLAGS}")
+    set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${SANITIZER_FLAGS}")
+  endif ()
 endif()
 
 
