@@ -42,6 +42,11 @@ namespace Engine {
       class Graphics {
         friend class Settings;
         public:
+          /// Changes whether the engine will skip rendering the duplicate frame.
+          /// If true, the frames per second counter becomes "falsified" since the game will render as little frames as
+          /// possible so it could render 0 frames a second without meaning that the game is experiencing delays.
+          /// If false, the engine will render as many frames as it can, displaying the correct frames per second.
+          static void SetFrameSkippingEnabled(bool newState);
           /// If true, the render rate will match the refresh rate of the current monitor the screen is running on
           static void SetVsyncEnabled(bool newState);
           /// If true, the viewport will maintain the aspect ratio defined by the initial screen resolution
@@ -49,10 +54,16 @@ namespace Engine {
           /// Changes the frame rate will target, if set to 0, the game will not cap the frame rate.
           static void SetTargetFrameRate(unsigned int newValue);
 
+          /// @returns True if the engine will skip rendering duplicate frames, false if not.
+          [[nodiscard]] static unsigned int GetFrameSkippingEnabled();
+          /// @returns True if the rendering will sync to the refresh rate of the monitor it is running on, false if not.
           [[nodiscard]] static bool GetVsyncEnabled();
+          /// @returns True if the textures will scale with the window, false if not
           [[nodiscard]] static bool GetMaintainAspectRatio();
+          /// @returns How many frames wil be rendered per second, if 0 the engine will render as many as possible
           [[nodiscard]] static unsigned int GetTargetFrameRate();
         private:
+          static bool frameSkippingEnabled;
           static bool vsyncEnabled;
           static bool maintainAspectRatio;
           static unsigned int targetFrameRate;
@@ -132,17 +143,6 @@ namespace Engine {
 
           Input() = default;
       };
-
-    /*
-      /// All the settings related to the window
-      static WindowSettings Window;
-      /// All the settings related to the graphics
-      static GraphicsSettings Graphics;
-      /// All the settings related to the physics engine
-      static PhysicsSettings Physics;
-      /// All the settings related to the input system
-      static InputSettings Input;
-    */
     private:
       Settings() = default;
   };

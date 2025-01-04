@@ -28,21 +28,24 @@ namespace Engine2D {
     friend class Entity2D;
     friend class Game2D;
     public:
-      /// Weather or not this component is active in the scene
-      bool active;
-
       Component2D();
       virtual ~Component2D();
+
+      /// Changes the active state of this component
+      void SetActive(bool active);
+      /// @returns True if this component and its parent entity are active, false if not
+      [[nodiscard]] bool IsActive() const;
 
       /// @returns The entity this component is attached to
       [[nodiscard]] std::shared_ptr<Entity2D> &Entity();
       /// @returns The transform attached to the entity this component is attached to
       [[nodiscard]] Transform2D *Transform() const;
     private:
+      /// Whether this component is active in the scene
+      bool active;
       /// The entity this component is attached to
       std::shared_ptr<Entity2D> entity;
-      /// The transform of the entity this component is attached to
-      Transform2D *transform;
+
       /// Sets the parent entity this component is attached to
       void setEntity(const std::shared_ptr<Entity2D> &entity);
   };

@@ -12,7 +12,7 @@
 #include <string>
 #include <glm/glm.hpp>
 
-#include "Vector2.h"
+#include "2D/Types/Vector2.h"
 #include "Common/Log.h"
 
 namespace Engine2D {
@@ -48,52 +48,52 @@ namespace Engine2D {
       static const Vector2 Down;
 
       /// Addition operator for component-wise addition.
-      Vector2 operator+(const Vector2 v) const {
+      constexpr Vector2 operator+(const Vector2 v) const {
         return {x + v.x, y + v.y};
       }
 
       /// Addition assignment operator for component-wise addition.
-      Vector2 &operator+=(const Vector2 v) {
+      constexpr Vector2 &operator+=(const Vector2 v) {
         return *this = *this + v;
       }
 
       /// Negation operator, returns the vector with all it's components negated.
-      Vector2 operator-() const {
+      constexpr Vector2 operator-() const {
         return {-x, -y};
       }
 
       /// Subtraction operator for subtracting two vectors.
-      Vector2 operator-(const Vector2 v) const {
+      constexpr Vector2 operator-(const Vector2 v) const {
         return {x - v.x, y - v.y};
       }
 
       /// Subtraction assignment operator for component-wise subtraction.
-      Vector2 &operator-=(const Vector2 v) {
+      constexpr Vector2 &operator-=(const Vector2 v) {
         return *this = *this - v;
       }
 
       /// Multiplication operator for dot product.
-      float operator*(const Vector2 v) const {
+      constexpr float operator*(const Vector2 v) const {
         return x * v.x + y * v.y;
       }
 
       /// Scalar multiplication operator for scaling the vector.
-      Vector2 operator*(const float scalar) const {
+      constexpr Vector2 operator*(const float scalar) const {
         return {x * scalar, y * scalar};
       }
 
       /// Scalar multiplication operator for scaling the vector.
-      friend Vector2 operator*(const float scalar, const Vector2 vec) {
+      friend constexpr Vector2 operator*(const float scalar, const Vector2 vec) {
         return vec * scalar;
       }
 
       /// Scalar multiplication assignment for scaling the vector.
-      Vector2 &operator*=(const float scalar) {
+      constexpr Vector2 &operator*=(const float scalar) {
         return *this = *this * scalar;
       }
 
       /// Cross product operator
-      float operator^(const Vector2 v) const {
+      constexpr float operator^(const Vector2 v) const {
         return x * v.y - y * v.x;
       }
 
@@ -137,19 +137,19 @@ namespace Engine2D {
       }
 
       /// Assignment operator between a Vector2 and glm::vec2
-      Vector2 &operator=(const glm::vec2 other) {
+      constexpr Vector2 &operator=(const glm::vec2 other) {
         x = other.x;
         y = other.y;
         return *this;
       }
 
       /// Strict equality operator for comparing two vectors.
-      bool operator==(const Vector2 v) const {
+      constexpr bool operator==(const Vector2 v) const {
         return x == v.x && y == v.y;
       }
 
       /// Strict inequality operator for comparing two vectors.
-      bool operator!=(const Vector2 v) const {
+      constexpr bool operator!=(const Vector2 v) const {
         return x != v.x || y != v.y;
       }
 
@@ -190,27 +190,27 @@ namespace Engine2D {
       }
 
       /// @returns The squared magnitude/length/size of this vector
-      [[nodiscard]] float SquaredMagnitude() const {
+      [[nodiscard]] constexpr float SquaredMagnitude() const {
         return *this * *this;
       }
 
       /// @returns The dot product between the current vector and v
-      [[nodiscard]] T Dot(const Vector2 v) const {
+      [[nodiscard]] constexpr T Dot(const Vector2 v) const {
         return x * v.x + y * v.y;
       }
 
       /// @returns The cross product between the current vector and v
-      [[nodiscard]] T Cross(const Vector2 v) const {
+      [[nodiscard]] constexpr T Cross(const Vector2 v) const {
         return x * v.y - y * v.x;
       }
 
       /// @returns The smallest value between the x and y coordinates
-      [[nodiscard]] T Min() const {
+      [[nodiscard]] constexpr T Min() const {
         return std::min(x, y);
       }
 
       /// @returns The biggest value between the x and y coordinates
-      [[nodiscard]] T Max() const {
+      [[nodiscard]] constexpr T Max() const {
         return std::max(x, y);
       }
 
@@ -243,7 +243,7 @@ namespace Engine2D {
       }
 
       /// @returns The component-wise multiplication
-      [[nodiscard]] Vector2 Scaled(const Vector2 v) const {
+      [[nodiscard]] constexpr Vector2 Scaled(const Vector2 v) const {
         return {x * v.x, y * v.y};
       }
 
@@ -279,12 +279,12 @@ namespace Engine2D {
       }
 
       /// @returns A vector that is perpendicular to the current vector
-      [[nodiscard]] Vector2 Perpendicular() const {
+      [[nodiscard]] constexpr Vector2 Perpendicular() const {
         return {-y, x};
       }
 
       /// @returns A vector that is perpendicular to the current vector in a counterclockwise direction
-      [[nodiscard]] Vector2 PerpendicularCounterClockwise() const {
+      [[nodiscard]] constexpr Vector2 PerpendicularCounterClockwise() const {
         return {y, -x};
       }
 
@@ -319,7 +319,7 @@ namespace Engine2D {
       }
 
       /// Scales the current vector with v by using component-wise multiplication
-      void Scale(const Vector2 v) {
+      constexpr void Scale(const Vector2 v) {
         *this = this->Scaled(v);
       }
 
@@ -344,8 +344,8 @@ namespace Engine2D {
       }
 
       /// Converts this Vector2 to a glm::vec2 type for compatibility with OpenGL and GLM libraries.
-      [[nodiscard]] glm::vec2 toGLM() const {
-        return {x, y};
+      [[nodiscard]] constexpr glm::vec2 toGLM() const {
+        return glm::vec2{x, y};
       }
 
       /**
@@ -381,7 +381,7 @@ namespace Engine2D {
        * @param target The second vector
        * @return The distance separating both vectors squared
        */
-      [[nodiscard]] static float SquaredDistanceTo(const Vector2 current, const Vector2 target) {
+      [[nodiscard]] constexpr static float SquaredDistanceTo(const Vector2 current, const Vector2 target) {
         const float dx = current.x - target.x;
         const float dy = current.y - target.y;
         return dx * dx + dy * dy;
@@ -411,7 +411,7 @@ namespace Engine2D {
        *          Values outside this range will extrapolate beyond the `current` and `target`.
        * @return A new Vector2 representing the interpolated position between `current` and `target`.
        */
-      [[nodiscard]] static Vector2 Lerp(const Vector2 current, const Vector2 target, const float t) {
+      [[nodiscard]] constexpr static Vector2 Lerp(const Vector2 current, const Vector2 target, const float t) {
         return LerpUnclamped(current, target, std::clamp(t, 0.0f, 1.0f));
       }
 
@@ -430,7 +430,7 @@ namespace Engine2D {
        * @return A new Vector2 representing the interpolated or extrapolated position
        *         based on `t` between `current` and `target`.
        */
-      [[nodiscard]] static Vector2 LerpUnclamped(const Vector2 current, const Vector2 target, float t) {
+      [[nodiscard]] constexpr static Vector2 LerpUnclamped(const Vector2 current, const Vector2 target, float t) {
         return current + (target - current) * t;
       }
 

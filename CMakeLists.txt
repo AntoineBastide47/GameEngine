@@ -27,8 +27,8 @@ add_library(Engine2D STATIC
     Engine/2D/Rendering/SpriteRenderer.cpp
     EngineFiles/2D/Rendering/SpriteRenderer.h
     EngineFiles/2D/Types/Vector2.h
-    Engine/2D/Components/Transform2D.cpp
-    EngineFiles/2D/Components/Transform2D.h
+    Engine/2D/Transform2D.cpp
+    EngineFiles/2D/Transform2D.h
     Engine/2D/Entity2D.cpp
     EngineFiles/2D/Entity2D.h
     Engine/Common/Log.cpp
@@ -41,8 +41,8 @@ add_library(Engine2D STATIC
     Engine/Input/Gamepad.cpp
     EngineFiles/Input/Gamepad.h
     EngineFiles/Input/InputContexts.h
-    Engine/2D/Components/Component2D.cpp
-    EngineFiles/2D/Components/Component2D.h
+    Engine/2D/Component2D.cpp
+    EngineFiles/2D/Component2D.h
     Engine/2D/Physics/Collisions.cpp
     EngineFiles/2D/Physics/Collisions.h
     Engine/2D/Physics/Physics2D.cpp
@@ -60,6 +60,8 @@ add_library(Engine2D STATIC
     EngineFiles/2D/Physics/CollisionGrid.h
     Engine/Common/Settings.cpp
     EngineFiles/Common/Settings.h
+    Engine/2D/Physics/Collider2D.cpp
+    EngineFiles/2D/Physics/Collider2D.h
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -95,7 +97,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cpptrace)
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-0.3.8
+    OUTPUT_NAME Engine2D-0.3.9
     PREFIX ""
 )
 

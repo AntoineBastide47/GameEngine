@@ -4,10 +4,9 @@
 // Date: 03/11/2024
 //
 
-#include "2D/Components/Transform2D.h"
-
 #include <iostream>
 
+#include "2D/Transform2D.h"
 #include "2D/Entity2D.h"
 #include "2D/Game2D.h"
 #include "Common/Log.h"
@@ -32,7 +31,9 @@ namespace Engine2D {
             this->onTransformChange();
           }
         }
-      ), parent(nullptr), wasUpdated(false), visible(true), projectionMatrix(glm::mat4(1.0f)) {}
+      ), parent(nullptr), wasUpdated(false), visible(true), projectionMatrix(glm::mat4(1.0f)) {
+    onTransformChange();
+  }
 
   Transform2D::~Transform2D() {
     RemoveAllChildren();
@@ -49,19 +50,19 @@ namespace Engine2D {
     return !(*this == transform);
   }
 
-  std::vector<std::shared_ptr<Entity2D>>::iterator Transform2D::begin() {
+  std::vector<std::shared_ptr<Entity2D> >::iterator Transform2D::begin() {
     return childList.begin();
   }
 
-  std::vector<std::shared_ptr<Entity2D>>::iterator Transform2D::end() {
+  std::vector<std::shared_ptr<Entity2D> >::iterator Transform2D::end() {
     return childList.end();
   }
 
-  std::vector<std::shared_ptr<Entity2D>>::const_iterator Transform2D::begin() const {
+  std::vector<std::shared_ptr<Entity2D> >::const_iterator Transform2D::begin() const {
     return childList.cbegin();
   }
 
-  std::vector<std::shared_ptr<Entity2D>>::const_iterator Transform2D::end() const {
+  std::vector<std::shared_ptr<Entity2D> >::const_iterator Transform2D::end() const {
     return childList.cend();
   }
 
@@ -80,29 +81,27 @@ namespace Engine2D {
     // Remove the previous parents
     parentList.clear();
 
-    // If no parent is specified, set the parent to the root Entity of the scene
-    const auto sceneRoot = Game2D::instance ? Game2D::instance->root : nullptr;
+    // If no parent is specified, set the parent to null
     if (!parent) {
       position = WorldPosition();
       rotation = WorldRotation();
       scale = WorldScale();
-      this->parent = sceneRoot;
+      this->parent = nullptr;
+      onParentHierarchyChange();
       return;
     }
 
     // Remove this entity from the child list of its old parent
     this->parent = parent;
-    if (this->parent) {
-      this->parent->transform.removeChild(this->Entity());
+    this->parent->transform.removeChild(Entity());
 
-      // If a parent is given, find all of its parents, exclude the root Entity of the scene
-      while (parent->transform.parent && parent->transform.parent != sceneRoot) {
-        parentList.push_back(parent->transform.parent);
-        parent = parent->transform.parent;
-      }
-      this->parent = parent;
-      this->parent->transform.addChild(this->Entity());
+    // Create the parent hierarchy
+    while (parent->transform.parent && parent->transform.parent != nullptr) {
+      parentList.push_back(parent->transform.parent);
+      parent = parent->transform.parent;
     }
+    this->parent->transform.addChild(Entity());
+    onParentHierarchyChange();
   }
 
   std::shared_ptr<Entity2D> Transform2D::GetParent() const {
@@ -125,10 +124,6 @@ namespace Engine2D {
       if (child == entity)
         return true;
     return false;
-  }
-
-  bool Transform2D::Changed() const {
-    return wasUpdated;
   }
 
   Vector2f Transform2D::WorldPosition() const {
@@ -155,12 +150,9 @@ namespace Engine2D {
   }
 
   std::shared_ptr<Entity2D> Transform2D::Find(const std::string &name) const {
-    std::cout << position << std::endl;
-    for (auto child: childList) {
-      std::cout << child << std::endl;
+    for (auto child: childList)
       if (child && child->name == name)
         return child;
-    }
     return nullptr;
   }
 
@@ -189,7 +181,9 @@ namespace Engine2D {
   }
 
   void Transform2D::onTransformChange() {
-    wasUpdated = true;
+    const auto oldWorldPosition = this->worldPosition;
+    const auto oldWorldRotation = this->worldRotation;
+    const auto oldWorldScale = this->worldScale;
 
     worldPosition = position;
     worldRotation = rotation;
@@ -204,19 +198,20 @@ namespace Engine2D {
     }
     worldScaleHalf = worldScale * 0.5f;
 
+    if (oldWorldPosition == worldPosition && oldWorldRotation == worldRotation && oldWorldScale == worldScale)
+      return;
+
+    wasUpdated = true;
     projectionMatrix =
       glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition.toGLM(), 0.0f)) *
       glm::rotate(glm::mat4(1.0f), glm::degrees(-worldRotation), glm::vec3(0.0f, 0.0f, 1.0f)) *
       glm::scale(glm::mat4(1.0f), glm::vec3(-worldScale.toGLM(), 1.0f));
-
-    visible = !Game2D::instance
-                ? false
-                : !(
-                  worldPosition.x + worldScaleHalf.x < -Game2D::ViewportWidth() * 0.5f ||
-                  worldPosition.x - worldScaleHalf.x > Game2D::ViewportWidth() * 0.5f ||
-                  worldPosition.y + worldScaleHalf.y < -Game2D::ViewportHeight() * 0.5f ||
-                  worldPosition.y - worldScaleHalf.y > Game2D::ViewportHeight() * 0.5f
-                );
+    visible = Game2D::instance && !(
+                worldPosition.x + worldScaleHalf.x < -Game2D::ViewportWidth() * 0.5f ||
+                worldPosition.x - worldScaleHalf.x > Game2D::ViewportWidth() * 0.5f ||
+                worldPosition.y + worldScaleHalf.y < -Game2D::ViewportHeight() * 0.5f ||
+                worldPosition.y - worldScaleHalf.y > Game2D::ViewportHeight() * 0.5f
+              );
 
     // Update the children of this transform as they depend on the transform of their parent
     for (const auto child: childList)
@@ -224,10 +219,27 @@ namespace Engine2D {
         child->transform.onTransformChange();
   }
 
-  void Transform2D::addChild(const std::shared_ptr<Entity2D> &child) {
-    if (!child)
+  void Transform2D::onParentHierarchyChange() {
+    // Check if the entity has a parent
+    if (!parent) {
+      Entity()->parentsActive = true;
       return;
-    childList.push_back(child);
+    }
+    // If it is active, make sure all it's parents are also active
+    Transform2D *current = &parent->transform;
+    while (current) {
+      if (current->Entity() && !current->Entity()->active) {
+        Entity()->parentsActive = false;
+        return;
+      }
+      current = current->parent ? &current->parent->transform : nullptr;
+    }
+    Entity()->parentsActive = true;
+  }
+
+  void Transform2D::addChild(const std::shared_ptr<Entity2D> &child) {
+    if (child)
+      childList.push_back(child);
   }
 
   void Transform2D::removeChild(const std::shared_ptr<Entity2D> &child) {

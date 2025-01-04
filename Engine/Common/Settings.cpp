@@ -28,9 +28,26 @@ namespace Engine {
     allowResize = newState;
   }
 
+  Engine2D::Vector2<size_t> Settings::Window::GetScreenResolution() {
+    return resolution;
+  }
+
+  std::string Settings::Window::GetTitle() {
+    return title;
+  }
+
+  bool Settings::Window::GetAllowResize() {
+    return allowResize;
+  }
+
+  bool Settings::Graphics::frameSkippingEnabled = false;
   bool Settings::Graphics::vsyncEnabled = false;
   bool Settings::Graphics::maintainAspectRatio = true;
   unsigned int Settings::Graphics::targetFrameRate = 0;
+
+  void Settings::Graphics::SetFrameSkippingEnabled(bool newState) {
+    frameSkippingEnabled = newState;
+  }
 
   void Settings::Graphics::SetVsyncEnabled(const bool newState) {
     vsyncEnabled = newState;
@@ -55,6 +72,22 @@ namespace Engine {
       Engine2D::Game2D::instance->targetFrameRate = targetFrameRate;
       Engine2D::Game2D::instance->targetRenderRate = 1.0f / targetFrameRate;
     }
+  }
+
+  unsigned int Settings::Graphics::GetFrameSkippingEnabled() {
+    return frameSkippingEnabled;
+  }
+
+  bool Settings::Graphics::GetVsyncEnabled() {
+    return vsyncEnabled;
+  }
+
+  bool Settings::Graphics::GetMaintainAspectRatio() {
+    return maintainAspectRatio;
+  }
+
+  unsigned int Settings::Graphics::GetTargetFrameRate() {
+    return targetFrameRate;
   }
 
   float Settings::Physics::fixedDeltaTime = 0.02f;
@@ -84,30 +117,6 @@ namespace Engine {
 
   void Settings::Physics::SetGravity(const Engine2D::Vector2f newValue) {
     gravity = newValue;
-  }
-
-  Engine2D::Vector2<size_t> Settings::Window::GetScreenResolution() {
-    return resolution;
-  }
-
-  std::string Settings::Window::GetTitle() {
-    return title;
-  }
-
-  bool Settings::Window::GetAllowResize() {
-    return allowResize;
-  }
-
-  bool Settings::Graphics::GetVsyncEnabled() {
-    return vsyncEnabled;
-  }
-
-  bool Settings::Graphics::GetMaintainAspectRatio() {
-    return maintainAspectRatio;
-  }
-
-  unsigned int Settings::Graphics::GetTargetFrameRate() {
-    return targetFrameRate;
   }
 
   float Settings::Physics::GetFixedDeltaTime() {

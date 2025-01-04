@@ -28,15 +28,6 @@ namespace Engine {
         T initialValue, const Callback &postCallback, const std::optional<Callback> &preCallback = std::nullopt
       ) : value(initialValue), preCallback(preCallback), postCallback(postCallback) {}
 
-      /// Assignment operator
-      Property &operator=(const T &newValue) {
-        if (preCallback)
-          (*preCallback)();
-        value = newValue;
-        postCallback();
-        return *this;
-      }
-
       T operator+(const Property &prop) const {
         return value + prop.value;
       }
@@ -83,6 +74,15 @@ namespace Engine {
 
       friend T operator/(const T &other, const Property &prop) {
         return other / prop.value;
+      }
+
+      /// Assignment operator
+      Property &operator=(const T &newValue) {
+        if (preCallback)
+          (*preCallback)();
+        value = newValue;
+        postCallback();
+        return *this;
       }
 
       /// Addition operator

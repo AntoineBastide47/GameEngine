@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include "2D/Components/Component2D.h"
+#include "2D/Component2D.h"
 #include "2D/Types/Vector2.h"
 #include "Common/Property.h"
 
@@ -21,6 +21,7 @@ namespace Engine2D {
    * of entities in a 2D space. It provides operators for equality comparisons between transforms.
    */
   class Transform2D : public Component2D {
+    friend class Game2D;
     friend class Entity2D;
     public:
       /// Position of the transform in 2D space.
@@ -120,6 +121,8 @@ namespace Engine2D {
 
       /// Callback function that updates fields of this transform only if any of its public properties are modified
       void onTransformChange();
+      /// Callback function that updates the active state of the entity when it's parent list changes
+      void onParentHierarchyChange();
 
       /// Adds the given child to the child list of the current entity's transform
       void addChild(const std::shared_ptr<Entity2D> &child);

@@ -12,8 +12,8 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "2D/Components/Component2D.h"
-#include "2D/Components/Transform2D.h"
+#include "Component2D.h"
+#include "2D/Transform2D.h"
 #include "2D/Rendering/Texture2D.h"
 
 namespace Engine2D::Physics {
@@ -30,6 +30,7 @@ namespace Engine2D {
    */
   class Entity2D : public std::enable_shared_from_this<Entity2D> {
     friend class Game2D;
+    friend class Transform2D;
     public:
       /// The name of the entity.
       std::string name;
@@ -37,8 +38,6 @@ namespace Engine2D {
       Transform2D transform;
       /// The color of the texture
       glm::vec3 textureColor;
-      /// If the current entity is active in the scene, if it is not, it will not be updated and rendered
-      bool active;
 
       /**
        * Constructs an Entity2D with a given name.
@@ -73,16 +72,26 @@ namespace Engine2D {
       }
 
       /// Removes the given component to the current entity
-      template<typename T> requires std::is_base_of_v<Component2D, T>
+      template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
       void RemoveComponent(const std::shared_ptr<T> &component) {
-        unforwardComponent(component);
+        recallComponent(component);
         components.erase(component);
       }
 
-      /// Sets the texture of the entity to the given texture
-      void SetTexture(const std::shared_ptr<Texture2D> &texture);
-      /// @returns The pointer to the texture of this entity
-      [[nodiscard]] std::shared_ptr<Texture2D> Texture() const;
+      /**
+       * Try's to find a component of the given type on the current entity
+       * @tparam T The type of the component to find, must inherit from Component2D
+       * @return The first component that matches the given type found on the current entity, nullptr if none were found
+       */
+      template<typename T> requires std::is_base_of_v<Component2D, T>
+      [[nodiscard]] bool HasComponent() const {
+        if constexpr (std::is_same_v<T, Transform2D>)
+          return true;
+        for (auto component: components)
+          if (auto casted = std::dynamic_pointer_cast<T>(component))
+            return true;
+        return false;
+      }
 
       /**
        * Try's to find a component of the given type on the current entity
@@ -94,7 +103,7 @@ namespace Engine2D {
         if constexpr (std::is_same_v<T, Transform2D>)
           return transform;
         for (auto component: components)
-          if (auto casted = std::static_pointer_cast<T>(component))
+          if (auto casted = std::dynamic_pointer_cast<T>(component))
             return casted;
         return nullptr;
       }
@@ -110,16 +119,28 @@ namespace Engine2D {
           return {transform};
         std::unordered_set<std::shared_ptr<T> > res;
         for (auto component: components)
-          if (typeid(component) == typeid(T))
-            res.insert(std::static_pointer_cast<T>(component));
+          if (auto casted = std::dynamic_pointer_cast<T>(component))
+            res.insert(casted);
         return res;
       }
 
+      /// Changes the active state of this entity
+      void SetActive(bool active);
+      /// @returns True if this entity and all it's parents are enabled, false if not
+      [[nodiscard]] bool IsActive() const;
+      /// Sets the texture of the entity to the given texture
+      void SetTexture(const std::shared_ptr<Texture2D> &texture);
+      /// @returns The pointer to the texture of this entity
+      [[nodiscard]] std::shared_ptr<Texture2D> Texture() const;
       /// Removes this Entity2D and all it's attached components from the game
       void Destroy();
     private:
       /// Whether this entity has been initialized by the game
       bool initialized;
+      /// If the current entity is active in the scene
+      bool active;
+      /// If the parents of the current entity are active in the scene
+      bool parentsActive;
       /// The texture of this entity
       std::shared_ptr<Texture2D> texture;
       /// The components linked to this entity
@@ -131,6 +152,7 @@ namespace Engine2D {
       void update();
       /// Cleans up resources when the game ends
       void destroy();
+
       /// Checks if the given component needs to be sent to other classes
       static void forwardComponent(const std::shared_ptr<Component2D> &component);
       /// Checks if the given component needs to be removed from other classes

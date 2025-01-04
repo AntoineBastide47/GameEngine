@@ -8,11 +8,10 @@
 #define SPRITERENDERER_H
 
 #include <map>
-#include <map>
 #include <unordered_set>
 
-#include "Shader.h"
 #include "2D/Entity2D.h"
+#include "2D/Rendering/Shader.h"
 
 namespace Engine2D {
   class Game2D;

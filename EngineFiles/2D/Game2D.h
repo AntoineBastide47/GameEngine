@@ -95,6 +95,8 @@ namespace Engine2D {
       /// Called during initialization, allowing derived classes to customize behavior.
       virtual void Initialize() {}
     private:
+      /// Used to resize the coordinate space. If initial window is 1920x1080 and factor is 0.1f, the coordinate space will
+      /// be 192x108.
       static const float screenScaleFactor;
       /// The current aspect ratio of the window
       Vector2f aspectRatio;
@@ -113,8 +115,6 @@ namespace Engine2D {
       /// The resource loader for embedded resources
       ResourceLoader resourceLoader;
 
-      /// The root entity of the game
-      std::shared_ptr<Entity2D> root;
       /// All the entities currently in the game
       std::unordered_set<std::shared_ptr<Entity2D> > entities;
       /// Entities scheduled to be added to the game
@@ -132,9 +132,11 @@ namespace Engine2D {
       float targetFrameRate;
       /// The rate at which the game should update
       float targetRenderRate;
+      /// If the new frame needs rendering
+      bool currentFrameNeedsRendering;
 
       /// Physics simulator
-      Physics::Physics2D *physics2D;
+      Physics2D *physics2D;
       /// Timer used to check if the game is ready for the next physics update
       float physicsAccumulator;
 

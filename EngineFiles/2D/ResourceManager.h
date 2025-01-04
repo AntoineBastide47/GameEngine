@@ -9,8 +9,8 @@
 
 #include <map>
 
-#include "Rendering/Shader.h"
-#include "Rendering/Texture2D.h"
+#include "2D/Rendering/Shader.h"
+#include "2D/Rendering/Texture2D.h"
 
 using Engine2D::Rendering::Shader;
 using Engine2D::Rendering::Texture2D;

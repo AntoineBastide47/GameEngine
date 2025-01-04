@@ -10,6 +10,7 @@
 
 #include "2D/Game2D.h"
 #include "2D/ResourceManager.h"
+#include "2D/Physics/Rigidbody2D.h"
 #include "2D/Rendering/ShapeRenderer.h"
 #include "2D/Rendering/SpriteRenderer.h"
 #include "Common/Macros.h"
@@ -24,9 +25,9 @@ namespace Engine2D {
   const float Game2D::screenScaleFactor{0.1f};
 
   Game2D::Game2D(const int width, const int height, std::string title)
-    : aspectRatio(Vector2f::One), title(std::move(title)), width(width), height(height), window(nullptr), deltaTime(0),
-      timeScale(1), targetFrameRate(0), targetRenderRate(0), physics2D(nullptr),
-      physicsAccumulator(0) {
+    : aspectRatio(Vector2f::One), title(std::move(title)), width(width), height(height), window(nullptr),
+      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), currentFrameNeedsRendering(false),
+      physics2D(nullptr), physicsAccumulator(0) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -62,7 +63,7 @@ namespace Engine2D {
     targetRenderRate = targetFrameRate == 0 ? 0.0f : 1.0f / targetFrameRate;
     auto nextFrameTime = std::chrono::high_resolution_clock::now();
     float oneSecondTimer = 0.0f;
-    float frameCounter = 0;
+    int frameCounter = 0;
 
     auto lastTime = std::chrono::high_resolution_clock::now();
     while (!glfwWindowShouldClose(window)) {
@@ -74,16 +75,30 @@ namespace Engine2D {
 
       this->addEntities();
       this->removeEntities();
+
+      // Reset the updated flag of the entities
+      for (const auto &entity: entities)
+        if (entity && entity->IsActive())
+          entity->transform.wasUpdated = false;
+      currentFrameNeedsRendering = false;
+
       this->processInput();
       this->fixedUpdate();
       this->update();
-      this->render();
+
+      if (!Engine::Settings::Graphics::GetFrameSkippingEnabled() || (
+            Engine::Settings::Graphics::GetFrameSkippingEnabled() && currentFrameNeedsRendering)) {
+        this->render();
+        frameCounter++;
+      }
 
       // FPS calculation
       oneSecondTimer += deltaTime;
-      frameCounter++;
       while (oneSecondTimer >= 1.0f) {
-        std::cout << "FPS: " << frameCounter << std::endl;
+        std::cout << "FPS: " << frameCounter;
+        if (Engine::Settings::Graphics::GetFrameSkippingEnabled())
+          std::cout << " (Only necessary frames rendered)";
+        std::cout << std::endl;
         oneSecondTimer -= 1.0f;
         frameCounter = 0;
         physicsAccumulator = 0.0f;
@@ -193,8 +208,7 @@ namespace Engine2D {
     Rendering::ShapeRenderer::shader = ResourceManager::GetShader("shape");
     Rendering::ShapeRenderer::initRenderData();
 
-    physics2D = new Physics::Physics2D();
-    AddEntity<Entity2D>("Root");
+    physics2D = new Physics2D();
 
     this->Initialize();
   }
@@ -211,8 +225,10 @@ namespace Engine2D {
   void Game2D::update() {
     bool foundNull = false;
     for (const auto &entity: entities) {
-      if (entity && entity->active)
+      if (entity && entity->IsActive()) {
         entity->update();
+        currentFrameNeedsRendering = currentFrameNeedsRendering || entity->transform.wasUpdated;
+      }
       else if (!entity)
         foundNull = true;
     }
@@ -229,7 +245,7 @@ namespace Engine2D {
     physicsAccumulator += deltaTime;
     while (physicsAccumulator >= Engine::Settings::Physics::GetFixedDeltaTime()) {
       for (const auto entity: entities)
-        if (entity->active)
+        if (entity->IsActive())
           entity->FixedUpdate();
       physics2D->step();
       physicsAccumulator -= Engine::Settings::Physics::GetFixedDeltaTime();
@@ -239,27 +255,28 @@ namespace Engine2D {
   void Game2D::render() const {
     // Clear previous frame
     glClearColor(0, 0, 0, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     Rendering::SpriteRenderer::drawSprites(entitiesToRender);
 
-    /*for (const auto rigidbody: physics2D->rigidbodies) {
-      if (!rigidbody->Transform()->IsInScreenBounds())
+    /*
+    for (const auto collider: physics2D->colliders) {
+      if (!collider->Transform()->Visible())
         continue;
-      if (rigidbody->type == Physics::Rigidbody2D::Circle)
+      if (collider->type == Collider2D::Circle)
         Rendering::ShapeRenderer::DrawCircleWireframe(
-          rigidbody->Transform()->WorldPosition(), rigidbody->Transform()->WorldHalfScale().x, glm::vec3(1, 0, 0)
+          collider->Transform()->WorldPosition(), collider->Transform()->WorldHalfScale().x, glm::vec3(1, 0, 0)
         );
-      else {
-        Rendering::ShapeRenderer::DrawPolygonWireframe(rigidbody->transformedVertices, glm::vec3(1, 0, 0));
-        Rendering::ShapeRenderer::DrawPolygonWireframe(
-          {rigidbody->getAABB().min, rigidbody->getAABB().max}, glm::vec3(1, 0, 0)
-        );
-      }
-    }*/
+      else
+        Rendering::ShapeRenderer::DrawPolygonWireframe(collider->transformedVertices, glm::vec3(1, 0, 0));
+      Rendering::ShapeRenderer::DrawPolygonWireframe(
+        {collider->getAABB().min, collider->getAABB().max}, glm::vec3(1, 0, 0)
+      );
+    }
+    */
 
     // Prepare the next frame
     glfwSwapBuffers(window);
-    glFinish();
+    glFlush();
   }
 
   void Game2D::quit() {
@@ -316,7 +333,7 @@ namespace Engine2D {
   }
 
   void Game2D::removeEntity(const std::shared_ptr<Entity2D> &entity) {
-    if (entity && instance && entity != instance->root && !instance->entities.empty())
+    if (entity && instance && !instance->entities.empty())
       instance->entitiesToRemove.insert(entity);
   }
 

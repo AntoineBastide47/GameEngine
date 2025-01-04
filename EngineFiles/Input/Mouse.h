@@ -9,10 +9,10 @@
 
 #include <bitset>
 
-#include "InputContexts.h"
 #include "2D/Types/Vector2.h"
 #include "Common/Event.h"
 #include "Common/RenderingHeaders.h"
+#include "Input/InputContexts.h"
 
 namespace Engine2D {
   class Game2D;

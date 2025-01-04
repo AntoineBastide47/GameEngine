@@ -15,7 +15,7 @@ using Engine2D::Rendering::Texture2D;
 
 namespace Engine2D {
   Entity2D::Entity2D(std::string name)
-    : name(std::move(name)), textureColor(glm::vec3(1.0f)), active(true), initialized(false), texture(nullptr) {}
+    : name(std::move(name)), textureColor(glm::vec3(1.0f)), initialized(false), active(true), parentsActive(true), texture(nullptr) {}
 
   bool Entity2D::operator==(const Entity2D &entity) const {
     return name == entity.name && transform == entity.transform && texture == entity.texture;
@@ -23,6 +23,16 @@ namespace Engine2D {
 
   bool Entity2D::operator!=(const Entity2D &entity) const {
     return !(*this == entity);
+  }
+
+  void Entity2D::SetActive(const bool active) {
+    this->active = active;
+    for (const auto child: transform)
+      child->transform.onParentHierarchyChange();
+  }
+
+  bool Entity2D::IsActive() const {
+    return this->active && this->parentsActive;
   }
 
   void Entity2D::SetTexture(const std::shared_ptr<Texture2D> &texture) {
@@ -49,9 +59,10 @@ namespace Engine2D {
         throw std::runtime_error(name + " must be created using Game2D::AddEntity.");
 
       transform.setEntity(shared_from_this());
+      transform.onParentHierarchyChange();
       this->Initialize();
       if (!this->transform.parent)
-        this->transform.SetParent(Game2D::instance->root);
+        this->transform.SetParent(nullptr);
       this->initialized = true;
     }
   }
@@ -59,7 +70,6 @@ namespace Engine2D {
   void Entity2D::update() {
     if (!initialized)
       this->initialize();
-    transform.wasUpdated = false;
     this->Update();
   }
 
@@ -67,7 +77,7 @@ namespace Engine2D {
     this->OnDestroy();
     for (auto it = components.begin(); it != components.end();) {
       const auto component = *it;
-      if (const auto rigidbody = std::static_pointer_cast<Rigidbody2D>(component))
+      if (const auto rigidbody = std::dynamic_pointer_cast<Rigidbody2D>(component))
         Game2D::instance->physics2D->removeRigidbody(rigidbody);
       it = components.erase(it);
     }
@@ -75,12 +85,16 @@ namespace Engine2D {
   }
 
   void Entity2D::forwardComponent(const std::shared_ptr<Component2D> &component) {
-    if (const auto rigidbody = std::static_pointer_cast<Rigidbody2D>(component))
+    if (const auto rigidbody = std::dynamic_pointer_cast<Rigidbody2D>(component))
       Game2D::instance->physics2D->addRigidBody(rigidbody);
+    if (const auto collider = std::dynamic_pointer_cast<Collider2D>(component))
+      Game2D::instance->physics2D->addCollider(collider);
   }
 
   void Entity2D::recallComponent(const std::shared_ptr<Component2D> &component) {
-    if (const auto rigidbody = std::static_pointer_cast<Rigidbody2D>(component))
+    if (const auto rigidbody = std::dynamic_pointer_cast<Rigidbody2D>(component))
       Game2D::instance->physics2D->removeRigidbody(rigidbody);
+    if (const auto collider = std::dynamic_pointer_cast<Collider2D>(component))
+      Game2D::instance->physics2D->removeCollider(collider);
   }
 }

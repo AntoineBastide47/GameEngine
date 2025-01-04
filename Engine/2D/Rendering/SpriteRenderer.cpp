@@ -24,6 +24,7 @@ namespace Engine2D::Rendering {
       return;
 
     shader->Use();
+    glBindVertexArray(quadVAO);
     for (const auto [id, e]: entities) {
       // Render texture
       glActiveTexture(GL_TEXTURE0);
@@ -31,18 +32,16 @@ namespace Engine2D::Rendering {
         (*it)->Texture()->bind();
 
       for (const auto entity: e) {
-        if (!entity || !entity->active || !entity->Texture() || !entity->transform.Visible())
+        if (!entity || !entity->IsActive() || !entity->Texture() || !entity->transform.Visible())
           continue;
 
         // render textured quad
         shader->SetMatrix4("model", entity->transform.WorldMatrix());
         shader->SetVector3f("spriteColor", entity->textureColor);
-
-        glBindVertexArray(quadVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
       }
     }
+    glBindVertexArray(0);
   }
 
   void SpriteRenderer::initRenderData() {
@@ -58,15 +57,17 @@ namespace Engine2D::Rendering {
     };
 
     glGenVertexArrays(1, &quadVAO);
+    glBindVertexArray(quadVAO);
+
+    // Single-quad VBO
     unsigned int VBO;
     glGenBuffers(1, &VBO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindVertexArray(quadVAO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+
+    // Clean up
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
   }
