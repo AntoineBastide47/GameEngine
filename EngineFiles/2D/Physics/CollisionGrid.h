@@ -10,7 +10,7 @@
 #include "2D/Types/Vector2.h"
 
 namespace Engine2D::Physics {
-  class Rigidbody2D;
+  class Collider2D;
 }
 
 namespace Engine2D::Physics {
@@ -21,23 +21,13 @@ namespace Engine2D::Physics {
     Vector2f topRight;
     Vector2f cellSize;
     Vector2<size_t> gridSize;
-    std::vector<std::vector<std::vector<std::shared_ptr<Rigidbody2D>> > > grid;
+    std::vector<std::vector<std::vector<std::shared_ptr<Collider2D> > > > grid;
 
     explicit CollisionGrid(Vector2<size_t> gridSize);
     void setGridSize(Vector2<size_t> gridSize);
 
-    void update(const std::vector<std::shared_ptr<Rigidbody2D>> &rigidbodies);
-    std::vector<std::tuple<std::shared_ptr<Rigidbody2D>, std::shared_ptr<Rigidbody2D>>> collisionPairs() const;
+    void update(const std::vector<std::shared_ptr<Collider2D> > &colliders);
   };
 }
-
-template<typename T1, typename T2> struct std::hash<std::pair<T1, T2> > {
-  size_t operator()(const std::pair<T1, T2> &p) const {
-    auto h1 = std::hash<T1>{}(p.first);
-    auto h2 = std::hash<T2>{}(p.second);
-    // Combine the two hash values (use a prime multiplier to avoid collisions)
-    return h1 ^ h2 << 1;
-  }
-};
 
 #endif //COLLISION_GRID_H

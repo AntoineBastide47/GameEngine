@@ -6,23 +6,22 @@
 
 #include "2D/Physics/Collisions.h"
 #include "2D/Entity2D.h"
-#include "2D/Physics/Rigidbody2D.h"
 
 namespace Engine2D::Physics {
-  bool Collisions::collideAABB(const Rigidbody2D::AABB a, const Rigidbody2D::AABB b) {
+  bool Collisions::collideAABB(const Collider2D::AABB a, const Collider2D::AABB b) {
     return !(a.max.x <= b.min.x || b.max.x <= a.min.x || a.max.y <= b.min.y || b.max.y <= a.min.y);
   }
 
   bool Collisions::collide(
-    const std::shared_ptr<Rigidbody2D> &rigidbodyA, const std::shared_ptr<Rigidbody2D> &rigidbodyB, Vector2f *normal,
+    const std::shared_ptr<Collider2D> &rigidbodyA, const std::shared_ptr<Collider2D> &rigidbodyB, Vector2f *normal,
     double *depth
   ) {
-    if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle)
+    if (rigidbodyA->type == Collider2D::Circle && rigidbodyB->type == Collider2D::Circle)
       return circlesIntersect(
         rigidbodyA->Transform()->WorldPosition(), rigidbodyA->Transform()->WorldHalfScale(),
         rigidbodyB->Transform()->WorldPosition(), rigidbodyB->Transform()->WorldHalfScale(), normal, depth
       );
-    if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() != Rigidbody2D::Circle) {
+    if (rigidbodyA->type == Collider2D::Circle && rigidbodyB->type != Collider2D::Circle) {
       const bool collide = polygonAndCircleIntersect(
         rigidbodyB->transformedVertices, rigidbodyB->Transform()->WorldPosition(), rigidbodyA->Transform()->WorldPosition(),
         rigidbodyA->Transform()->WorldHalfScale(), normal, depth
@@ -30,7 +29,7 @@ namespace Engine2D::Physics {
       *normal = -*normal;
       return collide;
     }
-    if (rigidbodyA->Type() != Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle) {
+    if (rigidbodyA->type != Collider2D::Circle && rigidbodyB->type == Collider2D::Circle) {
       return polygonAndCircleIntersect(
         rigidbodyA->transformedVertices, rigidbodyA->Transform()->WorldPosition(), rigidbodyB->Transform()->WorldPosition(),
         rigidbodyB->Transform()->WorldHalfScale(), normal, depth
@@ -44,24 +43,24 @@ namespace Engine2D::Physics {
   }
 
   void Collisions::findContactPoints(
-    const std::shared_ptr<Rigidbody2D> &rigidbodyA, const std::shared_ptr<Rigidbody2D> &rigidbodyB, Vector2f *contactPoint1,
+    const std::shared_ptr<Collider2D> &rigidbodyA, const std::shared_ptr<Collider2D> &rigidbodyB, Vector2f *contactPoint1,
     Vector2f *contactPoint2, uint8_t *contactCount
   ) {
-    if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle) {
+    if (rigidbodyA->type == Collider2D::Circle && rigidbodyB->type == Collider2D::Circle) {
       findCirclesContactPoint(
         rigidbodyA->Transform()->WorldPosition(), rigidbodyB->Transform()->WorldPosition(),
-        rigidbodyA->Transform()->WorldScale().x, contactPoint1
+        rigidbodyA->Transform()->WorldHalfScale().x, contactPoint1
       );
       *contactCount = 1;
     }
-    else if (rigidbodyA->Type() == Rigidbody2D::Circle && rigidbodyB->Type() != Rigidbody2D::Circle) {
+    else if (rigidbodyA->type == Collider2D::Circle && rigidbodyB->type != Collider2D::Circle) {
       findCircleAndPolygonContactPoint(
         rigidbodyA->Transform()->WorldPosition(), rigidbodyB->transformedVertices,
         contactPoint1
       );
       *contactCount = 1;
     }
-    else if (rigidbodyA->Type() != Rigidbody2D::Circle && rigidbodyB->Type() == Rigidbody2D::Circle) {
+    else if (rigidbodyA->type != Collider2D::Circle && rigidbodyB->type == Collider2D::Circle) {
       findCircleAndPolygonContactPoint(
         rigidbodyB->Transform()->WorldPosition(), rigidbodyA->transformedVertices,
         contactPoint1

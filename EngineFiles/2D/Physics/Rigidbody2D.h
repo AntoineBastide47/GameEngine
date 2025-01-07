@@ -7,7 +7,8 @@
 #ifndef RIGIDBODY2D_H
 #define RIGIDBODY2D_H
 
-#include "2D/Components/Component2D.h"
+#include "2D/Component2D.h"
+#include "2D/Physics/Collider2D.h"
 #include "2D/Types/Vector2.h"
 #include "Common/Property.h"
 #include "Types/float01.h"
@@ -18,7 +19,6 @@ namespace Engine2D {
 
 namespace Engine2D::Physics {
   /**
-   * @class Rigidbody2D
    * Represents a 2D rigid body in the physics engine.
    *
    * The Rigidbody2D class is responsible for simulating physical behavior such as velocity,
@@ -28,19 +28,7 @@ namespace Engine2D::Physics {
   class Rigidbody2D : public Component2D {
     friend class Engine2D::Game2D;
     friend class Physics2D;
-    friend class Collisions;
-    friend class CollisionGrid;
     public:
-      struct AABB {
-        Vector2f min;
-        Vector2f max;
-      };
-      enum Rigidbody2DType {
-        Circle, Rectangle
-      };
-
-      /// Coefficient of restitution (bounciness) of the rigid body.
-      Engine::float01 restitution;
       /// Indicates how much of the angular velocity will be applied during collisions.
       /// For full rotation set it to 1, for no rotation set it to 0 or values inbetween for different reactions.
       Engine::float01 angularDamping;
@@ -49,16 +37,7 @@ namespace Engine2D::Physics {
       /// Flag indicating whether the body is affected by gravity.
       bool affectedByGravity;
       /// Mass of the rigidbody
-      Engine::Property<float> mass{
-        0, [this] {
-          if (this->mass < 0.0f)
-            this->mass = 0;
-          else if (this->mass == 0.0f)
-            this->massInv = 0;
-          else
-            this->massInv = 1.0f / this->mass;
-        }
-      };
+      Engine::Property<float> mass;
       /// The coefficient of the frictional force which acts between the two surfaces when they are in the rest position
       /// with respect to each other.
       float staticFriction;
@@ -83,10 +62,6 @@ namespace Engine2D::Physics {
        * @param force The force vector to apply.
        */
       void AddForce(const Vector2f &force);
-      /// @return The Rigidbody2DType of the body.
-      [[nodiscard]] Rigidbody2DType Type() const;
-      /// @returns The points at which this rigidbody collided with another rigidbody
-      [[nodiscard]] std::vector<Vector2f> ContactPoints() const;
       /// Makes this rigidbody bounce off every part of the viewport
       void BindToViewport();
       /// Makes this rigidbody not bounce off every part of the viewport
@@ -97,11 +72,7 @@ namespace Engine2D::Physics {
       ///  - static: 0.6f
       ///  - dynamic: 0.4f
       void DefaultFriction();
-
-      // Temporary until collider class
-      void SetType(Rigidbody2DType type, float mass, Vector2f dimensions, float radius);
     private:
-      bool initialized;
       /// Angular velocity of the body.
       float angularVelocity;
       /// Inverse of the mass (cached to only use the division when mass changes)
@@ -110,25 +81,15 @@ namespace Engine2D::Physics {
       float inertia;
       /// Inverse of the inertia (cached to only use the division when inertia changes)
       float inertiaInv;
-      /// Type of the rigid body (Circle or Rectangle).
-      Rigidbody2DType type;
       /// Linear velocity of the rigid body.
       Vector2f linearVelocity;
-      /// Accumulated force applied to the rigid body.
+      /// Accumulated force applied to the rigidbody.
       Vector2f force;
-      /// The axis-aligned bounding box  of this rigidbody.
-      AABB aabb;
-      /// Vertices of the rigid body (used for rectangles).
-      std::vector<Vector2f> transformedVertices;
-      /// The points at which this rigidbody collided with another rigidbody
-      std::vector<Vector2f> contactPoints;
-      /// The model matrix of the rigidbody last time it changed
-      glm::mat4 lastModelMatrix;
 
-      /** @return A std::array containing the min and max points of the AABB. */
-      [[nodiscard]] AABB getAABB();
       /// Simulates a step of the physics simulation for the current rigidbody
       void step(float fixedDeltaTime);
+      /// Calculates the inertia of this body using the given collider
+      void computeInertia(const std::shared_ptr<Collider2D> &collider);
   };
 }
 

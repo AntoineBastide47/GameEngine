@@ -76,9 +76,7 @@ namespace Engine2D {
   void Entity2D::destroy() {
     this->OnDestroy();
     for (auto it = components.begin(); it != components.end();) {
-      const auto component = *it;
-      if (const auto rigidbody = std::dynamic_pointer_cast<Rigidbody2D>(component))
-        Game2D::instance->physics2D->removeRigidbody(rigidbody);
+      recallComponent(*it);
       it = components.erase(it);
     }
     components.clear();

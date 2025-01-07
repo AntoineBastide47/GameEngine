@@ -76,11 +76,13 @@ namespace Engine2D {
       static void Close(Engine::Input::KeyboardAndMouseContext context);
       /// Adds an entity to the game
       template<typename T> requires std::is_base_of_v<Entity2D, T>
-      static void AddEntity(std::string name = "Entity") {
+      static std::shared_ptr<T> AddEntity(std::string name = "Entity") {
         if (instance) {
           std::shared_ptr<T> entity = std::make_shared<T>(name);
-          instance->entitiesToAdd.insert(std::move(entity));
+          instance->entitiesToAdd.insert(entity);
+          return entity;
         }
+        return nullptr;
       }
     protected:
       /**

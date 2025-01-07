@@ -62,6 +62,7 @@ add_library(Engine2D STATIC
     EngineFiles/Common/Settings.h
     Engine/2D/Physics/Collider2D.cpp
     EngineFiles/2D/Physics/Collider2D.h
+    EngineFiles/2D/Physics/CollisionPair.h
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -97,7 +98,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cpptrace)
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-0.3.9
+    OUTPUT_NAME Engine2D-0.3.10
     PREFIX ""
 )
 

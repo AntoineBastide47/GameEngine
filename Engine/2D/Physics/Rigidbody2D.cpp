@@ -4,8 +4,6 @@
 // Date: 30/11/2024
 //
 
-#include <iostream>
-
 #include "2D/Physics/Rigidbody2D.h"
 #include "2D/Entity2D.h"
 #include "2D/Game2D.h"
@@ -13,10 +11,19 @@
 
 namespace Engine2D::Physics {
   Rigidbody2D::Rigidbody2D()
-    : restitution(1), angularDamping(1), isStatic(false), affectedByGravity(true), staticFriction(0.6f),
-      dynamicFriction(0.4f), bindToViewportTop(false), bindToViewportBottom(false), bindToViewportLeft(false),
-      bindToViewportRight(false), initialized(false), angularVelocity(0), massInv(0), inertia(0), inertiaInv(0),
-      type(Circle), lastModelMatrix() {}
+    : angularDamping(1), isStatic(false), affectedByGravity(true), mass(
+        Engine::Property{
+          1.0f, [this] {
+            if (this->mass < 0.0f)
+              this->mass = 0;
+            else if (this->mass == 0.0f)
+              this->massInv = 0;
+            else
+              this->massInv = 1.0f / this->mass;
+          }
+        }
+      ), staticFriction(0.6f), dynamicFriction(0.4f), bindToViewportTop(false), bindToViewportBottom(false),
+      bindToViewportLeft(false), bindToViewportRight(false), angularVelocity(0), massInv(1), inertia(0), inertiaInv(0) {}
 
   void Rigidbody2D::BindToViewport() {
     bindToViewportTop = bindToViewportBottom = bindToViewportLeft = bindToViewportRight = true;
@@ -36,46 +43,14 @@ namespace Engine2D::Physics {
     dynamicFriction = 0.4f;
   }
 
-  Rigidbody2D::AABB Rigidbody2D::getAABB() {
-    if (initialized && lastModelMatrix == Transform()->WorldMatrix())
-      return aabb;
-    if (type == Circle) {
-      aabb.min = Transform()->WorldPosition() - Transform()->WorldScale();
-      aabb.max = Transform()->WorldPosition() + Transform()->WorldScale();
-    }
-    else if (type == Rectangle) {
-      // Find the bounds of the rectangle
-      const float left = -Transform()->WorldHalfScale().x;
-      const float right = -left;
-      const float top = Transform()->WorldHalfScale().y;
-      const float bottom = -top;
-
-      // Transform the bounds of the rectangle
-      this->transformedVertices = {
-        Vector2(left, top).Rotated(Transform()->WorldRotation()) + Transform()->WorldPosition(),
-        Vector2(right, top).Rotated(Transform()->WorldRotation()) + Transform()->WorldPosition(),
-        Vector2(right, bottom).Rotated(Transform()->WorldRotation()) + Transform()->WorldPosition(),
-        Vector2(left, bottom).Rotated(Transform()->WorldRotation()) + Transform()->WorldPosition(),
-      };
-
-      // Construct the AABB
-      aabb.min = Vector2f::One * std::numeric_limits<float>::max();
-      aabb.max = Vector2f::One * std::numeric_limits<float>::lowest();
-      for (const auto vertex: transformedVertices) {
-        aabb.min.x = std::min(aabb.min.x, vertex.x);
-        aabb.min.y = std::min(aabb.min.y, vertex.y);
-        aabb.max.x = std::max(aabb.max.x, vertex.x);
-        aabb.max.y = std::max(aabb.max.y, vertex.y);
-      }
-    }
-    initialized = true;
-    lastModelMatrix = Transform()->WorldMatrix();
-    return aabb;
-  }
-
   void Rigidbody2D::step(const float fixedDeltaTime) {
-    this->linearVelocity += (affectedByGravity * Engine::Settings::Physics::GetGravity() + force) * massInv * fixedDeltaTime;
+    // Apply half the velocity before and half after to make the movement more accurate
+    this->linearVelocity +=
+      (affectedByGravity * Engine::Settings::Physics::GetGravity() + force) * massInv * fixedDeltaTime * 0.5f;
     this->Transform()->position += this->linearVelocity * fixedDeltaTime;
+    this->linearVelocity +=
+      (affectedByGravity * Engine::Settings::Physics::GetGravity() + force) * massInv * fixedDeltaTime * 0.5f;
+
     this->Transform()->rotation += this->angularVelocity * fixedDeltaTime * angularDamping;
     this->force = Vector2f::Zero;
 
@@ -111,29 +86,34 @@ namespace Engine2D::Physics {
     this->force += force;
   }
 
-  Rigidbody2D::Rigidbody2DType Rigidbody2D::Type() const {
-    return this->type;
-  }
-
-  std::vector<Vector2f> Rigidbody2D::ContactPoints() const {
-    return contactPoints;
-  }
-
-  void Rigidbody2D::SetType(
-    const Rigidbody2DType type, const float mass, const Vector2f dimensions, const float radius
-  ) {
-    this->type = type;
-    this->mass = mass;
-    switch (type) {
-      case Rectangle: inertia = 1.0f / 12.0f * mass * dimensions * dimensions;
+  void Rigidbody2D::computeInertia(const std::shared_ptr<Collider2D> &collider) {
+    switch (collider->type) {
+      case Collider2D::None: inertia = inertiaInv = 0.0f;
+        break;
+      case Collider2D::Circle: inertia = 0.5f * mass * Transform()->WorldHalfScale().x * Transform()->WorldHalfScale().x;
         inertiaInv = 1.0f / inertia;
         break;
-      case Circle: inertia = 0.5f * mass * radius * radius;
+      case Collider2D::Rectangle: inertia = 1.0f / 12.0f * mass * Transform()->WorldScale() * Transform()->WorldScale();
         inertiaInv = 1.0f / inertia;
         break;
-      default: inertia = 0;
-        inertiaInv = 0;
+      case Collider2D::Shape: {
+        float area = 0.0f;
+        inertia = 0;
+        for (int i = 0; i < collider->transformedVertices.size() - 1; ++i) {
+          const float cross = collider->transformedVertices[i] ^ collider->transformedVertices[i + 1];
+          area += cross;
+          inertia += cross * (collider->transformedVertices[i].x * collider->transformedVertices[i].x + collider->
+                              transformedVertices[i].x * collider->transformedVertices[i + 1].x + collider->
+                              transformedVertices[i + 1].x * collider->transformedVertices[i + 1].x + collider->
+                              transformedVertices[i].y * collider->transformedVertices[i].y + collider->transformedVertices[
+                                i].y * collider->transformedVertices[i + 1].y + collider->transformedVertices[i + 1].y *
+                              collider->transformedVertices[i + 1].y);
+        }
+        area = std::abs(area) * 0.5f;
+        inertia = (1.0f / 12.0f * inertia) / (area > 0 ? area : 1);
+        inertiaInv = inertia > 0 ? 1.0f / inertia : 0;
         break;
+      }
     }
   }
 }

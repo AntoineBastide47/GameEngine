@@ -14,6 +14,7 @@
 
 #include "Component2D.h"
 #include "2D/Transform2D.h"
+#include "2D/Physics/Collider2D.h"
 #include "2D/Rendering/Texture2D.h"
 
 namespace Engine2D::Physics {
@@ -25,8 +26,8 @@ namespace Engine2D {
   /**
    * Represents a 2D entity with a transform, rendering capabilities, and hierarchical structure.
    *
-   * The Entity2D class provides an interface for creating and managing entities in a 2D game world.
-   * Each entity can have a position, rotation, and scale, as well as a renderer and a parent entity.
+   * The Entity2D class provides an interface for creating entities in a 2D game world.
+   * Each entity can have a position, rotation, and scale, a parent entity and multiple components to interact with the 2D game world.
    */
   class Entity2D : public std::enable_shared_from_this<Entity2D> {
     friend class Game2D;
@@ -59,16 +60,29 @@ namespace Engine2D {
       virtual void FixedUpdate() {}
       /// Called when the entity is removed from the game or when the game quits, allowing derived classes to customize behavior.
       virtual void OnDestroy() {}
-      /// Called when this entity collides with another entity, required the entity to have a Rigidbody2D component
-      virtual void OnCollision(const std::shared_ptr<Physics::Rigidbody2D> &collider) {}
+
+      /// Called when this entity first collides with a given entity, required the entity to have a Collider2D component
+      virtual void OnCollisionEnter2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      /// Called while this entity collides with a given entity, required the entity to have a Collider2D component
+      virtual void OnCollisionStay2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      /// Called when this entity stops collides with a given entity, required the entity to have a Collider2D component
+      virtual void OnCollisionExit2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+
+      /// Called when this entity is first triggered by a given entity, required the entity to have a Collider2D component
+      virtual void OnTriggerEnter2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      /// Called when this entity is first triggered by a given entity, required the entity to have a Collider2D component
+      virtual void OnTriggerStay2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      /// Called when this entity is stops triggered by a given entity, required the entity to have a Collider2D component
+      virtual void OnTriggerExit2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
 
       /// Adds the given component to the current entity
       template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
-      void AddComponent() {
+      std::shared_ptr<T> AddComponent() {
         auto component = std::make_shared<T>();
         component->setEntity(shared_from_this());
         components.insert(component);
         forwardComponent(component);
+        return component;
       }
 
       /// Removes the given component to the current entity

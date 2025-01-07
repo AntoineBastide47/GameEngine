@@ -5,6 +5,7 @@ This game engine is a personal project I'm working on to learn more about game d
 **Rendering Engine:** Efficient rendering of sprites and textures.<br>
 **Entity Management:** Organize game objects and their behaviors.<br>
 **Input Handling:** Support for keyboard and mouse input.<br>
+**Physics Engine:** Support for rigidbodies and collision responses.<br>
 
 ## Future Features
 To check out what I plan to add to the engine in the future, or what I am currently working on, check out this link:
@@ -68,8 +69,10 @@ For example games that implement the engine, check out: https://github.com/Antoi
 Warning: the game code is subject to change as the engine develops.
 
 ## Limitations
-I am currently building the engine on MacOS, so the engine wont have the best support for Linux and Windows out of the box,
-but I will try my best to make it as cross-platform as possible
+I am currently building the engine on macOS, so the engine won't have the best support for Linux and Windows out of the box,
+but I am planning to make the engine usable on Windows and Linux for version 1.0.0.<br>
+The engine won't be backwards compatible as that would create to much overhead, increase the size of binaries and reduce
+the performance of the games.
 
 ## Contributing
 Since this is a personal learning project, contributions are welcomed but may not be merged immediately. Feel free to fork the repository and experiment on your own.

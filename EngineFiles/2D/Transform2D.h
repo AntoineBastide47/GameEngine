@@ -45,10 +45,10 @@ namespace Engine2D {
       /// Inequality operator to compare two Transform2D objects.
       bool operator!=(const Transform2D &transform) const;
 
-      std::vector<std::shared_ptr<Entity2D>>::iterator begin();
-      std::vector<std::shared_ptr<Entity2D>>::iterator end();
-      [[nodiscard]] std::vector<std::shared_ptr<Entity2D>>::const_iterator begin() const;
-      [[nodiscard]] std::vector<std::shared_ptr<Entity2D>>::const_iterator end() const;
+      std::vector<std::shared_ptr<Entity2D> >::iterator begin();
+      std::vector<std::shared_ptr<Entity2D> >::iterator end();
+      [[nodiscard]] std::vector<std::shared_ptr<Entity2D> >::const_iterator begin() const;
+      [[nodiscard]] std::vector<std::shared_ptr<Entity2D> >::const_iterator end() const;
 
       /// @returns A unit vector representing the forward direction of this entity.
       [[nodiscard]] Vector2f Forward() const;
@@ -100,9 +100,9 @@ namespace Engine2D {
       /// The parent Entity2D of the entity that this transform is attached to
       std::shared_ptr<Entity2D> parent;
       /// The list of all the parents of the parent of this entity
-      std::vector<std::shared_ptr<Entity2D>> parentList;
+      std::vector<std::shared_ptr<Entity2D> > parentList;
       /// The list of all the children of this entity
-      std::vector<std::shared_ptr<Entity2D>> childList;
+      std::vector<std::shared_ptr<Entity2D> > childList;
 
       /// Is the transform was updated last frame
       bool wasUpdated;

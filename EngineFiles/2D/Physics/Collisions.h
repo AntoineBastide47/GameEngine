@@ -7,7 +7,7 @@
 #ifndef COLLISIONS_H
 #define COLLISIONS_H
 
-#include "Rigidbody2D.h"
+#include "2D/Physics/Collider2D.h"
 #include "2D/Types/Vector2.h"
 
 namespace Engine2D::Physics {
@@ -20,7 +20,7 @@ namespace Engine2D::Physics {
      * @param b The second rigidbody AABB
      * @return True if the AABBs collide, false if not
      */
-    [[nodiscard]] static bool collideAABB(Rigidbody2D::AABB a, Rigidbody2D::AABB b);
+    [[nodiscard]] static bool collideAABB(Collider2D::AABB a, Collider2D::AABB b);
     /**
      * Checks if the given rigidbodies collide
      * @param rigidbodyA The first rigidbody
@@ -30,7 +30,7 @@ namespace Engine2D::Physics {
      * @return True if they collide, false if not
      */
     [[nodiscard]] static bool collide(
-      const std::shared_ptr<Rigidbody2D> &rigidbodyA, const std::shared_ptr<Rigidbody2D> &rigidbodyB, Vector2f *normal,
+      const std::shared_ptr<Collider2D> &rigidbodyA, const std::shared_ptr<Collider2D> &rigidbodyB, Vector2f *normal,
       double *depth
     );
     /**
@@ -42,7 +42,7 @@ namespace Engine2D::Physics {
      * @param contactCount The number of contact points, either 1 or 2, calculated in the function's body
      */
     static void findContactPoints(
-      const std::shared_ptr<Rigidbody2D> &rigidbodyA, const std::shared_ptr<Rigidbody2D> &rigidbodyB,
+      const std::shared_ptr<Collider2D> &rigidbodyA, const std::shared_ptr<Collider2D> &rigidbodyB,
       Vector2f *contactPoint1, Vector2f *contactPoint2, uint8_t *contactCount
     );
 

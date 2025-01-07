@@ -58,9 +58,11 @@ namespace Engine2D {
   void Game2D::Run() {
     this->initialize();
 
-    // Variables for FPS calculation
+    // Set the render variables
     targetFrameRate = Engine::Settings::Graphics::GetTargetFrameRate();
     targetRenderRate = targetFrameRate == 0 ? 0.0f : 1.0f / targetFrameRate;
+
+    // Variables for FPS calculation
     auto nextFrameTime = std::chrono::high_resolution_clock::now();
     float oneSecondTimer = 0.0f;
     int frameCounter = 0;
@@ -86,6 +88,7 @@ namespace Engine2D {
       this->fixedUpdate();
       this->update();
 
+      // Check whether we should skip duplicate frame
       if (!Engine::Settings::Graphics::GetFrameSkippingEnabled() || (
             Engine::Settings::Graphics::GetFrameSkippingEnabled() && currentFrameNeedsRendering)) {
         this->render();
@@ -268,6 +271,7 @@ namespace Engine2D {
         );
       else
         Rendering::ShapeRenderer::DrawPolygonWireframe(collider->transformedVertices, glm::vec3(1, 0, 0));
+      const auto [min, max] = collider->getAABB();
       Rendering::ShapeRenderer::DrawPolygonWireframe(
         {collider->getAABB().min, collider->getAABB().max}, glm::vec3(1, 0, 0)
       );
