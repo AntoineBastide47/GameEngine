@@ -68,7 +68,9 @@ namespace Engine2D {
     return LOG_ERROR("Unknown shader: " + name);
   }
 
-  std::shared_ptr<Texture2D> ResourceManager::LoadTexture(const std::string &filePath, const bool alpha, const std::string &name) {
+  std::shared_ptr<Texture2D> ResourceManager::LoadTexture(
+    const std::string &filePath, const bool alpha, const std::string &name
+  ) {
     if (filePath.empty())
       return LOG_ERROR("File path is required to load a texture");
     if (name.empty())

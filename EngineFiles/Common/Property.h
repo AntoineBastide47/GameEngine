@@ -12,21 +12,28 @@
 namespace Engine {
   /**
    * The Property class is a templated utility for encapsulating a value along with a callback mechanism that gets triggered
-   * whenever the value changes. It allows you to define custom logic that executes whenever the property is updated.
+   * whenever the value changes. It allows you to define custom logic that executes whenever the property is updated.<br>
+   * The class has two callbacks available:
+   *  - postCallback: The callback called once the value is set
+   *  - preCallback: (Optional) The callback called before setting the value to pre-process it if needed
    * @tparam T The type of the value stored in this property
    */
   template<typename T> class Property {
     public:
-      using Callback = std::function<void()>;
+      using PostCallback = std::function<void()>;
+      using PreCallback = std::function<T(T value)>;
 
       /**
        * @param initialValue The initial value to store in the property
        * @param postCallback The callback called after value of this property is changed
-       * @param preCallback The callback called before value of this property is changed
        */
-      explicit Property(
-        T initialValue, const Callback &postCallback, const std::optional<Callback> &preCallback = std::nullopt
-      ) : value(initialValue), preCallback(preCallback), postCallback(postCallback) {}
+      explicit Property(T initialValue, const PostCallback &postCallback)
+        : value(initialValue), preCallback(std::nullopt), postCallback(postCallback) {}
+
+      /// Sets the preprocessing callback to the given callback
+      void SetPreprocessingCallback(const PreCallback &preCallback) {
+        this->preCallback = preCallback;
+      }
 
       T operator+(const Property &prop) const {
         return value + prop.value;
@@ -77,9 +84,9 @@ namespace Engine {
       }
 
       /// Assignment operator
-      Property &operator=(const T &newValue) {
+      Property &operator=(T newValue) {
         if (preCallback)
-          (*preCallback)();
+          newValue = (*preCallback)(newValue);
         value = newValue;
         postCallback();
         return *this;
@@ -114,33 +121,39 @@ namespace Engine {
         return value == other.value;
       }
 
+      /// Equality operator
+      bool operator==(const T value) {
+        return this->value == value;
+      }
+
+      /// Equality operator
+      friend bool operator==(const T value, const Property &prop) {
+        return prop.value == value;
+      }
+
       /// Inequality operator
       bool operator!=(const Property &other) const {
         return value != other.value;
       }
 
       /// Equality operator
-      bool operator==(const T &other) const {
-        return value == other;
+      bool operator!=(const T value) {
+        return this->value != value;
       }
 
-      /// Inequality operator
-      bool operator!=(const T &other) const {
-        return value != other;
+      /// Equality operator
+      friend bool operator!=(const T value, const Property &prop) {
+        return prop.value != value;
       }
 
       /// Forward operator to access data stored in the value of this property
       T *operator->() {
-        if (preCallback)
-          (*preCallback)();
         postCallback();
         return &value;
       }
 
       /// Forward operator to access data stored in the value of this property
       const T *operator->() const {
-        if (preCallback)
-          (*preCallback)();
         postCallback();
         return &value;
       }
@@ -148,9 +161,9 @@ namespace Engine {
       /// The value stored in this property
       T value;
       /// The callback called before value is changed
-      std::optional<Callback> preCallback;
+      std::optional<PreCallback> preCallback;
       /// The callback called after value is changed
-      Callback postCallback;
+      PostCallback postCallback;
   };
 }
 

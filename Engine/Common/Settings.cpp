@@ -71,6 +71,9 @@ namespace Engine {
     if (targetFrameRate > 0) {
       Engine2D::Game2D::instance->targetFrameRate = targetFrameRate;
       Engine2D::Game2D::instance->targetRenderRate = 1.0f / targetFrameRate;
+    } else {
+      Engine2D::Game2D::instance->targetFrameRate = 0;
+      Engine2D::Game2D::instance->targetRenderRate = 0;
     }
   }
 

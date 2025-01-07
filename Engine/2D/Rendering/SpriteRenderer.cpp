@@ -19,7 +19,7 @@ namespace Engine2D::Rendering {
     }
   }
 
-  void SpriteRenderer::drawSprites(const std::map<int, std::unordered_set<std::shared_ptr<Entity2D> > > &entities) {
+  void SpriteRenderer::drawSprites(const std::map<int, std::unordered_set<std::shared_ptr<Entity2D>>> &entities) {
     if (!shader)
       return;
 

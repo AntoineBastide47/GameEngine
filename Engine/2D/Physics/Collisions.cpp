@@ -13,65 +13,49 @@ namespace Engine2D::Physics {
   }
 
   bool Collisions::collide(
-    const std::shared_ptr<Collider2D> &rigidbodyA, const std::shared_ptr<Collider2D> &rigidbodyB, Vector2f *normal,
+    const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, Vector2f *normal,
     double *depth
   ) {
-    if (rigidbodyA->type == Collider2D::Circle && rigidbodyB->type == Collider2D::Circle)
+    if (col1->type == Collider2D::Circle && col2->type == Collider2D::Circle)
       return circlesIntersect(
-        rigidbodyA->Transform()->WorldPosition(), rigidbodyA->Transform()->WorldHalfScale(),
-        rigidbodyB->Transform()->WorldPosition(), rigidbodyB->Transform()->WorldHalfScale(), normal, depth
+        col1->getPosition(), col1->getScale(), col2->getPosition(), col2->getScale(), normal, depth
       );
-    if (rigidbodyA->type == Collider2D::Circle && rigidbodyB->type != Collider2D::Circle) {
+    if (col1->type == Collider2D::Circle && col2->type != Collider2D::Circle) {
       const bool collide = polygonAndCircleIntersect(
-        rigidbodyB->transformedVertices, rigidbodyB->Transform()->WorldPosition(), rigidbodyA->Transform()->WorldPosition(),
-        rigidbodyA->Transform()->WorldHalfScale(), normal, depth
+        col2->transformedVertices, col2->getPosition(), col1->getPosition(), col1->getScale(), normal, depth
       );
       *normal = -*normal;
       return collide;
     }
-    if (rigidbodyA->type != Collider2D::Circle && rigidbodyB->type == Collider2D::Circle) {
+    if (col1->type != Collider2D::Circle && col2->type == Collider2D::Circle) {
       return polygonAndCircleIntersect(
-        rigidbodyA->transformedVertices, rigidbodyA->Transform()->WorldPosition(), rigidbodyB->Transform()->WorldPosition(),
-        rigidbodyB->Transform()->WorldHalfScale(), normal, depth
+        col1->transformedVertices, col1->getPosition(), col2->getPosition(), col2->getScale(), normal, depth
       );
     }
     return polygonsIntersect(
-      rigidbodyA->transformedVertices, rigidbodyA->Transform()->WorldPosition(), rigidbodyB->transformedVertices,
-      rigidbodyB->Transform()->WorldPosition(),
-      normal, depth
+      col1->transformedVertices, col1->getPosition(), col2->transformedVertices, col2->getPosition(), normal, depth
     );
   }
 
   void Collisions::findContactPoints(
-    const std::shared_ptr<Collider2D> &rigidbodyA, const std::shared_ptr<Collider2D> &rigidbodyB, Vector2f *contactPoint1,
+    const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, Vector2f *contactPoint1,
     Vector2f *contactPoint2, uint8_t *contactCount
   ) {
-    if (rigidbodyA->type == Collider2D::Circle && rigidbodyB->type == Collider2D::Circle) {
+    if (col1->type == Collider2D::Circle && col2->type == Collider2D::Circle) {
       findCirclesContactPoint(
-        rigidbodyA->Transform()->WorldPosition(), rigidbodyB->Transform()->WorldPosition(),
-        rigidbodyA->Transform()->WorldHalfScale().x, contactPoint1
+        col1->getPosition(), col2->getPosition(), col1->Transform()->WorldHalfScale().x, contactPoint1
       );
       *contactCount = 1;
-    }
-    else if (rigidbodyA->type == Collider2D::Circle && rigidbodyB->type != Collider2D::Circle) {
-      findCircleAndPolygonContactPoint(
-        rigidbodyA->Transform()->WorldPosition(), rigidbodyB->transformedVertices,
-        contactPoint1
-      );
+    } else if (col1->type == Collider2D::Circle && col2->type != Collider2D::Circle) {
+      findCircleAndPolygonContactPoint(col1->getPosition(), col2->transformedVertices, contactPoint1);
       *contactCount = 1;
-    }
-    else if (rigidbodyA->type != Collider2D::Circle && rigidbodyB->type == Collider2D::Circle) {
-      findCircleAndPolygonContactPoint(
-        rigidbodyB->Transform()->WorldPosition(), rigidbodyA->transformedVertices,
-        contactPoint1
-      );
+    } else if (col1->type != Collider2D::Circle && col2->type == Collider2D::Circle) {
+      findCircleAndPolygonContactPoint(col2->getPosition(), col1->transformedVertices, contactPoint1);
       *contactCount = 1;
-    }
-    else {
+    } else
       findPolygonsContactPoint(
-        rigidbodyA->transformedVertices, rigidbodyB->transformedVertices, contactPoint1, contactPoint2, contactCount
+        col1->transformedVertices, col2->transformedVertices, contactPoint1, contactPoint2, contactCount
       );
-    }
   }
 
   bool Collisions::circlesIntersect(
@@ -261,8 +245,7 @@ namespace Engine2D::Physics {
         if (distanceSquared == minDistanceSquared && Vector2f::ApproxEquals(contact, *contactPoint1)) {
           *contactCount = 2;
           *contactPoint2 = contact;
-        }
-        else if (distanceSquared < minDistanceSquared) {
+        } else if (distanceSquared < minDistanceSquared) {
           minDistanceSquared = distanceSquared;
           *contactCount = 1;
           *contactPoint1 = contact;
@@ -283,8 +266,7 @@ namespace Engine2D::Physics {
         if (distanceSquared == minDistanceSquared && Vector2f::ApproxEquals(contact, *contactPoint1)) {
           *contactCount = 2;
           *contactPoint2 = contact;
-        }
-        else if (distanceSquared < minDistanceSquared) {
+        } else if (distanceSquared < minDistanceSquared) {
           minDistanceSquared = distanceSquared;
           *contactCount = 1;
           *contactPoint1 = contact;

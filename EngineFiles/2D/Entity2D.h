@@ -12,7 +12,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "Component2D.h"
+#include "2D/Component2D.h"
 #include "2D/Transform2D.h"
 #include "2D/Physics/Collider2D.h"
 #include "2D/Rendering/Texture2D.h"
@@ -53,11 +53,11 @@ namespace Engine2D {
       bool operator!=(const Entity2D &entity) const;
 
       /// Called before the first update, allowing derived classes to customize behavior.
-      virtual void Initialize() {}
+      virtual void OnInitialize() {}
       /// Called once per frame, allowing derived classes to customize behavior.
-      virtual void Update() {}
+      virtual void OnUpdate() {}
       /// Called once per physics update, allowing derived classes to customize behavior.
-      virtual void FixedUpdate() {}
+      virtual void OnFixedUpdate() {}
       /// Called when the entity is removed from the game or when the game quits, allowing derived classes to customize behavior.
       virtual void OnDestroy() {}
 
@@ -75,7 +75,7 @@ namespace Engine2D {
       /// Called when this entity is stops triggered by a given entity, required the entity to have a Collider2D component
       virtual void OnTriggerExit2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
 
-      /// Adds the given component to the current entity
+      /// Creates a component of the given type and adds it to the entity
       template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
       std::shared_ptr<T> AddComponent() {
         auto component = std::make_shared<T>();

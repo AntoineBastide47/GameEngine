@@ -32,6 +32,9 @@ namespace Engine2D {
           }
         }
       ), parent(nullptr), wasUpdated(false), visible(true), projectionMatrix(glm::mat4(1.0f)) {
+    this->rotation.SetPreprocessingCallback([] (const float newValue) {
+      return std::fmod(newValue, 360.0f);
+    });
     onTransformChange();
   }
 
@@ -50,19 +53,19 @@ namespace Engine2D {
     return !(*this == transform);
   }
 
-  std::vector<std::shared_ptr<Entity2D> >::iterator Transform2D::begin() {
+  std::vector<std::shared_ptr<Entity2D>>::iterator Transform2D::begin() {
     return childList.begin();
   }
 
-  std::vector<std::shared_ptr<Entity2D> >::iterator Transform2D::end() {
+  std::vector<std::shared_ptr<Entity2D>>::iterator Transform2D::end() {
     return childList.end();
   }
 
-  std::vector<std::shared_ptr<Entity2D> >::const_iterator Transform2D::begin() const {
+  std::vector<std::shared_ptr<Entity2D>>::const_iterator Transform2D::begin() const {
     return childList.cbegin();
   }
 
-  std::vector<std::shared_ptr<Entity2D> >::const_iterator Transform2D::end() const {
+  std::vector<std::shared_ptr<Entity2D>>::const_iterator Transform2D::end() const {
     return childList.cend();
   }
 
@@ -204,7 +207,7 @@ namespace Engine2D {
     wasUpdated = true;
     projectionMatrix =
       glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition.toGLM(), 0.0f)) *
-      glm::rotate(glm::mat4(1.0f), glm::degrees(-worldRotation), glm::vec3(0.0f, 0.0f, 1.0f)) *
+      glm::rotate(glm::mat4(1.0f), glm::radians(-worldRotation), glm::vec3(0.0f, 0.0f, 1.0f)) *
       glm::scale(glm::mat4(1.0f), glm::vec3(-worldScale.toGLM(), 1.0f));
     visible = Game2D::instance && !(
                 worldPosition.x + worldScaleHalf.x < -Game2D::ViewportWidth() * 0.5f ||

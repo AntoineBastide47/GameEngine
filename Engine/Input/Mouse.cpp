@@ -35,7 +35,7 @@ namespace Engine::Input {
   Engine2D::Vector2f Mouse::Position() {
     double x, y;
     glfwGetCursorPos(window, &x, &y);
-    return  Engine2D::Vector2{static_cast<float>(x), static_cast<float>(y)};
+    return Engine2D::Vector2{static_cast<float>(x), static_cast<float>(y)};
   }
 
   Mouse::~Mouse() {

@@ -4,8 +4,8 @@
 // Date: 10/11/2024
 //
 
-#ifndef RENDERINGHEADERS_H
-#define RENDERINGHEADERS_H
+#ifndef RENDERING_HEADERS_H
+#define RENDERING_HEADERS_H
 
 // OpenGL
 #include <GL/glew.h>
@@ -13,4 +13,4 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#endif //RENDERINGHEADERS_H
+#endif //RENDERING_HEADERS_H

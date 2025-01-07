@@ -7,7 +7,6 @@
 #include "2D/Physics/CollisionGrid.h"
 #include "2D/Game2D.h"
 #include "2D/Physics/Collider2D.h"
-#include "2D/Physics/Physics2D.h"
 
 namespace Engine2D::Physics {
   CollisionGrid::CollisionGrid(const Vector2<size_t> gridSize) {
@@ -15,7 +14,7 @@ namespace Engine2D::Physics {
     this->topRight = -bottomLeft;
     this->gridSize = gridSize;
     this->cellSize = Vector2f{Game2D::ViewportWidth() / gridSize.x, Game2D::ViewportHeight() / gridSize.y};
-    grid.resize(gridSize.x, std::vector<std::vector<std::shared_ptr<Collider2D> > >(gridSize.y));
+    grid.resize(gridSize.x, std::vector<std::vector<std::shared_ptr<Collider2D>>>(gridSize.y));
   }
 
   void CollisionGrid::setGridSize(const Vector2<size_t> gridSize) {
@@ -23,10 +22,10 @@ namespace Engine2D::Physics {
     for (auto &col: grid)
       for (auto &cell: col)
         cell.clear();
-    grid.resize(gridSize.x, std::vector<std::vector<std::shared_ptr<Collider2D> > >(gridSize.y));
+    grid.resize(gridSize.x, std::vector<std::vector<std::shared_ptr<Collider2D>>>(gridSize.y));
   }
 
-  void CollisionGrid::update(const std::vector<std::shared_ptr<Collider2D> > &colliders) {
+  void CollisionGrid::update(const std::vector<std::shared_ptr<Collider2D>> &colliders) {
     // Clear the cells
     for (auto &col: grid)
       for (auto &cell: col)

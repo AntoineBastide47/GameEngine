@@ -42,20 +42,20 @@ namespace Engine2D::Physics {
     CollisionGrid collisionGrid;
 
     /// The list of all the rigidbodies that are in the game
-    std::unordered_set<std::shared_ptr<Rigidbody2D> > rigidbodies;
+    std::unordered_set<std::shared_ptr<Rigidbody2D>> rigidbodies;
     /// The list of rigidbodies to add to the future physics simulations steps
-    std::unordered_set<std::shared_ptr<Rigidbody2D> > rigidbodiesToAdd;
+    std::unordered_set<std::shared_ptr<Rigidbody2D>> rigidbodiesToAdd;
     /// The list of rigidbodies to remove from the future physics simulations steps
-    std::unordered_set<std::shared_ptr<Rigidbody2D> > rigidbodiesToRemove;
+    std::unordered_set<std::shared_ptr<Rigidbody2D>> rigidbodiesToRemove;
 
     /// The list of all the colliders that are in the game
-    std::unordered_set<std::shared_ptr<Collider2D> > colliders;
+    std::unordered_set<std::shared_ptr<Collider2D>> colliders;
     /// The list of colliders to add to the future physics simulations steps
-    std::unordered_set<std::shared_ptr<Collider2D> > collidersToAdd;
+    std::unordered_set<std::shared_ptr<Collider2D>> collidersToAdd;
     /// The list of colliders to remove from the future physics simulations steps
-    std::unordered_set<std::shared_ptr<Collider2D> > collidersToRemove;
+    std::unordered_set<std::shared_ptr<Collider2D>> collidersToRemove;
     /// The list of currently active rigidbodies
-    std::vector<std::shared_ptr<Collider2D> > activeColliders;
+    std::vector<std::shared_ptr<Collider2D>> activeColliders;
 
     /// The list of pairs of rigidbodies that had a contact during this frame
     std::unordered_set<ContactPair> contactPairs;
@@ -100,8 +100,7 @@ namespace Engine2D::Physics {
     /// Separates the given bodies using the given Minimum Translation Vector to make sure they are not contained in each other
     static void separateBodies(
       const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2,
-      const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, Vector2f mtv, bool separateBody1, bool
-      separateBody2
+      const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, Vector2f mtv
     );
     /// Resolves the collision between two rigidbodies
     static void resolveCollision(const Engine::Physics::CollisionManifold &contact);

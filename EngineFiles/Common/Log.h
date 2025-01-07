@@ -23,9 +23,9 @@ namespace Engine {
       /// Print's the given string to the console and adds a new line at the end
       static void Println(const std::string &message);
       /// Print's the given string to the console
-      static void Print(const char* &message);
+      static void Print(const char * &message);
       /// Print's the given string to the console and adds a new line at the end
-      static void Println(const char* &message);
+      static void Println(const char * &message);
       /**
        * Sends the given message to the console with the current stack trace to pinpoint the place it was sent
        * @param msg The message to log

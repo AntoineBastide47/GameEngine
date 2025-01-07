@@ -54,10 +54,12 @@ namespace Engine {
        * @param callback The callback function to remove. Each should be a non-capturing lambda or function pointer.
        */
       void RemoveCallback(const Callback &callback) {
-        auto it = std::remove_if(callbacks.begin(), callbacks.end(),
-                                 [&callback](const Callback &ptr) {
-                                   return ptr.template target<void(Args...)>() == callback.template target<void(Args...)>();
-                                 });
+        auto it = std::remove_if(
+          callbacks.begin(), callbacks.end(),
+          [&callback](const Callback &ptr) {
+            return ptr.template target<void(Args...)>() == callback.template target<void(Args...)>();
+          }
+        );
         callbacks.erase(it, callbacks.end());
       }
 

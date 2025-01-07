@@ -29,30 +29,25 @@ namespace Engine2D::Physics {
     friend class Engine2D::Game2D;
     friend class Physics2D;
     public:
-      /// Indicates how much of the angular velocity will be applied during collisions.
-      /// For full rotation set it to 1, for no rotation set it to 0 or values inbetween for different reactions.
-      Engine::float01 angularDamping;
-      /// Flag indicating whether the body is static (immovable).
-      bool isStatic;
+      /// Flag indicating whether the body is affected by forces.
+      bool isKinematic;
       /// Flag indicating whether the body is affected by gravity.
       bool affectedByGravity;
       /// Mass of the rigidbody
       Engine::Property<float> mass;
+      /// Linear velocity of the rigid body.
+      Vector2f linearVelocity;
+      /// Angular velocity of the body.
+      float angularVelocity;
+      /// Indicates how much of the angular velocity will be applied during collisions.
+      /// For full rotation set it to 1, for no rotation set it to 0 or values inbetween for different reactions.
+      Engine::float01 angularDamping;
       /// The coefficient of the frictional force which acts between the two surfaces when they are in the rest position
       /// with respect to each other.
       float staticFriction;
       /// The coefficient of the frictional force which is created between any two surfaces when they are in a moving
       /// position.
       float dynamicFriction;
-
-      /// If true, the rigidbody will bounce off the top of the viewport
-      bool bindToViewportTop;
-      /// If true, the rigidbody will bounce off the bottom of the viewport
-      bool bindToViewportBottom;
-      /// If true, the rigidbody will bounce off the left of the viewport
-      bool bindToViewportLeft;
-      /// If true, the rigidbody will bounce off the right of the viewport
-      bool bindToViewportRight;
 
       /// Default constructor.
       Rigidbody2D();
@@ -62,10 +57,6 @@ namespace Engine2D::Physics {
        * @param force The force vector to apply.
        */
       void AddForce(const Vector2f &force);
-      /// Makes this rigidbody bounce off every part of the viewport
-      void BindToViewport();
-      /// Makes this rigidbody not bounce off every part of the viewport
-      void UnbindFromViewport();
       /// Sets the friction coefficients to 0
       void NoFriction();
       /// Sets the friction coefficients to there default values:
@@ -73,16 +64,12 @@ namespace Engine2D::Physics {
       ///  - dynamic: 0.4f
       void DefaultFriction();
     private:
-      /// Angular velocity of the body.
-      float angularVelocity;
       /// Inverse of the mass (cached to only use the division when mass changes)
       float massInv;
       /// Inertia of the rigidbody
       float inertia;
       /// Inverse of the inertia (cached to only use the division when inertia changes)
       float inertiaInv;
-      /// Linear velocity of the rigid body.
-      Vector2f linearVelocity;
       /// Accumulated force applied to the rigidbody.
       Vector2f force;
 

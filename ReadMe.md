@@ -1,5 +1,5 @@
-# 2D Game Engine Project
-This game engine is a personal project I'm working on to learn more about game development and C++. It's designed for 2D games and aims to provide a simple yet powerful framework for building interactive applications. The project is both a fun endeavor and an educational journey into the world of game engine architecture.
+# Game Engine Project  [![License](https://img.shields.io/github/license/TheCherno/Hazel.svg)](https://github.com/AntoineBastide47/GameEngine/blob/main/LICENSE)
+This game engine is a personal project I'm working on to learn more about game development and C++. For now it is designed for 2D games and aims to provide a simple yet powerful framework for building interactive applications. The project is both a fun endeavor and an educational journey into the world of game engine architecture.
 
 ## Current Features
 **Rendering Engine:** Efficient rendering of sprites and textures.<br>
@@ -23,6 +23,12 @@ Versions are currently formatted as follows: `[major].[feature].[patch].[beta]` 
 - **Version 0.1.1:** Keyboard Input System.
 - **Version 0.2.0:** Input System.
 - **Version 1.0.0:** First full version of the engine.
+
+## Commits
+Commits will be formated as follows:
+- Name: new version of the engine
+- Description: global idea of what this commit it
+- [Changelog](https://github.com/standard/standard/blob/master/CHANGELOG.md): more details about the commit
 
 ## Getting Started
 To get started with the engine:

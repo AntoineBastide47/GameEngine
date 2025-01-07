@@ -15,7 +15,8 @@ using Engine2D::Rendering::Texture2D;
 
 namespace Engine2D {
   Entity2D::Entity2D(std::string name)
-    : name(std::move(name)), textureColor(glm::vec3(1.0f)), initialized(false), active(true), parentsActive(true), texture(nullptr) {}
+    : name(std::move(name)), textureColor(glm::vec3(1.0f)), initialized(false), active(true), parentsActive(true),
+      texture(nullptr) {}
 
   bool Entity2D::operator==(const Entity2D &entity) const {
     return name == entity.name && transform == entity.transform && texture == entity.texture;
@@ -60,7 +61,7 @@ namespace Engine2D {
 
       transform.setEntity(shared_from_this());
       transform.onParentHierarchyChange();
-      this->Initialize();
+      this->OnInitialize();
       if (!this->transform.parent)
         this->transform.SetParent(nullptr);
       this->initialized = true;
@@ -70,7 +71,7 @@ namespace Engine2D {
   void Entity2D::update() {
     if (!initialized)
       this->initialize();
-    this->Update();
+    this->OnUpdate();
   }
 
   void Entity2D::destroy() {

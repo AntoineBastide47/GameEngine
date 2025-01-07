@@ -128,8 +128,7 @@ namespace Engine2D::Rendering {
           << infoLog << "\n -- --------------------------------------------------- -- "
           << std::endl;
       }
-    }
-    else {
+    } else {
       glGetProgramiv(object, GL_LINK_STATUS, &success);
       if (!success) {
         glGetProgramInfoLog(object, 1024, nullptr, infoLog);

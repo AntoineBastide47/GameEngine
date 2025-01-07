@@ -74,7 +74,7 @@ namespace Engine2D {
 
       /// Closes/Quits the game
       static void Close(Engine::Input::KeyboardAndMouseContext context);
-      /// Adds an entity to the game
+      /// Creates an entity of the given type and adds it to the game
       template<typename T> requires std::is_base_of_v<Entity2D, T>
       static std::shared_ptr<T> AddEntity(std::string name = "Entity") {
         if (instance) {
@@ -95,7 +95,7 @@ namespace Engine2D {
       virtual ~Game2D() = default;
 
       /// Called during initialization, allowing derived classes to customize behavior.
-      virtual void Initialize() {}
+      virtual void OnInitialize() {}
     private:
       /// Used to resize the coordinate space. If initial window is 1920x1080 and factor is 0.1f, the coordinate space will
       /// be 192x108.
@@ -118,13 +118,13 @@ namespace Engine2D {
       ResourceLoader resourceLoader;
 
       /// All the entities currently in the game
-      std::unordered_set<std::shared_ptr<Entity2D> > entities;
+      std::unordered_set<std::shared_ptr<Entity2D>> entities;
       /// Entities scheduled to be added to the game
-      std::unordered_set<std::shared_ptr<Entity2D> > entitiesToAdd;
+      std::unordered_set<std::shared_ptr<Entity2D>> entitiesToAdd;
       /// Entities scheduled to be removed from the game
-      std::unordered_set<std::shared_ptr<Entity2D> > entitiesToRemove;
+      std::unordered_set<std::shared_ptr<Entity2D>> entitiesToRemove;
       /// The entities of the game grouped by there texture id
-      std::map<int, std::unordered_set<std::shared_ptr<Entity2D> > > entitiesToRender;
+      std::map<int, std::unordered_set<std::shared_ptr<Entity2D>>> entitiesToRender;
 
       /// The time during two frames
       float deltaTime;

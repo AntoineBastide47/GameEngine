@@ -213,7 +213,7 @@ namespace Engine2D {
 
     physics2D = new Physics2D();
 
-    this->Initialize();
+    this->OnInitialize();
   }
 
   void Game2D::processInput() {
@@ -231,8 +231,7 @@ namespace Engine2D {
       if (entity && entity->IsActive()) {
         entity->update();
         currentFrameNeedsRendering = currentFrameNeedsRendering || entity->transform.wasUpdated;
-      }
-      else if (!entity)
+      } else if (!entity)
         foundNull = true;
     }
     if (foundNull)
@@ -249,7 +248,7 @@ namespace Engine2D {
     while (physicsAccumulator >= Engine::Settings::Physics::GetFixedDeltaTime()) {
       for (const auto entity: entities)
         if (entity->IsActive())
-          entity->FixedUpdate();
+          entity->OnFixedUpdate();
       physics2D->step();
       physicsAccumulator -= Engine::Settings::Physics::GetFixedDeltaTime();
     }
@@ -261,22 +260,30 @@ namespace Engine2D {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     Rendering::SpriteRenderer::drawSprites(entitiesToRender);
 
-    /*
-    for (const auto collider: physics2D->colliders) {
-      if (!collider->Transform()->Visible())
-        continue;
-      if (collider->type == Collider2D::Circle)
-        Rendering::ShapeRenderer::DrawCircleWireframe(
-          collider->Transform()->WorldPosition(), collider->Transform()->WorldHalfScale().x, glm::vec3(1, 0, 0)
-        );
-      else
-        Rendering::ShapeRenderer::DrawPolygonWireframe(collider->transformedVertices, glm::vec3(1, 0, 0));
-      const auto [min, max] = collider->getAABB();
-      Rendering::ShapeRenderer::DrawPolygonWireframe(
-        {collider->getAABB().min, collider->getAABB().max}, glm::vec3(1, 0, 0)
-      );
-    }
-    */
+    if constexpr (false)
+      for (const auto collider: physics2D->colliders) {
+        if (!collider->Transform()->Visible())
+          continue;
+        if (collider->type == Collider2D::Circle)
+          Rendering::ShapeRenderer::DrawCircleWireframe(
+            collider->Transform()->WorldPosition(), collider->Transform()->WorldHalfScale().x, glm::vec3(1, 0, 0)
+          );
+        else
+          Rendering::ShapeRenderer::DrawPolygonWireframe(collider->transformedVertices, glm::vec3(1, 0, 0));
+
+        if constexpr (false) {
+          auto [min, max] = collider->getAABB();
+          std::vector vertices = {
+            min,                    // Bottom-left corner
+            Vector2f{max.x, min.y}, // Bottom-right corner
+            max,                    // Top-right corner
+            Vector2f{min.x, max.y}  // Top-left corner
+          };
+
+          // Draw the wireframe polygon with the specified color (red)
+          Rendering::ShapeRenderer::DrawPolygonWireframe(vertices, glm::vec3(1, 0, 0));
+        }
+      }
 
     // Prepare the next frame
     glfwSwapBuffers(window);
