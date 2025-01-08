@@ -9,8 +9,10 @@
 
 #include <map>
 
-#include "2D/Rendering/Shader.h"
-#include "2D/Rendering/Texture2D.h"
+namespace Engine2D::Rendering {
+  class Shader;
+  class Texture2D;
+}
 
 using Engine2D::Rendering::Shader;
 using Engine2D::Rendering::Texture2D;

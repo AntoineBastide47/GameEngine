@@ -9,20 +9,22 @@
 
 #include <string>
 #include <unordered_set>
-#include <vector>
 #include <glm/glm.hpp>
 
-#include "2D/Component2D.h"
+
 #include "2D/Transform2D.h"
 #include "2D/Physics/Collider2D.h"
 #include "2D/Rendering/Texture2D.h"
 
-namespace Engine2D::Physics {
-  class Rigidbody2D;
-}
 using Engine2D::Rendering::Texture2D;
 
 namespace Engine2D {
+  class Component2D;
+
+  namespace Physics {
+    class Rigidbody2D;
+  }
+
   /**
    * Represents a 2D entity with a transform, rendering capabilities, and hierarchical structure.
    *
@@ -128,10 +130,10 @@ namespace Engine2D {
        * @return The components that match the given type found on the current entity, nullptr if none were found
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] std::unordered_set<std::shared_ptr<T> > GetComponents() const {
+      [[nodiscard]] std::unordered_set<std::shared_ptr<T>> GetComponents() const {
         if constexpr (std::is_same_v<T, Transform2D>)
           return {transform};
-        std::unordered_set<std::shared_ptr<T> > res;
+        std::unordered_set<std::shared_ptr<T>> res;
         for (auto component: components)
           if (auto casted = std::dynamic_pointer_cast<T>(component))
             res.insert(casted);
@@ -158,7 +160,7 @@ namespace Engine2D {
       /// The texture of this entity
       std::shared_ptr<Texture2D> texture;
       /// The components linked to this entity
-      std::unordered_set<std::shared_ptr<Component2D> > components;
+      std::unordered_set<std::shared_ptr<Component2D>> components;
 
       /// Initializes the entity, setting its parent to the main parent if none is set.
       void initialize();

@@ -11,6 +11,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "2D/Rendering/stb_image.h"
 
+#include "2D/Rendering/Shader.h"
+#include "2D/Rendering/Texture2D.h"
 #include "2D/ResourceManager.h"
 #include "2D/Game2D.h"
 #include "Common/Log.h"

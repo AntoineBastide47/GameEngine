@@ -30,7 +30,7 @@
 **/install_manifest.txt
 **/CMakeFiles/
 **/CTestTestfile.cmake
-**/Makefile
+**/cmake-build-debug/Makefile
 **/*.cbp
 **/CMakeScripts
 **/compile_commands.json
@@ -39,3 +39,4 @@
 build_debug/*
 EngineFiles/*.a
 todo.txt
+**/.DS_Store

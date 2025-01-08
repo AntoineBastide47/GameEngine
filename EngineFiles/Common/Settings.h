@@ -51,7 +51,8 @@ namespace Engine {
           static void SetVsyncEnabled(bool newState);
           /// If true, the viewport will maintain the aspect ratio defined by the initial screen resolution
           static void SetMaintainAspectRatio(bool newState);
-          /// Changes the frame rate will target, if set to 0, the game will not cap the frame rate.
+          /// Changes the frame rate will target, if set to 0, the game will not cap the frame rate.<br>
+          /// Warning: Uncapping the frame rate may cause the game to utilize maximum CPU resources in an attempt to achieve the highest possible frame rate.
           static void SetTargetFrameRate(unsigned int newValue);
 
           /// @returns True if the engine will skip rendering duplicate frames, false if not.

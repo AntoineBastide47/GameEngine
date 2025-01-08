@@ -7,12 +7,10 @@
 #ifndef COLLISION_PAIR_H
 #define COLLISION_PAIR_H
 
-#include <memory>
-
-#include "2D/Physics/Collider2D.h"
-#include "2D/Physics/Rigidbody2D.h"
-
 namespace Engine2D::Physics {
+  class Collider2D;
+  class Rigidbody2D;
+
   struct ContactPair {
     std::shared_ptr<Collider2D> collider1;
     std::shared_ptr<Collider2D> collider2;

@@ -13,7 +13,6 @@
 #include <cmrc/cmrc.hpp>
 
 #include "2D/Entity2D.h"
-#include "2D/Physics/Physics2D.h"
 #include "2D/Types/Vector2.h"
 #include "Common/RenderingHeaders.h"
 #include "Input/InputContexts.h"
@@ -22,10 +21,12 @@ using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
 namespace Engine {
   class Settings;
+
 }
 
 namespace Engine2D::Physics {
   class Collider2D;
+  class Physics2D;
 }
 
 namespace Engine2D {
@@ -138,7 +139,7 @@ namespace Engine2D {
       bool currentFrameNeedsRendering;
 
       /// Physics simulator
-      Physics2D *physics2D;
+      Physics::Physics2D *physics2D;
       /// Timer used to check if the game is ready for the next physics update
       float physicsAccumulator;
 

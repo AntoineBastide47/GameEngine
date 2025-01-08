@@ -5,9 +5,9 @@
 
 class {{PROJECT_NAME}} : public Engine2D::Game2D {
   public:
-    {{PROJECT_NAME}}(int width, int height) : Game2D(width, height, "{{PROJECT_NAME}}") {};
+    {{PROJECT_NAME}}(int width, int height);
 
-    void Initialize() override;
+    void OnInitialize() override;
 };
 
 

@@ -6,6 +6,8 @@
 
 #include "2D/Rendering/SpriteRenderer.h"
 #include "2D/Game2D.h"
+#include "2D/Entity2D.h"
+#include "2D/Rendering/Shader.h"
 
 namespace Engine2D::Rendering {
   std::shared_ptr<Shader> SpriteRenderer::shader = nullptr;

@@ -10,11 +10,13 @@
 #include <map>
 #include <unordered_set>
 
-#include "2D/Entity2D.h"
-#include "2D/Rendering/Shader.h"
-
 namespace Engine2D {
   class Game2D;
+  class Entity2D;
+
+  namespace Rendering {
+    class Shader;
+  }
 }
 
 namespace Engine2D::Rendering {

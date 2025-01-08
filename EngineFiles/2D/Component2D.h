@@ -9,13 +9,14 @@
 
 #include <memory>
 
-namespace Engine2D::Rendering {
-  class ShapeRenderer;
-}
 namespace Engine2D {
   class Game2D;
   class Entity2D;
   class Transform2D;
+
+  namespace Rendering {
+    class ShapeRenderer;
+  }
 }
 
 namespace Engine2D {

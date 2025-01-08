@@ -8,7 +8,6 @@
 #define RIGIDBODY2D_H
 
 #include "2D/Component2D.h"
-#include "2D/Physics/Collider2D.h"
 #include "2D/Types/Vector2.h"
 #include "Common/Property.h"
 #include "Types/float01.h"
@@ -18,6 +17,7 @@ namespace Engine2D {
 }
 
 namespace Engine2D::Physics {
+  class Collider2D;
   /**
    * Represents a 2D rigid body in the physics engine.
    *

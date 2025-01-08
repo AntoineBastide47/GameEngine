@@ -10,6 +10,7 @@
 
 #include "2D/Game2D.h"
 #include "2D/ResourceManager.h"
+#include "2D/Physics/Physics2D.h"
 #include "2D/Physics/Rigidbody2D.h"
 #include "2D/Rendering/ShapeRenderer.h"
 #include "2D/Rendering/SpriteRenderer.h"
@@ -19,6 +20,7 @@
 #include "Input/Gamepad.h"
 #include "Input/Keyboard.h"
 #include "Input/Mouse.h"
+#include "2D/Rendering/Shader.h"
 
 namespace Engine2D {
   Game2D *Game2D::instance = nullptr;
@@ -73,7 +75,12 @@ namespace Engine2D {
       auto currentFrameTime = std::chrono::high_resolution_clock::now();
       this->deltaTime = std::chrono::duration<float>(currentFrameTime - lastTime).count() * timeScale;
       lastTime = currentFrameTime;
-      glfwPollEvents();
+
+      // Check if vsync is enabled to limit the frame rate
+      if (Engine::Settings::Graphics::GetVsyncEnabled()) {
+        const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        targetRenderRate = 1.0f / mode->refreshRate;
+      }
 
       this->addEntities();
       this->removeEntities();
@@ -88,12 +95,15 @@ namespace Engine2D {
       this->fixedUpdate();
       this->update();
 
-      // Check whether we should skip duplicate frame
-      if (!Engine::Settings::Graphics::GetFrameSkippingEnabled() || (
-            Engine::Settings::Graphics::GetFrameSkippingEnabled() && currentFrameNeedsRendering)) {
-        this->render();
-        frameCounter++;
+      // Make sure there is something to render
+      if (!entities.empty() && !entitiesToRender.empty()) {
+        // Check whether we should skip duplicate frame
+        if (!Engine::Settings::Graphics::GetFrameSkippingEnabled() || (
+              Engine::Settings::Graphics::GetFrameSkippingEnabled() && currentFrameNeedsRendering)) {
+          this->render();
+        }
       }
+          frameCounter++;
 
       // FPS calculation
       oneSecondTimer += deltaTime;
@@ -108,7 +118,7 @@ namespace Engine2D {
       }
 
       // Limit the frame rate if needed
-      if (targetFrameRate > 0) {
+      if (targetFrameRate > 0 || Engine::Settings::Graphics::GetVsyncEnabled()) {
         nextFrameTime += std::chrono::duration_cast<std::chrono::steady_clock::duration>(
           std::chrono::duration<float>(targetRenderRate)
         );
@@ -117,6 +127,8 @@ namespace Engine2D {
           while (std::chrono::high_resolution_clock::now() < nextFrameTime);
         }
       }
+
+      glfwPollEvents();
     }
 
     this->quit();

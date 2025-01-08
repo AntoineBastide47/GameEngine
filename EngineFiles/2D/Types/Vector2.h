@@ -12,7 +12,6 @@
 #include <string>
 #include <glm/glm.hpp>
 
-#include "2D/Types/Vector2.h"
 #include "Common/Log.h"
 
 namespace Engine2D {

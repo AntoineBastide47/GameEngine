@@ -3,7 +3,7 @@ project(GameEngine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_BUILD_TYPE "Release")
 
 # Find required packages
 find_package(OpenGL REQUIRED)
@@ -98,7 +98,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cpptrace)
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-0.4.0
+    OUTPUT_NAME Engine2D-0.4.0.1
     PREFIX ""
 )
 

@@ -8,6 +8,7 @@
 #include "2D/Entity2D.h"
 #include "2D/Game2D.h"
 #include "Common/Settings.h"
+#include "2D/Physics/Collider2D.h"
 
 namespace Engine2D::Physics {
   Rigidbody2D::Rigidbody2D()
