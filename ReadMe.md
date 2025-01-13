@@ -36,24 +36,17 @@ For more details about each commit, check the [Changelog.md](https://github.com/
 ## Getting Started
 To get started with the engine:
 
-#### 1. Clone the Repository:
+#### 1. Download the release zip file for your target OS
+The zip releases will be available on GitHub starting from version 1.0.0 when the engine will be cross-platform
+#### 2. Unzip the engine
+#### 3. Open the uncompressed folder in the terminal and run
 ```bash
-git clone https://github.com/AntoineBastide47/GameEngine.git
+make create-project
 ```
-#### 2. Build the Engine:
-```bash
-cd GameEngine
-make install_dependencies build
-```
-#### 3. Create a Sample Game:
-```bash
-make create_project
-```
-
 #### 4. Running the game
 ```bash
 cd your/project/location
-make refresh build run
+make build run
 ```
 If everything work correctly, you should see a black screen appear once the build phase ended.
 
@@ -66,6 +59,25 @@ or
 make help
 ```
 These two commands will give you descriptions for each available make command, be it in the engine or game folder.
+
+## Modifying the engine
+To modify the engine:
+### 1. Clone the Repository:
+```bash
+git clone https://github.com/AntoineBastide47/GameEngine.git
+```
+### 2. Modify the engine as you see fit
+### 3. Build the engine
+#### 3.1 Debug build
+```bash
+make build-debug
+```
+This builds a debug version of the engine.
+#### 3.2 Release build
+```bash
+make build-release
+```
+This builds an optimized version of the engine, and makes it ready for release by creating the necessary zip file.
 
 ## Learning Objectives
 **C++ Mastery:** Enhance proficiency in modern C++ programming.<br>
@@ -80,8 +92,8 @@ Warning: the game code is subject to change as the engine develops.
 ## Limitations
 I am currently building the engine on macOS, so the engine won't have the best support for Linux and Windows out of the box,
 but I am planning to make the engine cross-platform, including Windows and Linux for version 1.0.0.<br>
-The engine won't be backwards compatible as that would create to much overhead, increase the size of binaries and reduce
-the performance of the games.
+The engine won't be backwards compatible as that would create too much overhead, increase the size of binaries and
+might reduce the performance of games.
 
 ## Contributing
 Since this is a personal learning project, contributions are welcomed but may not be merged immediately. Feel free to fork the repository and experiment on your own.
