@@ -80,6 +80,7 @@ namespace Engine2D {
       template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
       std::shared_ptr<T> AddComponent() {
         auto component = std::make_shared<T>();
+        component->OnInitialize();
         component->setEntity(shared_from_this());
         components.insert(component);
         forwardComponent(component);
@@ -150,8 +151,6 @@ namespace Engine2D {
       /// Removes this Entity2D and all it's attached components from the game
       void Destroy();
     private:
-      /// Whether this entity has been initialized by the game
-      bool initialized;
       /// If the current entity is active in the scene
       bool active;
       /// If the parents of the current entity are active in the scene
@@ -163,8 +162,6 @@ namespace Engine2D {
 
       /// Initializes the entity, setting its parent to the main parent if none is set.
       void initialize();
-      /// Called when the game is updating, allowing derived classes to customize behavior.
-      void update();
       /// Cleans up resources when the game ends
       void destroy();
 

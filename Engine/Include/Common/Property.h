@@ -116,6 +116,11 @@ namespace Engine {
         return value;
       }
 
+      /// @returns The internal value of this property
+      [[nodiscard]] T Get() const {
+        return value;
+      }
+
       /// Equality operator
       bool operator==(const Property &other) const {
         return value == other.value;

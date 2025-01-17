@@ -24,6 +24,9 @@ namespace Engine2D::Rendering {
   class SpriteRenderer {
     friend class Engine2D::Game2D;
 
+    /// The vertices that will be sent to the VAO
+    static const float vertices[24];
+
     /// Shader that controls the rendering pipeline for the sprite, including transformations and textures.
     static std::shared_ptr<Shader> shader;
     /// Stores the vertex array configuration for the quad.
@@ -40,7 +43,7 @@ namespace Engine2D::Rendering {
      */
     static void initRenderData();
     /// Renders all the given entities
-    static void drawSprites(const std::map<int, std::unordered_set<std::shared_ptr<Entity2D>>> &entities);
+    static void render(const std::map<int, std::unordered_set<std::shared_ptr<Entity2D>>> &entities);
   };
 }
 

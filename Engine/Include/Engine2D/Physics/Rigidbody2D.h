@@ -73,10 +73,11 @@ namespace Engine2D::Physics {
       /// Accumulated force applied to the rigidbody.
       Vector2f force;
 
-      /// Simulates a step of the physics simulation for the current rigidbody
-      void step(float fixedDeltaTime);
       /// Calculates the inertia of this body using the given collider
       void computeInertia(const std::shared_ptr<Collider2D> &collider);
+
+      /// Simulates a step of the physics simulation for the current rigidbody
+      void OnFixedUpdate() override;
   };
 }
 

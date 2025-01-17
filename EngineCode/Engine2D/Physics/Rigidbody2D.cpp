@@ -23,7 +23,8 @@ namespace Engine2D::Physics {
               this->massInv = 1.0f / this->mass;
           }
         }
-      ), angularVelocity(0), angularDamping(1), staticFriction(0.6f), dynamicFriction(0.4f), massInv(1), inertia(0), inertiaInv(0) {}
+      ), angularVelocity(0), angularDamping(1), staticFriction(0.6f), dynamicFriction(0.4f), massInv(1), inertia(0),
+      inertiaInv(0) {}
 
   void Rigidbody2D::NoFriction() {
     dynamicFriction = 0.0f;
@@ -35,8 +36,12 @@ namespace Engine2D::Physics {
     dynamicFriction = 0.4f;
   }
 
-  void Rigidbody2D::step(const float fixedDeltaTime) {
+  void Rigidbody2D::OnFixedUpdate() {
+    if (!IsActive() || isKinematic)
+      return;
+
     // Apply half the velocity before and half after to make the movement more accurate on lower frame rates
+    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
     this->linearVelocity +=
       (affectedByGravity * Engine::Settings::Physics::GetGravity() + force) * massInv * fixedDeltaTime * 0.5f;
     this->Transform()->position += this->linearVelocity * fixedDeltaTime;

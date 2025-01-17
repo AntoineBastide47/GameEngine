@@ -4,19 +4,17 @@
 // Date: 03/11/2024
 //
 
-#include <iostream>
-
 #include "Engine2D/Entity2D.h"
 #include "Engine2D/Game2D.h"
+#include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.h"
+#include "Engine2D/ParticleSystem/ParticleSystem2D.h"
 #include "Engine2D/Physics/Physics2D.h"
-#include "Engine2D/Physics/Rigidbody2D.h"
 
 using Engine2D::Rendering::Texture2D;
 
 namespace Engine2D {
   Entity2D::Entity2D(std::string name)
-    : name(std::move(name)), textureColor(glm::vec4(1.0f)), initialized(false), active(true), parentsActive(true),
-      texture(nullptr) {}
+    : name(std::move(name)), textureColor(glm::vec4(1.0f)), active(true), parentsActive(true), texture(nullptr) {}
 
   bool Entity2D::operator==(const Entity2D &entity) const {
     return name == entity.name && transform == entity.transform && texture == entity.texture;
@@ -55,23 +53,14 @@ namespace Engine2D {
   }
 
   void Entity2D::initialize() {
-    if (!initialized) {
-      if (!weak_from_this().lock())
-        throw std::runtime_error(name + " must be created using Game2D::AddEntity.");
+    if (!weak_from_this().lock())
+      throw std::runtime_error(name + " must be created using Game2D::AddEntity.");
 
-      transform.setEntity(shared_from_this());
-      transform.onParentHierarchyChange();
-      this->OnInitialize();
-      if (!this->transform.parent)
-        this->transform.SetParent(nullptr);
-      this->initialized = true;
-    }
-  }
-
-  void Entity2D::update() {
-    if (!initialized)
-      this->initialize();
-    this->OnUpdate();
+    transform.setEntity(shared_from_this());
+    transform.onParentHierarchyChange();
+    this->OnInitialize();
+    if (!this->transform.parent)
+      this->transform.SetParent(nullptr);
   }
 
   void Entity2D::destroy() {
@@ -84,16 +73,20 @@ namespace Engine2D {
   }
 
   void Entity2D::forwardComponent(const std::shared_ptr<Component2D> &component) {
-    if (const auto rigidbody = std::dynamic_pointer_cast<Rigidbody2D>(component))
-      Game2D::instance->physics2D->addRigidBody(rigidbody);
     if (const auto collider = std::dynamic_pointer_cast<Collider2D>(component))
       Game2D::instance->physics2D->addCollider(collider);
+    if (const auto particleSystem = std::dynamic_pointer_cast<ParticleSystem2D>(component))
+      ParticleSystemRenderer2D::addParticleSystem(particleSystem);
+
+    component->OnInitialize();
   }
 
   void Entity2D::recallComponent(const std::shared_ptr<Component2D> &component) {
-    if (const auto rigidbody = std::dynamic_pointer_cast<Rigidbody2D>(component))
-      Game2D::instance->physics2D->removeRigidbody(rigidbody);
     if (const auto collider = std::dynamic_pointer_cast<Collider2D>(component))
       Game2D::instance->physics2D->removeCollider(collider);
+    if (const auto particleSystem = std::dynamic_pointer_cast<ParticleSystem2D>(component))
+      ParticleSystemRenderer2D::removeParticleSystem(particleSystem);
+
+    component->OnDestroy();
   }
 }

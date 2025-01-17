@@ -9,6 +9,7 @@
 
 namespace Engine2D {
   class ResourceManager;
+  class ParticleSystem2D;
 }
 
 namespace Engine2D::Rendering {
@@ -16,6 +17,7 @@ namespace Engine2D::Rendering {
   class Texture2D {
     friend class SpriteRenderer;
     friend class Engine2D::ResourceManager;
+    friend class Engine2D::ParticleSystem2D;
     public:
       /// The OpenGL id of this texture
       unsigned int id;

@@ -157,7 +157,6 @@ namespace Engine2D {
       void update();
       /// Simulates a step of the physics simulation
       void fixedUpdate();
-      void renderThread() const;
       /// Renders the game
       void render(bool override = false) const;
       /// Limits the frame rate of the game if needed

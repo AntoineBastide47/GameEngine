@@ -41,6 +41,15 @@ namespace Engine2D {
       [[nodiscard]] std::shared_ptr<Entity2D> &Entity();
       /// @returns The transform attached to the entity this component is attached to
       [[nodiscard]] Transform2D *Transform() const;
+
+      /// Called before the first update.
+      virtual void OnInitialize() {}
+      /// Called once per frame.
+      virtual void OnUpdate() {}
+      /// Called once per physics update.
+      virtual void OnFixedUpdate() {}
+      /// Called when the entity is removed from the game or when the game quits.
+      virtual void OnDestroy() {}
     private:
       /// Whether this component is active in the scene
       bool active;

@@ -18,36 +18,12 @@ namespace Engine2D::Physics {
   Physics2D::Physics2D() : collisionGridNeedsResizing(false), collisionGrid(Engine::Settings::Physics::GetPartitionSize()) {}
 
   Physics2D::~Physics2D() {
-    rigidbodies.clear();
-    rigidbodiesToRemove.clear();
-  }
-
-  void Physics2D::addRigidBody(const std::shared_ptr<Rigidbody2D> &rigidbody) {
-    if (rigidbody)
-      rigidbodiesToAdd.insert(rigidbody);
-  }
-
-  void Physics2D::addRigidbodies() {
-    // Add all the new rigidbodies to the physics world
-    if (!rigidbodiesToAdd.empty())
-      for (auto rigidbody: rigidbodiesToAdd)
-        rigidbodies.insert(rigidbody);
-    rigidbodiesToAdd.clear();
-  }
-
-  void Physics2D::removeRigidbody(const std::shared_ptr<Rigidbody2D> &rigidbody) {
-    if (rigidbody)
-      rigidbodiesToRemove.insert(rigidbody);
-  }
-
-  void Physics2D::removeRigidbodies() {
-    // Remove all the rigidbodies that no longer need to be simulated
-    if (!rigidbodiesToRemove.empty()) {
-      for (const std::shared_ptr rigidbody: rigidbodiesToRemove)
-        if (auto it = std::ranges::find(rigidbodies, rigidbody); it != rigidbodies.end())
-          rigidbodies.erase(it);
-      rigidbodiesToRemove.clear();
-    }
+    colliders.clear();
+    collidersToAdd.clear();
+    collidersToRemove.clear();
+    activeColliders.clear();
+    contactPairs.clear();
+    previousCollisionPairs.clear();
   }
 
   void Physics2D::addCollider(const std::shared_ptr<Collider2D> &collider) {
@@ -75,9 +51,7 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::step() {
-    // Update the physics components
-    addRigidbodies();
-    removeRigidbodies();
+    // Update the collider vector
     addColliders();
     removeColliders();
 
@@ -102,32 +76,6 @@ namespace Engine2D::Physics {
       activeColliders.clear();
       contactPairs.clear();
     }
-
-    // Early out if there are no physics components
-    if (rigidbodies.empty())
-      return;
-    simulate();
-  }
-
-  void Physics2D::simulate() {
-    // Simulate a step for each rigidbody, check for null pointers and get all the active rigidbodies
-    bool foundNull = false;
-    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
-    for (const auto rigidbody: rigidbodies) {
-      if (rigidbody && rigidbody->IsActive() && !rigidbody->isKinematic)
-        rigidbody->step(fixedDeltaTime);
-      else if (!rigidbody)
-        foundNull = true;
-    }
-
-    // Remove all the null pointers if at least one is found
-    if (foundNull)
-      for (auto it = rigidbodies.begin(); it != rigidbodies.end();) {
-        if (*it == nullptr)
-          it = rigidbodies.erase(it);
-        else
-          ++it;
-      }
   }
 
   void Physics2D::findActiveColliders() {

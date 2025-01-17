@@ -41,13 +41,6 @@ namespace Engine2D::Physics {
     /// The spacial partition of the screen for collisions
     CollisionGrid collisionGrid;
 
-    /// The list of all the rigidbodies that are in the game
-    std::unordered_set<std::shared_ptr<Rigidbody2D>> rigidbodies;
-    /// The list of rigidbodies to add to the future physics simulations steps
-    std::unordered_set<std::shared_ptr<Rigidbody2D>> rigidbodiesToAdd;
-    /// The list of rigidbodies to remove from the future physics simulations steps
-    std::unordered_set<std::shared_ptr<Rigidbody2D>> rigidbodiesToRemove;
-
     /// The list of all the colliders that are in the game
     std::unordered_set<std::shared_ptr<Collider2D>> colliders;
     /// The list of colliders to add to the future physics simulations steps
@@ -66,15 +59,6 @@ namespace Engine2D::Physics {
     Physics2D();
     ~Physics2D();
 
-    /// Adds a rigidbody to the physics simulation
-    void addRigidBody(const std::shared_ptr<Rigidbody2D> &rigidbody);
-    /// Adds all the rigidbodies scheduled to be added to the simulation
-    void addRigidbodies();
-    /// Removes a rigidbody to the physics simulation
-    void removeRigidbody(const std::shared_ptr<Rigidbody2D> &rigidbody);
-    /// Removes all the rigidbodies scheduled to be removed to the simulation
-    void removeRigidbodies();
-
     /// Adds a collider to the physics simulation
     void addCollider(const std::shared_ptr<Collider2D> &collider);
     /// Adds all the colliders scheduled to be added to the simulation
@@ -86,8 +70,6 @@ namespace Engine2D::Physics {
 
     /// Simulates a step of the physics simulation
     void step();
-    /// Simulates all the bodies of the simulation
-    void simulate();
     /// Filters all the colliders in the game and keeps only the ones that are active
     void findActiveColliders();
     static void notifyCollisions(

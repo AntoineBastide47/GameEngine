@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2025-01-17
+### Added
+- [ParticleSystem2D]: component to render particles to the screen
+- [ParticleSystemRenderer2D]: renders all the particle systems and contains the render data, allows for less memory usage
+- [Property]: added a getter
+- [Component2D]: added the following messages OnInitialize, OnUpdate, OnFixedUpdate, OnDestroy
+- [Game2D]: particle shader, particle rendering and calling of component messages
+### Changed
+- [Rigidbody2D]: changed step to use OnFixedUpdate
+### Removed
+- [Physics2D]: no more tracking of rigidbodies
+- [Entity2D]: initialized flag
+
 ## [0.4.1] - 2025-01-13
 ### Added
 - [Engine]: new Engine folder that contains the header files and templates of the engine. The create-project command has been moved to the makefile contained in the folder.

@@ -15,6 +15,8 @@
 #include "Engine2D/Rendering/SpriteRenderer.h"
 #include "Common/Macros.h"
 #include "Common/Settings.h"
+#include "Engine2D/ParticleSystem/ParticleSystem2D.h"
+#include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.h"
 #include "Input/Gamepad.h"
 #include "Input/Keyboard.h"
 #include "Input/Mouse.h"
@@ -23,7 +25,7 @@ namespace Engine2D {
   Game2D *Game2D::instance = nullptr;
   const float Game2D::screenScaleFactor{0.1f};
 
-  Game2D::Game2D(const int width, const int height, const char* title)
+  Game2D::Game2D(const int width, const int height, const char *title)
     : aspectRatio(Vector2f::One), title(title), width(width), height(height), window(nullptr),
       deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), currentFrameNeedsRendering(false),
       physics2D(nullptr), physicsAccumulator(0) {
@@ -156,6 +158,7 @@ namespace Engine2D {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Initialize GLEW
     glewExperimental = GL_TRUE;
@@ -177,11 +180,20 @@ namespace Engine2D {
     );
 
     // Create and configure the sprite renderer
-    ResourceManager::LoadShader("EngineInclude/Shaders/sprite.vs", "EngineInclude/Shaders/sprite.fs", "", "sprite");
+    ResourceManager::LoadShader("EngineInclude/Shaders/sprite.vert", "EngineInclude/Shaders/sprite.frag", "", "sprite");
     ResourceManager::GetShader("sprite")->SetInteger("sprite", 0, true);
     ResourceManager::GetShader("sprite")->SetMatrix4("projection", projection);
     Rendering::SpriteRenderer::shader = ResourceManager::GetShader("sprite");
     Rendering::SpriteRenderer::initRenderData();
+
+    // Configure the particle system shader
+    ResourceManager::LoadShader(
+      "EngineInclude/Shaders/particle.vert", "EngineInclude/Shaders/particle.frag", "", "particle"
+    );
+    ResourceManager::GetShader("particle")->SetInteger("sprite", 0, true);
+    ResourceManager::GetShader("particle")->SetMatrix4("projection", projection);
+
+    ParticleSystemRenderer2D::initialize();
 
     physics2D = new Physics2D();
 
@@ -209,7 +221,10 @@ namespace Engine2D {
     bool foundNull = false;
     for (const auto &entity: entities) {
       if (entity && entity->IsActive()) {
-        entity->update();
+        entity->OnUpdate();
+        for (const auto &component: entity->components)
+          if (component->IsActive())
+            component->OnUpdate();
         currentFrameNeedsRendering = currentFrameNeedsRendering || entity->transform.wasUpdated;
       } else if (!entity)
         foundNull = true;
@@ -227,9 +242,13 @@ namespace Engine2D {
     physicsAccumulator += deltaTime;
     const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
     while (physicsAccumulator >= fixedDeltaTime) {
-      for (const auto entity: entities)
-        if (entity->IsActive())
+      for (const auto &entity: entities)
+        if (entity->IsActive()) {
           entity->OnFixedUpdate();
+          for (const auto &component: entity->components)
+            if (component->IsActive())
+              component->OnFixedUpdate();
+        }
       physics2D->step();
       physicsAccumulator -= fixedDeltaTime;
     }
@@ -242,10 +261,11 @@ namespace Engine2D {
       if (override || (!Engine::Settings::Graphics::GetFrameSkippingEnabled() || (
                          Engine::Settings::Graphics::GetFrameSkippingEnabled() && currentFrameNeedsRendering))) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        Rendering::SpriteRenderer::drawSprites(entitiesToRender);
+
+        Rendering::SpriteRenderer::render(entitiesToRender);
+        ParticleSystemRenderer2D::render();
 
         // Prepare the next frame
-        glFlush();
         glfwSwapBuffers(window);
         frameCounter++;
       }
@@ -277,6 +297,7 @@ namespace Engine2D {
     entitiesToRemove.clear();
     entitiesToRemove.swap(entities);
     removeEntities();
+    entitiesToRender.clear();
 
     // Deallocate all the game resources
     ResourceManager::Clear();
@@ -303,6 +324,7 @@ namespace Engine2D {
       entities.insert(entity);
       if (entity->texture)
         entitiesToRender[entity->texture->id].insert(entity);
+      entity->initialize();
     }
     entitiesToAdd.clear();
   }

@@ -69,6 +69,10 @@ add_library(Engine2D SHARED
     EngineCode/Engine2D/Physics/Collider2D.cpp
     Engine/Include/Engine2D/Physics/Collider2D.h
     Engine/Include/Engine2D/Physics/CollisionPair.h
+    EngineCode/Engine2D/ParticleSystem/ParticleSystem2D.cpp
+    Engine/Include/Engine2D/ParticleSystem/ParticleSystem2D.h
+    EngineCode/Engine2D/ParticleSystem/ParticleSystemRenderer2D.cpp
+    Engine/Include/Engine2D/ParticleSystem/ParticleSystemRenderer2D.h
 )
 
 set_target_properties(Engine2D PROPERTIES OUTPUT_NAME Engine2D-0.4.1 PREFIX "")
@@ -120,6 +124,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
   )
   target_link_options(Engine2D PRIVATE -Wl,-O2)
   set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
   #add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
 
   target_compile_definitions(Engine2D PUBLIC DEBUG_BUILD=0)
