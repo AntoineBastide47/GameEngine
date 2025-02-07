@@ -8,9 +8,7 @@
 #define ENTITY2D_H
 
 #include <string>
-#include <unordered_set>
 
-#include "Engine2D/ResourceManager.h"
 #include "Engine2D/Transform2D.h"
 #include "Engine2D/Physics/Collider2D.h"
 #include "Engine2D/Rendering/Texture2D.h"
@@ -59,6 +57,8 @@ namespace Engine2D {
       virtual void OnUpdate() {}
       /// Called once per physics update.
       virtual void OnFixedUpdate() {}
+      /// Used to draw debug information to the screen
+      virtual void OnDrawGizmos2D() {}
       /// Called when the entity is removed from the game or when the game quits.
       virtual void OnDestroy() {}
 
@@ -82,7 +82,7 @@ namespace Engine2D {
         auto component = std::make_shared<T>();
         component->OnInitialize();
         component->setEntity(shared_from_this());
-        components.insert(component);
+        components.emplace_back(component);
         forwardComponent(component);
         return component;
       }
@@ -91,7 +91,7 @@ namespace Engine2D {
       template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
       void RemoveComponent(const std::shared_ptr<T> &component) {
         recallComponent(component);
-        components.erase(component);
+        std::erase(components, component);
       }
 
       /**
@@ -130,13 +130,13 @@ namespace Engine2D {
        * @return The components that match the given type found on the current entity, nullptr if none were found
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] std::unordered_set<std::shared_ptr<T>> GetComponents() const {
+      [[nodiscard]] std::vector<std::shared_ptr<T>> GetComponents() const {
         if constexpr (std::is_same_v<T, Transform2D>)
           return {transform};
-        std::unordered_set<std::shared_ptr<T>> res;
+        std::vector<std::shared_ptr<T>> res;
         for (auto component: components)
           if (auto casted = std::dynamic_pointer_cast<T>(component))
-            res.insert(casted);
+            res.push_back(casted);
         return res;
       }
 
@@ -158,7 +158,7 @@ namespace Engine2D {
       /// The texture of this entity
       std::shared_ptr<Texture2D> texture;
       /// The components linked to this entity
-      std::unordered_set<std::shared_ptr<Component2D>> components;
+      std::vector<std::shared_ptr<Component2D>> components;
 
       /// Initializes the entity, setting its parent to the main parent if none is set.
       void initialize();

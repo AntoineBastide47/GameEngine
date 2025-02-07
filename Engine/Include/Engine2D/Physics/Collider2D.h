@@ -44,8 +44,10 @@ namespace Engine2D::Physics {
       bool autoCompute;
       /// The position of the collider if it is not auto computed
       Vector2f position;
-      /// Determines weather the collider is configured as a trigger.
+      /// Determines whether the collider is configured as a trigger.
       bool isTrigger;
+      /// If the bounds of the collider should be drawn to the screen or not
+      bool draw;
 
       /// @returns The points at which this rigidbody collided with another rigidbody
       [[nodiscard]] std::vector<Vector2f> ContactPoints() const;
@@ -87,6 +89,8 @@ namespace Engine2D::Physics {
       std::vector<Vector2f> contactPoints;
       /// @return A std::array containing the min and max points of the AABB.
       [[nodiscard]] AABB getAABB();
+
+      void OnDrawGizmos2D() override;
   };
 
   /** Collider for 2D physics representing a circle. */

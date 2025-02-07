@@ -26,14 +26,4 @@ namespace Engine2D::Physics {
   };
 }
 
-template<> struct std::hash<ContactPair> {
-  size_t operator()(const ContactPair &pair) const noexcept {
-    const auto hash1 = std::hash<std::shared_ptr<Collider2D>>{}(pair.collider1);
-    const auto hash2 = std::hash<std::shared_ptr<Collider2D>>{}(pair.collider2);
-    const auto hash3 = std::hash<std::shared_ptr<Rigidbody2D>>{}(pair.rigidbody1);
-    const auto hash4 = std::hash<std::shared_ptr<Rigidbody2D>>{}(pair.rigidbody2);
-    return hash1 ^ (hash2 << 1) ^ (hash3 << 2) ^ (hash4 << 3);
-  }
-};
-
 #endif //COLLISION_PAIR_H

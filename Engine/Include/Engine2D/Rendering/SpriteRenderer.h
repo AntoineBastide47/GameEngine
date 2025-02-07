@@ -8,7 +8,6 @@
 #define SPRITERENDERER_H
 
 #include <map>
-#include <unordered_set>
 
 namespace Engine2D {
   class Game2D;
@@ -30,9 +29,10 @@ namespace Engine2D::Rendering {
     /// Shader that controls the rendering pipeline for the sprite, including transformations and textures.
     static std::shared_ptr<Shader> shader;
     /// Stores the vertex array configuration for the quad.
-    static unsigned int quadVAO;
+    static uint quadVAO;
+    static uint batchVBO;
     /// The id of the previously drawn texture
-    static unsigned int lastBoundTexture;
+    static uint lastBoundTexture;
 
     SpriteRenderer() = default;
     ~SpriteRenderer();
@@ -43,7 +43,7 @@ namespace Engine2D::Rendering {
      */
     static void initRenderData();
     /// Renders all the given entities
-    static void render(const std::map<int, std::unordered_set<std::shared_ptr<Entity2D>>> &entities);
+    static void render(const std::map<int, std::vector<std::shared_ptr<Entity2D>>> &entities);
   };
 }
 

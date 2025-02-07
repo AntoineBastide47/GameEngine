@@ -11,7 +11,7 @@
 #include "Common/Log.h"
 
 namespace Engine {
-  std::unordered_set<int64_t> Log::messagesSent;
+  std::vector<int64_t> Log::messagesSent;
 
   void Log::Print(const std::string &message) {
     std::cout << message;
@@ -44,10 +44,10 @@ namespace Engine {
 
   void Log::show(const std::string &msg, const bool showTrace) {
     const auto hash = hashStringToInt64(msg);
-    if (messagesSent.contains(hash))
+    if (std::ranges::find(messagesSent, hash) != messagesSent.end())
       return;
 
-    messagesSent.insert(hash);
+    messagesSent.emplace_back(hash);
     std::cout << std::endl << msg << std::endl;
     if (showTrace) {
       cpptrace::generate_trace().print();

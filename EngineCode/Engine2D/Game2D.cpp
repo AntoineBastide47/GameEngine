@@ -17,6 +17,7 @@
 #include "Common/Settings.h"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.h"
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.h"
+#include "Engine2D/Rendering/ShapeRenderer.h"
 #include "Input/Gamepad.h"
 #include "Input/Keyboard.h"
 #include "Input/Mouse.h"
@@ -27,8 +28,7 @@ namespace Engine2D {
 
   Game2D::Game2D(const int width, const int height, const char *title)
     : aspectRatio(Vector2f::One), title(title), width(width), height(height), window(nullptr),
-      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), currentFrameNeedsRendering(false),
-      physics2D(nullptr), physicsAccumulator(0) {
+      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), physics2D(nullptr), physicsAccumulator(0) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -79,7 +79,6 @@ namespace Engine2D {
       this->addEntities();
       this->removeEntities();
 
-      this->resetFlags();
       this->processInput();
       this->fixedUpdate();
       this->update();
@@ -89,10 +88,7 @@ namespace Engine2D {
       // FPS calculation
       oneSecondTimer += deltaTime;
       while (oneSecondTimer >= 1.0f) {
-        std::cout << "FPS: " << frameCounter;
-        if (Engine::Settings::Graphics::GetFrameSkippingEnabled())
-          std::cout << " (Only necessary frames rendered)";
-        std::cout << std::endl;
+        std::cout << "FPS: " << frameCounter << std::endl;
         oneSecondTimer -= 1.0f;
         frameCounter = 0;
         physicsAccumulator = 0.0f;
@@ -184,7 +180,6 @@ namespace Engine2D {
     ResourceManager::GetShader("sprite")->SetInteger("sprite", 0, true);
     ResourceManager::GetShader("sprite")->SetMatrix4("projection", projection);
     Rendering::SpriteRenderer::shader = ResourceManager::GetShader("sprite");
-    Rendering::SpriteRenderer::initRenderData();
 
     // Configure the particle system shader
     ResourceManager::LoadShader(
@@ -193,19 +188,13 @@ namespace Engine2D {
     ResourceManager::GetShader("particle")->SetInteger("sprite", 0, true);
     ResourceManager::GetShader("particle")->SetMatrix4("projection", projection);
 
-    ParticleSystemRenderer2D::initialize();
+    ResourceManager::LoadShader("EngineInclude/Shaders/shape.vert", "EngineInclude/Shaders/shape.frag", "", "shape");
+    ResourceManager::GetShader("shape")->SetMatrix4("projection", projection, true);
+    Rendering::ShapeRenderer::shader = ResourceManager::GetShader("shape");
 
     physics2D = new Physics2D();
 
     this->OnInitialize();
-  }
-
-  void Game2D::resetFlags() {
-    // Reset the update flags of the entities
-    for (const auto &entity: entities)
-      if (entity && entity->IsActive())
-        entity->transform.wasUpdated = false;
-    currentFrameNeedsRendering = false;
   }
 
   void Game2D::processInput() {
@@ -223,9 +212,8 @@ namespace Engine2D {
       if (entity && entity->IsActive()) {
         entity->OnUpdate();
         for (const auto &component: entity->components)
-          if (component->IsActive())
+          if (component && component->IsActive())
             component->OnUpdate();
-        currentFrameNeedsRendering = currentFrameNeedsRendering || entity->transform.wasUpdated;
       } else if (!entity)
         foundNull = true;
     }
@@ -254,22 +242,29 @@ namespace Engine2D {
     }
   }
 
-  void Game2D::render(const bool override) const {
+  void Game2D::render() const {
     // Make sure there is something to render
     if (!entities.empty() && !entitiesToRender.empty()) {
-      // Check whether we should skip duplicate frame
-      if (override || (!Engine::Settings::Graphics::GetFrameSkippingEnabled() || (
-                         Engine::Settings::Graphics::GetFrameSkippingEnabled() && currentFrameNeedsRendering))) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Rendering::SpriteRenderer::render(entitiesToRender);
-        ParticleSystemRenderer2D::render();
+      Rendering::SpriteRenderer::render(entitiesToRender);
+      ParticleSystemRenderer2D::render();
+      this->onDrawGizmos2D();
 
-        // Prepare the next frame
-        glfwSwapBuffers(window);
-        frameCounter++;
-      }
+      // Prepare the next frame
+      glfwSwapBuffers(window);
+      frameCounter++;
     }
+  }
+
+  void Game2D::onDrawGizmos2D() const {
+    for (const auto &entity: entities)
+      if (entity->IsActive()) {
+        entity->OnDrawGizmos2D();
+        for (const auto &component: entity->components)
+          if (component->IsActive())
+            component->OnDrawGizmos2D();
+      }
   }
 
   void Game2D::limitFrameRate() {
@@ -297,6 +292,7 @@ namespace Engine2D {
     entitiesToRemove.clear();
     entitiesToRemove.swap(entities);
     removeEntities();
+    entities.clear();
     entitiesToRender.clear();
 
     // Deallocate all the game resources
@@ -321,9 +317,9 @@ namespace Engine2D {
 
   void Game2D::addEntities() {
     for (auto entity: entitiesToAdd) {
-      entities.insert(entity);
+      entities.emplace_back(entity);
       if (entity->texture)
-        entitiesToRender[entity->texture->id].insert(entity);
+        entitiesToRender[entity->texture->id].emplace_back(entity);
       entity->initialize();
     }
     entitiesToAdd.clear();
@@ -331,15 +327,15 @@ namespace Engine2D {
 
   void Game2D::removeEntities() {
     for (auto it = instance->entitiesToRemove.begin(); it != instance->entitiesToRemove.end();) {
-      auto entity = *it;
+      const auto entity = *it;
 
       // If the entity has a texture, remove it from the draw list
       if (entity->texture)
-        entitiesToRender[entity->texture->id].erase(entity);
+        std::erase(entitiesToRender[entity->texture->id], entity);
 
       // Remove the entity from the game
-      if (entities.erase(entity) > 0)
-        entity->destroy();
+      std::erase(entities, entity);
+      entity->destroy();
 
       // Erase the entity and update the iterator
       it = instance->entitiesToRemove.erase(it);
@@ -348,7 +344,7 @@ namespace Engine2D {
 
   void Game2D::removeEntity(const std::shared_ptr<Entity2D> &entity) {
     if (entity && instance && !instance->entities.empty())
-      instance->entitiesToRemove.insert(entity);
+      instance->entitiesToRemove.emplace_back(entity);
   }
 
   void Game2D::framebuffer_size_callback(GLFWwindow *window, const int, const int) {
@@ -376,16 +372,16 @@ namespace Engine2D {
     const int viewHeight = static_cast<int>(static_cast<float>(initialSize.y) * viewportRatio.y);
 
     // Center the viewport
-    glViewport((framebufferWidth - viewWidth) >> 1, (framebufferHeight - viewHeight) >> 1, viewWidth, viewHeight);
+    glViewport((framebufferWidth - viewWidth) / 2, (framebufferHeight - viewHeight) / 2, viewWidth, viewHeight);
   }
 
   void Game2D::window_refresh_callback(GLFWwindow *) {
-    instance->render(true);
+    instance->render();
   }
 
   void Game2D::window_pos_callback(GLFWwindow *window, int, int) {
     framebuffer_size_callback(window, instance->width, instance->height);
-    instance->render(true);
+    instance->render();
   }
 
   void Game2D::scroll_callback(GLFWwindow *, double, const double yOffset) {

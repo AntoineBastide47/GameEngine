@@ -43,7 +43,7 @@ namespace Engine2D::Physics {
   ) {
     if (col1->type == Collider2D::Circle && col2->type == Collider2D::Circle) {
       findCirclesContactPoint(
-        col1->getPosition(), col2->getPosition(), col1->Transform()->WorldHalfScale().x, contactPoint1
+        col1->getPosition(), col2->getPosition(), col1->Transform()->GetWorldHalfScale().x, contactPoint1
       );
       *contactCount = 1;
     } else if (col1->type == Collider2D::Circle && col2->type != Collider2D::Circle) {

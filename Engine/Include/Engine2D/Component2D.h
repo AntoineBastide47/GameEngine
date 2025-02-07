@@ -48,6 +48,8 @@ namespace Engine2D {
       virtual void OnUpdate() {}
       /// Called once per physics update.
       virtual void OnFixedUpdate() {}
+      /// Used to draw debug information to the screen
+      virtual void OnDrawGizmos2D() {}
       /// Called when the entity is removed from the game or when the game quits.
       virtual void OnDestroy() {}
     private:

@@ -11,19 +11,13 @@
 
 namespace Engine2D {
   class ParticleSystem2D;
-}
-namespace Engine2D {
   class ParticleSystemRenderer2D {
     friend class Entity2D;
     friend class Game2D;
 
-    /// The vertices that will be sent to the VAO
-    static const float vertices[24];
-    /// The vertex array buffer used for rendering
-    static unsigned int VAO;
+    /// All the particle systems in the game
     static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystems;
 
-    static void initialize();
     static void render();
 
     static void addParticleSystem(const std::shared_ptr<ParticleSystem2D> &particleSystem);

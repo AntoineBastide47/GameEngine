@@ -1,5 +1,5 @@
 #include <cmrc/cmrc.hpp>
-#include <2D/Game2D.h>
+#include <Engine2D/Game2D.h>
 
 #include "GameCode/{{PROJECT_NAME}}.h"
 

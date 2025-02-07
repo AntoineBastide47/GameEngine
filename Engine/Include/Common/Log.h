@@ -9,7 +9,6 @@
 
 #include <regex>
 #include <string>
-#include <unordered_set>
 
 namespace Engine {
   /**
@@ -45,7 +44,7 @@ namespace Engine {
        */
       static std::nullptr_t Error(const std::string &msg);
     private:
-      static std::unordered_set<int64_t> messagesSent;
+      static std::vector<int64_t> messagesSent;
       Log() = default;
       /**
        * Log's the given message to the console with the stack trace

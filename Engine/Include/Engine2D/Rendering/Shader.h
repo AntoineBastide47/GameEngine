@@ -19,7 +19,7 @@ namespace Engine2D::Rendering {
     friend class Engine2D::ResourceManager;
     public:
       /// Used to reference and manage this shader program within OpenGL.
-      unsigned int id;
+      uint id;
 
       Shader() = default;
 
@@ -119,7 +119,7 @@ namespace Engine2D::Rendering {
       /** Clears the shader program, releasing associated resources. */
       void clear();
       /// Checks for compilation or linking errors in shader objects.
-      static void checkCompileErrors(unsigned int object, const std::string &type);
+      static void checkCompileErrors(uint object, const std::string &type);
   };
 }
 

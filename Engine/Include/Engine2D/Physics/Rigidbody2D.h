@@ -9,7 +9,6 @@
 
 #include "Engine2D/Component2D.h"
 #include "Engine2D/Types/Vector2.h"
-#include "Common/Property.h"
 #include "Types/float01.h"
 
 namespace Engine2D {
@@ -33,8 +32,6 @@ namespace Engine2D::Physics {
       bool isKinematic;
       /// Flag indicating whether the body is affected by gravity.
       bool affectedByGravity;
-      /// Mass of the rigidbody
-      Engine::Property<float> mass;
       /// Linear velocity of the rigid body.
       Vector2f linearVelocity;
       /// Angular velocity of the body.
@@ -52,6 +49,11 @@ namespace Engine2D::Physics {
       /// Default constructor.
       Rigidbody2D();
 
+      /// Sets the mass of this rigidbody
+      void SetMass(float mass);
+      /// @returns The mass of this rigidbody
+      [[nodiscard]] float GetMass() const;
+
       /**
        * Applies a force to the rigid body.
        * @param force The force vector to apply.
@@ -64,6 +66,8 @@ namespace Engine2D::Physics {
       ///  - dynamic: 0.4f
       void DefaultFriction();
     private:
+      /// Mass of the rigidbody
+      float mass;
       /// Inverse of the mass (cached to only use the division when mass changes)
       float massInv;
       /// Inertia of the rigidbody
@@ -76,7 +80,6 @@ namespace Engine2D::Physics {
       /// Calculates the inertia of this body using the given collider
       void computeInertia(const std::shared_ptr<Collider2D> &collider);
 
-      /// Simulates a step of the physics simulation for the current rigidbody
       void OnFixedUpdate() override;
   };
 }

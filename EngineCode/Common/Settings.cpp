@@ -40,14 +40,9 @@ namespace Engine {
     return allowResize;
   }
 
-  bool Settings::Graphics::frameSkippingEnabled = false;
   bool Settings::Graphics::vsyncEnabled = false;
   bool Settings::Graphics::maintainAspectRatio = true;
   unsigned int Settings::Graphics::targetFrameRate = 0;
-
-  void Settings::Graphics::SetFrameSkippingEnabled(bool newState) {
-    frameSkippingEnabled = newState;
-  }
 
   void Settings::Graphics::SetVsyncEnabled(const bool newState) {
     vsyncEnabled = newState;
@@ -75,10 +70,6 @@ namespace Engine {
       Engine2D::Game2D::instance->targetFrameRate = 0;
       Engine2D::Game2D::instance->targetRenderRate = 0;
     }
-  }
-
-  unsigned int Settings::Graphics::GetFrameSkippingEnabled() {
-    return frameSkippingEnabled;
   }
 
   bool Settings::Graphics::GetVsyncEnabled() {

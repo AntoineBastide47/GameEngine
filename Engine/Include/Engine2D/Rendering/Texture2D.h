@@ -20,7 +20,7 @@ namespace Engine2D::Rendering {
     friend class Engine2D::ParticleSystem2D;
     public:
       /// The OpenGL id of this texture
-      unsigned int id;
+      uint id;
       ///  The width of this texture in pixels.
       int width;
       ///  The height of this texture in pixels.

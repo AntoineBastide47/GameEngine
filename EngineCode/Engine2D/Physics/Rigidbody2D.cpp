@@ -12,19 +12,22 @@
 
 namespace Engine2D::Physics {
   Rigidbody2D::Rigidbody2D()
-    : isKinematic(false), affectedByGravity(true), mass(
-        Engine::Property{
-          1.0f, [this] {
-            if (this->mass < 0.0f)
-              this->mass = 0;
-            else if (this->mass == 0.0f)
-              this->massInv = 0;
-            else
-              this->massInv = 1.0f / this->mass;
-          }
-        }
-      ), angularVelocity(0), angularDamping(1), staticFriction(0.6f), dynamicFriction(0.4f), massInv(1), inertia(0),
-      inertiaInv(0) {}
+    : isKinematic(false), affectedByGravity(true), angularVelocity(0), angularDamping(1), staticFriction(0.6f),
+      dynamicFriction(0.4f), mass(1), massInv(1), inertia(0), inertiaInv(0) {}
+
+  void Rigidbody2D::SetMass(const float mass) {
+    if (this->mass <= 0) {
+      this->mass = 0;
+      this->massInv = 0;
+    } else {
+      this->mass = mass;
+      this->massInv = 1.0f / this->mass;
+    }
+  }
+
+  float Rigidbody2D::GetMass() const {
+    return this->mass;
+  }
 
   void Rigidbody2D::NoFriction() {
     dynamicFriction = 0.0f;
@@ -44,11 +47,11 @@ namespace Engine2D::Physics {
     const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
     this->linearVelocity +=
       (affectedByGravity * Engine::Settings::Physics::GetGravity() + force) * massInv * fixedDeltaTime * 0.5f;
-    this->Transform()->position += this->linearVelocity * fixedDeltaTime;
+    this->Transform()->UpdatePositionAndRotation(
+      this->linearVelocity * fixedDeltaTime, this->angularVelocity * fixedDeltaTime * angularDamping
+    );
     this->linearVelocity +=
       (affectedByGravity * Engine::Settings::Physics::GetGravity() + force) * massInv * fixedDeltaTime * 0.5f;
-
-    this->Transform()->rotation += this->angularVelocity * fixedDeltaTime * angularDamping;
     this->force = Vector2f::Zero;
   }
 
@@ -60,10 +63,12 @@ namespace Engine2D::Physics {
     switch (collider->type) {
       case Collider2D::None: inertia = inertiaInv = 0.0f;
         break;
-      case Collider2D::Circle: inertia = 0.5f * mass * Transform()->WorldHalfScale().x * Transform()->WorldHalfScale().x;
+      case Collider2D::Circle: inertia = 0.5f * mass * Transform()->GetWorldHalfScale().x * Transform()->GetWorldHalfScale().
+                                         x;
         inertiaInv = 1.0f / inertia;
         break;
-      case Collider2D::Rectangle: inertia = 1.0f / 12.0f * mass * Transform()->WorldScale() * Transform()->WorldScale();
+      case Collider2D::Rectangle: inertia = 1.0f / 12.0f * mass * Transform()->GetWorldScale() * Transform()->
+                                            GetWorldScale();
         inertiaInv = 1.0f / inertia;
         break;
       case Collider2D::Polygon: {

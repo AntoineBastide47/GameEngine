@@ -4,7 +4,7 @@ BUILD_TYPE := ""
 .PHONY: help check-platform install-dependencies build build-debug build-release build-tool build-tools run-stripper create-project
 
 default: help
-help:
+help: check-platform
 	@echo "Available commands:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
@@ -14,7 +14,7 @@ check-platform:
 		 exit 1; \
 	fi
 
-install-dependencies: check-platform ## Installs all the dependencies required to build the engine and games
+install-dependencies: check-platform ## Installs all the dependencies required to build the engine
 	@if [ "$$(uname)" = "Darwin" ]; then \
   		brew install glew glfw glm; \
   	elif [ "$$(uname)" = "Linux" ]; then \

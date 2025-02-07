@@ -39,9 +39,12 @@ namespace Engine2D {
       return;
 
     if (this->texture)
-      Game2D::instance->entitiesToRender[this->texture->id].erase(shared_from_this());
+      for (const auto it = Game2D::instance->entitiesToRender[this->texture->id].begin();
+           it != Game2D::instance->entitiesToRender[this->texture->id].end();)
+        if (*it == shared_from_this())
+          Game2D::instance->entitiesToRender[this->texture->id].erase(it);
     this->texture = texture;
-    Game2D::instance->entitiesToRender[this->texture->id].insert(shared_from_this());
+    Game2D::instance->entitiesToRender[this->texture->id].emplace_back(shared_from_this());
   }
 
   std::shared_ptr<Texture2D> Entity2D::Texture() const {

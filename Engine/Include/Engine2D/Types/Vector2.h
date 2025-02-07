@@ -32,6 +32,8 @@ namespace Engine2D {
        * @param y The y-component of the vector.
        */
       Vector2(T x, T y) : x(x), y(y) {}
+      /// Constructs a vector with the specified x and y components from the given glm vector.
+      explicit Vector2(glm::vec2 other) : x(other.x), y(other.y) {}
 
       /// Constant for a zero vector (0, 0).
       static const Vector2 Zero;
@@ -102,7 +104,9 @@ namespace Engine2D {
        */
       Vector2 operator/(const float scalar) const {
         if (scalar == 0.0f) {
-          Engine::Log::Warning("Can not divide a Vector2 by 0, resulting operation will default to not modify the Vector2 instance.");
+          Engine::Log::Warning(
+            "Can not divide a Vector2 by 0, resulting operation will default to not modify the Vector2 instance."
+          );
           return *this;
         }
         return *this * (1 / scalar);
@@ -114,7 +118,9 @@ namespace Engine2D {
        */
       Vector2 &operator/=(const float scalar) {
         if (scalar == 0.0f) {
-          Engine::Log::Warning("Can not divide a Vector2 by 0, resulting operation will default to not modify the Vector2 instance.");
+          Engine::Log::Warning(
+            "Can not divide a Vector2 by 0, resulting operation will default to not modify the Vector2 instance."
+          );
           return *this;
         }
         return *this = *this * (1 / scalar);
@@ -211,6 +217,11 @@ namespace Engine2D {
       /// @returns The biggest value between the x and y coordinates
       [[nodiscard]] constexpr T Max() const {
         return std::max(x, y);
+      }
+
+      /// @returns A vector with the sign of each of its components
+      [[nodiscard]] constexpr Vector2 SignVector() const {
+        return Vector2{T(x >= 0 ? 1 : -1), T(y >= 0 ? 1 : -1)};
       }
 
       /// @returns The normalized version of the current vector with a magnitude of 1
@@ -368,9 +379,13 @@ namespace Engine2D {
         if (const float v2Mag = v2.Magnitude(); v1Mag > 0.0f && v2Mag > 0.0f)
           return std::acosf(v1 * v2 / (v1Mag * v2Mag));
         if (v1Mag <= 0.0f)
-          Engine::Log::Warning("Parameter v1 can not have be a zero \"(0, 0)\" Vector2, resulting operation will return 0.0f");
+          Engine::Log::Warning(
+            "Parameter v1 can not have be a zero \"(0, 0)\" Vector2, resulting operation will return 0.0f"
+          );
         else
-          Engine::Log::Warning("Parameter v2 can not have be a zero \"(0, 0)\" Vector2, resulting operation will return 0.0f");
+          Engine::Log::Warning(
+            "Parameter v2 can not have be a zero \"(0, 0)\" Vector2, resulting operation will return 0.0f"
+          );
         return 0.0f;
       }
 

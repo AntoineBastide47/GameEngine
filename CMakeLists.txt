@@ -57,7 +57,6 @@ add_library(Engine2D SHARED
     Engine/Include/Engine2D/Physics/Physics2D.h
     EngineCode/Engine2D/Physics/Rigidbody2D.cpp
     Engine/Include/Engine2D/Physics/Rigidbody2D.h
-    Engine/Include/Common/Property.h
     EngineCode/Engine2D/Physics/CollisionManifold.cpp
     Engine/Include/Engine2D/Physics/CollisionManifold.h
     EngineCode/Types/float01.cpp
@@ -73,6 +72,8 @@ add_library(Engine2D SHARED
     Engine/Include/Engine2D/ParticleSystem/ParticleSystem2D.h
     EngineCode/Engine2D/ParticleSystem/ParticleSystemRenderer2D.cpp
     Engine/Include/Engine2D/ParticleSystem/ParticleSystemRenderer2D.h
+    EngineCode/Engine2D/Rendering/ShapeRenderer.cpp
+    Engine/Include/Engine2D/Rendering/ShapeRenderer.h
 )
 
 set_target_properties(Engine2D PROPERTIES OUTPUT_NAME Engine2D-0.4.1 PREFIX "")

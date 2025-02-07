@@ -16,16 +16,16 @@ namespace Engine2D::Rendering {
   }
 
   void Shader::compile(const char *vertexSource, const char *fragmentSource, const char *geometrySource) {
-    unsigned int gShader = 0;
+    uint gShader = 0;
 
     // Create the vertex shader
-    const unsigned int sVertex = glCreateShader(GL_VERTEX_SHADER);
+    const uint sVertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(sVertex, 1, &vertexSource, nullptr);
     glCompileShader(sVertex);
     checkCompileErrors(sVertex, "VERTEX");
 
     // Create the fragment shader
-    const unsigned int sFragment = glCreateShader(GL_FRAGMENT_SHADER);
+    const uint sFragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(sFragment, 1, &fragmentSource, nullptr);
     glCompileShader(sFragment);
     checkCompileErrors(sFragment, "FRAGMENT");
@@ -117,7 +117,7 @@ namespace Engine2D::Rendering {
     }
   }
 
-  void Shader::checkCompileErrors(const unsigned int object, const std::string &type) {
+  void Shader::checkCompileErrors(const uint object, const std::string &type) {
     int success;
     char infoLog[1024];
     if (type != "PROGRAM") {

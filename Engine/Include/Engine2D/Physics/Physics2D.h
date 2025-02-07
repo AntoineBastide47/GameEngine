@@ -7,8 +7,6 @@
 #ifndef PHYSICS2D_H
 #define PHYSICS2D_H
 
-#include <unordered_set>
-
 #include "Engine2D/Physics/CollisionGrid.h"
 #include "Engine2D/Physics/CollisionManifold.h"
 #include "Engine2D/Physics/CollisionPair.h"
@@ -42,18 +40,18 @@ namespace Engine2D::Physics {
     CollisionGrid collisionGrid;
 
     /// The list of all the colliders that are in the game
-    std::unordered_set<std::shared_ptr<Collider2D>> colliders;
+    std::vector<std::shared_ptr<Collider2D>> colliders;
     /// The list of colliders to add to the future physics simulations steps
-    std::unordered_set<std::shared_ptr<Collider2D>> collidersToAdd;
+    std::vector<std::shared_ptr<Collider2D>> collidersToAdd;
     /// The list of colliders to remove from the future physics simulations steps
-    std::unordered_set<std::shared_ptr<Collider2D>> collidersToRemove;
+    std::vector<std::shared_ptr<Collider2D>> collidersToRemove;
     /// The list of currently active rigidbodies
     std::vector<std::shared_ptr<Collider2D>> activeColliders;
 
     /// The list of pairs of rigidbodies that had a contact during this frame
-    std::unordered_set<ContactPair> contactPairs;
+    std::vector<ContactPair> contactPairs;
     /// The list of pairs of rigidbodies that collided last simulation
-    std::unordered_set<ContactPair> previousCollisionPairs;
+    std::vector<ContactPair> previousCollisionPairs;
 
     /// Creates the physics world instance and sets the update rate
     Physics2D();

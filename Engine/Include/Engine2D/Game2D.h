@@ -9,7 +9,6 @@
 
 #include <functional>
 #include <string>
-#include <unordered_set>
 #include <cmrc/cmrc.hpp>
 
 #include "Common/RenderingHeaders.h"
@@ -84,7 +83,7 @@ namespace Engine2D {
       static std::shared_ptr<T> AddEntity(std::string name = "Entity") {
         if (instance) {
           std::shared_ptr<T> entity = std::make_shared<T>(name);
-          instance->entitiesToAdd.insert(entity);
+          instance->entitiesToAdd.push_back(entity);
           return entity;
         }
         return nullptr;
@@ -123,13 +122,13 @@ namespace Engine2D {
       ResourceLoader resourceLoader;
 
       /// All the entities currently in the game
-      std::unordered_set<std::shared_ptr<Entity2D>> entities;
+      std::vector<std::shared_ptr<Entity2D>> entities;
       /// Entities scheduled to be added to the game
-      std::unordered_set<std::shared_ptr<Entity2D>> entitiesToAdd;
+      std::vector<std::shared_ptr<Entity2D>> entitiesToAdd;
       /// Entities scheduled to be removed from the game
-      std::unordered_set<std::shared_ptr<Entity2D>> entitiesToRemove;
+      std::vector<std::shared_ptr<Entity2D>> entitiesToRemove;
       /// The entities of the game grouped by there texture id
-      std::map<int, std::unordered_set<std::shared_ptr<Entity2D>>> entitiesToRender;
+      std::map<int, std::vector<std::shared_ptr<Entity2D>>> entitiesToRender;
 
       /// The time during two frames
       float deltaTime;
@@ -139,8 +138,6 @@ namespace Engine2D {
       float targetFrameRate;
       /// The rate at which the game should update
       float targetRenderRate;
-      /// If the new frame needs rendering
-      bool currentFrameNeedsRendering;
 
       /// Physics simulator
       Physics::Physics2D *physics2D;
@@ -149,8 +146,6 @@ namespace Engine2D {
 
       /// Initializes the game
       void initialize();
-      /// Resets the flags of the game
-      void resetFlags();
       /// Processes all the inputs to the game
       static void processInput();
       /// Update the game
@@ -158,7 +153,8 @@ namespace Engine2D {
       /// Simulates a step of the physics simulation
       void fixedUpdate();
       /// Renders the game
-      void render(bool override = false) const;
+      void render() const;
+      void onDrawGizmos2D() const;
       /// Limits the frame rate of the game if needed
       void limitFrameRate();
       /// Quits the game

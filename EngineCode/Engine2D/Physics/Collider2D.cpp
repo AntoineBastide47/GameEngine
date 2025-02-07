@@ -8,6 +8,7 @@
 #include "Engine2D/Entity2D.h"
 #include "Engine2D/Transform2D.h"
 #include "Engine2D/Physics/Rigidbody2D.h"
+#include "Engine2D/Rendering/ShapeRenderer.h"
 
 namespace Engine2D::Physics {
   Collider2D::Collider2D()
@@ -22,7 +23,7 @@ namespace Engine2D::Physics {
   }
 
   Collider2D::AABB Collider2D::getAABB() {
-    const auto matrix = Transform()->WorldMatrix();
+    const auto matrix = Transform()->GetWorldMatrix();
     if (!rigidbody)
       rigidbody = Entity()->GetComponent<Rigidbody2D>();
     if (initialized && lastModelMatrix == matrix)
@@ -34,8 +35,18 @@ namespace Engine2D::Physics {
     return aabb;
   }
 
+  void Collider2D::OnDrawGizmos2D() {
+    if (!draw)
+      return;
+
+    if (type == Circle)
+      Rendering::ShapeRenderer::DrawCircleWireframe(getPosition(), getScale().x, glm::vec4(0, 1, 0, 1), 32);
+    else
+      Rendering::ShapeRenderer::DrawPolygonWireframe(transformedVertices, glm::vec4(1, 0, 0, 1));
+  }
+
   Vector2f Collider2D::getPosition() const {
-    return (autoCompute ? Transform()->WorldPosition() : position) + offset;
+    return (autoCompute ? Transform()->GetWorldPosition() : position) + offset;
   }
 
   CircleCollider2D::CircleCollider2D()
@@ -49,7 +60,7 @@ namespace Engine2D::Physics {
   }
 
   Vector2f CircleCollider2D::getScale() {
-    return autoCompute ? Transform()->WorldHalfScale() : Vector2f::One * radius;
+    return autoCompute ? Transform()->GetWorldHalfScale() : Vector2f::One * radius;
   }
 
   RectangleCollider2D::RectangleCollider2D()
@@ -59,17 +70,17 @@ namespace Engine2D::Physics {
 
   void RectangleCollider2D::computeAABB() {
     // Find the bounds of the rectangle
-    const float left = -(autoCompute ? Transform()->WorldHalfScale().x : width);
+    const float left = -(autoCompute ? Transform()->GetWorldHalfScale().x : width);
     const float right = -left;
-    const float top = autoCompute ? Transform()->WorldHalfScale().y : height;
+    const float top = autoCompute ? Transform()->GetWorldHalfScale().y : height;
     const float bottom = -top;
 
     // Transform the bounds of the rectangle
     this->transformedVertices = {
-      Vector2(left, top).Rotated(Transform()->WorldRotation()) + getPosition(),
-      Vector2(right, top).Rotated(Transform()->WorldRotation()) + getPosition(),
-      Vector2(right, bottom).Rotated(Transform()->WorldRotation()) + getPosition(),
-      Vector2(left, bottom).Rotated(Transform()->WorldRotation()) + getPosition(),
+      Vector2(left, top).Rotated(Transform()->GetWorldRotation()) + getPosition(),
+      Vector2(right, top).Rotated(Transform()->GetWorldRotation()) + getPosition(),
+      Vector2(right, bottom).Rotated(Transform()->GetWorldRotation()) + getPosition(),
+      Vector2(left, bottom).Rotated(Transform()->GetWorldRotation()) + getPosition(),
     };
 
     // Construct the AABB
@@ -84,7 +95,7 @@ namespace Engine2D::Physics {
   }
 
   Vector2f RectangleCollider2D::getScale() {
-    return autoCompute ? Transform()->WorldScale() : Vector2f{width, height};
+    return autoCompute ? Transform()->GetWorldScale() : Vector2f{width, height};
   }
 
   PolygonCollider2D::PolygonCollider2D() {
@@ -101,7 +112,7 @@ namespace Engine2D::Physics {
     // Transform the bounds of the rectangle
     this->transformedVertices.resize(vertices.size());
     for (int i = 0; i < vertices.size(); ++i)
-      this->transformedVertices[i] = vertices[i].Rotated(Transform()->WorldRotation()) + getPosition();
+      this->transformedVertices[i] = vertices[i].Rotated(Transform()->GetWorldRotation()) + getPosition();
 
     // Construct the AABB
     aabb.min = Vector2f::One * std::numeric_limits<float>::max();
