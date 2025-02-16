@@ -38,7 +38,7 @@ namespace Engine2D {
     : loop(false), restart(false), startDelay(0), startLifetime(1), startSize(Vector2f::One),
       simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1),
       duration(1), emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0),
-      instanceVBO(0), quadVAO(0), quadVBO(0), initialized(false) {
+      instanceVBO(0), quadVAO(0), quadVBO(0), initialized(false), aliveCount(0) {
     this->shader = ResourceManager::GetShader("particle");
   }
 
@@ -101,12 +101,10 @@ namespace Engine2D {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    instanceData.reserve(particles.size() * 8);
   }
 
   void ParticleSystem2D::OnUpdate() {
-    if ((!restart && !loop && simulationFinished) || duration == 0)
+    if ((!restart && !loop && simulationFinished) || duration == 0 || emissionRate <= 0 || particles.size() == 0)
       return;
 
     if (restart) {
@@ -115,7 +113,7 @@ namespace Engine2D {
     }
     if (!loop || durationAcc < startDelay)
       durationAcc += Game2D::DeltaTime();
-    if (particles.size() == 0 || durationAcc < startDelay || emissionRate <= 0)
+    if (durationAcc < startDelay)
       return;
 
     if (loop || durationAcc <= duration + startDelay) {
@@ -129,18 +127,20 @@ namespace Engine2D {
     }
 
     // Update all particles.
-    bool allDead = true;
+    aliveCount = 0;
     const float dA = 1.0f / startLifetime;
+    const float dt = Game2D::DeltaTime() * simulationSpeed;
+
     for (auto &p: particles) {
-      const float dt = Game2D::DeltaTime() * simulationSpeed;
       p.lifeTime -= dt;
       if (p.lifeTime > 0.0f) {
         p.position -= p.velocity * dt;
         p.color.a -= dA * dt;
-        allDead = false;
+        ++aliveCount;
       }
     }
-    simulationFinished = !loop && durationAcc > duration + startDelay && allDead;
+
+    simulationFinished = !loop && durationAcc > duration + startDelay && aliveCount == 0;
   }
 
   void ParticleSystem2D::render() {
@@ -153,52 +153,44 @@ namespace Engine2D {
     this->shader->Use();
     this->texture->bind();
 
-    // Sort from youngest to oldest
-    std::ranges::sort(
-      particles, [](const Particle &a, const Particle &b) {
-        return a.lifeTime > b.lifeTime;
-      }
-    );
+    const size_t instanceDataSize = aliveCount * 8;
+    const auto instanceData = new float[instanceDataSize];
+    size_t i = 0;
 
-    // Build per-instance data for all visible particles.
-    // Each instance requires 8 floats: [pos.x, pos.y, scale.x, scale.y, color.r, color.g, color.b, color.a]
     for (const auto &particle: particles) {
-      if (particle.lifeTime <= 0.0f || !particle.Visible())
+      if (particle.lifeTime <= 0.0f)
+        continue;
+      if (!particle.Visible())
         continue;
 
-      glm::vec2 scale = particle.size.toGLM();
+      const glm::vec2 scale = particle.size.toGLM();
       glm::vec2 pos;
       if (simulateInWorldSpace)
         pos = particle.position.toGLM();
       else
         pos = glm::vec2(Transform()->GetWorldMatrix() * glm::vec4(particle.position.toGLM(), 0, 1));
 
-      instanceData.push_back(pos.x);
-      instanceData.push_back(pos.y);
-
-      instanceData.push_back(scale.x);
-      instanceData.push_back(scale.y);
-
-      instanceData.push_back(particle.color.r);
-      instanceData.push_back(particle.color.g);
-      instanceData.push_back(particle.color.b);
-      instanceData.push_back(particle.color.a);
+      instanceData[i + 0] = pos.x;
+      instanceData[i + 1] = pos.y;
+      instanceData[i + 2] = scale.x;
+      instanceData[i + 3] = scale.y;
+      instanceData[i + 4] = particle.color.r;
+      instanceData[i + 5] = particle.color.g;
+      instanceData[i + 6] = particle.color.b;
+      instanceData[i + 7] = particle.color.a;
+      i += 8;
     }
-
-    const int instanceCount = instanceData.size() / 8;
-    if (instanceCount == 0)
-      return;
 
     // Update the instance VBO with new per-particle data.
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, instanceData.size() * sizeof(float), instanceData.data());
+    glBufferSubData(GL_ARRAY_BUFFER, 0, instanceDataSize * sizeof(float), instanceData);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Bind the quad VAO and draw all instances in a single draw call.
     glBindVertexArray(quadVAO);
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 6, instanceCount);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 6, aliveCount);
     glBindVertexArray(0);
-    instanceData.clear();
+    delete[] instanceData;
   }
 
   void ParticleSystem2D::respawnParticle(const uint index) {

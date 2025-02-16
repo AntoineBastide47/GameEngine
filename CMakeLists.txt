@@ -113,6 +113,8 @@ target_include_directories(Engine2D PRIVATE
     ${cpptrace_SOURCE_DIR}/include
 )
 
+target_compile_options(Engine2D PUBLIC -fexperimental-library)
+
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
   target_compile_options(Engine2D PRIVATE
       -O3                     # General optimization

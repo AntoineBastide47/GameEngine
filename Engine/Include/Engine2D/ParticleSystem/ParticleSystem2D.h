@@ -102,7 +102,7 @@ namespace Engine2D {
       uint quadVAO;
       uint quadVBO;
       bool initialized;
-      std::vector<float> instanceData;
+      uint aliveCount;
 
       static const float quadVertices[];
 
