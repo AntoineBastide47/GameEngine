@@ -27,7 +27,7 @@ namespace Engine2D {
   const float Game2D::screenScaleFactor{0.1f};
 
   Game2D::Game2D(const int width, const int height, const char *title)
-    : aspectRatio(Vector2f::One), title(title), width(width), height(height), window(nullptr),
+    : aspectRatio(glm::vec2(1)), title(title), width(width), height(height), window(nullptr),
       deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), physics2D(nullptr), physicsAccumulator(0) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
@@ -44,7 +44,7 @@ namespace Engine2D {
     return screenScaleFactor * static_cast<float>(instance->height) / instance->aspectRatio.y;
   }
 
-  Vector2f Game2D::AspectRatio() {
+  glm::vec2 Game2D::AspectRatio() {
     return instance->aspectRatio;
   }
 
@@ -354,22 +354,21 @@ namespace Engine2D {
     instance->width = framebufferWidth;
     instance->height = framebufferHeight;
 
-    const Vector2<size_t> initialSize = Engine::Settings::Window::GetScreenResolution();
+    const glm::vec<2, size_t> initialSize = Engine::Settings::Window::GetScreenResolution();
 
     // Calculate the proper aspect ratio
     const float ratioX = static_cast<float>(framebufferWidth) / static_cast<float>(initialSize.x);
     const float ratioY = static_cast<float>(framebufferHeight) / static_cast<float>(initialSize.y);
-    instance->aspectRatio = Vector2{ratioX, ratioY};
-
+    instance->aspectRatio = glm::vec2(ratioX, ratioY);
     const bool maintainAspectRatio = Engine::Settings::Graphics::GetMaintainAspectRatio();
-    const auto viewportRatio = Vector2{
-      maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX,
-      maintainAspectRatio ? std::min(ratioX, ratioY) : ratioY
-    };
 
     // Calculate the viewport dimensions
-    const int viewWidth = static_cast<int>(static_cast<float>(initialSize.x) * viewportRatio.x);
-    const int viewHeight = static_cast<int>(static_cast<float>(initialSize.y) * viewportRatio.y);
+    const int viewWidth = static_cast<int>(
+      static_cast<float>(initialSize.x) * (maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX)
+    );
+    const int viewHeight = static_cast<int>(
+      static_cast<float>(initialSize.y) * (maintainAspectRatio ? std::min(ratioX, ratioY) : ratioY)
+    );
 
     // Center the viewport
     glViewport((framebufferWidth - viewWidth) / 2, (framebufferHeight - viewHeight) / 2, viewWidth, viewHeight);

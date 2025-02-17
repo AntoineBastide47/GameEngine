@@ -8,7 +8,6 @@
 #define COLLISIONS_H
 
 #include "Engine2D/Physics/Collider2D.h"
-#include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D::Physics {
   class Collisions {
@@ -30,7 +29,8 @@ namespace Engine2D::Physics {
      * @return True if they collide, false if not
      */
     [[nodiscard]] static bool collide(
-      const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, Vector2f *normal, double *depth
+      const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, glm::vec<2, double> *normal,
+      double *depth
     );
     /**
      * Computes the number of contact points between two rigidbodies when they collide
@@ -42,50 +42,50 @@ namespace Engine2D::Physics {
      */
     static void findContactPoints(
       const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2,
-      Vector2f *contactPoint1, Vector2f *contactPoint2, uint8_t *contactCount
+      glm::vec2 *contactPoint1, glm::vec2 *contactPoint2, uint8_t *contactCount
     );
 
     /// True if the given circle bodies collide, False if not
     static bool circlesIntersect(
-      Vector2f centerA, Vector2f scaleA, Vector2f centerB, Vector2f scaleB, Vector2f *normal, double *depth
+      glm::vec2 centerA, glm::vec2 scaleA, glm::vec2 centerB, glm::vec2 scaleB, glm::vec<2, double> *normal, double *depth
     );
     /// True if the given polygon bodies collide, False if not
     static bool polygonsIntersect(
-      const std::vector<Vector2f> &verticesA, Vector2f positionA, const std::vector<Vector2f> &verticesB,
-      Vector2f positionB, Vector2f *normal, double *depth
+      const std::vector<glm::vec2> &verticesA, glm::vec2 positionA, const std::vector<glm::vec2> &verticesB,
+      glm::vec2 positionB, glm::vec<2, double> *normal, double *depth
     );
     /// True if the given polygon body and circle body collide, False if not
     static bool polygonAndCircleIntersect(
-      const std::vector<Vector2f> &polygonVertices, Vector2f polygonCenter, Vector2f circleCenter,
-      Vector2f circleHalfScale, Vector2f *normal, double *depth
+      const std::vector<glm::vec2> &polygonVertices, glm::vec2 polygonCenter, glm::vec2 circleCenter,
+      glm::vec2 circleHalfScale, glm::vec<2, double> *normal, double *depth
     );
 
     /// Projects the given vertices onto the given axis
-    static void projectVertices(const std::vector<Vector2f> &vertices, Vector2f axis, double *min, double *max);
+    static void projectVertices(const std::vector<glm::vec2> &vertices, glm::vec2 axis, double *min, double *max);
     /// Projects the given circle onto the given axis
     static void projectCircle(
-      Vector2f circleCenter, float circleHalfScale, Vector2f axis, double *min, double *max
+      glm::vec2 circleCenter, float circleHalfScale, glm::vec2 axis, double *min, double *max
     );
     /// Returns the closest point to the given point on the given polygon
-    static Vector2f closestPointOnPolygon(Vector2f circleCenter, const std::vector<Vector2f> &vertices);
+    static glm::vec2 closestPointOnPolygon(glm::vec2 circleCenter, const std::vector<glm::vec2> &vertices);
 
     /// Finds the contact point between the given circles
     static void findCirclesContactPoint(
-      Vector2f centerA, Vector2f centerB, float radiusA, Vector2f *contactPoint
+      glm::vec2 centerA, glm::vec2 centerB, float radiusA, glm::vec2 *contactPoint
     );
     /// Finds the contact point between the given circle and polygon
     static void findCircleAndPolygonContactPoint(
-      Vector2f circleCenter, const std::vector<Vector2f> &vertices, Vector2f *contactPoint
+      glm::vec2 circleCenter, const std::vector<glm::vec2> &vertices, glm::vec2 *contactPoint
     );
     /// Finds the contact point(s) between the given polygons
     static void findPolygonsContactPoint(
-      const std::vector<Vector2f> &verticesA, const std::vector<Vector2f> &verticesB, Vector2f *contactPoint1,
-      Vector2f *contactPoint2, uint8_t *contactCount
+      const std::vector<glm::vec2> &verticesA, const std::vector<glm::vec2> &verticesB, glm::vec2 *contactPoint1,
+      glm::vec2 *contactPoint2, uint8_t *contactCount
     );
 
     /// Finds the distance and the closest point on the given segment between the given point and segment
     static void pointSegmentDistance(
-      Vector2f p, Vector2f pointA, Vector2f pointB, double *distanceSquared, Vector2f *closestPoint
+      glm::vec2 p, glm::vec2 pointA, glm::vec2 pointB, double *distanceSquared, glm::vec2 *closestPoint
     );
   };
 }

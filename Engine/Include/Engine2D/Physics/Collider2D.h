@@ -7,8 +7,10 @@
 #ifndef COLLIDER2D_H
 #define COLLIDER2D_H
 
+#include <vector>
+#include <glm/glm.hpp>
+
 #include "Engine2D/Component2D.h"
-#include "Engine2D/Types/Vector2.h"
 #include "Types/float01.h"
 
 namespace Engine2D {
@@ -38,31 +40,33 @@ namespace Engine2D::Physics {
       /// Coefficient of bounciness  of the rigid body.
       Engine::float01 bounciness;
       /// The positional offset of the collider in regard to the position of the entity it is attached to
-      Vector2f offset;
+      glm::vec2 offset;
       /// If true, the colliders bounds is computed using the transform of the entity it is attached to (works in most cases).
       /// If false, you need to specify the bounds of the entity manually (ex: width, height, radius).
       bool autoCompute;
       /// The position of the collider if it is not auto computed
-      Vector2f position;
+      glm::vec2 position;
       /// Determines whether the collider is configured as a trigger.
       bool isTrigger;
       /// If the bounds of the collider should be drawn to the screen or not
       bool draw;
 
       /// @returns The points at which this rigidbody collided with another rigidbody
-      [[nodiscard]] std::vector<Vector2f> ContactPoints() const;
+      [[nodiscard]] std::vector<glm::vec2> ContactPoints() const;
       Type GetType() const;
     protected:
       struct AABB {
-        Vector2f min;
-        Vector2f max;
+        glm::vec2 min;
+        glm::vec2 max;
+
+        AABB() : min(glm::vec2(0)), max(glm::vec2(0)) {}
       };
       /// The type of this collider
       Type type;
       /// The vertices that make up the initial collider.
-      std::vector<Vector2f> vertices;
+      std::vector<glm::vec2> vertices;
       /// The vertices that make up the initial collider transformed to match its current position, rotation and scale.
-      std::vector<Vector2f> transformedVertices;
+      std::vector<glm::vec2> transformedVertices;
       /// Weather or not this collider has been initialized or not
       bool initialized;
       /// The axis-aligned bounding box  of this rigidbody.
@@ -78,15 +82,15 @@ namespace Engine2D::Physics {
       virtual void computeAABB() {}
 
       /// @returns The current position of the collider taking into account if it is auto computed or not
-      [[nodiscard]] Vector2f getPosition() const;
+      [[nodiscard]] glm::vec2 getPosition() const;
 
       /// @returns The current scale of the collider taking into account if it is auto computed or not
-      [[nodiscard]] virtual Vector2f getScale() {
+      [[nodiscard]] virtual glm::vec2 getScale() {
         return {};
       }
     private:
       /// The points at which this rigidbody collided with another rigidbody
-      std::vector<Vector2f> contactPoints;
+      std::vector<glm::vec2> contactPoints;
       /// @return A std::array containing the min and max points of the AABB.
       [[nodiscard]] AABB getAABB();
 
@@ -101,7 +105,7 @@ namespace Engine2D::Physics {
       CircleCollider2D();
     protected:
       void computeAABB() override;
-      Vector2f getScale() override;
+      glm::vec2 getScale() override;
   };
 
   /** Collider for 2D physics representing a rectangle. */
@@ -114,7 +118,7 @@ namespace Engine2D::Physics {
       RectangleCollider2D();
     protected:
       void computeAABB() override;
-      Vector2f getScale() override;
+      glm::vec2 getScale() override;
   };
 
   /** Collider for 2D physics representing a polygon. */

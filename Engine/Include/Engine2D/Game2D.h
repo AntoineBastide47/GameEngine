@@ -13,7 +13,6 @@
 
 #include "Common/RenderingHeaders.h"
 #include "Engine2D/Entity2D.h"
-#include "Engine2D/Types/Vector2.h"
 #include "Input/InputContexts.h"
 
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
@@ -47,7 +46,7 @@ namespace Engine2D {
       /// @returns The height of the viewport of the window
       [[nodiscard]] static float ViewportHeight();
       /// @returns The aspect ratio of the viewport
-      [[nodiscard]] static Vector2f AspectRatio();
+      [[nodiscard]] static glm::vec2 AspectRatio();
       /// @returns The time span between the current frame and the last frame
       [[nodiscard]] static float DeltaTime();
       /// @returns The fixed time span between the physics updates
@@ -105,7 +104,7 @@ namespace Engine2D {
       /// be 192x108.
       static const float screenScaleFactor;
       /// The current aspect ratio of the window
-      Vector2f aspectRatio;
+      glm::vec2 aspectRatio;
 
       /// The title of the game window
       const char *title;

@@ -10,11 +10,11 @@
 #include "Common/RenderingHeaders.h"
 
 namespace Engine {
-  Engine2D::Vector2<size_t> Settings::Window::resolution = Engine2D::Vector2<size_t>{800, 600};
+  glm::vec<2, size_t> Settings::Window::resolution = glm::vec<2, size_t>(800, 600);
   std::string Settings::Window::title = "Game Window";
   bool Settings::Window::allowResize = true;
 
-  void Settings::Window::SetScreenResolution(const Engine2D::Vector2<size_t> newValue) {
+  void Settings::Window::SetScreenResolution(const glm::vec<2, size_t> newValue) {
     resolution = newValue;
     glfwSetWindowSize(Engine2D::Game2D::instance->window, newValue.x, newValue.y);
   }
@@ -28,7 +28,7 @@ namespace Engine {
     allowResize = newState;
   }
 
-  Engine2D::Vector2<size_t> Settings::Window::GetScreenResolution() {
+  glm::vec<2, size_t> Settings::Window::GetScreenResolution() {
     return resolution;
   }
 
@@ -87,8 +87,8 @@ namespace Engine {
   float Settings::Physics::fixedDeltaTime = 0.02f;
   bool Settings::Physics::frictionEnabled = true;
   bool Settings::Physics::useScreenPartitioning = false;
-  Engine2D::Vector2<size_t> Settings::Physics::partitionSize = Engine2D::Vector2<size_t>{4, 4};
-  Engine2D::Vector2f Settings::Physics::gravity = Engine2D::Vector2f(0.0f, -9.81f);
+  glm::vec<2, size_t> Settings::Physics::partitionSize = glm::vec<2, size_t>(4, 4);
+  glm::vec2 Settings::Physics::gravity = glm::vec2(0.0f, -9.81f);
 
   void Settings::Physics::SetFixedDeltaTime(const float newValue) {
     constexpr float min = 1.0f / 50.0f;
@@ -96,7 +96,7 @@ namespace Engine {
     fixedDeltaTime = std::clamp(newValue, min, max);
   }
 
-  void Settings::Physics::SetFrictionEnabled(bool newState) {
+  void Settings::Physics::SetFrictionEnabled(const bool newState) {
     frictionEnabled = newState;
   }
 
@@ -104,12 +104,12 @@ namespace Engine {
     useScreenPartitioning = newState;
   }
 
-  void Settings::Physics::SetPartitionSize(const Engine2D::Vector2<size_t> newValue) {
+  void Settings::Physics::SetPartitionSize(const glm::vec<2, size_t> newValue) {
     partitionSize = newValue;
     Engine2D::Game2D::instance->physics2D->collisionGridNeedsResizing = true;
   }
 
-  void Settings::Physics::SetGravity(const Engine2D::Vector2f newValue) {
+  void Settings::Physics::SetGravity(const glm::vec2 newValue) {
     gravity = newValue;
   }
 
@@ -125,11 +125,11 @@ namespace Engine {
     return useScreenPartitioning;
   }
 
-  Engine2D::Vector2<size_t> Settings::Physics::GetPartitionSize() {
+  glm::vec<2, size_t> Settings::Physics::GetPartitionSize() {
     return partitionSize;
   }
 
-  Engine2D::Vector2f Settings::Physics::GetGravity() {
+  glm::vec2 Settings::Physics::GetGravity() {
     return gravity;
   }
 

@@ -7,7 +7,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include "Engine2D/Types/Vector2.h"
+#include <string>
+#include <glm/glm.hpp>
 
 namespace Engine {
   /// Static class containing all the settings related to the engine
@@ -18,20 +19,20 @@ namespace Engine {
         friend class Settings;
         public:
           /// Changes the current screen resolution to the new value
-          static void SetScreenResolution(Engine2D::Vector2<size_t> newValue);
+          static void SetScreenResolution(glm::vec<2, size_t> newValue);
           /// Changes the title of the window
           static void SetTitle(const std::string &newTitle);
           /// If true, allows window resizing
           static void SetAllowResize(bool newState);
 
           /// @returns The initial screen resolution (before any resizing)
-          [[nodiscard]] static Engine2D::Vector2<size_t> GetScreenResolution();
+          [[nodiscard]] static glm::vec<2, size_t> GetScreenResolution();
           /// @returns The title of the window
           [[nodiscard]] static std::string GetTitle();
           /// @returns True if the user can resize the window, false if not
           [[nodiscard]] static bool GetAllowResize();
         private:
-          static Engine2D::Vector2<size_t> resolution;
+          static glm::vec<2, size_t> resolution;
           static std::string title;
           static bool allowResize;
 
@@ -80,9 +81,9 @@ namespace Engine {
           /// Changes the size of the partitioning of the screen for the physics simulation, defaulted to 4x4.
           /// Increasing the value does not always lead to a performance boost.
           /// It is better to test different values to find the best size for your game.
-          static void SetPartitionSize(Engine2D::Vector2<size_t> newValue);
+          static void SetPartitionSize(glm::vec<2, size_t> newValue);
           /// Changes the value of the gravity used in the physics simulation.
-          static void SetGravity(Engine2D::Vector2f newValue);
+          static void SetGravity(glm::vec2 newValue);
 
           /// @returns The rate at which the physics simulations are run
           [[nodiscard]] static float GetFixedDeltaTime();
@@ -91,15 +92,15 @@ namespace Engine {
           /// @returns True if the physics engine is currently using screen partitioning, false if not
           [[nodiscard]] static bool GetUseScreenPartitioning();
           /// @return The size of the screen partitioning used by the physics engine
-          [[nodiscard]] static Engine2D::Vector2<size_t> GetPartitionSize();
+          [[nodiscard]] static glm::vec<2, size_t> GetPartitionSize();
           /// @returns The value of gravity used by the physics engine
-          [[nodiscard]] static Engine2D::Vector2f GetGravity();
+          [[nodiscard]] static glm::vec2 GetGravity();
         private:
           static float fixedDeltaTime;
           static bool frictionEnabled;
           static bool useScreenPartitioning;
-          static Engine2D::Vector2<size_t> partitionSize;
-          static Engine2D::Vector2f gravity;
+          static glm::vec<2, size_t> partitionSize;
+          static glm::vec2 gravity;
 
           Physics() = default;
       };

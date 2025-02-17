@@ -9,15 +9,15 @@
 #include "Engine2D/Physics/Collider2D.h"
 
 namespace Engine2D::Physics {
-  CollisionGrid::CollisionGrid(const Vector2<size_t> gridSize) {
-    this->bottomLeft = Vector2f{Game2D::ViewportWidth() * -0.5f, Game2D::ViewportHeight() * -0.5f};
+  CollisionGrid::CollisionGrid(const glm::vec<2, size_t> gridSize) {
+    this->bottomLeft = glm::vec2(Game2D::ViewportWidth() * -0.5f, Game2D::ViewportHeight() * -0.5f);
     this->topRight = -bottomLeft;
     this->gridSize = gridSize;
-    this->cellSize = Vector2f{Game2D::ViewportWidth() / gridSize.x, Game2D::ViewportHeight() / gridSize.y};
+    this->cellSize = glm::vec2(Game2D::ViewportWidth() / gridSize.x, Game2D::ViewportHeight() / gridSize.y);
     grid.resize(gridSize.x, std::vector<std::vector<std::shared_ptr<Collider2D>>>(gridSize.y));
   }
 
-  void CollisionGrid::setGridSize(const Vector2<size_t> gridSize) {
+  void CollisionGrid::setGridSize(const glm::vec<2, size_t> gridSize) {
     this->gridSize = gridSize;
     for (auto &col: grid)
       for (auto &cell: col)

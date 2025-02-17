@@ -8,8 +8,8 @@
 #define MOUSE_H
 
 #include <bitset>
+#include <glm/glm.hpp>
 
-#include "Engine2D/Types/Vector2.h"
 #include "Common/Event.h"
 #include "Common/RenderingHeaders.h"
 #include "Input/InputContexts.h"
@@ -22,7 +22,7 @@ namespace Engine::Input {
   class MouseButtonEvent final : public Event<KeyboardAndMouseContext> {
     friend class Mouse;
   };
-  class MousePositionEvent final : public Event<Engine2D::Vector2f> {
+  class MousePositionEvent final : public Event<glm::vec2> {
     friend class Mouse;
   };
   class MouseScrollEvent final : public Event<MouseScroll> {
@@ -46,7 +46,7 @@ namespace Engine::Input {
       /// Sets the mouse lock state to true and hidden state to true.
       static void SetMouseDisabled();
       /// @returns The current position of the mouse on the screen
-      [[nodiscard]] static Engine2D::Vector2f Position();
+      [[nodiscard]] static glm::vec2 Position();
 
       friend class Engine2D::Game2D;
     private:

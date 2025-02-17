@@ -9,7 +9,6 @@
 
 #include <bitset>
 
-#include "Engine2D/Types/Vector2.h"
 #include "Common/Event.h"
 #include "Common/RenderingHeaders.h"
 #include "Input/InputContexts.h"
@@ -22,7 +21,7 @@ namespace Engine::Input {
   class GamepadButtonEvent final : public Event<KeyAndButtonContext> {
     friend class Gamepad;
   };
-  class GamepadStickEvent final : public Event<Engine2D::Vector2f> {
+  class GamepadStickEvent final : public Event<glm::vec2> {
     friend class Gamepad;
   };
 

@@ -7,8 +7,9 @@
 #ifndef RIGIDBODY2D_H
 #define RIGIDBODY2D_H
 
+#include <glm/glm.hpp>
+
 #include "Engine2D/Component2D.h"
-#include "Engine2D/Types/Vector2.h"
 #include "Types/float01.h"
 
 namespace Engine2D {
@@ -33,11 +34,11 @@ namespace Engine2D::Physics {
       /// Flag indicating whether the body is affected by gravity.
       bool affectedByGravity;
       /// Linear velocity of the rigid body.
-      Vector2f linearVelocity;
+      glm::vec2 linearVelocity;
       /// Angular velocity of the body.
       float angularVelocity;
       /// Indicates how much of the angular velocity will be applied during collisions.
-      /// For full rotation set it to 1, for no rotation set it to 0 or values inbetween for different reactions.
+      /// For full rotation set it to 1, for no rotation set it to 0 or values in between for different reactions.
       Engine::float01 angularDamping;
       /// The coefficient of the frictional force which acts between the two surfaces when they are in the rest position
       /// with respect to each other.
@@ -58,7 +59,7 @@ namespace Engine2D::Physics {
        * Applies a force to the rigid body.
        * @param force The force vector to apply.
        */
-      void AddForce(const Vector2f &force);
+      void AddForce(const glm::vec2 &force);
       /// Sets the friction coefficients to 0
       void NoFriction();
       /// Sets the friction coefficients to there default values:
@@ -75,7 +76,9 @@ namespace Engine2D::Physics {
       /// Inverse of the inertia (cached to only use the division when inertia changes)
       float inertiaInv;
       /// Accumulated force applied to the rigidbody.
-      Vector2f force;
+      glm::vec2 force;
+
+      static constexpr float RECTANGLE_COLLISION_FACTOR = 1.0f / 12.0f;
 
       /// Calculates the inertia of this body using the given collider
       void computeInertia(const std::shared_ptr<Collider2D> &collider);

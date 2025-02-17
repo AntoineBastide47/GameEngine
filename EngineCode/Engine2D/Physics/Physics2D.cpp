@@ -4,6 +4,7 @@
 // Date: 29/11/2024
 //
 
+#include <iostream>
 #include <ranges>
 
 #include "Engine2D/Physics/Physics2D.h"
@@ -13,6 +14,7 @@
 #include "Engine2D/Physics/Collisions.h"
 #include "Engine2D/Physics/Rigidbody2D.h"
 #include "Common/Settings.h"
+#include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D::Physics {
   Physics2D::Physics2D() : collisionGridNeedsResizing(false), collisionGrid(Engine::Settings::Physics::GetPartitionSize()) {}
@@ -171,7 +173,7 @@ namespace Engine2D::Physics {
     std::vector<ContactPair> collisionPairs;
     for (auto &[col1, col2, rb1, rb2]: contactPairs) {
       // More accurate SAT collision check
-      Vector2f normal;
+      glm::vec<2, double> normal;
       double depth = std::numeric_limits<double>::max();
       if (Collisions::collide(col1, col2, &normal, &depth)) {
         separateBodies(col1, col2, rb1, rb2, normal * depth);
@@ -182,7 +184,7 @@ namespace Engine2D::Physics {
           std::ranges::find(previousCollisionPairs, collisionPair) != previousCollisionPairs.end() ? Stay : Enter;
 
         // Find contact points
-        Vector2f contactPoint1, contactPoint2;
+        glm::vec2 contactPoint1, contactPoint2;
         uint8_t contactCount = 0;
         Collisions::findContactPoints(col1, col2, &contactPoint1, &contactPoint2, &contactCount);
 
@@ -210,7 +212,7 @@ namespace Engine2D::Physics {
 
   void Physics2D::separateBodies(
     const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2,
-    const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, const Vector2f mtv
+    const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, const glm::vec2 mtv
   ) {
     const bool separateBody1 = rb1 && !rb1->isKinematic && !col1->isTrigger;
     const bool separateBody2 = rb2 && !rb2->isKinematic && !col2->isTrigger;
@@ -231,7 +233,7 @@ namespace Engine2D::Physics {
 
   void Physics2D::resolveCollision(const Engine::Physics::CollisionManifold &contact) {
     const float bounciness = std::min(contact.col1->bounciness, contact.col2->bounciness);
-    std::array<Vector2f, 2> impulses;
+    std::array<glm::vec2, 2> impulses;
     std::array<float, 2> jList;
     const bool rb1NotStaticOrKinematic = !(!contact.rb1 || (contact.rb1 && contact.rb1->isKinematic));
     const bool rb2NotStaticOrKinematic = !(!contact.rb2 || (contact.rb2 && contact.rb2->isKinematic));
@@ -243,18 +245,18 @@ namespace Engine2D::Physics {
 
     // Find the impulses to apply
     for (int i = 0; i < contact.contactPoints.size(); i++) {
-      const Vector2f raPerp = (contact.contactPoints[i] - contact.col1->Transform()->GetWorldPosition()).Perpendicular();
-      const Vector2f rbPerp = (contact.contactPoints[i] - contact.col2->Transform()->GetWorldPosition()).Perpendicular();
+      const glm::vec2 raPerp = glm::perpendicular(contact.contactPoints[i] - contact.col1->Transform()->GetWorldPosition());
+      const glm::vec2 rbPerp = glm::perpendicular(contact.contactPoints[i] - contact.col2->Transform()->GetWorldPosition());
 
       // Find the relative velocity
-      const auto velA = contact.rb1 ? raPerp * contact.rb1->angularVelocity + contact.rb1->linearVelocity : Vector2f::Zero;
-      const auto velB = contact.rb2 ? rbPerp * contact.rb2->angularVelocity + contact.rb2->linearVelocity : Vector2f::Zero;
-      const Vector2f relativeVelocity = velB - velA;
+      const auto velA = contact.rb1 ? raPerp * contact.rb1->angularVelocity + contact.rb1->linearVelocity : glm::vec2(0);
+      const auto velB = contact.rb2 ? rbPerp * contact.rb2->angularVelocity + contact.rb2->linearVelocity : glm::vec2(0);
+      const glm::vec2 relativeVelocity = velB - velA;
 
-      if (const float contactVelocityMag = relativeVelocity * contact.normal; contactVelocityMag <= 0.0f) {
+      if (const float contactVelocityMag = glm::dot(relativeVelocity, contact.normal); contactVelocityMag <= 0.0f) {
         // Compute the impulse
-        const float raPerpMag = raPerp * contact.normal;
-        const float rbPerpMag = rbPerp * contact.normal;
+        const float raPerpMag = glm::dot(raPerp, contact.normal);
+        const float rbPerpMag = glm::dot(rbPerp, contact.normal);
         const float rb1Denom = rb1NotStaticOrKinematic
                                  ? contact.rb1->massInv + raPerpMag * raPerpMag * contact.rb1->inertiaInv
                                  : 0.0f;
@@ -270,16 +272,16 @@ namespace Engine2D::Physics {
     }
 
     // Apply the impulses to update the linear and angular velocity
-    for (int i = 0; i < impulses.size(); i++) {
+    for (int i = 0; i < contact.contactPoints.size(); i++) {
       if (rb1NotStaticOrKinematic) {
-        const Vector2f ra = contact.contactPoints[i] - contact.col1->Transform()->GetWorldPosition();
+        const glm::vec2 ra = contact.contactPoints[i] - contact.col1->Transform()->GetWorldPosition();
         contact.rb1->linearVelocity -= impulses[i] * contact.rb1->massInv;
-        contact.rb1->angularVelocity += impulses[i] ^ ra * contact.rb1->inertiaInv;
+        contact.rb1->angularVelocity += glm::cross_2(impulses[i], ra) * contact.rb1->inertiaInv;
       }
       if (rb2NotStaticOrKinematic) {
-        const Vector2f rb = contact.contactPoints[i] - contact.col2->Transform()->GetWorldPosition();
+        const glm::vec2 rb = contact.contactPoints[i] - contact.col2->Transform()->GetWorldPosition();
         contact.rb2->linearVelocity += impulses[i] * contact.rb2->massInv;
-        contact.rb2->angularVelocity -= impulses[i] ^ rb * contact.rb2->inertiaInv;
+        contact.rb2->angularVelocity -= glm::cross_2(impulses[i], rb) * contact.rb2->inertiaInv;
       }
     }
 
@@ -296,36 +298,36 @@ namespace Engine2D::Physics {
     }
     sf *= 0.5f;
     df *= 0.5f;
-    std::array<Vector2f, 2> frictionImpulses;
+    std::array<glm::vec2, 2> frictionImpulses;
 
     // Find the friction impulses to apply
     for (int i = 0; i < contact.contactPoints.size(); i++) {
-      const Vector2f raPerp = (contact.contactPoints[i] - contact.col1->Transform()->GetWorldPosition()).Perpendicular();
-      const Vector2f rbPerp = (contact.contactPoints[i] - contact.col2->Transform()->GetWorldPosition()).Perpendicular();
+      const glm::vec2 raPerp = glm::perpendicular(contact.contactPoints[i] - contact.col1->Transform()->GetWorldPosition());
+      const glm::vec2 rbPerp = glm::perpendicular(contact.contactPoints[i] - contact.col2->Transform()->GetWorldPosition());
 
       // Find the relative velocity
       const auto velA = rb1NotStaticOrKinematic
                           ? raPerp * contact.rb1->angularVelocity + contact.rb1->linearVelocity
-                          : Vector2f::Zero;
+                          : glm::vec2(0);
       const auto velB = rb2NotStaticOrKinematic
                           ? rbPerp * contact.rb2->angularVelocity + contact.rb2->linearVelocity
-                          : Vector2f::Zero;
-      const Vector2f relativeVelocity = velB - velA;
+                          : glm::vec2(0);
+      const glm::vec2 relativeVelocity = velB - velA;
 
-      Vector2f tangent = relativeVelocity - relativeVelocity * contact.normal * contact.normal;
-      if (Vector2f::ApproxEquals(tangent, Vector2f::Zero))
+      glm::vec2 tangent = relativeVelocity - relativeVelocity * contact.normal * contact.normal;
+      if (glm::approx_equals(tangent, glm::vec2(0)))
         continue;
-      tangent.Normalize();
+      tangent = glm::normalize(tangent);
 
       // Compute the impulse
-      const float raPerpMag = raPerp * tangent;
-      const float rbPerpMag = rbPerp * tangent;
+      const float raPerpMag = glm::dot(raPerp, tangent);
+      const float rbPerpMag = glm::dot(rbPerp, tangent);
       const float rb1Denom = contact.rb1 ? contact.rb1->massInv + raPerpMag * raPerpMag * contact.rb1->inertiaInv : 0.0f;
       const float rb2Denom = contact.rb2 ? contact.rb2->massInv + rbPerpMag * rbPerpMag * contact.rb2->inertiaInv : 0.0f;
       float denominator = rb1Denom + rb2Denom;
       if (denominator <= 0.0f)
         denominator = 1.0f;
-      if (const float jt = -relativeVelocity * tangent / (denominator * contact.contactPoints.size());
+      if (const float jt = glm::dot(-relativeVelocity, tangent) / (denominator * contact.contactPoints.size());
         std::abs(jt) <= jList[i] * sf)
         frictionImpulses[i] = jt * tangent;
       else
@@ -333,18 +335,18 @@ namespace Engine2D::Physics {
     }
 
     // Apply the friction impulses to update the linear and angular velocity
-    for (int i = 0; i < frictionImpulses.size(); i++) {
+    for (int i = 0; i < contact.contactPoints.size(); i++) {
       if (rb1NotStaticOrKinematic) {
-        const Vector2f ra = contact.contactPoints[i] - contact.col1->Transform()->GetWorldPosition();
+        const glm::vec2 ra = contact.contactPoints[i] - contact.col1->Transform()->GetWorldPosition();
         if (frictionEnabled)
           contact.rb1->linearVelocity -= frictionImpulses[i] * contact.rb1->massInv;
-        contact.rb1->angularVelocity += frictionImpulses[i] ^ ra * contact.rb1->inertiaInv;
+        contact.rb1->angularVelocity += glm::cross_2(frictionImpulses[i], ra) * contact.rb1->inertiaInv;
       }
       if (rb2NotStaticOrKinematic) {
-        const Vector2f rb = contact.contactPoints[i] - contact.col2->Transform()->GetWorldPosition();
+        const glm::vec2 rb = contact.contactPoints[i] - contact.col2->Transform()->GetWorldPosition();
         if (frictionEnabled)
           contact.rb2->linearVelocity += frictionImpulses[i] * contact.rb2->massInv;
-        contact.rb2->angularVelocity -= frictionImpulses[i] ^ rb * contact.rb2->inertiaInv;
+        contact.rb2->angularVelocity -= glm::cross_2(frictionImpulses[i], rb) * contact.rb2->inertiaInv;
       }
     }
   }

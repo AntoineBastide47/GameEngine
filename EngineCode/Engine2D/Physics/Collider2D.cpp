@@ -9,12 +9,14 @@
 #include "Engine2D/Transform2D.h"
 #include "Engine2D/Physics/Rigidbody2D.h"
 #include "Engine2D/Rendering/ShapeRenderer.h"
+#include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D::Physics {
   Collider2D::Collider2D()
-    : bounciness(1), autoCompute(true), isTrigger(false), type(None), initialized(false), lastModelMatrix() {}
+    : bounciness(1), offset(glm::vec2(0)), autoCompute(true), position(glm::vec2(0)), isTrigger(false), draw(false),
+      type(None), initialized(false), lastModelMatrix() {}
 
-  std::vector<Vector2f> Collider2D::ContactPoints() const {
+  std::vector<glm::vec2> Collider2D::ContactPoints() const {
     return contactPoints;
   }
 
@@ -45,7 +47,7 @@ namespace Engine2D::Physics {
       Rendering::ShapeRenderer::DrawPolygonWireframe(transformedVertices, glm::vec4(1, 0, 0, 1));
   }
 
-  Vector2f Collider2D::getPosition() const {
+  glm::vec2 Collider2D::getPosition() const {
     return (autoCompute ? Transform()->GetWorldPosition() : position) + offset;
   }
 
@@ -59,8 +61,8 @@ namespace Engine2D::Physics {
     aabb.max = getPosition() + getScale();
   }
 
-  Vector2f CircleCollider2D::getScale() {
-    return autoCompute ? Transform()->GetWorldHalfScale() : Vector2f::One * radius;
+  glm::vec2 CircleCollider2D::getScale() {
+    return autoCompute ? Transform()->GetWorldHalfScale() : glm::vec2(1) * radius;
   }
 
   RectangleCollider2D::RectangleCollider2D()
@@ -77,15 +79,15 @@ namespace Engine2D::Physics {
 
     // Transform the bounds of the rectangle
     this->transformedVertices = {
-      Vector2(left, top).Rotated(Transform()->GetWorldRotation()) + getPosition(),
-      Vector2(right, top).Rotated(Transform()->GetWorldRotation()) + getPosition(),
-      Vector2(right, bottom).Rotated(Transform()->GetWorldRotation()) + getPosition(),
-      Vector2(left, bottom).Rotated(Transform()->GetWorldRotation()) + getPosition(),
+      glm::rotate_vector2_degrees(glm::vec2(left, top), Transform()->GetWorldRotation()) + getPosition(),
+      glm::rotate_vector2_degrees(glm::vec2(right, top), Transform()->GetWorldRotation()) + getPosition(),
+      glm::rotate_vector2_degrees(glm::vec2(right, bottom), Transform()->GetWorldRotation()) + getPosition(),
+      glm::rotate_vector2_degrees(glm::vec2(left, bottom), Transform()->GetWorldRotation()) + getPosition(),
     };
 
     // Construct the AABB
-    aabb.min = Vector2f::One * std::numeric_limits<float>::max();
-    aabb.max = Vector2f::One * std::numeric_limits<float>::lowest();
+    aabb.min = glm::vec2(1) * std::numeric_limits<float>::max();
+    aabb.max = glm::vec2(1) * std::numeric_limits<float>::lowest();
     for (const auto vertex: transformedVertices) {
       aabb.min.x = std::min(aabb.min.x, vertex.x);
       aabb.min.y = std::min(aabb.min.y, vertex.y);
@@ -94,8 +96,8 @@ namespace Engine2D::Physics {
     }
   }
 
-  Vector2f RectangleCollider2D::getScale() {
-    return autoCompute ? Transform()->GetWorldScale() : Vector2f{width, height};
+  glm::vec2 RectangleCollider2D::getScale() {
+    return autoCompute ? Transform()->GetWorldScale() : glm::vec2(width, height);
   }
 
   PolygonCollider2D::PolygonCollider2D() {
@@ -104,19 +106,20 @@ namespace Engine2D::Physics {
 
   void PolygonCollider2D::computeAABB() {
     if (vertices.size() == 0) {
-      aabb.min = Vector2f::Zero;
-      aabb.max = Vector2f::Zero;
+      aabb.min = glm::vec2(0);
+      aabb.max = glm::vec2(0);
       return;
     }
 
     // Transform the bounds of the rectangle
     this->transformedVertices.resize(vertices.size());
     for (int i = 0; i < vertices.size(); ++i)
-      this->transformedVertices[i] = vertices[i].Rotated(Transform()->GetWorldRotation()) + getPosition();
+      this->transformedVertices[i] = glm::rotate_vector2_degrees(vertices[i], Transform()->GetWorldRotation()) +
+                                     getPosition();
 
     // Construct the AABB
-    aabb.min = Vector2f::One * std::numeric_limits<float>::max();
-    aabb.max = Vector2f::One * std::numeric_limits<float>::lowest();
+    aabb.min = glm::vec2(1) * std::numeric_limits<float>::max();
+    aabb.max = glm::vec2(1) * std::numeric_limits<float>::lowest();
     for (const auto vertex: transformedVertices) {
       aabb.min.x = std::min(aabb.min.x, vertex.x);
       aabb.min.y = std::min(aabb.min.y, vertex.y);

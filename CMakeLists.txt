@@ -34,7 +34,6 @@ add_library(Engine2D SHARED
     Engine/Include/Engine2D/ResourceManager.h
     EngineCode/Engine2D/Rendering/SpriteRenderer.cpp
     Engine/Include/Engine2D/Rendering/SpriteRenderer.h
-    Engine/Include/Engine2D/Types/Vector2.h
     EngineCode/Engine2D/Transform2D.cpp
     Engine/Include/Engine2D/Transform2D.h
     EngineCode/Engine2D/Entity2D.cpp
@@ -74,6 +73,7 @@ add_library(Engine2D SHARED
     Engine/Include/Engine2D/ParticleSystem/ParticleSystemRenderer2D.h
     EngineCode/Engine2D/Rendering/ShapeRenderer.cpp
     Engine/Include/Engine2D/Rendering/ShapeRenderer.h
+    Engine/Include/Engine2D/Types/Vector2.h
 )
 
 set_target_properties(Engine2D PROPERTIES OUTPUT_NAME Engine2D-0.4.1 PREFIX "")

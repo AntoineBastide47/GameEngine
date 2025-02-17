@@ -10,7 +10,6 @@
 #include <queue>
 
 #include "Engine2D/Component2D.h"
-#include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D::Rendering {
   class Texture2D;
@@ -33,11 +32,11 @@ namespace Engine2D {
       /// How long particles will be visible on screen
       float startLifetime;
       /// The initial position of the particles
-      Vector2f startPosition;
+      glm::vec2 startPosition;
       /// The initial velocity of the particles
-      Vector2f startVelocity;
+      glm::vec2 startVelocity;
       /// The initial size of the particles
-      Vector2f startSize;
+      glm::vec2 startSize;
 
       /// If the simulation is run in world or local space
       bool simulateInWorldSpace;
@@ -68,11 +67,11 @@ namespace Engine2D {
       /// Represents a single particle and it's state
       struct Particle {
         /// The position of the particle
-        Vector2f position;
+        glm::vec2 position;
         /// The size of the particle
-        Vector2f size;
+        glm::vec2 size;
         /// The current velocity of the particle
-        Vector2f velocity;
+        glm::vec2 velocity;
         /// The color of the particle
         glm::vec4 color;
         /// The remaining life span of the particle

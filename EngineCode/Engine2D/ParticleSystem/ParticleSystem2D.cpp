@@ -35,10 +35,10 @@ namespace Engine2D {
   }
 
   ParticleSystem2D::ParticleSystem2D()
-    : loop(false), restart(false), startDelay(0), startLifetime(1), startSize(Vector2f::One),
-      simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1),
-      duration(1), emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0),
-      instanceVBO(0), quadVAO(0), quadVBO(0), initialized(false), aliveCount(0) {
+    : loop(false), restart(false), startDelay(0), startLifetime(1), startPosition(glm::vec2(0)), startVelocity(glm::vec2(0)),
+      startSize(glm::vec2(1)), simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1),
+      duration(1), emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0), instanceVBO(0),
+      quadVAO(0), quadVBO(0), initialized(false), aliveCount(0) {
     this->shader = ResourceManager::GetShader("particle");
   }
 
@@ -163,12 +163,12 @@ namespace Engine2D {
       if (!particle.Visible())
         continue;
 
-      const glm::vec2 scale = particle.size.toGLM();
+      const glm::vec2 scale = particle.size;
       glm::vec2 pos;
       if (simulateInWorldSpace)
-        pos = particle.position.toGLM();
+        pos = particle.position;
       else
-        pos = glm::vec2(Transform()->GetWorldMatrix() * glm::vec4(particle.position.toGLM(), 0, 1));
+        pos = glm::vec2(Transform()->GetWorldMatrix() * glm::vec4(particle.position, 0, 1));
 
       instanceData[i + 0] = pos.x;
       instanceData[i + 1] = pos.y;
@@ -210,8 +210,8 @@ namespace Engine2D {
     particle.lifeTime = startLifetime;
     particle.velocity = startVelocity;
     particle.size = startSize;
-    particle.position = (simulateInWorldSpace ? Transform()->GetWorldPosition() : Vector2f::Zero)
-                        + startPosition + Vector2f{randomX, randomY};
+    particle.position = (simulateInWorldSpace ? Transform()->GetWorldPosition() : glm::vec2(0))
+                        + startPosition + glm::vec2(randomX, randomY);
     lastUsedParticle = --lastUsedParticle % particles.size();
   }
 }

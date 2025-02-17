@@ -11,9 +11,10 @@
 #include "Engine2D/Game2D.h"
 #include "Common/Log.h"
 #include "Engine2D/Physics/Collisions.h"
+#include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D {
-  Transform2D::Transform2D(const Vector2f position, const float rotation, const Vector2f scale)
+  Transform2D::Transform2D(const glm::vec2 position, const float rotation, const glm::vec2 scale)
     : position(position), rotation(std::fmod(rotation, 360.0f)), scale(scale), parent(nullptr), isDirty(true),
       visible(true), projectionMatrix(glm::mat4(1.0f)) {
     onTransformChange();
@@ -48,11 +49,11 @@ namespace Engine2D {
     return childList.cend();
   }
 
-  Vector2f Transform2D::GetPosition() const {
+  glm::vec2 Transform2D::GetPosition() const {
     return position;
   }
 
-  Vector2f Transform2D::GetScale() const {
+  glm::vec2 Transform2D::GetScale() const {
     return scale;
   }
 
@@ -60,7 +61,7 @@ namespace Engine2D {
     return rotation;
   }
 
-  void Transform2D::SetPosition(const Vector2f newPosition) {
+  void Transform2D::SetPosition(const glm::vec2 newPosition) {
     this->position = newPosition;
     onTransformChange();
   }
@@ -70,31 +71,31 @@ namespace Engine2D {
     onTransformChange();
   }
 
-  void Transform2D::SetScale(const Vector2f newScale) {
+  void Transform2D::SetScale(const glm::vec2 newScale) {
     this->scale = newScale;
     onTransformChange();
   }
 
-  void Transform2D::SetPositionAndRotation(const Vector2f newPosition, const float newRotation) {
+  void Transform2D::SetPositionAndRotation(const glm::vec2 newPosition, const float newRotation) {
     this->position = newPosition;
     this->rotation = fmod(newRotation, 360.0f);
     onTransformChange();
   }
 
-  void Transform2D::SetPositionAndScale(const Vector2f newPosition, const Vector2f newScale) {
+  void Transform2D::SetPositionAndScale(const glm::vec2 newPosition, const glm::vec2 newScale) {
     this->position = newPosition;
     this->scale = newScale;
     onTransformChange();
   }
 
-  void Transform2D::SetRotationAndScale(const float newRotation, const Vector2f newScale) {
+  void Transform2D::SetRotationAndScale(const float newRotation, const glm::vec2 newScale) {
     this->rotation = fmod(newRotation, 360.0f);
     this->scale = newScale;
     onTransformChange();
   }
 
   void Transform2D::SetPositionRotationAndScale(
-    const Vector2f newPosition, const float newRotation, const Vector2f newScale
+    const glm::vec2 newPosition, const float newRotation, const glm::vec2 newScale
   ) {
     this->position = newPosition;
     this->rotation = fmod(newRotation, 360.0f);
@@ -102,12 +103,12 @@ namespace Engine2D {
     onTransformChange();
   }
 
-  void Transform2D::UpdatePosition(const Vector2f positionIncrement) {
+  void Transform2D::UpdatePosition(const glm::vec2 positionIncrement) {
     this->position += positionIncrement;
     onTransformChange();
   }
 
-  void Transform2D::UpdateScale(const Vector2f scaleIncrement) {
+  void Transform2D::UpdateScale(const glm::vec2 scaleIncrement) {
     this->scale += scaleIncrement;
     onTransformChange();
   }
@@ -117,26 +118,26 @@ namespace Engine2D {
     onTransformChange();
   }
 
-  void Transform2D::UpdatePositionAndRotation(const Vector2f positionIncrement, const float rotationIncrement) {
+  void Transform2D::UpdatePositionAndRotation(const glm::vec2 positionIncrement, const float rotationIncrement) {
     this->position += positionIncrement;
     this->rotation = fmod(this->rotation + rotationIncrement, 360.0f);
     onTransformChange();
   }
 
-  void Transform2D::UpdatePositionAndScale(const Vector2f positionIncrement, const Vector2f scaleIncrement) {
+  void Transform2D::UpdatePositionAndScale(const glm::vec2 positionIncrement, const glm::vec2 scaleIncrement) {
     this->position += positionIncrement;
     this->scale += scaleIncrement;
     onTransformChange();
   }
 
-  void Transform2D::UpdateRotationAndScale(const float rotationIncrement, const Vector2f scaleIncrement) {
+  void Transform2D::UpdateRotationAndScale(const float rotationIncrement, const glm::vec2 scaleIncrement) {
     this->rotation = fmod(this->rotation + rotationIncrement, 360.0f);
     this->scale += scaleIncrement;
     onTransformChange();
   }
 
   void Transform2D::UpdatePositionRotationAndScale(
-    const Vector2f positionIncrement, const float rotationIncrement, const Vector2f scaleIncrement
+    const glm::vec2 positionIncrement, const float rotationIncrement, const glm::vec2 scaleIncrement
   ) {
     this->position += positionIncrement;
     this->rotation = fmod(this->rotation + rotationIncrement, 360.0f);
@@ -144,12 +145,12 @@ namespace Engine2D {
     isDirty = true;
   }
 
-  Vector2f Transform2D::Forward() const {
-    return Vector2f::Right.Rotated(rotation).Normalized();
+  glm::vec2 Transform2D::Forward() const {
+    return glm::normalize(glm::rotate_vector2_degrees(glm::vec2(1, 0), rotation));
   }
 
-  Vector2f Transform2D::Up() const {
-    return Vector2f::Up.Rotated(rotation).Normalized();
+  glm::vec2 Transform2D::Up() const {
+    return glm::normalize(glm::rotate_vector2_degrees(glm::vec2(0, 1), rotation));
   }
 
   void Transform2D::SetParent(const std::shared_ptr<Entity2D> &parent) {
@@ -161,9 +162,9 @@ namespace Engine2D {
 
     // If no parent is specified, set the parent to null
     if (!parent) {
-    position = GetWorldPosition();
-    rotation = GetWorldRotation();
-    scale = GetWorldScale();
+      position = GetWorldPosition();
+      rotation = GetWorldRotation();
+      scale = GetWorldScale();
       this->parent = nullptr;
       onParentHierarchyChange();
       return;
@@ -176,10 +177,10 @@ namespace Engine2D {
 
     // Convert the transform properties from world space to local space
     auto localTransform = glm::inverse(this->parent->transform.GetWorldMatrix()) * GetWorldMatrix();
-    position = Vector2f{localTransform[3][0], -localTransform[3][1]};
+    position = glm::vec2(localTransform[3][0], -localTransform[3][1]);
     rotation = scale.x == 0 ? 0 : glm::degrees(std::atan2(localTransform[1][0] / scale.x, localTransform[0][0] / scale.x));
-    scale.x = Vector2f{localTransform[0][0], localTransform[1][0]}.Magnitude();
-    scale.y = Vector2f{localTransform[0][1], localTransform[1][1]}.Magnitude();
+    scale.x = glm::length(glm::vec2(localTransform[0][0], localTransform[1][0]));
+    scale.y = glm::length(glm::vec2(localTransform[0][1], localTransform[1][1]));
   }
 
   std::shared_ptr<Entity2D> Transform2D::GetParent() const {
@@ -204,7 +205,7 @@ namespace Engine2D {
     return false;
   }
 
-  Vector2f Transform2D::GetWorldPosition() const {
+  glm::vec2 Transform2D::GetWorldPosition() const {
     return worldPosition;
   }
 
@@ -212,11 +213,11 @@ namespace Engine2D {
     return worldRotation;
   }
 
-  Vector2f Transform2D::GetWorldScale() const {
+  glm::vec2 Transform2D::GetWorldScale() const {
     return worldScale;
   }
 
-  Vector2f Transform2D::GetWorldHalfScale() const {
+  glm::vec2 Transform2D::GetWorldHalfScale() const {
     return worldScaleHalf;
   }
 
@@ -257,16 +258,16 @@ namespace Engine2D {
   glm::mat4 Transform2D::GetWorldMatrix() {
     if (isDirty) {
       projectionMatrix =
-        glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition.toGLM(), 0.0f)) *
+        glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition, 0.0f)) *
         glm::rotate(glm::mat4(1.0f), -glm::radians(worldRotation), glm::vec3(0.0f, 0.0f, 1.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(worldScale.Scaled({1, -1}).toGLM(), 1.0f));
+        glm::scale(glm::mat4(1.0f), glm::vec3(worldScale * glm::vec2(1, -1), 1.0f));
       isDirty = false;
     }
     return this->projectionMatrix;
   }
 
-  Vector2f Transform2D::WorldToLocal(const Vector2f &point) {
-    return Vector2f{glm::vec2(glm::inverse(GetWorldMatrix()) * glm::vec4(point.toGLM(), 0.0f, 1.0f))};
+  glm::vec2 Transform2D::WorldToLocal(const glm::vec2 &point) {
+    return glm::vec2(glm::vec2(glm::inverse(GetWorldMatrix()) * glm::vec4(point, 0.0f, 1.0f)));
   }
 
   void Transform2D::onTransformChange() {
@@ -280,9 +281,9 @@ namespace Engine2D {
 
     const Transform2D *current = parent ? &parent->transform : nullptr;
     while (current) {
-      worldPosition = worldPosition.Scaled(current->scale).Rotated(-current->rotation) + current->position;
+      worldPosition = glm::rotate_vector2_degrees(worldPosition * current->scale, -current->rotation) + current->position;
       worldRotation += current->rotation;
-      worldScale = worldScale.Scaled(current->scale);
+      worldScale = worldScale * current->scale;
       current = current->parent ? &current->parent->transform : nullptr;
     }
     worldScaleHalf = worldScale * 0.5f;

@@ -6,6 +6,8 @@
 
 #include "Engine2D/Physics/Collisions.h"
 #include "Engine2D/Entity2D.h"
+#include "Engine2D/Physics/Collider2D.h"
+#include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D::Physics {
   bool Collisions::collideAABB(const Collider2D::AABB a, const Collider2D::AABB b) {
@@ -13,7 +15,7 @@ namespace Engine2D::Physics {
   }
 
   bool Collisions::collide(
-    const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, Vector2f *normal,
+    const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, glm::vec<2, double> *normal,
     double *depth
   ) {
     if (col1->type == Collider2D::Circle && col2->type == Collider2D::Circle)
@@ -38,8 +40,8 @@ namespace Engine2D::Physics {
   }
 
   void Collisions::findContactPoints(
-    const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, Vector2f *contactPoint1,
-    Vector2f *contactPoint2, uint8_t *contactCount
+    const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, glm::vec2 *contactPoint1,
+    glm::vec2 *contactPoint2, uint8_t *contactCount
   ) {
     if (col1->type == Collider2D::Circle && col2->type == Collider2D::Circle) {
       findCirclesContactPoint(
@@ -59,32 +61,32 @@ namespace Engine2D::Physics {
   }
 
   bool Collisions::circlesIntersect(
-    const Vector2f centerA, const Vector2f scaleA, const Vector2f centerB, const Vector2f scaleB, Vector2f *normal,
-    double *depth
+    const glm::vec2 centerA, const glm::vec2 scaleA, const glm::vec2 centerB, const glm::vec2 scaleB,
+    glm::vec<2, double> *normal, double *depth
   ) {
     // Calculate the vector between the circle centers
-    const float distance = Vector2f::DistanceTo(centerA, centerB);
+    const float distance = glm::distance(centerA, centerB);
     const float combinedRadius = scaleA.x + scaleB.x;
 
     if (distance >= combinedRadius)
       return false;
 
-    *normal = (centerB - centerA).Normalized();
+    *normal = glm::normalize(centerB - centerA);
     *depth = combinedRadius - distance;
     return true;
   }
 
   bool Collisions::polygonsIntersect(
-    const std::vector<Vector2f> &verticesA, const Vector2f positionA, const std::vector<Vector2f> &verticesB,
-    const Vector2f positionB, Vector2f *normal, double *depth
+    const std::vector<glm::vec2> &verticesA, const glm::vec2 positionA, const std::vector<glm::vec2> &verticesB,
+    const glm::vec2 positionB, glm::vec<2, double> *normal, double *depth
   ) {
     double minA, maxA, minB, maxB, axisDepth;
-    Vector2f pointA, pointB, axis;
+    glm::vec2 pointA, pointB, axis;
 
     for (int i = 0; i < verticesA.size(); ++i) {
       pointA = verticesA[i];
       pointB = verticesA[(i + 1) % verticesA.size()];
-      axis = (pointB - pointA).Perpendicular().Normalized();
+      axis = glm::normalize(glm::perpendicular(pointB - pointA));
 
       projectVertices(verticesA, axis, &minA, &maxA);
       projectVertices(verticesB, axis, &minB, &maxB);
@@ -101,7 +103,7 @@ namespace Engine2D::Physics {
     for (int i = 0; i < verticesB.size(); ++i) {
       pointA = verticesB[i];
       pointB = verticesB[(i + 1) % verticesB.size()];
-      axis = (pointB - pointA).Perpendicular().Normalized();
+      axis = glm::normalize(glm::perpendicular(pointB - pointA));
 
       projectVertices(verticesA, axis, &minA, &maxA);
       projectVertices(verticesB, axis, &minB, &maxB);
@@ -115,23 +117,23 @@ namespace Engine2D::Physics {
       }
     }
 
-    if (const Vector2f direction = positionB - positionA; *normal * direction < 0.0f)
+    if (const glm::vec<2, double> direction = positionB - positionA; glm::dot(*normal, direction) < 0.0f)
       *normal *= -1.0f;
 
     return true;
   }
 
   bool Collisions::polygonAndCircleIntersect(
-    const std::vector<Vector2f> &polygonVertices, const Vector2f polygonCenter, const Vector2f circleCenter,
-    const Vector2f circleHalfScale, Vector2f *normal, double *depth
+    const std::vector<glm::vec2> &polygonVertices, const glm::vec2 polygonCenter, const glm::vec2 circleCenter,
+    const glm::vec2 circleHalfScale, glm::vec<2, double> *normal, double *depth
   ) {
     double minA, maxA, minB, maxB, axisDepth;
-    Vector2f axis;
+    glm::vec2 axis;
 
     for (int i = 0; i < polygonVertices.size(); ++i) {
-      const Vector2f pointA = polygonVertices[i];
-      const Vector2f pointB = polygonVertices[(i + 1) % polygonVertices.size()];
-      axis = (pointB - pointA).Perpendicular().Normalized();
+      const glm::vec2 pointA = polygonVertices[i];
+      const glm::vec2 pointB = polygonVertices[(i + 1) % polygonVertices.size()];
+      axis = glm::normalize(glm::perpendicular(pointB - pointA));
 
       projectVertices(polygonVertices, axis, &minA, &maxA);
       projectCircle(circleCenter, circleHalfScale.x, axis, &minB, &maxB);
@@ -145,8 +147,8 @@ namespace Engine2D::Physics {
       }
     }
 
-    const Vector2f closestPoint = closestPointOnPolygon(circleCenter, polygonVertices);
-    axis = (closestPoint - circleCenter).Normalized();
+    const glm::vec2 closestPoint = closestPointOnPolygon(circleCenter, polygonVertices);
+    axis = glm::normalize(closestPoint - circleCenter);
 
     projectVertices(polygonVertices, axis, &minA, &maxA);
     projectCircle(circleCenter, circleHalfScale.x, axis, &minB, &maxB);
@@ -159,40 +161,40 @@ namespace Engine2D::Physics {
       *normal = axis;
     }
 
-    if (const Vector2f direction = polygonCenter - circleCenter; *normal * direction < 0.0f)
+    if (const glm::vec<2, double> direction = polygonCenter - circleCenter; glm::dot(*normal, direction) < 0.0f)
       *normal *= -1.0f;
 
     return true;
   }
 
-  void Collisions::projectVertices(const std::vector<Vector2f> &vertices, const Vector2f axis, double *min, double *max) {
+  void Collisions::projectVertices(const std::vector<glm::vec2> &vertices, const glm::vec2 axis, double *min, double *max) {
     *min = std::numeric_limits<double>::max();
     *max = std::numeric_limits<double>::lowest();
 
-    for (const Vector2f vertex: vertices) {
-      const double projection = vertex * axis;
+    for (const glm::vec2 vertex: vertices) {
+      const double projection = glm::dot(vertex, axis);
       *min = std::min(*min, projection);
       *max = std::max(*max, projection);
     }
   }
 
   void Collisions::projectCircle(
-    const Vector2f circleCenter, const float circleHalfScale, const Vector2f axis, double *min, double *max
+    const glm::vec2 circleCenter, const float circleHalfScale, const glm::vec2 axis, double *min, double *max
   ) {
-    const Vector2f direction = axis.Normalized() * circleHalfScale;
-    *min = (circleCenter + direction) * axis;
-    *max = (circleCenter - direction) * axis;
+    const glm::vec2 direction = glm::normalize(axis) * circleHalfScale;
+    *min = glm::dot(circleCenter + direction, axis);
+    *max = glm::dot(circleCenter - direction, axis);
 
     if (*min > *max)
       std::swap(*min, *max);
   }
 
-  Vector2f Collisions::closestPointOnPolygon(const Vector2f circleCenter, const std::vector<Vector2f> &vertices) {
-    Vector2f closestPoint;
+  glm::vec2 Collisions::closestPointOnPolygon(const glm::vec2 circleCenter, const std::vector<glm::vec2> &vertices) {
+    auto closestPoint = glm::vec2(0);
     double minDistanceSquared = std::numeric_limits<float>::max();
 
     for (const auto vertex: vertices) {
-      if (const double distance = Vector2f::DistanceTo(vertex, circleCenter); distance < minDistanceSquared) {
+      if (const double distance = glm::distance(vertex, circleCenter); distance < minDistanceSquared) {
         minDistanceSquared = distance;
         closestPoint = vertex;
       }
@@ -202,21 +204,21 @@ namespace Engine2D::Physics {
   }
 
   void Collisions::findCirclesContactPoint(
-    const Vector2f centerA, const Vector2f centerB, const float radiusA, Vector2f *contactPoint
+    const glm::vec2 centerA, const glm::vec2 centerB, const float radiusA, glm::vec2 *contactPoint
   ) {
-    *contactPoint = centerA + (centerB - centerA).Normalized() * radiusA;
+    *contactPoint = centerA + glm::normalize(centerB - centerA) * radiusA;
   }
 
   void Collisions::findCircleAndPolygonContactPoint(
-    const Vector2f circleCenter, const std::vector<Vector2f> &vertices, Vector2f *contactPoint
+    const glm::vec2 circleCenter, const std::vector<glm::vec2> &vertices, glm::vec2 *contactPoint
   ) {
     double minDistanceSquared = std::numeric_limits<double>::max();
     for (int i = 0; i < vertices.size(); ++i) {
-      const Vector2f v1 = vertices[i];
-      const Vector2f v2 = vertices[(i + 1) % vertices.size()];
+      const glm::vec2 v1 = vertices[i];
+      const glm::vec2 v2 = vertices[(i + 1) % vertices.size()];
 
       double distanceSquared;
-      Vector2f contact;
+      glm::vec2 contact;
       pointSegmentDistance(circleCenter, v1, v2, &distanceSquared, &contact);
 
       if (distanceSquared < minDistanceSquared) {
@@ -227,22 +229,22 @@ namespace Engine2D::Physics {
   }
 
   void Collisions::findPolygonsContactPoint(
-    const std::vector<Vector2f> &verticesA, const std::vector<Vector2f> &verticesB, Vector2f *contactPoint1,
-    Vector2f *contactPoint2, uint8_t *contactCount
+    const std::vector<glm::vec2> &verticesA, const std::vector<glm::vec2> &verticesB, glm::vec2 *contactPoint1,
+    glm::vec2 *contactPoint2, uint8_t *contactCount
   ) {
     double minDistanceSquared = std::numeric_limits<double>::max();
 
     for (size_t i = 0; i < verticesA.size(); ++i) {
-      const Vector2f p = verticesA[i];
+      const glm::vec2 p = verticesA[i];
       for (size_t j = 0; j < verticesB.size(); ++j) {
-        const Vector2f va = verticesB[j];
-        const Vector2f vb = verticesB[(j + 1) % verticesB.size()];
+        const glm::vec2 va = verticesB[j];
+        const glm::vec2 vb = verticesB[(j + 1) % verticesB.size()];
 
         double distanceSquared;
-        Vector2f contact;
+        glm::vec2 contact;
         pointSegmentDistance(p, va, vb, &distanceSquared, &contact);
 
-        if (distanceSquared == minDistanceSquared && Vector2f::ApproxEquals(contact, *contactPoint1)) {
+        if (distanceSquared == minDistanceSquared && glm::approx_equals(contact, *contactPoint1)) {
           *contactCount = 2;
           *contactPoint2 = contact;
         } else if (distanceSquared < minDistanceSquared) {
@@ -254,16 +256,16 @@ namespace Engine2D::Physics {
     }
 
     for (size_t i = 0; i < verticesB.size(); ++i) {
-      const Vector2f p = verticesB[i];
+      const glm::vec2 p = verticesB[i];
       for (size_t j = 0; j < verticesA.size(); ++j) {
-        const Vector2f va = verticesA[j];
-        const Vector2f vb = verticesA[(j + 1) % verticesA.size()];
+        const glm::vec2 va = verticesA[j];
+        const glm::vec2 vb = verticesA[(j + 1) % verticesA.size()];
 
         double distanceSquared;
-        Vector2f contact;
+        glm::vec2 contact;
         pointSegmentDistance(p, va, vb, &distanceSquared, &contact);
 
-        if (distanceSquared == minDistanceSquared && Vector2f::ApproxEquals(contact, *contactPoint1)) {
+        if (distanceSquared == minDistanceSquared && glm::approx_equals(contact, *contactPoint1)) {
           *contactCount = 2;
           *contactPoint2 = contact;
         } else if (distanceSquared < minDistanceSquared) {
@@ -276,17 +278,17 @@ namespace Engine2D::Physics {
   }
 
   void Collisions::pointSegmentDistance(
-    const Vector2f p, const Vector2f pointA, const Vector2f pointB, double *distanceSquared, Vector2f *closestPoint
+    const glm::vec2 p, const glm::vec2 pointA, const glm::vec2 pointB, double *distanceSquared, glm::vec2 *closestPoint
   ) {
-    const Vector2f ab = pointB - pointA;
-    const Vector2f ap = p - pointA;
+    const glm::vec2 ab = pointB - pointA;
+    const glm::vec2 ap = p - pointA;
 
-    if (const double d = ab * ap / ab.SquaredMagnitude(); d < 0)
+    if (const double d = glm::dot(ab, ap) / glm::length_squared(ab); d < 0)
       *closestPoint = pointA;
     else if (d >= 1)
       *closestPoint = pointB;
     else
-      *closestPoint = pointA + ab * d;
-    *distanceSquared = Vector2f::SquaredDistanceTo(p, *closestPoint);
+      *closestPoint = pointA + ab * glm::vec2(d);
+    *distanceSquared = glm::distance_squared(p, *closestPoint);
   }
 }

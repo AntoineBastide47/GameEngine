@@ -8,9 +8,9 @@
 #define TRANSFORM2D_H
 
 #include <vector>
+#include <glm/glm.hpp>
 
 #include "Engine2D/Component2D.h"
-#include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D {
   class Entity2D;
@@ -29,7 +29,7 @@ namespace Engine2D {
        * @param rotation Initial rotation in degrees, defaulted to 0.
        * @param scale Initial scale of the transform, defaulted to (1, 1).
        */
-      explicit Transform2D(Vector2f position = Vector2f::Zero, float rotation = 0, Vector2f scale = Vector2f::One);
+      explicit Transform2D(glm::vec2 position = glm::vec2(0), float rotation = 0, glm::vec2 scale = glm::vec2(1));
       ~Transform2D() override;
 
       /// Equality operator to compare two Transform2D objects.
@@ -43,15 +43,15 @@ namespace Engine2D {
       [[nodiscard]] std::vector<std::shared_ptr<Entity2D>>::const_iterator end() const;
 
       /// @returns The local position of this transform
-      [[nodiscard]] Vector2f GetPosition() const;
+      [[nodiscard]] glm::vec2 GetPosition() const;
       /// @returns The local scale of this transform
-      [[nodiscard]] Vector2f GetScale() const;
+      [[nodiscard]] glm::vec2 GetScale() const;
       /// @returns The local rotation of this transform
       [[nodiscard]] float GetRotation() const;
 
       /// Overrides the current local position of this transform with the given position
       /// @param newPosition The new local position to set
-      void SetPosition(Vector2f newPosition);
+      void SetPosition(glm::vec2 newPosition);
 
       /// Overrides the current local rotation of this transform with the given rotation
       /// @param newRotation The new local rotation to set
@@ -59,32 +59,32 @@ namespace Engine2D {
 
       /// Overrides the current local scale of this transform with the given scale
       /// @param newScale The new local scale to set
-      void SetScale(Vector2f newScale);
+      void SetScale(glm::vec2 newScale);
 
       /// Overrides the current local position and rotation of this transform with the given values
       /// @param newPosition The new local position to set
       /// @param newRotation The new local rotation to set
-      void SetPositionAndRotation(Vector2f newPosition, float newRotation);
+      void SetPositionAndRotation(glm::vec2 newPosition, float newRotation);
 
       /// Overrides the current local position and scale of this transform with the given values
       /// @param newPosition The new local position to set
       /// @param newScale The new local scale to set
-      void SetPositionAndScale(Vector2f newPosition, Vector2f newScale);
+      void SetPositionAndScale(glm::vec2 newPosition, glm::vec2 newScale);
 
       /// Overrides the current local rotation and scale of this transform with the given values
       /// @param newRotation The new local rotation to set
       /// @param newScale The new local scale to set
-      void SetRotationAndScale(float newRotation, Vector2f newScale);
+      void SetRotationAndScale(float newRotation, glm::vec2 newScale);
 
       /// Overrides the current local position, rotation, and scale of this transform with the given values
       /// @param newPosition The new local position to set
       /// @param newRotation The new local rotation to set
       /// @param newScale The new local scale to set
-      void SetPositionRotationAndScale(Vector2f newPosition, float newRotation, Vector2f newScale);
+      void SetPositionRotationAndScale(glm::vec2 newPosition, float newRotation, glm::vec2 newScale);
 
       /// Adds the given position increment to the current local position of this transform
       /// @param positionIncrement The increment to add to the current local position
-      void UpdatePosition(Vector2f positionIncrement);
+      void UpdatePosition(glm::vec2 positionIncrement);
 
       /// Adds the given rotation increment to the current local rotation of this transform
       /// @param rotationIncrement The increment to add to the current local rotation
@@ -92,33 +92,33 @@ namespace Engine2D {
 
       /// Adds the given scale increment to the current local scale of this transform
       /// @param scaleIncrement The increment to add to the current local scale
-      void UpdateScale(Vector2f scaleIncrement);
+      void UpdateScale(glm::vec2 scaleIncrement);
 
       /// Adds the given position and rotation increments to the current local position and rotation of this transform
       /// @param positionIncrement The increment to add to the current local position
       /// @param rotationIncrement The increment to add to the current local rotation
-      void UpdatePositionAndRotation(Vector2f positionIncrement, float rotationIncrement);
+      void UpdatePositionAndRotation(glm::vec2 positionIncrement, float rotationIncrement);
 
       /// Adds the given position and scale increments to the current local position and scale of this transform
       /// @param positionIncrement The increment to add to the current local position
       /// @param scaleIncrement The increment to add to the current local scale
-      void UpdatePositionAndScale(Vector2f positionIncrement, Vector2f scaleIncrement);
+      void UpdatePositionAndScale(glm::vec2 positionIncrement, glm::vec2 scaleIncrement);
 
       /// Adds the given rotation and scale increments to the current local rotation and scale of this transform
       /// @param rotationIncrement The increment to add to the current local rotation
       /// @param scaleIncrement The increment to add to the current local scale
-      void UpdateRotationAndScale(float rotationIncrement, Vector2f scaleIncrement);
+      void UpdateRotationAndScale(float rotationIncrement, glm::vec2 scaleIncrement);
 
       /// Adds the given position, rotation, and scale increments to the current local position, rotation, and scale of this transform
       /// @param positionIncrement The increment to add to the current local position
       /// @param rotationIncrement The increment to add to the current local rotation
       /// @param scaleIncrement The increment to add to the current local scale
-      void UpdatePositionRotationAndScale(Vector2f positionIncrement, float rotationIncrement, Vector2f scaleIncrement);
+      void UpdatePositionRotationAndScale(glm::vec2 positionIncrement, float rotationIncrement, glm::vec2 scaleIncrement);
 
       /// @returns A unit vector representing the forward direction of this entity.
-      [[nodiscard]] Vector2f Forward() const;
+      [[nodiscard]] glm::vec2 Forward() const;
       /// @returns A unit vector representing the up direction of this entity.
-      [[nodiscard]] Vector2f Up() const;
+      [[nodiscard]] glm::vec2 Up() const;
 
       /**
        * Sets the parent entity of this entity for hierarchical organization.
@@ -135,18 +135,18 @@ namespace Engine2D {
       /// @returns False if the transform of this entity is not entirely in the viewport of the screen, True if not
       [[nodiscard]] bool GetIsVisible() const;
       /// @returns The position of the Entity2D this transform is attached to in world coordinates
-      [[nodiscard]] Vector2f GetWorldPosition() const;
+      [[nodiscard]] glm::vec2 GetWorldPosition() const;
       /// @returns The rotation of the Entity2D this transform is attached to in world coordinates
       [[nodiscard]] float GetWorldRotation() const;
       /// @returns The scale of the Entity2D this transform is attached to in world coordinates
-      [[nodiscard]] Vector2f GetWorldScale() const;
+      [[nodiscard]] glm::vec2 GetWorldScale() const;
       /// @returns The scale of the Entity2D this transform is attached to in world coordinates divided by 2
-      [[nodiscard]] Vector2f GetWorldHalfScale() const;
+      [[nodiscard]] glm::vec2 GetWorldHalfScale() const;
       /// @returns The transform matrix of this entity
       [[nodiscard]] glm::mat4 GetWorldMatrix();
 
       /// @returns The given point for world to local coordinates
-      [[nodiscard]] Vector2f WorldToLocal(const Vector2f &point);
+      [[nodiscard]] glm::vec2 WorldToLocal(const glm::vec2 &point);
 
       /// Sets the parent of all the children of the Entity2D this transform is attached to the current scene's root
       void RemoveAllChildren();
@@ -165,11 +165,11 @@ namespace Engine2D {
       using Component2D::Transform; // Disallow unnecessary overhead to access this component
 
       /// Position of the transform in 2D space.
-      Vector2f position;
+      glm::vec2 position;
       /// Rotation of the transform in degrees.
       float rotation;
       /// Scale of the transform in 2D space.
-      Vector2f scale;
+      glm::vec2 scale;
 
       /// The parent Entity2D of the entity that this transform is attached to
       std::shared_ptr<Entity2D> parent;
@@ -179,13 +179,13 @@ namespace Engine2D {
       /// If the transform matrix needs to be recomputed
       bool isDirty;
       /// Position of the transform in 2D space.
-      Vector2f worldPosition;
+      glm::vec2 worldPosition;
       /// Rotation of the transform in degrees.
       float worldRotation = 0;
       /// Scale of the transform in 2D space.
-      Vector2f worldScale;
+      glm::vec2 worldScale;
       /// Half of the scale of the transform in 2D space.
-      Vector2f worldScaleHalf;
+      glm::vec2 worldScaleHalf;
       /// If this entity is on screen
       bool visible;
       /// Transform matrix

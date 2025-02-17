@@ -12,7 +12,7 @@ namespace Engine2D::Rendering {
   std::shared_ptr<Shader> ShapeRenderer::shader = nullptr;
 
   void ShapeRenderer::DrawCircleWireframe(
-    const Vector2f center, const float radius, const glm::vec3 &color, const int segments
+    const glm::vec2 center, const float radius, const glm::vec3 &color, const int segments
   ) {
     std::vector<float> vertices;
     for (int i = 0; i <= segments; ++i) {
@@ -37,7 +37,7 @@ namespace Engine2D::Rendering {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
     shader->Use();
-    const glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(center.toGLM(), 0.0f));
+    const glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(center, 0.0f));
     shader->SetMatrix4("model", model);
     shader->SetVector3f("color", color);
 
@@ -53,7 +53,7 @@ namespace Engine2D::Rendering {
   }
 
   void ShapeRenderer::DrawCircleFill(
-    const Vector2f center, const float radius, const glm::vec3 &color, const int segments
+    const glm::vec2 center, const float radius, const glm::vec3 &color, const int segments
   ) {
     std::vector<float> vertices;
 
@@ -83,7 +83,7 @@ namespace Engine2D::Rendering {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
     shader->Use();
-    const glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(center.toGLM(), 0.0f));
+    const glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(center, 0.0f));
     shader->SetMatrix4("model", model);
     shader->SetVector3f("color", color);
 
@@ -97,7 +97,7 @@ namespace Engine2D::Rendering {
   }
 
   void ShapeRenderer::DrawCircleFillWithBorder(
-    const Vector2f center, const float radius, const glm::vec3 &fillColor, const glm::vec3 &borderColor,
+    const glm::vec2 center, const float radius, const glm::vec3 &fillColor, const glm::vec3 &borderColor,
     const float borderWidth, const int segments
   ) {
     // Draw filled circle
@@ -113,7 +113,7 @@ namespace Engine2D::Rendering {
     glLineWidth(1.0f);
   }
 
-  void ShapeRenderer::DrawPolygonWireframe(const std::vector<Vector2f> &vertices, const glm::vec3 &color) {
+  void ShapeRenderer::DrawPolygonWireframe(const std::vector<glm::vec2> &vertices, const glm::vec3 &color) {
     std::vector<float> data;
     for (const auto &vertex: vertices) {
       data.push_back(vertex.x);
@@ -149,7 +149,7 @@ namespace Engine2D::Rendering {
     glDeleteVertexArrays(1, &vao);
   }
 
-  void ShapeRenderer::DrawPolygonFill(const std::vector<Vector2f> &vertices, const glm::vec3 &color) {
+  void ShapeRenderer::DrawPolygonFill(const std::vector<glm::vec2> &vertices, const glm::vec3 &color) {
     // Note: For concave polygons, you need to triangulate the polygon.
     std::vector<float> data;
     for (const auto &vertex: vertices) {
@@ -185,7 +185,7 @@ namespace Engine2D::Rendering {
   }
 
   void ShapeRenderer::DrawPolygonFillWithBorder(
-    const std::vector<Vector2f> &vertices, const glm::vec3 &fillColor, const glm::vec3 &borderColor, const float borderWidth
+    const std::vector<glm::vec2> &vertices, const glm::vec3 &fillColor, const glm::vec3 &borderColor, const float borderWidth
   ) {
     // Draw filled polygon
     DrawPolygonFill(vertices, fillColor);

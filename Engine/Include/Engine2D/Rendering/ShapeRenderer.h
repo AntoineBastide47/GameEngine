@@ -8,8 +8,7 @@
 #define SHAPE_RENDERER_H
 
 #include <vector>
-
-#include "Engine2D/Types/Vector2.h"
+#include <glm/glm.hpp>
 
 namespace Engine2D {
   class Game2D;
@@ -25,18 +24,18 @@ namespace Engine2D::Rendering {
     friend class Engine2D::Game2D;
     public:
       // Circle drawing methods
-      static void DrawCircleWireframe(Vector2f center, float radius, const glm::vec3 &color, int segments = 32);
-      static void DrawCircleFill(Vector2f center, float radius, const glm::vec3 &color, int segments = 32);
+      static void DrawCircleWireframe(glm::vec2 center, float radius, const glm::vec3 &color, int segments = 32);
+      static void DrawCircleFill(glm::vec2 center, float radius, const glm::vec3 &color, int segments = 32);
       static void DrawCircleFillWithBorder(
-        Vector2f center, float radius, const glm::vec3 &fillColor, const glm::vec3 &borderColor, float borderWidth,
+        glm::vec2 center, float radius, const glm::vec3 &fillColor, const glm::vec3 &borderColor, float borderWidth,
         int segments = 32
       );
 
       // Polygon drawing methods
-      static void DrawPolygonWireframe(const std::vector<Vector2f> &vertices, const glm::vec3 &color);
-      static void DrawPolygonFill(const std::vector<Vector2f> &vertices, const glm::vec3 &color);
+      static void DrawPolygonWireframe(const std::vector<glm::vec2> &vertices, const glm::vec3 &color);
+      static void DrawPolygonFill(const std::vector<glm::vec2> &vertices, const glm::vec3 &color);
       static void DrawPolygonFillWithBorder(
-        const std::vector<Vector2f> &vertices, const glm::vec3 &fillColor, const glm::vec3 &borderColor, float borderWidth
+        const std::vector<glm::vec2> &vertices, const glm::vec3 &fillColor, const glm::vec3 &borderColor, float borderWidth
       );
     private:
       /** Shader that controls the rendering pipeline for the shapes. */

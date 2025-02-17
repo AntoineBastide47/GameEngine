@@ -83,7 +83,7 @@ namespace Engine::Input {
   void Gamepad::processStick(const int keyCodeX, const int keyCodeY, GamepadStickEvent *event) {
     const float x = axisTriggered(state.axes[keyCodeX]) ? state.axes[keyCodeX] : 0.0f;
     const float y = axisTriggered(state.axes[keyCodeY]) ? state.axes[keyCodeY] : 0.0f;
-    event->trigger(Engine2D::Vector2f{x, y});
+    event->trigger(glm::vec2(x, y));
   }
 
   bool Gamepad::axisTriggered(const float value) {

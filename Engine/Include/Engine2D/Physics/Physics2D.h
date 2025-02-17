@@ -10,7 +10,6 @@
 #include "Engine2D/Physics/CollisionGrid.h"
 #include "Engine2D/Physics/CollisionManifold.h"
 #include "Engine2D/Physics/CollisionPair.h"
-#include "Engine2D/Types/Vector2.h"
 
 namespace Engine {
   class Settings;
@@ -80,7 +79,7 @@ namespace Engine2D::Physics {
     /// Separates the given bodies using the given Minimum Translation Vector to make sure they are not contained in each other
     static void separateBodies(
       const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2,
-      const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, Vector2f mtv
+      const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, glm::vec2 mtv
     );
     /// Resolves the collision between two rigidbodies
     static void resolveCollision(const Engine::Physics::CollisionManifold &contact);

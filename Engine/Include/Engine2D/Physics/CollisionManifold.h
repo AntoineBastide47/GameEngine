@@ -8,8 +8,7 @@
 #define COLLISION_MANIFOLD_H
 
 #include <vector>
-
-#include "Engine2D/Types/Vector2.h"
+#include <glm/glm.hpp>
 
 namespace Engine2D::Physics {
   class Collider2D;
@@ -30,14 +29,14 @@ namespace Engine::Physics {
       /// The second rigidbody involved in the collision
       std::shared_ptr<Rigidbody2D> rb2;
       /// The normal along which the collision occurs
-      Engine2D::Vector2f normal;
+      glm::vec2 normal;
       /// The first contact point between the two rigidbodies
-      std::vector<Engine2D::Vector2f> contactPoints;
+      std::vector<glm::vec2> contactPoints;
 
       CollisionManifold(
         const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2,
-        const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, Engine2D::Vector2f normal,
-        Engine2D::Vector2f contactPoint1, Engine2D::Vector2f contactPoint2, uint8_t contactCount
+        const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, glm::vec2 normal,
+        glm::vec2 contactPoint1, glm::vec2 contactPoint2, uint8_t contactCount
       );
   };
 }
