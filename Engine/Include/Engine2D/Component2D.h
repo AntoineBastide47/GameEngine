@@ -1,5 +1,5 @@
 //
-// IComponent2D.h
+// Component2D.h
 // Author: Antoine Bastide
 // Date: 22/11/2024
 //

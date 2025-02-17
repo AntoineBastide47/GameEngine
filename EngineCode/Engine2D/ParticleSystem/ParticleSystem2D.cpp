@@ -7,6 +7,10 @@
 #include <random>
 #include <vector>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <iostream>
+#include <glm/gtx/compatibility.hpp>
+
 #include "Common/RenderingHeaders.h"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.h"
 #include "Engine2D/Game2D.h"
@@ -35,10 +39,12 @@ namespace Engine2D {
   }
 
   ParticleSystem2D::ParticleSystem2D()
-    : loop(false), restart(false), startDelay(0), startLifetime(1), startPosition(glm::vec2(0)), startVelocity(glm::vec2(0)),
-      startSize(glm::vec2(1)), simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1),
-      duration(1), emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0), instanceVBO(0),
-      quadVAO(0), quadVBO(0), initialized(false), aliveCount(0) {
+    : loop(false), restart(false), startDelay(0), particleLifetime(1), startPosition(glm::vec2(0)),
+      startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)), startAngularVelocity(0), endAngularVelocity(),
+      startSize(glm::vec2(1)), endSize(glm::vec2(0)), startColor(glm::vec4(1)), endColor(glm::vec4(1)),
+      simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), duration(1),
+      emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0), instanceVBO(0), quadVAO(0), quadVBO(0),
+      initialized(false), aliveCount(0) {
     this->shader = ResourceManager::GetShader("particle");
   }
 
@@ -56,7 +62,6 @@ namespace Engine2D {
     if (instanceVBO)
       return;
     this->particles.resize(maxParticles, Particle());
-    emissionRate = particles.size() * 1.0f / startLifetime;
   }
 
   uint32_t ParticleSystem2D::GetMaxParticles() const {
@@ -81,31 +86,39 @@ namespace Engine2D {
     glGenBuffers(1, &instanceVBO);
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     // Allocate buffer with enough space for all particles.
-    glBufferData(GL_ARRAY_BUFFER, particles.size() * 8 * sizeof(float), nullptr, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, particles.size() * 9 * sizeof(float), nullptr, GL_STREAM_DRAW);
 
     // Setup instance attributes:
     // Attribute location 1: instancePosition (vec2)
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), nullptr);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), nullptr);
     glVertexAttribDivisor(1, 1);
 
     // Attribute location 2: instanceScale (vec2)
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(2 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)(2 * sizeof(float)));
     glVertexAttribDivisor(2, 1);
 
     // Attribute location 3: instanceColor (vec4)
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(4 * sizeof(float)));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)(4 * sizeof(float)));
     glVertexAttribDivisor(3, 1);
+
+    // Attribute location 4: instanceRotation (vec1)
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)(8 * sizeof(float)));
+    glVertexAttribDivisor(4, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
   }
 
   void ParticleSystem2D::OnUpdate() {
-    if ((!restart && !loop && simulationFinished) || duration == 0 || emissionRate <= 0 || particles.size() == 0)
+    if ((!restart && !loop && simulationFinished) || duration == 0 || particles.size() == 0)
       return;
+
+    if (emissionRate <= 0)
+      emissionRate = particles.size() / particleLifetime;
 
     if (restart) {
       restart = false;
@@ -128,14 +141,19 @@ namespace Engine2D {
 
     // Update all particles.
     aliveCount = 0;
-    const float dA = 1.0f / startLifetime;
+    const float dA = 1.0f / particleLifetime;
     const float dt = Game2D::DeltaTime() * simulationSpeed;
 
     for (auto &p: particles) {
       p.lifeTime -= dt;
       if (p.lifeTime > 0.0f) {
-        p.position -= p.velocity * dt;
-        p.color.a -= dA * dt;
+        const float t = p.lifeTime * dA;
+        p.position -= dt * (
+          useGlobalVelocities ? glm::lerp(startVelocity, endVelocity, t) : glm::lerp(p.startVelocity, p.endVelocity, t)
+        );
+        p.color = glm::lerp(startColor, endColor, t);
+        p.size = glm::lerp(endSize, startSize, t);
+        p.rotation += glm::lerp(startAngularVelocity, endAngularVelocity, t) * dt;
         ++aliveCount;
       }
     }
@@ -153,7 +171,7 @@ namespace Engine2D {
     this->shader->Use();
     this->texture->bind();
 
-    const size_t instanceDataSize = aliveCount * 8;
+    const size_t instanceDataSize = aliveCount * 9;
     const auto instanceData = new float[instanceDataSize];
     size_t i = 0;
 
@@ -178,7 +196,8 @@ namespace Engine2D {
       instanceData[i + 5] = particle.color.g;
       instanceData[i + 6] = particle.color.b;
       instanceData[i + 7] = particle.color.a;
-      i += 8;
+      instanceData[i + 8] = particle.rotation;
+      i += 9;
     }
 
     // Update the instance VBO with new per-particle data.
@@ -197,18 +216,18 @@ namespace Engine2D {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dist_random(-maxStartPositionOffset, maxStartPositionOffset);
-    std::uniform_real_distribution<float> dist_rColor(0.5f, 1.5f);
 
     // Get a random color.
     const float randomX = dist_random(gen);
     const float randomY = dist_random(gen);
-    const float rColor = dist_rColor(gen);
 
     // Update the particle.
     Particle &particle = this->particles[index];
-    particle.color = glm::vec4(rColor, rColor, rColor, 1.0f);
-    particle.lifeTime = startLifetime;
+    particle.color = startColor;
+    particle.lifeTime = particleLifetime;
     particle.velocity = startVelocity;
+    particle.startVelocity = startVelocity;
+    particle.endVelocity = endVelocity;
     particle.size = startSize;
     particle.position = (simulateInWorldSpace ? Transform()->GetWorldPosition() : glm::vec2(0))
                         + startPosition + glm::vec2(randomX, randomY);

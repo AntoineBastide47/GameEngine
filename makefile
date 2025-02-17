@@ -35,10 +35,10 @@ build:
 	  echo "Please avoid using \033[1mmake build\033[0m to build the engine.\nInstead, you should use \033[1mmake build-debug\033[0m or \033[1mmake build-release\033[0m"; \
 	  exit 1; \
   	fi; \
-	rm -rf Engine/[a-zA-Z0-9]*-[0-9]*.[0-9]*.[0-9]*.dylib; \
+	rm -rf Engine/Include/*-[0-9]*.[0-9]*.[0-9]*.dylib Engine/Include/*-[0-9]*.[0-9]*.[0-9]*.[0-9]*.dylib; \
 	rm -rf Engine.zip; \
   	cmake -B $(BUILD_FOLDER) -S . -DCMAKE_BUILD_TYPE=$(BUILD_TYPE); \
   	if [ $(BUILD_TYPE) = "Release" ]; then cmake --build $(BUILD_FOLDER) --target clean; fi; \
 	cmake --build $(BUILD_FOLDER); \
 	mv -f $(BUILD_FOLDER)/[a-zA-Z0-9]*-[0-9]*.[0-9]*.[0-9]*.dylib Engine/Include; \
-	if [ $(BUILD_TYPE) = "Release" ]; then zip -r Engine.zip Engine; fi; \
+	if [ $(BUILD_TYPE) = "Release" ]; then zip -r Engine.zip Engine; fi

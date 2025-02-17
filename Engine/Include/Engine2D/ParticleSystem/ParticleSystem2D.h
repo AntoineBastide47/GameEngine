@@ -30,13 +30,28 @@ namespace Engine2D {
       /// How long to wait before running the first simulation
       float startDelay;
       /// How long particles will be visible on screen
-      float startLifetime;
+      float particleLifetime;
       /// The initial position of the particles
       glm::vec2 startPosition;
+
+      /// Whether particles will have their own start and end velocities
+      bool useGlobalVelocities;
       /// The initial velocity of the particles
       glm::vec2 startVelocity;
+      /// The final velocity of the particles
+      glm::vec2 endVelocity;
+      /// The initial angular velocity of the particles
+      float startAngularVelocity;
+      /// The final angular velocity of the particles
+      float endAngularVelocity;
       /// The initial size of the particles
       glm::vec2 startSize;
+      /// The final size of the particles
+      glm::vec2 endSize;
+      /// The initial color of the particles
+      glm::vec4 startColor;
+      /// The final color of the particles
+      glm::vec4 endColor;
 
       /// If the simulation is run in world or local space
       bool simulateInWorldSpace;
@@ -68,6 +83,8 @@ namespace Engine2D {
       struct Particle {
         /// The position of the particle
         glm::vec2 position;
+        /// The rotation of the particle
+        float rotation;
         /// The size of the particle
         glm::vec2 size;
         /// The current velocity of the particle
@@ -76,8 +93,10 @@ namespace Engine2D {
         glm::vec4 color;
         /// The remaining life span of the particle
         float lifeTime;
-
-        float padding;
+        /// The initial velocity of the particles
+        glm::vec2 startVelocity;
+        /// The final velocity of the particles
+        glm::vec2 endVelocity;
 
         bool Visible() const;
       };
