@@ -8,7 +8,7 @@ To get started with the engine:
 
 ### 1. Clone the Repository:
 ```bash
-git clone https://github.com/AntoineBastide47/GameEngine.git
+git clone --recursive -j8 https://github.com/AntoineBastide47/GameEngine.git
 ```
 ### 2. Build the engine
 #### 2.1. Build the engine in debug mode if you want readable error messages

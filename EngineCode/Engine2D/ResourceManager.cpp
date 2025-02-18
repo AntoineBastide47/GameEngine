@@ -15,7 +15,7 @@
 #include "Engine2D/Rendering/Texture2D.h"
 #include "Engine2D/ResourceManager.h"
 #include "Engine2D/Game2D.h"
-#include "Common/Log.h"
+#include "Engine/Log.h"
 
 namespace Engine2D {
   std::map<std::string, std::shared_ptr<Texture2D>> ResourceManager::textures;

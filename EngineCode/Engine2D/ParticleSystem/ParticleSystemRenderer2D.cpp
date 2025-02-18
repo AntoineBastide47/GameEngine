@@ -4,12 +4,17 @@
 // Date: 16/01/2025
 //
 
-#include "Common/RenderingHeaders.h"
+#include "Engine/RenderingHeaders.h"
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.h"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.h"
 
 namespace Engine2D {
   std::vector<std::shared_ptr<ParticleSystem2D>> ParticleSystemRenderer2D::particleSystems;
+
+  void ParticleSystemRenderer2D::update() {
+    for (const auto &particleSystem: particleSystems)
+      particleSystem->update();
+  }
 
   void ParticleSystemRenderer2D::render() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);

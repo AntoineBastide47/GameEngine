@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "Engine2D/Rendering/Shader.h"
-#include "Common/Log.h"
+#include "Engine/Log.h"
 
 namespace Engine2D::Rendering {
   Shader &Shader::Use() {

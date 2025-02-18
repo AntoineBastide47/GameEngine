@@ -4,20 +4,20 @@
 // Date: 03/11/2024
 //
 
-#include <iostream>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/rotate_vector.hpp>
 
 #include "Engine2D/Transform2D.h"
 #include "Engine2D/Entity2D.h"
 #include "Engine2D/Game2D.h"
-#include "Common/Log.h"
+#include "Engine/Log.h"
 #include "Engine2D/Physics/Collisions.h"
 #include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D {
   Transform2D::Transform2D(const glm::vec2 position, const float rotation, const glm::vec2 scale)
-    : position(position), rotation(std::fmod(rotation, 360.0f)), scale(scale), parent(nullptr), isDirty(true),
-      visible(true), projectionMatrix(glm::mat4(1.0f)) {
-    onTransformChange();
+    : parent(nullptr), isDirty(true), visible(true), projectionMatrix(glm::mat4(1.0f)) {
+    SetPositionRotationAndScale(position, rotation, scale);
   }
 
   Transform2D::~Transform2D() {
@@ -146,11 +146,11 @@ namespace Engine2D {
   }
 
   glm::vec2 Transform2D::Forward() const {
-    return glm::normalize(glm::rotate_vector2_degrees(glm::vec2(1, 0), rotation));
+    return glm::normalize(glm::rotate(glm::vec2(1, 0), glm::radians(rotation)));
   }
 
   glm::vec2 Transform2D::Up() const {
-    return glm::normalize(glm::rotate_vector2_degrees(glm::vec2(0, 1), rotation));
+    return glm::normalize(glm::rotate(glm::vec2(0, 1), glm::radians(rotation)));
   }
 
   void Transform2D::SetParent(const std::shared_ptr<Entity2D> &parent) {
@@ -218,7 +218,7 @@ namespace Engine2D {
   }
 
   glm::vec2 Transform2D::GetWorldHalfScale() const {
-    return worldScaleHalf;
+    return worldScale * 0.5f;
   }
 
   void Transform2D::RemoveAllChildren() {
@@ -281,17 +281,17 @@ namespace Engine2D {
 
     const Transform2D *current = parent ? &parent->transform : nullptr;
     while (current) {
-      worldPosition = glm::rotate_vector2_degrees(worldPosition * current->scale, -current->rotation) + current->position;
+      worldPosition = glm::rotate(worldPosition * current->scale, glm::radians(-current->rotation)) + current->position;
       worldRotation += current->rotation;
       worldScale = worldScale * current->scale;
       current = current->parent ? &current->parent->transform : nullptr;
     }
-    worldScaleHalf = worldScale * 0.5f;
 
     if (oldWorldPosition == worldPosition && oldWorldRotation == worldRotation && oldWorldScale == worldScale)
       return;
 
     isDirty = true;
+    const glm::vec2 worldScaleHalf = worldScale * 0.5f;
     visible = Game2D::instance && !(
                 worldPosition.x + worldScaleHalf.x < -Game2D::ViewportWidth() * 0.5f ||
                 worldPosition.x - worldScaleHalf.x > Game2D::ViewportWidth() * 0.5f ||

@@ -4,6 +4,9 @@
 // Date: 22/12/2024
 //
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/rotate_vector.hpp>
+
 #include "Engine2D/Physics/Collider2D.h"
 #include "Engine2D/Entity2D.h"
 #include "Engine2D/Transform2D.h"
@@ -37,7 +40,7 @@ namespace Engine2D::Physics {
     return aabb;
   }
 
-  void Collider2D::OnDrawGizmos2D() {
+  void Collider2D::drawGizmos2D() {
     if (!draw)
       return;
 
@@ -79,10 +82,10 @@ namespace Engine2D::Physics {
 
     // Transform the bounds of the rectangle
     this->transformedVertices = {
-      glm::rotate_vector2_degrees(glm::vec2(left, top), Transform()->GetWorldRotation()) + getPosition(),
-      glm::rotate_vector2_degrees(glm::vec2(right, top), Transform()->GetWorldRotation()) + getPosition(),
-      glm::rotate_vector2_degrees(glm::vec2(right, bottom), Transform()->GetWorldRotation()) + getPosition(),
-      glm::rotate_vector2_degrees(glm::vec2(left, bottom), Transform()->GetWorldRotation()) + getPosition(),
+      glm::rotate(glm::vec2(left, top), glm::radians(Transform()->GetWorldRotation())) + getPosition(),
+      glm::rotate(glm::vec2(right, top), glm::radians(Transform()->GetWorldRotation())) + getPosition(),
+      glm::rotate(glm::vec2(right, bottom), glm::radians(Transform()->GetWorldRotation())) + getPosition(),
+      glm::rotate(glm::vec2(left, bottom), glm::radians(Transform()->GetWorldRotation())) + getPosition(),
     };
 
     // Construct the AABB
@@ -114,7 +117,7 @@ namespace Engine2D::Physics {
     // Transform the bounds of the rectangle
     this->transformedVertices.resize(vertices.size());
     for (int i = 0; i < vertices.size(); ++i)
-      this->transformedVertices[i] = glm::rotate_vector2_degrees(vertices[i], Transform()->GetWorldRotation()) +
+      this->transformedVertices[i] = glm::rotate(vertices[i], glm::radians(Transform()->GetWorldRotation())) +
                                      getPosition();
 
     // Construct the AABB

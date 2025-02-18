@@ -11,7 +11,7 @@
 #include <iostream>
 #include <glm/gtx/compatibility.hpp>
 
-#include "Common/RenderingHeaders.h"
+#include "Engine/RenderingHeaders.h"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.h"
 #include "Engine2D/Game2D.h"
 #include "Engine2D/ResourceManager.h"
@@ -40,8 +40,8 @@ namespace Engine2D {
 
   ParticleSystem2D::ParticleSystem2D()
     : loop(false), restart(false), startDelay(0), particleLifetime(1), startPosition(glm::vec2(0)),
-      startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)), startAngularVelocity(0), endAngularVelocity(),
-      startSize(glm::vec2(1)), endSize(glm::vec2(0)), startColor(glm::vec4(1)), endColor(glm::vec4(1)),
+      useGlobalVelocities(false), startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)), startAngularVelocity(0),
+      endAngularVelocity(), startSize(glm::vec2(1)), endSize(glm::vec2(0)), startColor(glm::vec4(1)), endColor(glm::vec4(1)),
       simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), duration(1),
       emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0), instanceVBO(0), quadVAO(0), quadVBO(0),
       initialized(false), aliveCount(0) {
@@ -61,7 +61,7 @@ namespace Engine2D {
   void ParticleSystem2D::SetMaxParticles(const size_t maxParticles) {
     if (instanceVBO)
       return;
-    this->particles.resize(maxParticles, Particle());
+    this->particles.resize(maxParticles);
   }
 
   uint32_t ParticleSystem2D::GetMaxParticles() const {
@@ -113,7 +113,7 @@ namespace Engine2D {
     glBindVertexArray(0);
   }
 
-  void ParticleSystem2D::OnUpdate() {
+  void ParticleSystem2D::update() {
     if ((!restart && !loop && simulationFinished) || duration == 0 || particles.size() == 0)
       return;
 
@@ -176,9 +176,7 @@ namespace Engine2D {
     size_t i = 0;
 
     for (const auto &particle: particles) {
-      if (particle.lifeTime <= 0.0f)
-        continue;
-      if (!particle.Visible())
+      if (particle.lifeTime <= 0.0 || !particle.Visible())
         continue;
 
       const glm::vec2 scale = particle.size;
@@ -223,6 +221,7 @@ namespace Engine2D {
 
     // Update the particle.
     Particle &particle = this->particles[index];
+    particle = Particle();
     particle.color = startColor;
     particle.lifeTime = particleLifetime;
     particle.velocity = startVelocity;

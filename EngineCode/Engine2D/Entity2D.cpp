@@ -80,8 +80,6 @@ namespace Engine2D {
       Game2D::instance->physics2D->addCollider(collider);
     if (const auto particleSystem = std::dynamic_pointer_cast<ParticleSystem2D>(component))
       ParticleSystemRenderer2D::addParticleSystem(particleSystem);
-
-    component->OnInitialize();
   }
 
   void Entity2D::recallComponent(const std::shared_ptr<Component2D> &component) {
@@ -89,7 +87,5 @@ namespace Engine2D {
       Game2D::instance->physics2D->removeCollider(collider);
     if (const auto particleSystem = std::dynamic_pointer_cast<ParticleSystem2D>(component))
       ParticleSystemRenderer2D::removeParticleSystem(particleSystem);
-
-    component->OnDestroy();
   }
 }

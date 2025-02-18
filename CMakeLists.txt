@@ -6,74 +6,65 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
 find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(GLM REQUIRED)
-
-# Include cpptrace to be able to print stack traces
-include(FetchContent)
-FetchContent_Declare(
-    cpptrace
-    GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
-    GIT_TAG v0.7.3 # <HASH or TAG>
-)
-FetchContent_MakeAvailable(cpptrace)
 
 # Create the Engine2D as a static library
 add_library(Engine2D SHARED
-    Engine/Include/Common/Macros.h
-    Engine/Include/Engine2D/Rendering/stb_image.h
-    Engine/Include/Common/RenderingHeaders.h
+    EngineInclude/Engine/Macros.h
+    EngineInclude/Engine2D/Rendering/stb_image.h
+    EngineInclude/Engine/RenderingHeaders.h
+    EngineInclude/Engine2D/Types/Vector2.h
     EngineCode/Engine2D/Game2D.cpp
-    Engine/Include/Engine2D/Game2D.h
+    EngineInclude/Engine2D/Game2D.h
     EngineCode/Engine2D/Rendering/Shader.cpp
-    Engine/Include/Engine2D/Rendering/Shader.h
+    EngineInclude/Engine2D/Rendering/Shader.h
     EngineCode/Engine2D/Rendering/Texture2D.cpp
-    Engine/Include/Engine2D/Rendering/Texture2D.h
+    EngineInclude/Engine2D/Rendering/Texture2D.h
     EngineCode/Engine2D/ResourceManager.cpp
-    Engine/Include/Engine2D/ResourceManager.h
+    EngineInclude/Engine2D/ResourceManager.h
     EngineCode/Engine2D/Rendering/SpriteRenderer.cpp
-    Engine/Include/Engine2D/Rendering/SpriteRenderer.h
+    EngineInclude/Engine2D/Rendering/SpriteRenderer.h
     EngineCode/Engine2D/Transform2D.cpp
-    Engine/Include/Engine2D/Transform2D.h
+    EngineInclude/Engine2D/Transform2D.h
     EngineCode/Engine2D/Entity2D.cpp
-    Engine/Include/Engine2D/Entity2D.h
-    EngineCode/Common/Log.cpp
-    Engine/Include/Common/Log.h
-    Engine/Include/Common/Event.h
-    EngineCode/Input/Keyboard.cpp
-    Engine/Include/Input/Keyboard.h
-    EngineCode/Input/Mouse.cpp
-    Engine/Include/Input/Mouse.h
-    EngineCode/Input/Gamepad.cpp
-    Engine/Include/Input/Gamepad.h
-    Engine/Include/Input/InputContexts.h
+    EngineInclude/Engine2D/Entity2D.h
+    EngineCode/Engine/Log.cpp
+    EngineInclude/Engine/Log.h
+    EngineInclude/Engine/Event.h
+    EngineCode/Engine/Input/Keyboard.cpp
+    EngineInclude/Engine/Input/Keyboard.h
+    EngineCode/Engine/Input/Mouse.cpp
+    EngineInclude/Engine/Input/Mouse.h
+    EngineCode/Engine/Input/Gamepad.cpp
+    EngineInclude/Engine/Input/Gamepad.h
+    EngineInclude/Engine/Input/InputContexts.h
     EngineCode/Engine2D/Component2D.cpp
-    Engine/Include/Engine2D/Component2D.h
+    EngineInclude/Engine2D/Component2D.h
     EngineCode/Engine2D/Physics/Collisions.cpp
-    Engine/Include/Engine2D/Physics/Collisions.h
+    EngineInclude/Engine2D/Physics/Collisions.h
     EngineCode/Engine2D/Physics/Physics2D.cpp
-    Engine/Include/Engine2D/Physics/Physics2D.h
+    EngineInclude/Engine2D/Physics/Physics2D.h
     EngineCode/Engine2D/Physics/Rigidbody2D.cpp
-    Engine/Include/Engine2D/Physics/Rigidbody2D.h
+    EngineInclude/Engine2D/Physics/Rigidbody2D.h
     EngineCode/Engine2D/Physics/CollisionManifold.cpp
-    Engine/Include/Engine2D/Physics/CollisionManifold.h
-    EngineCode/Types/float01.cpp
-    Engine/Include/Types/float01.h
+    EngineInclude/Engine2D/Physics/CollisionManifold.h
+    EngineCode/Engine/Types/float01.cpp
+    EngineInclude/Engine/Types/float01.h
     EngineCode/Engine2D/Physics/CollisionGrid.cpp
-    Engine/Include/Engine2D/Physics/CollisionGrid.h
-    EngineCode/Common/Settings.cpp
-    Engine/Include/Common/Settings.h
+    EngineInclude/Engine2D/Physics/CollisionGrid.h
+    EngineCode/Engine/Settings.cpp
+    EngineInclude/Engine/Settings.h
     EngineCode/Engine2D/Physics/Collider2D.cpp
-    Engine/Include/Engine2D/Physics/Collider2D.h
-    Engine/Include/Engine2D/Physics/CollisionPair.h
+    EngineInclude/Engine2D/Physics/Collider2D.h
+    EngineInclude/Engine2D/Physics/CollisionPair.h
     EngineCode/Engine2D/ParticleSystem/ParticleSystem2D.cpp
-    Engine/Include/Engine2D/ParticleSystem/ParticleSystem2D.h
+    EngineInclude/Engine2D/ParticleSystem/ParticleSystem2D.h
     EngineCode/Engine2D/ParticleSystem/ParticleSystemRenderer2D.cpp
-    Engine/Include/Engine2D/ParticleSystem/ParticleSystemRenderer2D.h
+    EngineInclude/Engine2D/ParticleSystem/ParticleSystemRenderer2D.h
     EngineCode/Engine2D/Rendering/ShapeRenderer.cpp
-    Engine/Include/Engine2D/Rendering/ShapeRenderer.h
-    Engine/Include/Engine2D/Types/Vector2.h
+    EngineInclude/Engine2D/Rendering/ShapeRenderer.h
+    EngineCode/Engine2D/Behaviour.cpp
+    EngineInclude/Engine2D/Behaviour.h
 )
 
 set_target_properties(Engine2D PROPERTIES OUTPUT_NAME Engine2D-0.5.0 PREFIX "")
@@ -81,13 +72,28 @@ set_target_properties(Engine2D PROPERTIES OUTPUT_NAME Engine2D-0.5.0 PREFIX "")
 # Include CMakeRC
 include(CMakeRC.cmake)
 cmrc_add_resource_library(assets NAMESPACE engineResources ${CMAKE_SOURCE_DIR}/Assets)
-
 target_link_libraries(Engine2D PUBLIC assets)
+
+# GLFW
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/glfw)
+
+# GLM
+add_subdirectory(external/glm)
+target_include_directories(glm INTERFACE external/glm)
+
+# Cpptrace
+set(CPPTRACE_SOURCE_DIR external/cpptrace)
+add_subdirectory(${CPPTRACE_SOURCE_DIR})
+
+# Include all other libraries
 target_link_libraries(Engine2D PRIVATE
     OpenGL::GL
-    glfw
     GLEW::GLEW
-    glm::glm
+    glfw
+    glm
     cpptrace::cpptrace
 )
 
@@ -103,7 +109,7 @@ elseif (WIN32)
   message(STATUS "Window build is not fully supported yet, there could be some errors.")
 endif ()
 
-set(ENGINE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/Engine/Include)
+set(ENGINE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/EngineInclude)
 target_include_directories(Engine2D PUBLIC ${ENGINE_INCLUDE_DIR})
 target_include_directories(Engine2D PRIVATE
     ${OPENGL_INCLUDE_DIR}

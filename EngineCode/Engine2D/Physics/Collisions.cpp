@@ -4,6 +4,9 @@
 // Date: 29/11/2024
 //
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
+
 #include "Engine2D/Physics/Collisions.h"
 #include "Engine2D/Entity2D.h"
 #include "Engine2D/Physics/Collider2D.h"
@@ -283,7 +286,7 @@ namespace Engine2D::Physics {
     const glm::vec2 ab = pointB - pointA;
     const glm::vec2 ap = p - pointA;
 
-    if (const double d = glm::dot(ab, ap) / glm::length_squared(ab); d < 0)
+    if (const double d = glm::dot(ab, ap) / glm::length2(ab); d < 0)
       *closestPoint = pointA;
     else if (d >= 1)
       *closestPoint = pointB;
