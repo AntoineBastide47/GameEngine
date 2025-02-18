@@ -4,10 +4,8 @@
 // Date: 10/11/2024
 //
 
-#include <iostream>
-
 #include "Engine2D/Rendering/Texture2D.h"
-#include "Common/RenderingHeaders.h"
+#include "Engine/RenderingHeaders.h"
 
 namespace Engine2D::Rendering {
   Texture2D::Texture2D()

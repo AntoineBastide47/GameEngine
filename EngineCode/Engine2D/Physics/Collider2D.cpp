@@ -37,7 +37,7 @@ namespace Engine2D::Physics {
     return aabb;
   }
 
-  void Collider2D::OnDrawGizmos2D() {
+  void Collider2D::drawGizmos2D() {
     if (!draw)
       return;
 

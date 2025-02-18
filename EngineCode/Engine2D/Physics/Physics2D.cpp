@@ -13,7 +13,7 @@
 #include "Engine2D/Physics/Collider2D.h"
 #include "Engine2D/Physics/Collisions.h"
 #include "Engine2D/Physics/Rigidbody2D.h"
-#include "Common/Settings.h"
+#include "Engine/Settings.h"
 #include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D::Physics {
@@ -60,6 +60,11 @@ namespace Engine2D::Physics {
     // Skip the collision detection if there are no active colliders
     findActiveColliders();
     if (!activeColliders.empty()) {
+
+      for (const auto collider: activeColliders)
+        if (collider->rigidbody)
+          collider->rigidbody->step();
+
       if (Engine::Settings::Physics::GetUseScreenPartitioning()) {
         // Update the collision grid
         if (collisionGridNeedsResizing)

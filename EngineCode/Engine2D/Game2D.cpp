@@ -13,14 +13,13 @@
 #include "Engine2D/Physics/Physics2D.h"
 #include "Engine2D/Rendering/Shader.h"
 #include "Engine2D/Rendering/SpriteRenderer.h"
-#include "Common/Macros.h"
-#include "Common/Settings.h"
-#include "Engine2D/ParticleSystem/ParticleSystem2D.h"
+#include "Engine/Macros.h"
+#include "Engine/Settings.h"
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.h"
 #include "Engine2D/Rendering/ShapeRenderer.h"
-#include "Input/Gamepad.h"
-#include "Input/Keyboard.h"
-#include "Input/Mouse.h"
+#include "Engine/Input/Gamepad.h"
+#include "Engine/Input/Keyboard.h"
+#include "Engine/Input/Mouse.h"
 
 namespace Engine2D {
   Game2D *Game2D::instance = nullptr;
@@ -206,15 +205,25 @@ namespace Engine2D {
       Engine::Input::Gamepad::processInput();
   }
 
+  void Game2D::fixedUpdate() {
+    physicsAccumulator += deltaTime;
+    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
+    while (physicsAccumulator >= fixedDeltaTime) {
+      for (const auto &entity: entities)
+        if (entity->IsActive())
+          entity->OnFixedUpdate();
+      physics2D->step();
+      physicsAccumulator -= fixedDeltaTime;
+    }
+  }
+
   void Game2D::update() {
     bool foundNull = false;
+    ParticleSystemRenderer2D::update();
     for (const auto &entity: entities) {
-      if (entity && entity->IsActive()) {
+      if (entity && entity->IsActive())
         entity->OnUpdate();
-        for (const auto &component: entity->components)
-          if (component && component->IsActive())
-            component->OnUpdate();
-      } else if (!entity)
+      else if (!entity)
         foundNull = true;
     }
     if (foundNull)
@@ -224,22 +233,6 @@ namespace Engine2D {
         else
           ++it;
       }
-  }
-
-  void Game2D::fixedUpdate() {
-    physicsAccumulator += deltaTime;
-    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
-    while (physicsAccumulator >= fixedDeltaTime) {
-      for (const auto &entity: entities)
-        if (entity->IsActive()) {
-          entity->OnFixedUpdate();
-          for (const auto &component: entity->components)
-            if (component->IsActive())
-              component->OnFixedUpdate();
-        }
-      physics2D->step();
-      physicsAccumulator -= fixedDeltaTime;
-    }
   }
 
   void Game2D::render() const {
@@ -259,12 +252,8 @@ namespace Engine2D {
 
   void Game2D::onDrawGizmos2D() const {
     for (const auto &entity: entities)
-      if (entity->IsActive()) {
+      if (entity->IsActive())
         entity->OnDrawGizmos2D();
-        for (const auto &component: entity->components)
-          if (component->IsActive())
-            component->OnDrawGizmos2D();
-      }
   }
 
   void Game2D::limitFrameRate() {

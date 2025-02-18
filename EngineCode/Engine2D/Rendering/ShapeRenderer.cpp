@@ -6,7 +6,7 @@
 
 #include "Engine2D/Rendering/ShapeRenderer.h"
 #include "Engine2D/Rendering/Shader.h"
-#include "Common/RenderingHeaders.h"
+#include "Engine/RenderingHeaders.h"
 
 namespace Engine2D::Rendering {
   std::shared_ptr<Shader> ShapeRenderer::shader = nullptr;

@@ -7,7 +7,7 @@
 #include "Engine2D/Physics/Rigidbody2D.h"
 #include "Engine2D/Entity2D.h"
 #include "Engine2D/Game2D.h"
-#include "Common/Settings.h"
+#include "Engine/Settings.h"
 #include "Engine2D/Physics/Collider2D.h"
 #include "Engine2D/Types/Vector2.h"
 
@@ -40,7 +40,7 @@ namespace Engine2D::Physics {
     dynamicFriction = 0.4f;
   }
 
-  void Rigidbody2D::OnFixedUpdate() {
+  void Rigidbody2D::step() {
     if (!IsActive() || isKinematic)
       return;
 
