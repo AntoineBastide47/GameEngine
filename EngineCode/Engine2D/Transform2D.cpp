@@ -20,11 +20,6 @@ namespace Engine2D {
     SetPositionRotationAndScale(position, rotation, scale);
   }
 
-  Transform2D::~Transform2D() {
-    RemoveAllChildren();
-    parent = nullptr;
-  }
-
   bool Transform2D::operator==(const Transform2D &other) const {
     return parent == other.parent && position == other.position && rotation == other.rotation && scale == other.scale;
   }
@@ -158,7 +153,7 @@ namespace Engine2D {
       return;
 
     if (this->parent)
-      this->parent->transform.removeChild(Entity());
+      this->parent->transform->removeChild(Entity());
 
     // If no parent is specified, set the parent to null
     if (!parent) {
@@ -172,11 +167,11 @@ namespace Engine2D {
 
     // Create the parent hierarchy
     this->parent = parent;
-    this->parent->transform.addChild(Entity());
+    this->parent->transform->addChild(Entity());
     onParentHierarchyChange();
 
     // Convert the transform properties from world space to local space
-    auto localTransform = glm::inverse(this->parent->transform.GetWorldMatrix()) * GetWorldMatrix();
+    auto localTransform = glm::inverse(this->parent->transform->GetWorldMatrix()) * GetWorldMatrix();
     position = glm::vec2(localTransform[3][0], -localTransform[3][1]);
     rotation = scale.x == 0 ? 0 : glm::degrees(std::atan2(localTransform[1][0] / scale.x, localTransform[0][0] / scale.x));
     scale.x = glm::length(glm::vec2(localTransform[0][0], localTransform[1][0]));
@@ -188,12 +183,12 @@ namespace Engine2D {
   }
 
   bool Transform2D::IsChildOf(const std::shared_ptr<Entity2D> &entity) const {
-    Transform2D *current = parent ? &parent->transform : nullptr;
+    Transform2D *current = parent ? parent->transform.get() : nullptr;
 
     while (current) {
       if (current->Entity() && current->Entity() == entity)
         return true;
-      current = current->parent ? &current->parent->transform : nullptr;
+      current = current->parent ? current->parent->transform.get() : nullptr;
     }
     return false;
   }
@@ -224,7 +219,7 @@ namespace Engine2D {
   void Transform2D::RemoveAllChildren() {
     for (const auto child: childList)
       if (child)
-        child->transform.SetParent(nullptr);
+        child->transform->SetParent(nullptr);
     childList.clear();
   }
 
@@ -279,12 +274,12 @@ namespace Engine2D {
     worldRotation = rotation;
     worldScale = scale;
 
-    const Transform2D *current = parent ? &parent->transform : nullptr;
+    const Transform2D *current = parent ? parent->transform.get() : nullptr;
     while (current) {
       worldPosition = glm::rotate(worldPosition * current->scale, glm::radians(-current->rotation)) + current->position;
       worldRotation += current->rotation;
       worldScale = worldScale * current->scale;
-      current = current->parent ? &current->parent->transform : nullptr;
+      current = current->parent ? current->parent->transform.get() : nullptr;
     }
 
     if (oldWorldPosition == worldPosition && oldWorldRotation == worldRotation && oldWorldScale == worldScale)
@@ -302,7 +297,7 @@ namespace Engine2D {
     // Update the children of this transform as they depend on the transform of their parent
     for (const auto child: childList)
       if (child)
-        child->transform.onTransformChange();
+        child->transform->onTransformChange();
   }
 
   void Transform2D::onParentHierarchyChange() {
@@ -312,13 +307,13 @@ namespace Engine2D {
       return;
     }
     // If it is active, make sure all it's parents are also active
-    Transform2D *current = &parent->transform;
+    Transform2D *current = parent->transform.get();
     while (current && current->Entity()) {
       if (!current->Entity()->active) {
         Entity()->parentsActive = false;
         return;
       }
-      current = current->parent ? &current->parent->transform : nullptr;
+      current = current->parent ? current->parent->transform.get() : nullptr;
     }
     Entity()->parentsActive = true;
   }

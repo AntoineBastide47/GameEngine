@@ -13,6 +13,7 @@
 #include "Engine2D/Physics/Collisions.h"
 #include "Engine2D/Physics/Rigidbody2D.h"
 #include "Engine/Settings.h"
+#include "Engine2D/Behaviour.h"
 #include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D::Physics {
@@ -109,20 +110,32 @@ namespace Engine2D::Physics {
   ) {
     if (sender->isTrigger) {
       switch (eventType) {
-        case Stay: sender->Entity()->OnTriggerStay2D(receiver);
+        case Stay:
+          for (const auto &behaviour: sender->Entity()->behaviours)
+            behaviour->OnTriggerStay2D(receiver);
           break;
-        case Enter: sender->Entity()->OnTriggerEnter2D(receiver);
+        case Enter:
+          for (const auto &behaviour: sender->Entity()->behaviours)
+            behaviour->OnTriggerEnter2D(receiver);
           break;
-        case Exit: sender->Entity()->OnTriggerExit2D(receiver);
+        case Exit:
+          for (const auto &behaviour: sender->Entity()->behaviours)
+            behaviour->OnTriggerExit2D(receiver);
           break;
       }
     } else {
       switch (eventType) {
-        case Stay: sender->Entity()->OnCollisionStay2D(receiver);
+        case Stay:
+          for (const auto &behaviour: sender->Entity()->behaviours)
+            behaviour->OnCollisionStay2D(receiver);
           break;
-        case Enter: sender->Entity()->OnCollisionEnter2D(receiver);
+        case Enter:
+          for (const auto &behaviour: sender->Entity()->behaviours)
+            behaviour->OnCollisionEnter2D(receiver);
           break;
-        case Exit: sender->Entity()->OnCollisionExit2D(receiver);
+        case Exit:
+          for (const auto &behaviour: sender->Entity()->behaviours)
+            behaviour->OnCollisionExit2D(receiver);
           break;
       }
     }
@@ -147,8 +160,8 @@ namespace Engine2D::Physics {
           col1 < col2 ? rb2 : rb1,
         };
         // Check if the colliders have a parent-child relationship and if they do not have a rigidbody each
-        const bool col1ChildCol2 = col1->Entity()->transform.IsChildOf(col2->Entity()) && !(rb1 && rb2);
-        const bool col2ChildCol1 = col2->Entity()->transform.IsChildOf(col1->Entity()) && !(rb1 && rb2);
+        const bool col1ChildCol2 = col1->Entity()->transform->IsChildOf(col2->Entity()) && !(rb1 && rb2);
+        const bool col2ChildCol1 = col2->Entity()->transform->IsChildOf(col1->Entity()) && !(rb1 && rb2);
         // Make sure it is not a collision between two static colliders, prevent entities colliding with themselves
         // and do a cheap collision check for early out
         if ((!rb1 && !rb2) || col1->Entity() == col2->Entity() || col1ChildCol2 || col2ChildCol1 ||

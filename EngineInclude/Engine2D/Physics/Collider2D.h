@@ -98,7 +98,7 @@ namespace Engine2D::Physics {
   };
 
   /** Collider for 2D physics representing a circle. */
-  class CircleCollider2D : public Collider2D {
+  class CircleCollider2D final : public Collider2D {
     public:
       /// The radius of this collider
       float radius;
@@ -109,7 +109,7 @@ namespace Engine2D::Physics {
   };
 
   /** Collider for 2D physics representing a rectangle. */
-  class RectangleCollider2D : public Collider2D {
+  class RectangleCollider2D final : public Collider2D {
     public:
       /// The height of this collider
       float width;
@@ -122,7 +122,7 @@ namespace Engine2D::Physics {
   };
 
   /** Collider for 2D physics representing a polygon. */
-  class PolygonCollider2D : public Collider2D {
+  class PolygonCollider2D final : public Collider2D {
     public:
       using Collider2D::vertices;
       PolygonCollider2D();

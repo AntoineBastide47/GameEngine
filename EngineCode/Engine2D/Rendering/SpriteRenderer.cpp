@@ -4,6 +4,7 @@
 // Date: 10/11/2024 (modified 02/03/2025)
 //
 
+#include <iostream>
 #include <vector>
 #include <map>
 
@@ -95,7 +96,7 @@ namespace Engine2D::Rendering {
     glBindVertexArray(0);
   }
 
-  void SpriteRenderer::render(const std::map<int, std::vector<std::shared_ptr<Entity2D>>> &entities) {
+  void SpriteRenderer::render(std::map<int, std::vector<std::shared_ptr<Entity2D>>> &entities) {
     if (!shader)
       return;
 
@@ -106,8 +107,10 @@ namespace Engine2D::Rendering {
     glBindVertexArray(quadVAO);
 
     for (const auto [id, group] : entities) {
-      if (group.empty())
+      if (group.empty()) {
+        entities.erase(id);
         continue;
+      }
 
       // Bind the texture for this batch.
       group.front()->Texture()->bind();
@@ -119,16 +122,16 @@ namespace Engine2D::Rendering {
 
       int instanceCount = 0;
       for (const auto &entity : group) {
-        if (!entity || !entity->IsActive() || !entity->transform.GetIsVisible())
+        if (!entity || !entity->IsActive() || !entity->transform->GetIsVisible())
           continue;
 
-        // Get the model matrix (assumed to be a glm::mat4)
-        const auto &modelMatrix = entity->transform.GetWorldMatrix();
+        // Get the model matrix
+        const auto &modelMatrix = entity->transform->GetWorldMatrix();
         // Append the 16 floats (column-major order) from the model matrix.
         const float* matrixPtr = glm::value_ptr(modelMatrix);
         batchData.insert(batchData.end(), matrixPtr, matrixPtr + 16);
 
-        // Append the sprite color (assumed to be stored as RGBA floats)
+        // Append the sprite color
         batchData.push_back(entity->textureColor.r);
         batchData.push_back(entity->textureColor.g);
         batchData.push_back(entity->textureColor.b);

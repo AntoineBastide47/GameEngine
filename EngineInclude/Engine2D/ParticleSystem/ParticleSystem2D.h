@@ -17,7 +17,7 @@ namespace Engine2D::Rendering {
 }
 
 namespace Engine2D {
-  class ParticleSystem2D : public Component2D {
+  class ParticleSystem2D final : public Component2D {
     friend class Game2D;
     friend class Entity2D;
     friend class ParticleSystemRenderer2D;

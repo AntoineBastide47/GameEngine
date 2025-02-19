@@ -10,27 +10,20 @@
 #include <memory>
 
 namespace Engine2D {
-  class Game2D;
   class Entity2D;
   class Transform2D;
 
-  namespace Rendering {
-    class ShapeRenderer;
-  }
-}
-
-namespace Engine2D {
   /**
    * Component2D is the base class for all 2D components linked to a 2D Entity (it works like an interface in other languages).
    * If you need to create a component and want to link it to an Entity2D using Entity2D::AddComponent(), your component will
    * need to inherit from this class for it to work.
    */
-  class Component2D : protected std::enable_shared_from_this<Component2D> {
+  class Component2D {
     friend class Entity2D;
     friend class Game2D;
     public:
       Component2D();
-      virtual ~Component2D();
+      virtual ~Component2D() = default;
 
       /// Changes the active state of this component
       void SetActive(bool active);
@@ -40,7 +33,7 @@ namespace Engine2D {
       /// @returns The entity this component is attached to
       [[nodiscard]] std::shared_ptr<Entity2D> &Entity();
       /// @returns The transform attached to the entity this component is attached to
-      [[nodiscard]] Transform2D *Transform() const;
+      [[nodiscard]] std::shared_ptr<Transform2D> Transform() const;
     private:
       /// Whether this component is active in the scene
       bool active;

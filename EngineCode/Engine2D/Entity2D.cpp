@@ -4,6 +4,8 @@
 // Date: 03/11/2024
 //
 
+#include <iostream>
+
 #include "Engine2D/Entity2D.h"
 #include "Engine2D/Game2D.h"
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.h"
@@ -14,7 +16,8 @@ using Engine2D::Rendering::Texture2D;
 
 namespace Engine2D {
   Entity2D::Entity2D(std::string name)
-    : name(std::move(name)), textureColor(glm::vec4(1.0f)), active(true), parentsActive(true), texture(nullptr) {}
+    : name(std::move(name)), textureColor(glm::vec4(1.0f)), active(true), parentsActive(true), texture(nullptr),
+      transform(std::make_shared<Transform2D>()) {}
 
   bool Entity2D::operator==(const Entity2D &entity) const {
     return name == entity.name && transform == entity.transform && texture == entity.texture;
@@ -26,8 +29,8 @@ namespace Engine2D {
 
   void Entity2D::SetActive(const bool active) {
     this->active = active;
-    for (const auto child: transform)
-      child->transform.onParentHierarchyChange();
+    for (const auto child: *transform)
+      child->transform->onParentHierarchyChange();
   }
 
   bool Entity2D::IsActive() const {
@@ -59,20 +62,19 @@ namespace Engine2D {
     if (!weak_from_this().lock())
       throw std::runtime_error(name + " must be created using Game2D::AddEntity.");
 
-    transform.setEntity(shared_from_this());
-    transform.onParentHierarchyChange();
-    this->OnInitialize();
-    if (!this->transform.parent)
-      this->transform.SetParent(nullptr);
+    transform->setEntity(shared_from_this());
+    transform->onParentHierarchyChange();
+    if (!this->transform->parent)
+      this->transform->SetParent(nullptr);
   }
 
   void Entity2D::destroy() {
-    this->OnDestroy();
     for (auto it = components.begin(); it != components.end();) {
       recallComponent(*it);
       it = components.erase(it);
     }
     components.clear();
+    transform->RemoveAllChildren();
   }
 
   void Entity2D::forwardComponent(const std::shared_ptr<Component2D> &component) {

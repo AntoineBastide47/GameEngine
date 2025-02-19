@@ -19,7 +19,7 @@ namespace Engine2D {
    * This class is used to define and manage the spatial transformations (position, rotation, scale)
    * of entities in a 2D space. It provides operators for equality comparisons between transforms.
    */
-  class Transform2D : public Component2D {
+  class Transform2D final : public Component2D {
     friend class Game2D;
     friend class Entity2D;
     public:
@@ -30,7 +30,6 @@ namespace Engine2D {
        * @param scale Initial scale of the transform, defaulted to (1, 1).
        */
       explicit Transform2D(glm::vec2 position = glm::vec2(0), float rotation = 0, glm::vec2 scale = glm::vec2(1));
-      ~Transform2D() override;
 
       /// Equality operator to compare two Transform2D objects.
       bool operator==(const Transform2D &other) const;

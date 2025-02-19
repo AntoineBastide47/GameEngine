@@ -25,7 +25,7 @@ namespace Engine2D::Physics {
    * forces, collisions, and interaction with gravity. It supports two types of bodies:
    * Circle and Rectangle.
    */
-  class Rigidbody2D : public Component2D {
+  class Rigidbody2D final : public Component2D {
     friend class Engine2D::Game2D;
     friend class Physics2D;
     public:

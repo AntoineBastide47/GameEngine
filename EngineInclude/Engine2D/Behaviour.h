@@ -6,6 +6,7 @@
 
 #ifndef BEHAVIOUR_H
 #define BEHAVIOUR_H
+
 #include "Engine2D/Component2D.h"
 
 namespace Engine2D {

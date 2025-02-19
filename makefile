@@ -44,8 +44,7 @@ build:
   	  	cmake --build $(BUILD_FOLDER) --target clean; \
   	fi; \
 	cmake --build $(BUILD_FOLDER); \
-	mv -f $(BUILD_FOLDER)/[a-zA-Z0-9]*-[0-9]*.[0-9]*.[0-9]*.dylib EngineInclude; \
-	if [ $(BUILD_TYPE) = "Release" ]; then zip -r Engine.zip Engine; fi
+	mv -f $(BUILD_FOLDER)/[a-zA-Z0-9]*-[0-9]*.[0-9]*.[0-9]*.dylib EngineInclude;
 
 create-project: ## Starts the CLI to create a new project
 	@clear; \

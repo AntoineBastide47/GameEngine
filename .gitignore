@@ -38,5 +38,5 @@
 # other
 todo.txt
 **/.DS_Store
-Engine/Include/*.dylib
+EngineInclude/*.dylib
 Engine.zip

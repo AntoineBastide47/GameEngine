@@ -20,6 +20,7 @@
 #include "Engine/Input/Gamepad.h"
 #include "Engine/Input/Keyboard.h"
 #include "Engine/Input/Mouse.h"
+#include "Engine2D/Behaviour.h"
 
 namespace Engine2D {
   Game2D *Game2D::instance = nullptr;
@@ -55,10 +56,16 @@ namespace Engine2D {
     return Engine::Settings::Physics::GetFixedDeltaTime();
   }
 
-  // Variables for FPS calculation
-  auto nextFrameTime = std::chrono::high_resolution_clock::now();
   float oneSecondTimer = 0.0f;
-  int frameCounter = 0;
+  auto lastTime = std::chrono::high_resolution_clock::now();
+
+  // New members for pipelined concurrency.
+  // (Add these to the Game2D class declaration as well.)
+  std::mutex syncMutex;
+  std::condition_variable cv;
+  bool updateFinished = false; // True when update thread has produced new frame data.
+  bool renderFinished = true;  // True when renderer is done with the previous frame.
+  std::thread renderThread;
 
   void Game2D::Run() {
     this->initialize();
@@ -66,13 +73,29 @@ namespace Engine2D {
     // Set the render variables
     targetFrameRate = Engine::Settings::Graphics::GetTargetFrameRate();
     targetRenderRate = targetFrameRate == 0 ? 0.0f : 1.0f / targetFrameRate;
+    nextFrameTime = std::chrono::high_resolution_clock::now();
+    frameCounter = 0;
 
-    auto lastTime = std::chrono::high_resolution_clock::now();
+    // IMPORTANT:
+    // GLFW requires event processing (glfwPollEvents) in the main thread.
+    // So we run the update loop on the main thread.
+    // We then release the GL context so the render thread can make it current.
+    glfwMakeContextCurrent(nullptr);
+
+    renderThread = std::thread(&Game2D::renderLoop, this);
+    updateLoop();
+    renderThread.join();
+
+    this->quit();
+  }
+
+  void Game2D::updateLoop() {
     while (!glfwWindowShouldClose(window)) {
       // Calculate the current deltaTime
-      auto currentFrameTime = std::chrono::high_resolution_clock::now();
+      const auto currentFrameTime = std::chrono::high_resolution_clock::now();
       this->deltaTime = std::chrono::duration<float>(currentFrameTime - lastTime).count() * timeScale;
       lastTime = currentFrameTime;
+
       glfwPollEvents();
 
       this->addEntities();
@@ -81,7 +104,20 @@ namespace Engine2D {
       this->processInput();
       this->fixedUpdate();
       this->update();
-      this->render();
+
+      // Handoff engine data to the render thread
+      {
+        std::unique_lock lock(syncMutex);
+        cv.wait(
+          lock, [this] {
+            return renderFinished;
+          }
+        );
+        updateFinished = true;
+        renderFinished = false;
+      }
+      cv.notify_one();
+
       this->limitFrameRate();
 
       // FPS calculation
@@ -93,8 +129,33 @@ namespace Engine2D {
         physicsAccumulator = 0.0f;
       }
     }
+    // In case the window is closing, ensure the render thread isn’t left waiting.
+    {
+      std::unique_lock lock(syncMutex);
+      updateFinished = true;
+    }
+    cv.notify_one();
+  }
 
-    this->quit();
+  void Game2D::renderLoop() {
+    // Make the GL context current in this thread.
+    glfwMakeContextCurrent(window);
+
+    while (!glfwWindowShouldClose(window)) {
+      {
+        std::unique_lock lock(syncMutex);
+        cv.wait(
+          lock, [this] {
+            return updateFinished;
+          }
+        );
+        // Now the engine data is exclusively ours; render the frame.
+        this->render();
+        updateFinished = false;
+        renderFinished = true;
+      }
+      cv.notify_one();
+    }
   }
 
   void Game2D::SetGameResourceLoader(ResourceLoader resourceLoader) {
@@ -104,6 +165,26 @@ namespace Engine2D {
   void Game2D::Close(const Engine::Input::KeyboardAndMouseContext context) {
     if (context.released)
       glfwSetWindowShouldClose(instance->window, true);
+  }
+
+  std::shared_ptr<Entity2D> Game2D::AddEntity(std::string name) {
+    if (instance) {
+      auto entity = std::make_shared<Entity2D>(name);
+      instance->entitiesToAdd.push_back(entity);
+      entity->initialize();
+      return entity;
+    }
+    return nullptr;
+  }
+
+  std::shared_ptr<Entity2D> Game2D::Find(const std::string &name) {
+    for (const auto entity: instance->entitiesToAdd)
+      if (entity->name == name)
+        return entity;
+    for (const auto entity: instance->entities)
+      if (entity->name == name)
+        return entity;
+    return nullptr;
   }
 
   void Game2D::initialize() {
@@ -136,8 +217,6 @@ namespace Engine2D {
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
-    glfwSetWindowRefreshCallback(window, window_refresh_callback);
-    glfwSetWindowPosCallback(window, window_pos_callback);
 
     glfwSwapInterval(Engine::Settings::Graphics::GetVsyncEnabled());
 
@@ -196,6 +275,7 @@ namespace Engine2D {
     this->OnInitialize();
   }
 
+  // ReSharper disable once CppMemberFunctionMayBeStatic
   void Game2D::processInput() {
     if (Engine::Settings::Input::GetAllowMouseInput())
       Engine::Input::Mouse::processInput();
@@ -211,7 +291,8 @@ namespace Engine2D {
     while (physicsAccumulator >= fixedDeltaTime) {
       for (const auto &entity: entities)
         if (entity->IsActive())
-          entity->OnFixedUpdate();
+          for (const auto &behaviour: entity->behaviours)
+            behaviour->OnFixedUpdate();
       physics2D->step();
       physicsAccumulator -= fixedDeltaTime;
     }
@@ -222,7 +303,8 @@ namespace Engine2D {
     ParticleSystemRenderer2D::update();
     for (const auto &entity: entities) {
       if (entity && entity->IsActive())
-        entity->OnUpdate();
+        for (const auto &behaviour: entity->behaviours)
+          behaviour->OnUpdate();
       else if (!entity)
         foundNull = true;
     }
@@ -235,25 +317,18 @@ namespace Engine2D {
       }
   }
 
-  void Game2D::render() const {
+  void Game2D::render() {
     // Make sure there is something to render
     if (!entities.empty() && !entitiesToRender.empty()) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       Rendering::SpriteRenderer::render(entitiesToRender);
       ParticleSystemRenderer2D::render();
-      this->onDrawGizmos2D();
 
       // Prepare the next frame
       glfwSwapBuffers(window);
       frameCounter++;
     }
-  }
-
-  void Game2D::onDrawGizmos2D() const {
-    for (const auto &entity: entities)
-      if (entity->IsActive())
-        entity->OnDrawGizmos2D();
   }
 
   void Game2D::limitFrameRate() {
@@ -361,15 +436,6 @@ namespace Engine2D {
 
     // Center the viewport
     glViewport((framebufferWidth - viewWidth) / 2, (framebufferHeight - viewHeight) / 2, viewWidth, viewHeight);
-  }
-
-  void Game2D::window_refresh_callback(GLFWwindow *) {
-    instance->render();
-  }
-
-  void Game2D::window_pos_callback(GLFWwindow *window, int, int) {
-    framebuffer_size_callback(window, instance->width, instance->height);
-    instance->render();
   }
 
   void Game2D::scroll_callback(GLFWwindow *, double, const double yOffset) {

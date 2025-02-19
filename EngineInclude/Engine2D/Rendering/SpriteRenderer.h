@@ -43,7 +43,7 @@ namespace Engine2D::Rendering {
      */
     static void initRenderData();
     /// Renders all the given entities
-    static void render(const std::map<int, std::vector<std::shared_ptr<Entity2D>>> &entities);
+    static void render(std::map<int, std::vector<std::shared_ptr<Entity2D>>> &entities);
   };
 }
 

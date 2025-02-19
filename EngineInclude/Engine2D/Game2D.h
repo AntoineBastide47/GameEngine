@@ -21,16 +21,14 @@ namespace Engine {
   class Settings;
 }
 
-namespace Engine2D::Rendering {
-  class Texture2D;
-}
-
-namespace Engine2D::Physics {
-  class Collider2D;
-  class Physics2D;
-}
-
 namespace Engine2D {
+  namespace Rendering {
+    class Texture2D;
+  }
+  namespace Physics {
+    class Collider2D;
+    class Physics2D;
+  }
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Entity2D;
@@ -51,17 +49,6 @@ namespace Engine2D {
       [[nodiscard]] static float DeltaTime();
       /// @returns The fixed time span between the physics updates
       [[nodiscard]] static float FixedDeltaTime();
-      /// @returns The entity with the given name if it was found, nullptr if not
-      template<typename T> requires std::is_base_of_v<Entity2D, T>
-      static std::shared_ptr<T> Find(const std::string &name) {
-        for (const auto entity: instance->entitiesToAdd)
-          if (entity->name == name)
-            return std::static_pointer_cast<T>(entity);
-        for (const auto entity: instance->entities)
-          if (entity->name == name)
-            return std::static_pointer_cast<T>(entity);
-        return nullptr;
-      }
 
       /**
        * Start's and Run's the current game
@@ -77,16 +64,10 @@ namespace Engine2D {
 
       /// Closes/Quits the game
       static void Close(Engine::Input::KeyboardAndMouseContext context);
-      /// Creates an entity of the given type and adds it to the game
-      template<typename T> requires std::is_base_of_v<Entity2D, T>
-      static std::shared_ptr<T> AddEntity(std::string name = "Entity") {
-        if (instance) {
-          std::shared_ptr<T> entity = std::make_shared<T>(name);
-          instance->entitiesToAdd.push_back(entity);
-          return entity;
-        }
-        return nullptr;
-      }
+      /// Creates an entity of with the given name
+      static std::shared_ptr<Entity2D> AddEntity(std::string name = "Entity");
+      /// @returns The entity with the given name if it was found, nullptr if not
+      static std::shared_ptr<Entity2D> Find(const std::string &name);
     protected:
       /**
        * Creates a game
@@ -137,23 +118,29 @@ namespace Engine2D {
       float targetFrameRate;
       /// The rate at which the game should update
       float targetRenderRate;
+      /// Counts the number of frames renderer during the current second of elapsed time
+      int frameCounter;
+      /// The remaining time until the next frame should be rendered
+      std::chrono::time_point<std::chrono::steady_clock> nextFrameTime;
 
       /// Physics simulator
       Physics::Physics2D *physics2D;
       /// Timer used to check if the game is ready for the next physics update
       float physicsAccumulator;
 
+      void updateLoop();
+      void renderLoop();
+
       /// Initializes the game
       void initialize();
       /// Processes all the inputs to the game
-      static void processInput();
+      void processInput();
       /// Update the game
       void update();
       /// Simulates a step of the physics simulation
       void fixedUpdate();
       /// Renders the game
-      void render() const;
-      void onDrawGizmos2D() const;
+      void render();
       /// Limits the frame rate of the game if needed
       void limitFrameRate();
       /// Quits the game
@@ -171,8 +158,6 @@ namespace Engine2D {
 
       // OpenGL callbacks
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-      static void window_refresh_callback(GLFWwindow *window);
-      static void window_pos_callback(GLFWwindow *window, int x, int y);
       static void scroll_callback(GLFWwindow *window, double xOffset, double yOffset);
   };
 } // Engine2D

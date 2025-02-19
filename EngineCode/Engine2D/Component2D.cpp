@@ -10,16 +10,12 @@
 namespace Engine2D {
   Component2D::Component2D() : active(true), entity(nullptr) {}
 
-  Component2D::~Component2D() {
-    entity = nullptr;
-  }
-
   std::shared_ptr<Entity2D> &Component2D::Entity() {
     return entity;
   }
 
-  Transform2D *Component2D::Transform() const {
-    return entity ? &entity->transform : nullptr;
+  std::shared_ptr<Transform2D> Component2D::Transform() const {
+    return entity ? entity->transform : nullptr;
   }
 
   void Component2D::SetActive(const bool active) {
