@@ -67,7 +67,7 @@ add_library(Engine2D SHARED
     EngineInclude/Engine2D/Behaviour.h
 )
 
-set_target_properties(Engine2D PROPERTIES OUTPUT_NAME Engine2D-0.5.0 PREFIX "")
+set_target_properties(Engine2D PROPERTIES OUTPUT_NAME Engine2D-0.5.1 PREFIX "")
 
 # Include CMakeRC
 include(CMakeRC.cmake)

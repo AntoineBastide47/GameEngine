@@ -7,8 +7,6 @@
 #ifndef PARTICLE_SYSTEM2D_H
 #define PARTICLE_SYSTEM2D_H
 
-#include <queue>
-
 #include "Engine2D/Component2D.h"
 
 namespace Engine2D::Rendering {

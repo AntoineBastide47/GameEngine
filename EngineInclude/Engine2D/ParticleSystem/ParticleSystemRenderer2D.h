@@ -8,6 +8,7 @@
 #define PARTICLE_SYSTEM_RENDERER2D_H
 
 #include <vector>
+#include <mutex>
 
 namespace Engine2D {
   class ParticleSystem2D;
@@ -17,6 +18,7 @@ namespace Engine2D {
 
     /// All the particle systems in the game
     static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystems;
+    static std::mutex particleSystemMutex;
 
     static void update();
     static void render();

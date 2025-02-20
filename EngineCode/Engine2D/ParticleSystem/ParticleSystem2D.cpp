@@ -4,12 +4,10 @@
 // Date: 14/01/2025
 //
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/compatibility.hpp>
 #include <random>
 #include <vector>
-
-#define GLM_ENABLE_EXPERIMENTAL
-#include <iostream>
-#include <glm/gtx/compatibility.hpp>
 
 #include "Engine/RenderingHeaders.h"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.h"
@@ -176,7 +174,7 @@ namespace Engine2D {
     size_t i = 0;
 
     for (const auto &particle: particles) {
-      if (particle.lifeTime <= 0.0 || !particle.Visible())
+      if (particle.lifeTime <= 0 || !particle.Visible())
         continue;
 
       const glm::vec2 scale = particle.size;
@@ -221,7 +219,6 @@ namespace Engine2D {
 
     // Update the particle.
     Particle &particle = this->particles[index];
-    particle = Particle();
     particle.color = startColor;
     particle.lifeTime = particleLifetime;
     particle.velocity = startVelocity;

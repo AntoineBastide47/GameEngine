@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include <random>
-#include <thread>
 
 #include "Engine2D/Game2D.h"
 #include "Engine2D/ResourceManager.h"
@@ -28,7 +27,8 @@ namespace Engine2D {
 
   Game2D::Game2D(const int width, const int height, const char *title)
     : aspectRatio(glm::vec2(1)), title(title), width(width), height(height), window(nullptr),
-      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), physics2D(nullptr), physicsAccumulator(0) {
+      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), physics2D(nullptr), physicsAccumulator(0),
+      updateFinished(false), renderFinished(true) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -58,14 +58,6 @@ namespace Engine2D {
 
   float oneSecondTimer = 0.0f;
   auto lastTime = std::chrono::high_resolution_clock::now();
-
-  // New members for pipelined concurrency.
-  // (Add these to the Game2D class declaration as well.)
-  std::mutex syncMutex;
-  std::condition_variable cv;
-  bool updateFinished = false; // True when update thread has produced new frame data.
-  bool renderFinished = true;  // True when renderer is done with the previous frame.
-  std::thread renderThread;
 
   void Game2D::Run() {
     this->initialize();

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-02-19
+### Added
+- **[Game2D]**: render thread for as much fps as possible
+- **[Behaviour]**: base class for user defined components that has the callbacks Entity2D had
+- **[ParticleSystemRenderer2D]**: mutex for data synchronization
+### Changed
+- **[Entity2D]**: no longer inheritable
+### Removed
+- **[Game2D]**: adding overrides of Entity2D
+- **[Entity2D]**: virtual functions
+
 ## [0.5.0] - 2025-02-18
 ### Added
 - **[ParticleSystem2D]**: more control and options over the particle system

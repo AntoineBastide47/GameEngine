@@ -7,6 +7,7 @@
 #ifndef GAME2D_H
 #define GAME2D_H
 
+#include <thread>
 #include <functional>
 #include <string>
 #include <cmrc/cmrc.hpp>
@@ -38,6 +39,7 @@ namespace Engine2D {
     friend class Physics::Physics2D;
     friend class Engine::Settings;
     friend class Rendering::Texture2D;
+    friend class ParticleSystemRenderer2D;
     public:
       /// @returns The width of the viewport of the window
       [[nodiscard]] static float ViewportWidth();
@@ -127,6 +129,14 @@ namespace Engine2D {
       Physics::Physics2D *physics2D;
       /// Timer used to check if the game is ready for the next physics update
       float physicsAccumulator;
+
+      /// Whether the main thread is finished and ready to sync with the render thread
+      bool updateFinished;
+      /// Whether the render thread is finished and ready to sync with the main thread
+      bool renderFinished;
+      std::mutex syncMutex;
+      std::condition_variable cv;
+      std::thread renderThread;
 
       void updateLoop();
       void renderLoop();
