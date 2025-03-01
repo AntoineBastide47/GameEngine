@@ -8,7 +8,6 @@
 #define GAME2D_H
 
 #include <thread>
-#include <functional>
 #include <string>
 #include <cmrc/cmrc.hpp>
 
@@ -30,6 +29,7 @@ namespace Engine2D {
     class Collider2D;
     class Physics2D;
   }
+
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Entity2D;
@@ -39,7 +39,6 @@ namespace Engine2D {
     friend class Physics::Physics2D;
     friend class Engine::Settings;
     friend class Rendering::Texture2D;
-    friend class ParticleSystemRenderer2D;
     public:
       /// @returns The width of the viewport of the window
       [[nodiscard]] static float ViewportWidth();
@@ -134,11 +133,16 @@ namespace Engine2D {
       bool updateFinished;
       /// Whether the render thread is finished and ready to sync with the main thread
       bool renderFinished;
+      /// Mutex to prevent race conditions between the update and render thread
       std::mutex syncMutex;
+      /// Variable that allows data to switch threads
       std::condition_variable cv;
+      /// The thread responsible for rendering the game
       std::thread renderThread;
 
+      /// The update loop called on the main thread
       void updateLoop();
+      /// The render loop called on the render thread
       void renderLoop();
 
       /// Initializes the game

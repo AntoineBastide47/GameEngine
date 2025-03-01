@@ -1,28 +1,18 @@
 BUILD_FOLDER := cmake-build-debug
 BUILD_TYPE := ""
 
-.PHONY: help check-platform install-dependencies build build-debug build-release create-project
+.PHONY: help check-platform build-dependencies build build-debug build-release create-project
 
 default: help
 help: check-platform
-	@echo "Available commands:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo "Available commands:"; \
+	grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 check-platform:
 	@if ! ([ "$$OS" = "Windows_NT" ] || [ "$$(uname)" = "Darwin" ] || [ "$$(uname)" = "Linux" ]); then \
 		 echo "Unsupported platform. The engine only supports MacOS, Linux and Windows"; \
 		 exit 1; \
 	fi
-
-install-dependencies: check-platform ## Installs all the dependencies required to build the engine
-	@if [ "$$(uname)" = "Darwin" ]; then \
-  		brew install glew; \
-  	elif [ "$$(uname)" = "Linux" ]; then \
-  		sudo apt-get update && sudo apt-get install -y libglew-dev; \
-  	else \
-  	  	echo "Dependencies installation is not configured for windows. Please install GLEW manually using this tutorial:"; \
-  	  	echo "https://github.com/nigels-com/glew?tab=readme-ov-file#windows"; \
-  	fi
 
 build-debug: check-platform ## Build's the engine static library in debug mode
 	@make build BUILD_TYPE="Debug"

@@ -6,6 +6,8 @@ The project is both a fun endeavor and an educational journey into the world of 
 ## Getting Started
 To get started with the engine:
 
+### 0. Installing dependencies
+This project requires [make]() and [GLEW](https://github.com/nigels-com/glew?tab=readme-ov-file#build) to be installed on your system for proper functionality.
 ### 1. Clone the Repository:
 ```bash
 git clone --recursive -j8 https://github.com/AntoineBastide47/GameEngine.git

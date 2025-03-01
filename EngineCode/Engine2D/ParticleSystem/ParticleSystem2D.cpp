@@ -11,9 +11,13 @@
 
 #include "Engine/RenderingHeaders.h"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.h"
+
+#include <iostream>
+
 #include "Engine2D/Game2D.h"
 #include "Engine2D/ResourceManager.h"
 #include "Engine2D/Rendering/Shader.h"
+#include "Engine2D/Types/Vector2.h"
 
 namespace Engine2D {
   const float ParticleSystem2D::quadVertices[] = {
@@ -94,17 +98,17 @@ namespace Engine2D {
 
     // Attribute location 2: instanceScale (vec2)
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)(2 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
     glVertexAttribDivisor(2, 1);
 
     // Attribute location 3: instanceColor (vec4)
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)(4 * sizeof(float)));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), reinterpret_cast<void *>(4 * sizeof(float)));
     glVertexAttribDivisor(3, 1);
 
     // Attribute location 4: instanceRotation (vec1)
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)(8 * sizeof(float)));
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), reinterpret_cast<void *>(8 * sizeof(float)));
     glVertexAttribDivisor(4, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -143,16 +147,23 @@ namespace Engine2D {
     const float dt = Game2D::DeltaTime() * simulationSpeed;
 
     for (auto &p: particles) {
+      if (p.lifeTime <= 0.0f)
+        continue;
+
       p.lifeTime -= dt;
       if (p.lifeTime > 0.0f) {
+        ++aliveCount;
+
         const float t = p.lifeTime * dA;
-        p.position -= dt * (
-          useGlobalVelocities ? glm::lerp(startVelocity, endVelocity, t) : glm::lerp(p.startVelocity, p.endVelocity, t)
-        );
-        p.color = glm::lerp(startColor, endColor, t);
+        p.color = glm::lerp(startColor, endColor, 1.0f - t);
         p.size = glm::lerp(endSize, startSize, t);
         p.rotation += glm::lerp(startAngularVelocity, endAngularVelocity, t) * dt;
-        ++aliveCount;
+
+        p.position += dt * glm::lerp(
+          useGlobalVelocities ? startVelocity : p.startVelocity,
+          useGlobalVelocities ? endVelocity : p.endVelocity,
+          t
+        );
       }
     }
 
@@ -211,22 +222,16 @@ namespace Engine2D {
   void ParticleSystem2D::respawnParticle(const uint index) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist_random(-maxStartPositionOffset, maxStartPositionOffset);
+    std::uniform_real_distribution dist_random(-maxStartPositionOffset, maxStartPositionOffset);
 
-    // Get a random color.
-    const float randomX = dist_random(gen);
-    const float randomY = dist_random(gen);
-
-    // Update the particle.
     Particle &particle = this->particles[index];
     particle.color = startColor;
     particle.lifeTime = particleLifetime;
-    particle.velocity = startVelocity;
     particle.startVelocity = startVelocity;
     particle.endVelocity = endVelocity;
     particle.size = startSize;
     particle.position = (simulateInWorldSpace ? Transform()->GetWorldPosition() : glm::vec2(0))
-                        + startPosition + glm::vec2(randomX, randomY);
+                        + startPosition + glm::vec2(dist_random(gen), dist_random(gen));
     lastUsedParticle = --lastUsedParticle % particles.size();
   }
 }

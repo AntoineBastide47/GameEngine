@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Debug")
 
 # Find required packages
+set(GLEW_USE_STATIC_LIBS ON)
 find_package(GLEW REQUIRED)
 
 # Add the main.cpp file to build the SpaceInvaders executable
@@ -47,21 +48,18 @@ cmrc_add_resource_library(shaders NAMESPACE engine_resources ${SHADERS})
 # Link the libraries needed to make the engine run
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${ENGINE_LIB}
+    GLEW::GLEW
     shaders
 )
 
 # Include the directories needed to make the engine run
-target_include_directories(${PROJECT_NAME} PRIVATE
-    EngineInclude
-    ${GLEW_INCLUDE_DIRS}
-)
+target_include_directories(${PROJECT_NAME} PRIVATE EngineInclude)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   target_compile_options(${PROJECT_NAME} PRIVATE
       -O3                     # General optimization
       -DNDEBUG                # Disable assertions
       -finline-functions      # Enable inlining
-      -flto                   # Link-Time Optimization
       -fomit-frame-pointer    # Free up a register
       -ffunction-sections     # Enable section-based optimization
       -fdata-sections         # Enable data section optimization

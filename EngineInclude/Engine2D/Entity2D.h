@@ -8,6 +8,7 @@
 #define ENTITY2D_H
 
 #include <string>
+#include <entt.hpp>
 
 #include "Engine2D/Transform2D.h"
 #include "Engine2D/Physics/Collider2D.h"

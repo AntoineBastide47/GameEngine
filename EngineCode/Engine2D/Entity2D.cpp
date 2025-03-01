@@ -16,8 +16,8 @@ using Engine2D::Rendering::Texture2D;
 
 namespace Engine2D {
   Entity2D::Entity2D(std::string name)
-    : name(std::move(name)), textureColor(glm::vec4(1.0f)), active(true), parentsActive(true), texture(nullptr),
-      transform(std::make_shared<Transform2D>()) {}
+    : name(std::move(name)), transform(std::make_shared<Transform2D>()), textureColor(glm::vec4(1.0f)), active(true),
+      parentsActive(true), texture(nullptr) {}
 
   bool Entity2D::operator==(const Entity2D &entity) const {
     return name == entity.name && transform == entity.transform && texture == entity.texture;

@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2025-XX-XX
+### Added
+### Changed
+- **[CMakeLists]**: GLEW is now linked statically
+- **[Templates/2D]**: build commands for projects now also use build-debug and build-release like the engine
+### Fixed
+### Removed
+- **[CMakeLists], [Templates/2D]**: link time optimization since it creates bugs in the release builds of the engine
+
 ## [0.5.1] - 2025-02-19
 ### Added
 - **[Game2D]**: render thread for as much fps as possible

@@ -85,8 +85,6 @@ namespace Engine2D {
         float rotation;
         /// The size of the particle
         glm::vec2 size;
-        /// The current velocity of the particle
-        glm::vec2 velocity;
         /// The color of the particle
         glm::vec4 color;
         /// The remaining life span of the particle

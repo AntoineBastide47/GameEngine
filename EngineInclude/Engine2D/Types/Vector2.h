@@ -7,6 +7,7 @@
 #ifndef VECTOR2_H
 #define VECTOR2_H
 
+#include <iostream>
 #include <glm/vec2.hpp>
 #include <glm/glm.hpp>
 
@@ -38,6 +39,16 @@ namespace glm {
   ) {
     const vec2 temp = current - target;
     return glm::dot(temp, temp);
+  }
+  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> void print(
+    const glm::vec<2, T> &v
+  ) {
+    std::cout << "(" << v.x << ", " << v.y << ")";
+  }
+  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> void println(
+    const glm::vec<2, T> &v
+  ) {
+    std::cout << "(" << v.x << ", " << v.y << ")" << std::endl;
   }
 } // glm
 

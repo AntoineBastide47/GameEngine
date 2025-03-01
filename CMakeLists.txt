@@ -4,11 +4,7 @@ project(GameEngine)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find required packages
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-
-# Create the Engine2D as a static library
+# Create the Engine2D as a shared library
 add_library(Engine2D SHARED
     EngineInclude/Engine/Macros.h
     EngineInclude/Engine2D/Rendering/stb_image.h
@@ -74,18 +70,24 @@ include(CMakeRC.cmake)
 cmrc_add_resource_library(assets NAMESPACE engineResources ${CMAKE_SOURCE_DIR}/Assets)
 target_link_libraries(Engine2D PUBLIC assets)
 
+# OpenGL anf GLEW
+find_package(OpenGL REQUIRED)
+
+set(GLEW_USE_STATIC_LIBS ON)
+find_package(GLEW REQUIRED)
+
 # GLFW
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-add_subdirectory(external/glfw)
+add_subdirectory(vendor/glfw)
 
 # GLM
-add_subdirectory(external/glm)
-target_include_directories(glm INTERFACE external/glm)
+add_subdirectory(vendor/glm)
+target_include_directories(glm INTERFACE vendor/glm)
 
 # Cpptrace
-set(CPPTRACE_SOURCE_DIR external/cpptrace)
+set(CPPTRACE_SOURCE_DIR vendor/cpptrace)
 add_subdirectory(${CPPTRACE_SOURCE_DIR})
 
 # Include all other libraries
@@ -114,19 +116,16 @@ target_include_directories(Engine2D PUBLIC ${ENGINE_INCLUDE_DIR})
 target_include_directories(Engine2D PRIVATE
     ${OPENGL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIRS}
-    ${GLEW_INCLUDE_DIRS}
     ${GLM_INCLUDE_DIRS}
     ${cpptrace_SOURCE_DIR}/include
+    vendor/entt
 )
-
-target_compile_options(Engine2D PUBLIC -fexperimental-library)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
   target_compile_options(Engine2D PRIVATE
       -O3                     # General optimization
       -DNDEBUG                # Disable assertions
       -finline-functions      # Enable inlining
-      -flto                   # Link-Time Optimization
       -fomit-frame-pointer    # Free up a register
       -ffunction-sections     # Enable section-based optimization
       -fdata-sections         # Enable data section optimization
@@ -134,7 +133,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
   target_link_options(Engine2D PRIVATE -Wl,-O2)
   set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-  #add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
 
   target_compile_definitions(Engine2D PUBLIC DEBUG_BUILD=0)
 else ()

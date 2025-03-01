@@ -75,20 +75,20 @@ namespace Engine2D::Rendering {
     glVertexAttribDivisor(1, 1); // Advance once per instance
 
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (void*)vec4Size);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(vec4Size));
     glVertexAttribDivisor(2, 1);
 
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, stride, (void*)(2 * vec4Size));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(2 * vec4Size));
     glVertexAttribDivisor(3, 1);
 
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, (void*)(3 * vec4Size));
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(3 * vec4Size));
     glVertexAttribDivisor(4, 1);
 
     // Attribute location 5: sprite color (vec4)
     glEnableVertexAttribArray(5);
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * vec4Size));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(4 * vec4Size));
     glVertexAttribDivisor(5, 1);
 
     // Cleanup: unbind the VBO and VAO

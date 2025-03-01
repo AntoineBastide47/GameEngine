@@ -27,8 +27,8 @@ namespace Engine2D {
 
   Game2D::Game2D(const int width, const int height, const char *title)
     : aspectRatio(glm::vec2(1)), title(title), width(width), height(height), window(nullptr),
-      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), physics2D(nullptr), physicsAccumulator(0),
-      updateFinished(false), renderFinished(true) {
+      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), frameCounter(0), physics2D(nullptr),
+      physicsAccumulator(0), updateFinished(false), renderFinished(true) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -292,7 +292,6 @@ namespace Engine2D {
 
   void Game2D::update() {
     bool foundNull = false;
-    ParticleSystemRenderer2D::update();
     for (const auto &entity: entities) {
       if (entity && entity->IsActive())
         for (const auto &behaviour: entity->behaviours)
@@ -307,6 +306,7 @@ namespace Engine2D {
         else
           ++it;
       }
+    ParticleSystemRenderer2D::update();
   }
 
   void Game2D::render() {
