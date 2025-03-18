@@ -39,7 +39,6 @@ namespace Engine2D::Rendering {
       int filterMax;
 
       Texture2D();
-
     private:
       /**
        * Sets up the texture with specified width, height, and pixel data.

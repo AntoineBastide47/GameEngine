@@ -9,7 +9,7 @@
 
 #include "Engine2D/Physics/CollisionGrid.h"
 #include "Engine2D/Physics/CollisionManifold.h"
-#include "Engine2D/Physics/CollisionPair.h"
+#include "Engine2D/Physics/Collider2D.h"
 
 namespace Engine {
   class Settings;
@@ -22,7 +22,19 @@ namespace Engine2D {
 
 namespace Engine2D::Physics {
   class Rigidbody2D;
-  class Collider2D;
+
+  struct ContactPair {
+    std::shared_ptr<Collider2D> collider1;
+    std::shared_ptr<Collider2D> collider2;
+    std::shared_ptr<Rigidbody2D> rigidbody1;
+    std::shared_ptr<Rigidbody2D> rigidbody2;
+
+    bool operator==(const ContactPair &other) const {
+      return collider1 == other.collider1 && collider2 == other.collider2 &&
+             rigidbody1 == other.rigidbody1 && rigidbody2 == other.rigidbody2;
+    }
+  };
+
   class Physics2D {
     friend class Engine2D::Entity2D;
     friend class Engine2D::Game2D;

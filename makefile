@@ -1,7 +1,7 @@
 BUILD_FOLDER := cmake-build-debug
 BUILD_TYPE := ""
 
-.PHONY: help check-platform build-dependencies build build-debug build-release create-project
+.PHONY: help check-platform build-dependencies build build-debug build-release create-project dependencies
 
 default: help
 help: check-platform
@@ -13,6 +13,9 @@ check-platform:
 		 echo "Unsupported platform. The engine only supports MacOS, Linux and Windows"; \
 		 exit 1; \
 	fi
+
+dependencies: check-platform ## Update's the github submodules linked to this project
+	@git submodule update --init --recursive
 
 build-debug: check-platform ## Build's the engine static library in debug mode
 	@make build BUILD_TYPE="Debug"
@@ -26,7 +29,7 @@ build:
 		echo "Please avoid using \033[1mmake build\033[0m to build the engine.\nInstead, you should use \033[1mmake build-debug\033[0m or \033[1mmake build-release\033[0m"; \
 		exit 1; \
   	fi; \
-  	git submodule update --init --recursive; \
+  	make dependencies; \
 	rm -rf EngineInclude/*-[0-9]*.[0-9]*.[0-9]*.dylib EngineInclude/*-[0-9]*.[0-9]*.[0-9]*.[0-9]*.dylib; \
 	rm -rf Engine.zip; \
   	cmake -B $(BUILD_FOLDER) -S . -DCMAKE_BUILD_TYPE=$(BUILD_TYPE); \

@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Create the Engine2D as a shared library
 add_library(Engine2D SHARED
-    EngineInclude/Engine/Macros.h
     EngineInclude/Engine2D/Rendering/stb_image.h
     EngineInclude/Engine/RenderingHeaders.h
     EngineInclude/Engine2D/Types/Vector2.h
@@ -52,7 +51,6 @@ add_library(Engine2D SHARED
     EngineInclude/Engine/Settings.h
     EngineCode/Engine2D/Physics/Collider2D.cpp
     EngineInclude/Engine2D/Physics/Collider2D.h
-    EngineInclude/Engine2D/Physics/CollisionPair.h
     EngineCode/Engine2D/ParticleSystem/ParticleSystem2D.cpp
     EngineInclude/Engine2D/ParticleSystem/ParticleSystem2D.h
     EngineCode/Engine2D/ParticleSystem/ParticleSystemRenderer2D.cpp
@@ -61,12 +59,15 @@ add_library(Engine2D SHARED
     EngineInclude/Engine2D/Rendering/ShapeRenderer.h
     EngineCode/Engine2D/Behaviour.cpp
     EngineInclude/Engine2D/Behaviour.h
+    EngineInclude/Engine/Macros/Utils.h
+    EngineInclude/Engine/Macros/PlatformDetection.h
+    EngineInclude/Engine/Macros/Assert.h
 )
 
 set_target_properties(Engine2D PROPERTIES OUTPUT_NAME Engine2D-0.5.1 PREFIX "")
 
 # Include CMakeRC
-include(CMakeRC.cmake)
+include(vendor/CMakeRC/CMakeRC.cmake)
 cmrc_add_resource_library(assets NAMESPACE engineResources ${CMAKE_SOURCE_DIR}/Assets)
 target_link_libraries(Engine2D PUBLIC assets)
 
@@ -100,15 +101,16 @@ target_link_libraries(Engine2D PRIVATE
 )
 
 if (APPLE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0")
   target_link_libraries(Engine2D PRIVATE
       "-framework CoreFoundation"
       "-framework IOKit"
       "-framework Cocoa"
   )
 elseif (UNIX)
-  message(STATUS "Linux build is not fully supported yet, there could be some errors.")
+  message(WARNING "Linux build is not fully supported yet, there could be some errors.")
 elseif (WIN32)
-  message(STATUS "Window build is not fully supported yet, there could be some errors.")
+  message(WARNING "Window build is not fully supported yet, there could be some errors.")
 endif ()
 
 set(ENGINE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/EngineInclude)
@@ -118,7 +120,6 @@ target_include_directories(Engine2D PRIVATE
     ${GLFW_INCLUDE_DIRS}
     ${GLM_INCLUDE_DIRS}
     ${cpptrace_SOURCE_DIR}/include
-    vendor/entt
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -134,7 +135,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
   set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
-  target_compile_definitions(Engine2D PUBLIC DEBUG_BUILD=0)
+  target_compile_definitions(Engine2D PUBLIC ENGINE_DEBUG=0)
 else ()
-  target_compile_definitions(Engine2D PUBLIC DEBUG_BUILD=1)
+  target_compile_definitions(Engine2D PUBLIC ENGINE_DEBUG=1)
 endif ()

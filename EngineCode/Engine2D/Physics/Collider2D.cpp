@@ -40,7 +40,7 @@ namespace Engine2D::Physics {
     return aabb;
   }
 
-  void Collider2D::drawGizmos2D() {
+  void Collider2D::drawGizmos2D() const {
     if (!draw)
       return;
 
@@ -64,16 +64,16 @@ namespace Engine2D::Physics {
     aabb.max = getPosition() + getScale();
   }
 
-  glm::vec2 CircleCollider2D::getScale() {
+  glm::vec2 CircleCollider2D::getScale() const {
     return autoCompute ? Transform()->GetWorldHalfScale() : glm::vec2(1) * radius;
   }
 
-  RectangleCollider2D::RectangleCollider2D()
+  BoxCollider2D::BoxCollider2D()
     : width(0), height(0) {
     this->type = Rectangle;
   }
 
-  void RectangleCollider2D::computeAABB() {
+  void BoxCollider2D::computeAABB() {
     // Find the bounds of the rectangle
     const float left = -(autoCompute ? Transform()->GetWorldHalfScale().x : width);
     const float right = -left;
@@ -99,7 +99,7 @@ namespace Engine2D::Physics {
     }
   }
 
-  glm::vec2 RectangleCollider2D::getScale() {
+  glm::vec2 BoxCollider2D::getScale() const {
     return autoCompute ? Transform()->GetWorldScale() : glm::vec2(width, height);
   }
 

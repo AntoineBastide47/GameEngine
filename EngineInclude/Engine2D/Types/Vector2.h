@@ -7,20 +7,20 @@
 #ifndef VECTOR2_H
 #define VECTOR2_H
 
-#include <iostream>
-#include <glm/vec2.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/string_cast.hpp"
 #include <glm/glm.hpp>
 
 namespace glm {
   /// Generic function to get the perpendicular vector of a given vector
-  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> glm::vec<2, T> perpendicular(
+  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> inline glm::vec<2, T> perpendicular(
     const glm::vec<2, T> &v
   ) {
     return glm::vec<2, T>(-v.y, v.x);
   }
 
   /// Generic function to get the perpendicular vector of a given vector
-  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> float cross_2(
+  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> inline float cross_2(
     const glm::vec<2, T> &v1, const glm::vec<2, T> &v2
   ) {
     return glm::cross(glm::vec3(v1, 0), glm::vec3(v2, 0)).z;
@@ -34,21 +34,17 @@ namespace glm {
     return distance_squared(v1, v2) < scaledEpsilon * scaledEpsilon;
   }
 
-  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> static constexpr float distance_squared(
+  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> static inline float distance_squared(
     const glm::vec<2, T> current, const glm::vec<2, T> target
   ) {
     const vec2 temp = current - target;
     return glm::dot(temp, temp);
   }
-  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> void print(
-    const glm::vec<2, T> &v
+
+  template<typename OStream, glm::length_t L, typename T, glm::qualifier Q> inline OStream &operator<<(
+    OStream &os, const glm::vec<L, T, Q> &vector
   ) {
-    std::cout << "(" << v.x << ", " << v.y << ")";
-  }
-  template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> void println(
-    const glm::vec<2, T> &v
-  ) {
-    std::cout << "(" << v.x << ", " << v.y << ")" << std::endl;
+    return os << glm::to_string(vector);
   }
 } // glm
 

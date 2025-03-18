@@ -85,7 +85,7 @@ namespace Engine2D::Physics {
       [[nodiscard]] glm::vec2 getPosition() const;
 
       /// @returns The current scale of the collider taking into account if it is auto computed or not
-      [[nodiscard]] virtual glm::vec2 getScale() {
+      [[nodiscard]] virtual glm::vec2 getScale() const {
         return {};
       }
     private:
@@ -94,7 +94,7 @@ namespace Engine2D::Physics {
       /// @return A std::array containing the min and max points of the AABB.
       [[nodiscard]] AABB getAABB();
 
-      void drawGizmos2D();
+      void drawGizmos2D() const;
   };
 
   /** Collider for 2D physics representing a circle. */
@@ -105,20 +105,20 @@ namespace Engine2D::Physics {
       CircleCollider2D();
     protected:
       void computeAABB() override;
-      glm::vec2 getScale() override;
+      glm::vec2 getScale() const override;
   };
 
   /** Collider for 2D physics representing a rectangle. */
-  class RectangleCollider2D final : public Collider2D {
+  class BoxCollider2D final : public Collider2D {
     public:
       /// The height of this collider
       float width;
       /// The width of this collider
       float height;
-      RectangleCollider2D();
+      BoxCollider2D();
     protected:
       void computeAABB() override;
-      glm::vec2 getScale() override;
+      glm::vec2 getScale() const override;
   };
 
   /** Collider for 2D physics representing a polygon. */
