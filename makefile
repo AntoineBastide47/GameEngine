@@ -18,13 +18,13 @@ help: check-platform
 
 dependencies: check-platform ## Update's the github submodules linked to this project
 	@if [ ! -d $(VENDOR_LOCATION)/glfw ]; then \
-		git submodule add https://github.com/glfw/glfw.git $(VENDOR_LOCATION)/glfw; \
+		git submodule add --force https://github.com/glfw/glfw.git $(VENDOR_LOCATION)/glfw; \
 	fi; \
 	if [ ! -d $(VENDOR_LOCATION)/glm ]; then \
-		git submodule add https://github.com/g-truc/glm.git $(VENDOR_LOCATION)/glm; \
+		git submodule add --force https://github.com/g-truc/glm.git $(VENDOR_LOCATION)/glm; \
 	fi; \
 	if [ ! -d $(VENDOR_LOCATION)/cpptrace ]; then \
-		git submodule add https://github.com/jeremy-rifkin/cpptrace.git $(VENDOR_LOCATION)/cpptrace; \
+		git submodule add --force https://github.com/jeremy-rifkin/cpptrace.git $(VENDOR_LOCATION)/cpptrace; \
 	fi; \
 	git submodule update --init --recursive
 
