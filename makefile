@@ -1,50 +1,56 @@
-BUILD_FOLDER := cmake-build-debug
-BUILD_TYPE := ""
+BUILD_FOLDER = cmake-build-debug
+BUILD_TYPE =
+VENDOR_LOCATION = ./vendor
 
 .PHONY: help check-platform build-dependencies build build-debug build-release create-project dependencies
 
 default: help
+
+check-platform:
+	@if ! ([ "$$OS" = "Windows_NT" ] || [ "$$(uname)" = "Darwin" ] || [ "$$(uname)" = "Linux" ]); then \
+		 echo "Unsupported platform. The engine only supports MacOS, Linux and Windows for now."; \
+		 exit 1; \
+	fi
+
 help: check-platform
 	@echo "Available commands:"; \
 	grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-check-platform:
-	@if ! ([ "$$OS" = "Windows_NT" ] || [ "$$(uname)" = "Darwin" ] || [ "$$(uname)" = "Linux" ]); then \
-		 echo "Unsupported platform. The engine only supports MacOS, Linux and Windows"; \
-		 exit 1; \
-	fi
-
 dependencies: check-platform ## Update's the github submodules linked to this project
-	@git submodule update --init --recursive
+	@if [ ! -d $(VENDOR_LOCATION)/glfw ]; then \
+		git submodule add https://github.com/glfw/glfw.git $(VENDOR_LOCATION)/glfw; \
+	fi; \
+	if [ ! -d $(VENDOR_LOCATION)/glm ]; then \
+		git submodule add https://github.com/g-truc/glm.git $(VENDOR_LOCATION)/glm; \
+	fi; \
+	if [ ! -d $(VENDOR_LOCATION)/cpptrace ]; then \
+		git submodule add https://github.com/jeremy-rifkin/cpptrace.git $(VENDOR_LOCATION)/cpptrace; \
+	fi; \
+	git submodule update --init --recursive
 
-build-debug: check-platform ## Build's the engine static library in debug mode
+build-debug: ## Build's the engine static library in debug mode
 	@make build BUILD_TYPE="Debug"
 
-build-release: check-platform ## Build's the engine static library in release mode
+build-release: ## Build's the engine static library in release mode
 	@make build BUILD_TYPE="Release"
 
-build:
+build: check-platform
 	@clear; \
 	if [ $(BUILD_TYPE) = "" ]; then \
 		echo "Please avoid using \033[1mmake build\033[0m to build the engine.\nInstead, you should use \033[1mmake build-debug\033[0m or \033[1mmake build-release\033[0m"; \
 		exit 1; \
   	fi; \
   	make dependencies; \
-	rm -rf EngineInclude/*-[0-9]*.[0-9]*.[0-9]*.dylib EngineInclude/*-[0-9]*.[0-9]*.[0-9]*.[0-9]*.dylib; \
-	rm -rf Engine.zip; \
+	rm -rf include/*-[0-9]*.[0-9]*.[0-9]*.*; \
   	cmake -B $(BUILD_FOLDER) -S . -DCMAKE_BUILD_TYPE=$(BUILD_TYPE); \
   	if [ $(BUILD_TYPE) = "Release" ]; then \
   	  	cmake --build $(BUILD_FOLDER) --target clean; \
   	fi; \
 	cmake --build $(BUILD_FOLDER); \
-	mv -f $(BUILD_FOLDER)/[a-zA-Z0-9]*-[0-9]*.[0-9]*.[0-9]*.dylib EngineInclude;
+	mv -f $(BUILD_FOLDER)/*-[0-9]*.[0-9]*.[0-9]*.* include
 
-create-project: ## Starts the CLI to create a new project
+create-project: check-platform ## Starts the CLI to create a new project
 	@clear; \
-	if ! ([ "$$OS" = "Windows_NT" ] || [ "$$(uname)" = "Darwin" ] || [ "$$(uname)" = "Linux" ]); then \
-		 echo "Unsupported platform. The engine only supports MacOS, Linux and Windows"; \
-		 exit 1; \
-	fi; \
 	echo "GameEngine Project creation CLI:"; \
 	validType=0; \
 	while [ $$validType -eq 0 ]; do \
@@ -79,20 +85,46 @@ create-project: ## Starts the CLI to create a new project
 			validName=1; \
 			mkdir -p "$$location/$$name"; \
 			cp -rp ./Templates/$$type/* "$$location/$$name"; \
+			cp -rp ./include/Shaders/* "$$location/$$name/Engine/Shaders"; \
 		fi; \
 	done; \
+	FROM="$$(realpath $$location/$$name)"; \
+	TO="$$(realpath .)"; \
 	cd "$$location/$$name"; \
 	if [ "$$OS" = "Windows_NT" ]; then \
-    		powershell -Command "Get-ChildItem -Recurse -File | ForEach-Object { (Get-Content \$$_.FullName) -replace '{{PROJECT_NAME}}', '$(name)' | Set-Content \$$_.FullName }"; \
-	elif [ "$$(uname)" = "Darwin" ]; then find . -type f -exec sed -i '' "s/{{PROJECT_NAME}}/$$name/g" {} +; \
-	elif [ "$$(uname)" = "Linux" ]; then find . -type f -exec sed -i "s/{{PROJECT_NAME}}/$$name/g" {} +; \
-	fi; \
-	mv "./GameCode/{{PROJECT_NAME}}.cpp" "./GameCode/$$name.cpp"; \
-	mv "./GameCode/{{PROJECT_NAME}}.h" "./GameCode/$$name.h"; \
-	if [ "$$OS" = "Windows_NT" ]; then \
-		if (NET SESSION 1>NUL 2>NUL); then cmd /c "mklink /D $(realpath EngineInclude) $$location/$$name/EngineInclude"; \
-		else \
-			cp -r $(realpath EngineInclude) "$$location/$$name/EngineInclude"; \
+		powershell -Command "Get-ChildItem -Recurse -File | ForEach-Object { (Get-Content \$$_.FullName) -replace '{{PROJECT_NAME}}', '$(name)' | Set-Content \$$_.FullName }"; \
+		powershell -Command "Get-ChildItem -Recurse -File | ForEach-Object { (Get-Content $_.FullName) -replace '{{ENGINE_LOCATION}}', '$(REL_PATH)' | Set-Content $_.FullName }"; \
+	else \
+		REL="$$(awk -v from="$$FROM" -v to="$$TO" ' \
+        	BEGIN { \
+        		n=split(from, f, "/"); m=split(to, t, "/"); \
+        		while (f[i+1] == t[i+1]) i++; \
+        		for (j=i+1; j<=n; j++) up=up"../"; \
+        		for (j=i+1; j<=m; j++) down=down t[j]"/"; \
+        		print up down \
+        	}')"; \
+		if [ "$$(uname)" = "Darwin" ]; then \
+			find . -type f -exec sed -i '' "s/{{PROJECT_NAME}}/$$name/g" {} +; \
+	  		find . -type f -exec sed -i '' "s|{{ENGINE_LOCATION}}|$$REL|g" {} +; \
+		elif [ "$$(uname)" = "Linux" ]; then \
+			find . -type f -exec sed -i "s/{{PROJECT_NAME}}/$$name/g" {} +; \
+			find . -type f -exec sed -i "s|{{ENGINE_LOCATION}}|$$REL|g" {} +; \
 		fi; \
-	else ln -s $(realpath EngineInclude) "$$location/$$name/EngineInclude"; fi; \
+	fi; \
+	mv "./Game/src/{{PROJECT_NAME}}.cpp" "./Game/src/$$name.cpp"; \
+	mv "./Game/include/{{PROJECT_NAME}}.hpp" "./Game/include/$$name.hpp"; \
 	echo "Project '$$name' of type '$$type' created at '$$location/$$name'."
+
+
+#if [ "$$OS" = "Windows_NT" ]; then \
+	if (NET SESSION 1>NUL 2>NUL); then \
+	  cmd /c "mklink /D $(realpath include) $$location/$$name/EngineInclude"; \
+	  cmd /c "mklink /D $(realpath vendor) $$location/$$name/vendor"; \
+	else \
+		cp -r $(realpath EngineInclude) "$$location/$$name/EngineInclude"; \
+		cp -r $(realpath vendor) "$$location/$$name/vendor"; \
+	fi; \
+else \
+  ln -s $(realpath EngineInclude) "$$location/$$name/EngineInclude"; \
+  ln -s $(realpath vendor) "$$location/$$name/vendor"; \
+fi

@@ -38,5 +38,7 @@
 # other
 todo.txt
 **/.DS_Store
-EngineInclude/*.dylib
-Engine.zip
+include/*.a
+include/Engine/Types/SparseSet.hpp
+include/Engine2D/EntityComponentRegistry.hpp
+src/Engine2D/EntityComponentRegistry.hpp

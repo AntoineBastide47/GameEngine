@@ -6,8 +6,21 @@ The project is both a fun endeavor and an educational journey into the world of 
 ## Getting Started
 To get started with the engine:
 
-### 0. Installing dependencies
-This project requires [make]() and [GLEW](https://github.com/nigels-com/glew?tab=readme-ov-file#build) to be installed on your system for proper functionality.
+### 0. Prerequisites
+This project requires [make](), [cmake](https://cmake.org) and [GLEW](https://github.com/nigels-com/glew?tab=readme-ov-file#build) to be installed on your system for proper functionality.
+#### 0.1. MacOS installation
+```bash
+brew install make cmake glew
+```
+### 0.2. Linux installation
+```bash
+sudo apt-get install build-essential libglew-dev
+sudo snap install cmake --classic
+```
+### 0.3. Windows installation (with chocolatey)
+```bash
+choco install make cmake glew
+```
 ### 1. Clone the Repository:
 ```bash
 git clone --recursive -j8 https://github.com/AntoineBastide47/GameEngine.git
@@ -22,7 +35,7 @@ make build-debug
 make build-release
 ```
 ### 3. Create a project
-#### 3.1. Open the folder `GameEngine/Engine` in your terminal
+#### 3.1. Open the folder `GameEngine` in your terminal
 #### 3.2. Run the shell CLI
 ```bash
 make create-project
