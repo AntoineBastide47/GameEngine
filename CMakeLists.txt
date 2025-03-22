@@ -125,6 +125,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
   target_compile_options(Engine2D PRIVATE
       -O3 -DNDEBUG -finline-functions -fomit-frame-pointer
       -ffunction-sections -fdata-sections
+      -fno-fast-math -fno-strict-aliasing -frounding-math
   )
   target_link_options(Engine2D PRIVATE -Wl,-O2)
   set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
