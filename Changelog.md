@@ -3,14 +3,17 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.2] - 2025-XX-XX
+## [0.5.2] - 2025-31-03
 ### Added
+- **[CMakeLists]**: made most dependencies submodules
+- **[engine-cli]**: simple binary that replaces the old makefile
 ### Changed
 - **[CMakeLists]**: GLEW is now linked statically
-- **[Templates/2D]**: build commands for projects now also use build-debug and build-release like the engine
-### Fixed
+- **[Templates/2D]**: templates use the same build command pattern as for the engine
+- **[Collider2D]**: renamed RectangleCollider2D to BoxCollider2D
 ### Removed
 - **[CMakeLists], [Templates/2D]**: link time optimization since it creates bugs in the release builds of the engine
+- **[Project], [Templates/2D]**: make is no longer a dependency
 
 ## [0.5.1] - 2025-02-19
 ### Added

@@ -1,5 +1,7 @@
+## Engine CMake <-- do not remove line
+
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.5.1)
+project(GameEngine VERSION 0.5.2)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -66,11 +68,9 @@ add_library(Engine2D STATIC
 
 set_target_properties(Engine2D PROPERTIES
     OUTPUT_NAME Engine2D-${PROJECT_VERSION}
+    DEBUG_POSTFIX d
     PREFIX ""
-    VERSION ${PROJECT_VERSION}
-    SOVERSION 0
 )
-
 target_include_directories(Engine2D PUBLIC include)
 
 # --------------------------
@@ -101,8 +101,6 @@ add_subdirectory(vendor/cpptrace)
 add_library(cpptrace STATIC vendor/cpptrace/src/cpptrace.cpp)
 target_include_directories(cpptrace PUBLIC vendor/cpptrace/include vendor/cpptrace/src)
 
-target_link_libraries(Engine2D PUBLIC OpenGL::GL GLEW::GLEW glfw glm-header-only cmrc cpptrace::cpptrace)
-
 # === OS Specific Requirements ===
 if (APPLE)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0")
@@ -115,7 +113,12 @@ elseif (LINUX)
   message(WARNING "Linux build is not fully supported yet.")
 elseif (WIN32)
   message(WARNING "Windows build is not fully supported yet.")
-endif()
+endif ()
+
+target_link_libraries(Engine2D PUBLIC
+    OpenGL::GL GLEW::GLEW glfw glm-header-only
+    cmrc cpptrace::cpptrace
+)
 
 # --------------------------
 # Build Configs
@@ -131,7 +134,17 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
   set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
   add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
-endif()
+endif ()
+
+add_custom_command(TARGET Engine2D POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rename
+    $<TARGET_FILE:Engine2D>
+    ${CMAKE_CURRENT_BINARY_DIR}/../include/$<TARGET_FILE_NAME:Engine2D>
+)
+
+# --------------------------
+# Macros
+# --------------------------
 
 target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Release>:ENGINE_DEBUG=0>

@@ -111,6 +111,16 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
   endif ()
 endif ()
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rename
+    $<TARGET_FILE:${PROJECT_NAME}>
+    ${CMAKE_CURRENT_BINARY_DIR}/../$<TARGET_FILE_NAME:${PROJECT_NAME}>
+)
+
+# --------------------------
+# Macros
+# --------------------------
+
 target_compile_definitions(${PROJECT_NAME} PUBLIC
     $<$<CONFIG:Release>:ENGINE_DEBUG=0>
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>

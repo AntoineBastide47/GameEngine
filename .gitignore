@@ -39,6 +39,5 @@
 todo.txt
 **/.DS_Store
 include/*.a
-include/Engine/Types/SparseSet.hpp
-include/Engine2D/EntityComponentRegistry.hpp
-src/Engine2D/EntityComponentRegistry.hpp
+**/engine-cli
+CLI/build

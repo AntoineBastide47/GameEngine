@@ -3,7 +3,7 @@
 
 #include <Engine2D/Game2D.hpp>
 
-class {{PROJECT_NAME}} : public Engine2D::Game2D {
+class {{PROJECT_NAME}} final : public Engine2D::Game2D {
   public:
     {{PROJECT_NAME}}(int width, int height);
 

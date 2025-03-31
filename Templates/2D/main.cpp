@@ -2,7 +2,7 @@
 #include <Engine2D/Game2D.hpp>
 #include <string>
 
-#include "Game/include/{{PROJECT_NAME}}.hpp"
+#include "{{PROJECT_NAME}}.hpp"
 
 CMRC_DECLARE(resources);
 CMRC_DECLARE(engine_resources);
