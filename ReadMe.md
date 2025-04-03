@@ -36,17 +36,17 @@ Run the CLI with:
 ### 3. Build the engine
 - **Debug Mode** (recommended for development; provides detailed error messages):
 ```bash
-./engine-cli build debug
+./engine-cli --build debug
 ```
 - **Release Mode** (recommended for production; optimized performance):
 ```bash
-./engine-cli build release
+./engine-cli --build release
 ```
 ### 4. Create a project
 1. Open the folder `GameEngine` in your terminal
 2. Run the CLI command:
 ```bash
-./engine-cli create-project
+./engine-cli --create-project
 ```
 ### 5. Running a Game Project
 1. Navigate to your game folder:
@@ -55,8 +55,7 @@ cd your/game/folder/location
 ```
 2. Build and run the game
 ```bash
-./engine-cli build-project debug
-./engine-cli run
+./engine-cli --build-project debug --run
 ```
 _Tip: Replace `debug` with `release` for production builds._
 ### 6. CLI command information
@@ -66,7 +65,7 @@ For a list of available commands:
 ```
 or
 ```bash
-./engine-cli help
+./engine-cli --help
 ```
 
 ## Current Features

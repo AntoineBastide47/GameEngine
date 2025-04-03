@@ -26,6 +26,10 @@ add_executable(${PROJECT_NAME}
     include/commands/BuildProject.hpp
     src/commands/RunProject.cpp
     include/commands/RunProject.hpp
+    src/commands/Rebuild.cpp
+    include/commands/Rebuild.hpp
+    src/Utils.cpp
+    include/Utils.hpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME engine-cli)

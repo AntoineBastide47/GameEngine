@@ -57,36 +57,27 @@ namespace Engine2D {
   }
 
   void Transform2D::SetPosition(const glm::vec2 newPosition) {
-    position = newPosition;
-    onTransformChange();
+    SetPositionRotationAndScale(newPosition, rotation, scale);
   }
 
   void Transform2D::SetRotation(const float newRotation) {
-    rotation = fmod(newRotation, 360.0f);
-    onTransformChange();
+    SetPositionRotationAndScale(position, newRotation, scale);
   }
 
   void Transform2D::SetScale(const glm::vec2 newScale) {
-    scale = newScale;
-    onTransformChange();
+    SetPositionRotationAndScale(position, rotation, newScale);
   }
 
   void Transform2D::SetPositionAndRotation(const glm::vec2 newPosition, const float newRotation) {
-    position = newPosition;
-    rotation = fmod(newRotation, 360.0f);
-    onTransformChange();
+    SetPositionRotationAndScale(newPosition, newRotation, scale);
   }
 
   void Transform2D::SetPositionAndScale(const glm::vec2 newPosition, const glm::vec2 newScale) {
-    position = newPosition;
-    scale = newScale;
-    onTransformChange();
+    SetPositionRotationAndScale(newPosition, rotation, newScale);
   }
 
   void Transform2D::SetRotationAndScale(const float newRotation, const glm::vec2 newScale) {
-    rotation = fmod(newRotation, 360.0f);
-    scale = newScale;
-    onTransformChange();
+    SetPositionRotationAndScale(position, newRotation, newScale);
   }
 
   void Transform2D::SetPositionRotationAndScale(
@@ -99,36 +90,27 @@ namespace Engine2D {
   }
 
   void Transform2D::UpdatePosition(const glm::vec2 positionIncrement) {
-    position += positionIncrement;
-    onTransformChange();
+    UpdatePositionRotationAndScale(positionIncrement, 0, glm::vec2(0));
   }
 
   void Transform2D::UpdateScale(const glm::vec2 scaleIncrement) {
-    scale += scaleIncrement;
-    onTransformChange();
+    UpdatePositionRotationAndScale(glm::vec2(0), 0, scaleIncrement);
   }
 
   void Transform2D::UpdateRotation(const float rotationIncrement) {
-    rotation = fmod(rotation + rotationIncrement, 360.0f);
-    onTransformChange();
+    UpdatePositionRotationAndScale(glm::vec2(0), rotationIncrement, glm::vec2(0));
   }
 
   void Transform2D::UpdatePositionAndRotation(const glm::vec2 positionIncrement, const float rotationIncrement) {
-    position += positionIncrement;
-    rotation = fmod(rotation + rotationIncrement, 360.0f);
-    onTransformChange();
+    UpdatePositionRotationAndScale(positionIncrement, rotationIncrement, glm::vec2(0));
   }
 
   void Transform2D::UpdatePositionAndScale(const glm::vec2 positionIncrement, const glm::vec2 scaleIncrement) {
-    position += positionIncrement;
-    scale += scaleIncrement;
-    onTransformChange();
+    UpdatePositionRotationAndScale(positionIncrement, 0, scaleIncrement);
   }
 
   void Transform2D::UpdateRotationAndScale(const float rotationIncrement, const glm::vec2 scaleIncrement) {
-    rotation = fmod(rotation + rotationIncrement, 360.0f);
-    scale += scaleIncrement;
-    onTransformChange();
+    UpdatePositionRotationAndScale(glm::vec2(0), rotationIncrement, scaleIncrement);
   }
 
   void Transform2D::UpdatePositionRotationAndScale(

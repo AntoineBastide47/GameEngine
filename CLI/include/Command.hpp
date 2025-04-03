@@ -7,11 +7,11 @@
 #ifndef COMMAND_HPP
 #define COMMAND_HPP
 
+#include <fstream>
 #include <filesystem>
 #include <string>
 #include <regex>
 #include <iostream>
-#include <fstream>
 
 #include "OrderedMap.hpp"
 
@@ -22,20 +22,28 @@ constexpr auto RESET = "\033[0m";
 constexpr auto RED = "\033[31m";
 constexpr auto GREEN = "\033[32m";
 
-#define CLI_VERSION "0.8.0"
+static constexpr std::string CLI_VERSION = "1.0.0";
 
-#define CLI_COMMAND_NAME "engine-cli"
-#define CLI_COMMAND ("./" CLI_COMMAND_NAME)
+static constexpr std::string CLI_COMMAND_NAME = "engine-cli";
 
-#define COMMAND_HELP "help"
-#define COMMAND_VERSION "version"
-#define COMMAND_DEPENDENCIES "dependencies"
-#define COMMAND_BUILD "build"
-#define COMMAND_CREATE_PROJECT "create-project"
-#define COMMAND_LINK_PROJECT "link-project"
+static constexpr std::string COMMAND_HELP = "help";
+static constexpr std::string COMMAND_VERSION = "version";
+static constexpr std::string COMMAND_DEPENDENCIES = "dependencies";
+static constexpr std::string COMMAND_BUILD = "build";
+static constexpr std::string COMMAND_CREATE_PROJECT = "create-project";
+static constexpr std::string COMMAND_LINK_PROJECT = "link-project";
+static constexpr std::string COMMAND_REBUILD = "rebuild";
 
-#define COMMAND_BUILD_PROJECT "build-project"
-#define COMMAND_RUN_PROJECT "run"
+static constexpr std::string COMMAND_BUILD_PROJECT = "build-project";
+static constexpr std::string COMMAND_RUN_PROJECT = "run";
+
+static inline std::string CLI_COMMAND() {
+  return "./" + CLI_COMMAND_NAME;
+}
+
+static inline std::string CLI_EXECUTE_COMMAND(const std::string &name) {
+  return "'" + CLI_COMMAND() + " --" + name + "'";
+}
 
 class Command {
   friend int main(int argc, const char *argv[]);
@@ -65,7 +73,7 @@ class Command {
         if (argsAreOptional)
           std::cout << "at most ";
         std::cout << argCount << " but got " << actualArgs << "\n"
-          << "Try '" << CLI_COMMAND << " help " << args[0] << "' for more information." << RESET << std::endl;
+          << "Try '" << CLI_COMMAND() << " help " << args[0] << "' for more information." << RESET << std::endl;
         return;
       }
 

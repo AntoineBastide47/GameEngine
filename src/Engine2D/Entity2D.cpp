@@ -64,8 +64,8 @@ namespace Engine2D {
 
     transform->setEntity(shared_from_this());
     transform->onParentHierarchyChange();
-    if (!this->transform->parent)
-      this->transform->SetParent(nullptr);
+    if (!transform->parent)
+      transform->SetParent(nullptr);
   }
 
   void Entity2D::destroy() {

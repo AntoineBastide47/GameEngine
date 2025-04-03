@@ -20,7 +20,7 @@ void Version::Run(const std::vector<std::string> &args, const OrderedMap<std::st
 
   std::ifstream cmakeFile("CMakeLists.txt");
   if (!cmakeFile) {
-    std::cerr << RED << "CMakeLists.txt not found in the current directory." << RESET << std::endl;
+    std::cerr << RED << " CMakeLists.txt not found in the current directory." << RESET << std::endl;
     return;
   }
 
@@ -36,7 +36,7 @@ void Version::Run(const std::vector<std::string> &args, const OrderedMap<std::st
     }
   }
 
-  if (engineLocation.empty()) {
+  if (engineLocation.empty() && commands.contains(COMMAND_BUILD_PROJECT)) {
     std::cerr << RED << "Could not determine engine location from CMakeLists.txt." << RESET << std::endl;
     return;
   }

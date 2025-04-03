@@ -12,11 +12,10 @@ void Help::Run(const std::vector<std::string> &args, const OrderedMap<std::strin
   if (args.size() == 1) {
     if (commands.contains(args[0])) {
       displayCommandInfo(args[0], commands[args[0]]);
-    }
-    else {
+    } else {
       //TODO: add: ", did you mean 'closest command name to args[0]'
       std::cout << RED << "Command " << args[0] << " not found." << "\n";
-      std::cout << "Try '" << CLI_COMMAND << " help' for available commands." << RESET << std::endl;
+      std::cout << "Try " << CLI_EXECUTE_COMMAND(COMMAND_HELP) << " for available commands." << std::endl;
     }
     return;
   }
@@ -31,7 +30,7 @@ void Help::Run(const std::vector<std::string> &args, const OrderedMap<std::strin
 
 void Help::displayCommandInfo(const std::string &name, const std::unique_ptr<Command> &command) {
   std::cout << BOLD << name << RESET << ": " << command->description << "\n"
-    << "    Usage:   " << CLI_COMMAND << " " << name << " " << command->args;
+    << "    Usage:   " << CLI_EXECUTE_COMMAND(name) << " " << command->args;
   if (!command->defaultArg.empty())
-    std::cout << "\n    Example: " << CLI_COMMAND << " " << name << " " << command->defaultArg;
+    std::cout << "\n    Example: " << CLI_EXECUTE_COMMAND(name) << " " << command->defaultArg;
 }

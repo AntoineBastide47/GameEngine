@@ -12,7 +12,7 @@ Build::Build() : Command("builds the engine's static library in debug or release
 void Build::Run(const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands) {
   const std::string &buildType = args[0];
   if (buildType != "debug" && buildType != "release") {
-    std::cout << RED << "Unknown build type: " << buildType << "\n" << "Try '" << CLI_COMMAND
+    std::cout << RED << "Unknown build type: " << buildType << "\n" << "Try '" << CLI_COMMAND()
       << " help build' for more information." << RESET;
     return;
   }

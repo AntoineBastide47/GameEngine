@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2025-03-04
+### Added
+- **[engine-cli]**: rebuild command rebuilds the cli's binary executable 
+### Changed
+- **[Transform2D]**: Set and Update functions all call the main one
+- **[engine-cli]**: commands must start with a "--" symbol now and multiple commands can be run together
+### Fixed
+- **[engine-cli]**: version command works correctly when in the Engine folder
+
 ## [0.5.2] - 2025-31-03
 ### Added
 - **[CMakeLists]**: made most dependencies submodules
