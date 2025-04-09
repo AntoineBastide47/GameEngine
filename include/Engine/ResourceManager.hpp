@@ -9,15 +9,19 @@
 
 #include <map>
 
-namespace Engine2D::Rendering {
+namespace Engine::Rendering {
   class Shader;
-  class Texture2D;
+  class Texture;
+}
+namespace Engine2D::Rendering {
+  class Sprite;
 }
 
-using Engine2D::Rendering::Shader;
-using Engine2D::Rendering::Texture2D;
+using Engine::Rendering::Shader;
+using Engine::Rendering::Texture;
+using Engine2D::Rendering::Sprite;
 
-namespace Engine2D {
+namespace Engine {
   /** ResourceManager is a static class that keeps track of all the shaders and textures that have been loaded to the game. */
   class ResourceManager {
     public:
@@ -52,20 +56,47 @@ namespace Engine2D {
        * - the file can't be read or is empty
        * @return The loaded texture
        */
-      static std::shared_ptr<Texture2D> LoadTexture(const std::string &filePath, bool alpha, const std::string &name);
+      static std::shared_ptr<Texture> LoadTexture(const std::string &filePath, bool alpha, const std::string &name);
       /**
        * Finds and returns the texture with the given name
        * @param name
        * @note Calling this method will log an error if the texture with the given name does not exist
        */
-      static std::shared_ptr<Texture2D> GetTexture(const std::string &name);
+      static std::shared_ptr<Texture> GetTexture(const std::string &name);
+      /**
+       * Creates a sprite using the texture with the given name
+       * @param textureName The name of the texture to base this sprite on
+       * @note Log's an error if no texture with the given name was found
+       */
+      static std::shared_ptr<Sprite> CreateSprite(const std::string &textureName);
+      /**
+       * Finds or create the sprite with the given name and returns it
+       * @param name The name of the sprite, must be the same as the loaded textures name
+       * @note Log's an error if no texture with the given name was found
+       */
+      static std::shared_ptr<Sprite> GetSprite(const std::string &name);
+      /**
+       * Loads a texture to memory
+       * @param filePath The texture file path
+       * @param alpha If the texture has an alpha channel
+       * @param name The name of this texture
+       * @note Calling this method will log an error if:
+       * - parameters file or name are empty, or if a texture with the given name already exists
+       * - the file can't be read or is empty
+       * @return The loaded texture
+       */
+      static std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> LoadTextureAndSprite(
+        const std::string &filePath, bool alpha, const std::string &name
+      );
       /// Deletes all the loaded textures and shaders
       static void Clear();
     private:
       /// The shaders that have been loaded to memory by the Resource Manager
       static std::map<std::string, std::shared_ptr<Shader>> shaders;
       /// The textures that have been loaded to memory by the Resource Manager
-      static std::map<std::string, std::shared_ptr<Texture2D>> textures;
+      static std::map<std::string, std::shared_ptr<Texture>> textures;
+      /// The sprites that have been loaded to memory by the Resource Manager
+      static std::map<std::string, std::shared_ptr<Sprite>> sprites;
       ResourceManager() = default;
   };
 }

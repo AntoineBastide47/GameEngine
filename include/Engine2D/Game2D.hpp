@@ -18,27 +18,17 @@
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
 namespace Engine {
+  class ResourceManager;
   class Settings;
 }
 
 namespace Engine2D {
-  namespace Rendering {
-    class Texture2D;
-  }
-  namespace Physics {
-    class Collider2D;
-    class Physics2D;
-  }
-
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Entity2D;
-    friend class ResourceManager;
+    friend class Engine::ResourceManager;
     friend class Transform2D;
-    friend class Physics::Collider2D;
-    friend class Physics::Physics2D;
     friend class Engine::Settings;
-    friend class Rendering::Texture2D;
     public:
       /// @returns The width of the viewport of the window
       [[nodiscard]] static float ViewportWidth();
@@ -108,8 +98,6 @@ namespace Engine2D {
       std::vector<std::shared_ptr<Entity2D>> entitiesToAdd;
       /// Entities scheduled to be removed from the game
       std::vector<std::shared_ptr<Entity2D>> entitiesToRemove;
-      /// The entities of the game grouped by there texture id
-      std::map<int, std::vector<std::shared_ptr<Entity2D>>> entitiesToRender;
 
       /// The time during two frames
       float deltaTime;

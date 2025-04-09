@@ -4,19 +4,24 @@
 // Date: 10/11/2024
 //
 
-#ifndef TEXTURE2D_H
-#define TEXTURE2D_H
+#ifndef TEXTURE_H
+#define TEXTURE_H
 
-namespace Engine2D {
+namespace Engine {
   class ResourceManager;
+}
+namespace Engine2D {
   class ParticleSystem2D;
+  namespace Rendering {
+    class Renderer2D;
+  }
 }
 
-namespace Engine2D::Rendering {
+namespace Engine::Rendering {
   /// A class representing a 2D texture in OpenGL, handling creation, configuration, and binding of textures.
-  class Texture2D {
-    friend class SpriteRenderer;
-    friend class Engine2D::ResourceManager;
+  class Texture {
+    friend class Engine2D::Rendering::Renderer2D;
+    friend class Engine::ResourceManager;
     friend class Engine2D::ParticleSystem2D;
     public:
       /// The OpenGL id of this texture
@@ -38,7 +43,7 @@ namespace Engine2D::Rendering {
       /// Determines how the texture is sampled when magnified (e.g., GL_LINEAR, GL_NEAREST).
       int filterMax;
 
-      Texture2D();
+      Texture();
     private:
       /**
        * Sets up the texture with specified width, height, and pixel data.
@@ -56,4 +61,4 @@ namespace Engine2D::Rendering {
   };
 }
 
-#endif //TEXTURE2D_H
+#endif //TEXTURE_H

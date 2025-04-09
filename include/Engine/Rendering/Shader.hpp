@@ -9,14 +9,14 @@
 
 #include "Engine/RenderingHeaders.hpp"
 
-namespace Engine2D {
+namespace Engine {
   class ResourceManager;
 }
 
-namespace Engine2D::Rendering {
+namespace Engine::Rendering {
   /// Represents an OpenGL shader program, managing shader compilation, linking, and uniform settings.
   class Shader {
-    friend class Engine2D::ResourceManager;
+    friend class Engine::ResourceManager;
     public:
       /// Used to reference and manage this shader program within OpenGL.
       uint id;

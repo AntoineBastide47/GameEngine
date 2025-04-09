@@ -1,50 +1,32 @@
 //
-// SpriteRenderer.h
+// SpriteRenderer.hpp
 // Author: Antoine Bastide
-// Date: 10/11/2024
+// Date: 09/04/2025
 //
 
-#ifndef SPRITERENDERER_H
-#define SPRITERENDERER_H
+#ifndef SPRITE_RENDERER_HPP
+#define SPRITE_RENDERER_HPP
 
-#include <map>
+#include <glm/vec4.hpp>
 
-namespace Engine2D {
-  class Game2D;
-  class Entity2D;
+#include "Engine2D/Component2D.hpp"
 
-  namespace Rendering {
-    class Shader;
-  }
+namespace Engine::Rendering {
+  class Shader;
 }
 
 namespace Engine2D::Rendering {
-  /// Class responsible for rendering all the textures/sprites in the game
-  class SpriteRenderer {
-    friend class Engine2D::Game2D;
+  class Sprite;
+  class SpriteRenderer final : public Component2D {
+    public:
+      std::shared_ptr<Engine::Rendering::Shader> shader;
+      std::shared_ptr<Sprite> sprite;
+      glm::vec4 color;
+      uint32_t renderLayer;
+      int renderOrder;
 
-    /// The vertices that will be sent to the VAO
-    static const float vertices[24];
-
-    /// Shader that controls the rendering pipeline for the sprite, including transformations and textures.
-    static std::shared_ptr<Shader> shader;
-    /// Stores the vertex array configuration for the quad.
-    static uint quadVAO;
-    static uint batchVBO;
-    /// The id of the previously drawn texture
-    static uint lastBoundTexture;
-
-    SpriteRenderer() = default;
-    ~SpriteRenderer();
-
-    /**
-     * Initializes the vertex data and buffers for rendering a quad.
-     * This setup is performed once in the constructor and is used throughout the object's lifetime.
-     */
-    static void initRenderData();
-    /// Renders all the given entities
-    static void render(std::map<int, std::vector<std::shared_ptr<Entity2D>>> &entities);
+      SpriteRenderer();
   };
 }
 
-#endif // SPRITERENDERER_H
+#endif //SPRITE_RENDERER_HPP

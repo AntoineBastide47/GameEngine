@@ -1,7 +1,7 @@
 ## Engine CMake <-- do not remove line
 
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.5.3)
+project(GameEngine VERSION 0.5.4)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,14 +13,14 @@ add_library(Engine2D STATIC
     include/Engine2D/Types/Vector2.hpp
     src/Engine2D/Game2D.cpp
     include/Engine2D/Game2D.hpp
-    src/Engine2D/Rendering/Shader.cpp
-    include/Engine2D/Rendering/Shader.hpp
-    src/Engine2D/Rendering/Texture2D.cpp
-    include/Engine2D/Rendering/Texture2D.hpp
-    src/Engine2D/ResourceManager.cpp
-    include/Engine2D/ResourceManager.hpp
-    src/Engine2D/Rendering/SpriteRenderer.cpp
-    include/Engine2D/Rendering/SpriteRenderer.hpp
+    src/Engine/Rendering/Shader.cpp
+    include/Engine/Rendering/Shader.hpp
+    src/Engine/Rendering/Texture.cpp
+    include/Engine/Rendering/Texture.hpp
+    src/Engine/ResourceManager.cpp
+    include/Engine/ResourceManager.hpp
+    src/Engine2D/Rendering/Renderer2D.cpp
+    include/Engine2D/Rendering/Renderer2D.hpp
     src/Engine2D/Transform2D.cpp
     include/Engine2D/Transform2D.hpp
     src/Engine2D/Entity2D.cpp
@@ -64,6 +64,9 @@ add_library(Engine2D STATIC
     include/Engine/Macros/Utils.hpp
     include/Engine/Macros/PlatformDetection.hpp
     include/Engine/Macros/Assert.hpp
+    include/Engine2D/Rendering/Sprite.hpp
+    src/Engine2D/Rendering/SpriteRenderer.cpp
+    include/Engine2D/Rendering/SpriteRenderer.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES

@@ -11,9 +11,9 @@
 
 #include "Engine2D/Transform2D.hpp"
 #include "Engine2D/Physics/Collider2D.hpp"
-#include "Engine2D/Rendering/Texture2D.hpp"
+#include "Engine/Rendering/Texture.hpp"
 
-using Engine2D::Rendering::Texture2D;
+using Engine::Rendering::Texture;
 
 namespace Engine2D {
   class Component2D;
@@ -33,8 +33,6 @@ namespace Engine2D {
       std::string name;
       /// The transform representing the position, rotation, and scale of the entity in the game world.
       std::shared_ptr<Transform2D> transform;
-      /// The color of the texture
-      glm::vec4 textureColor;
 
       /**
        * Constructs an Entity2D with a given name.
@@ -138,10 +136,6 @@ namespace Engine2D {
       void SetActive(bool active);
       /// @returns True if this entity and all it's parents are enabled, false if not
       [[nodiscard]] bool IsActive() const;
-      /// Sets the texture of the entity to the given texture
-      void SetTexture(const std::shared_ptr<Texture2D> &texture);
-      /// @returns The pointer to the texture of this entity
-      [[nodiscard]] std::shared_ptr<Texture2D> Texture() const;
       /// Removes this Entity2D and all it's attached components from the game
       void Destroy();
     private:
@@ -149,8 +143,6 @@ namespace Engine2D {
       bool active;
       /// If the parents of the current entity are active in the scene
       bool parentsActive;
-      /// The texture of this entity
-      std::shared_ptr<Texture2D> texture;
       /// The list of built-in components linked to this entity
       std::vector<std::shared_ptr<Component2D>> components;
       /// The list of user defined components linked to this entity

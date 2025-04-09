@@ -13,9 +13,13 @@
 namespace Engine2D {
   class Game2D;
 }
+namespace Engine::Rendering {
+  class Shader;
+}
+
+using Engine::Rendering::Shader;
 
 namespace Engine2D::Rendering {
-  class Shader;
   /**
    * A class responsible for rendering 2D shapes (rectangles, circles, polygons) using OpenGL.
    * Provides methods to draw shapes in wireframe, fill, and fill with border modes.

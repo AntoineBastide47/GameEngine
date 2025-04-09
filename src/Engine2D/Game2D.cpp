@@ -8,10 +8,10 @@
 #include <random>
 
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/ResourceManager.hpp"
+#include "Engine/ResourceManager.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
-#include "Engine2D/Rendering/Shader.hpp"
-#include "Engine2D/Rendering/SpriteRenderer.hpp"
+#include "Engine/Rendering/Shader.hpp"
+#include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine/Macros/Utils.hpp"
 #include "Engine/Settings.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp"
@@ -20,6 +20,8 @@
 #include "Engine/Input/Keyboard.hpp"
 #include "Engine/Input/Mouse.hpp"
 #include "Engine2D/Behaviour.hpp"
+
+using Engine::ResourceManager;
 
 namespace Engine2D {
   Game2D *Game2D::instance = nullptr;
@@ -249,7 +251,6 @@ namespace Engine2D {
     ResourceManager::LoadShader("Engine/Shaders/sprite.vert", "Engine/Shaders/sprite.frag", "", "sprite");
     ResourceManager::GetShader("sprite")->SetInteger("sprite", 0, true);
     ResourceManager::GetShader("sprite")->SetMatrix4("projection", projection);
-    Rendering::SpriteRenderer::shader = ResourceManager::GetShader("sprite");
 
     // Configure the particle system shader
     ResourceManager::LoadShader(
@@ -311,10 +312,10 @@ namespace Engine2D {
 
   void Game2D::render() {
     // Make sure there is something to render
-    if (!entities.empty() && !entitiesToRender.empty()) {
+    if (!entities.empty() ) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      Rendering::SpriteRenderer::render(entitiesToRender);
+      Rendering::Renderer2D::render();
       ParticleSystemRenderer2D::render();
 
       // Prepare the next frame
@@ -349,7 +350,6 @@ namespace Engine2D {
     entitiesToRemove.swap(entities);
     removeEntities();
     entities.clear();
-    entitiesToRender.clear();
 
     // Deallocate all the game resources
     ResourceManager::Clear();
@@ -374,8 +374,6 @@ namespace Engine2D {
   void Game2D::addEntities() {
     for (auto entity: entitiesToAdd) {
       entities.emplace_back(entity);
-      if (entity->texture)
-        entitiesToRender[entity->texture->id].emplace_back(entity);
       entity->initialize();
     }
     entitiesToAdd.clear();
@@ -384,10 +382,6 @@ namespace Engine2D {
   void Game2D::removeEntities() {
     for (auto it = instance->entitiesToRemove.begin(); it != instance->entitiesToRemove.end();) {
       const auto entity = *it;
-
-      // If the entity has a texture, remove it from the draw list
-      if (entity->texture)
-        std::erase(entitiesToRender[entity->texture->id], entity);
 
       // Remove the entity from the game
       std::erase(entities, entity);

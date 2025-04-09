@@ -5,7 +5,7 @@
 //
 
 #include "Engine2D/Rendering/ShapeRenderer.hpp"
-#include "Engine2D/Rendering/Shader.hpp"
+#include "../../../include/Engine/Rendering/Shader.hpp"
 #include "Engine/RenderingHeaders.hpp"
 
 namespace Engine2D::Rendering {

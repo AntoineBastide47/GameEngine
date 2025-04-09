@@ -9,10 +9,13 @@
 
 #include "Engine2D/Component2D.hpp"
 
-namespace Engine2D::Rendering {
-  class Texture2D;
+namespace Engine::Rendering {
+  class Texture;
   class Shader;
 }
+
+using Engine::Rendering::Shader;
+using Engine::Rendering::Texture;
 
 namespace Engine2D {
   class ParticleSystem2D final : public Component2D {
@@ -61,9 +64,9 @@ namespace Engine2D {
       float maxStartPositionOffset;
 
       /// The shader of used to render the particles, defaults to the "particle" shader
-      std::shared_ptr<Rendering::Shader> shader;
+      std::shared_ptr<Shader> shader;
       /// The texture used to render the particles
-      std::shared_ptr<Rendering::Texture2D> texture;
+      std::shared_ptr<Texture> texture;
 
       ParticleSystem2D();
 

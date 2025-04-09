@@ -6,10 +6,10 @@
 
 #include <iostream>
 
-#include "Engine2D/Rendering/Shader.hpp"
+#include "Engine/Rendering/Shader.hpp"
 #include "Engine/Log.hpp"
 
-namespace Engine2D::Rendering {
+namespace Engine::Rendering {
   Shader &Shader::Use() {
     glUseProgram(this->id);
     return *this;

@@ -4,22 +4,25 @@
 // Date: 10/11/2024
 //
 
-#include <fstream>
 #include <ranges>
 #include <sstream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "Engine2D/Rendering/stb_image.hpp"
 
-#include "Engine2D/Rendering/Shader.hpp"
-#include "Engine2D/Rendering/Texture2D.hpp"
-#include "Engine2D/ResourceManager.hpp"
+#include "Engine/Rendering/Shader.hpp"
+#include "Engine/Rendering/Texture.hpp"
+#include "Engine/ResourceManager.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine/Log.hpp"
+#include "Engine2D/Rendering/Sprite.hpp"
 
-namespace Engine2D {
-  std::map<std::string, std::shared_ptr<Texture2D>> ResourceManager::textures;
+using Engine2D::Game2D;
+
+namespace Engine {
+  std::map<std::string, std::shared_ptr<Texture>> ResourceManager::textures;
   std::map<std::string, std::shared_ptr<Shader>> ResourceManager::shaders;
+  std::map<std::string, std::shared_ptr<Sprite>> ResourceManager::sprites;
 
   std::shared_ptr<Shader> ResourceManager::LoadShader(
     const std::string &vShaderFile, const std::string &fShaderFile, const std::string &gShaderFile,
@@ -65,12 +68,12 @@ namespace Engine2D {
   }
 
   std::shared_ptr<Shader> ResourceManager::GetShader(const std::string &name) {
-    if (const auto it = shaders.find(name); it != shaders.end())
-      return it->second;
+    if (shaders.contains(name))
+      return shaders[name];
     return Engine::Log::Error("Unknown shader: " + name);
   }
 
-  std::shared_ptr<Texture2D> ResourceManager::LoadTexture(
+  std::shared_ptr<Texture> ResourceManager::LoadTexture(
     const std::string &filePath, const bool alpha, const std::string &name
   ) {
     if (filePath.empty())
@@ -81,7 +84,7 @@ namespace Engine2D {
       return textures[name];
 
     // Create the texture
-    const auto texture = std::make_shared<Texture2D>();
+    const auto texture = std::make_shared<Texture>();
     if (alpha) {
       texture->imageFormat = GL_RGBA;
       texture->internalFormat = GL_RGBA;
@@ -111,10 +114,36 @@ namespace Engine2D {
     return textures[name] = texture;
   }
 
-  std::shared_ptr<Texture2D> ResourceManager::GetTexture(const std::string &name) {
-    if (const auto it = textures.find(name); it != textures.end())
-      return it->second;
+  std::shared_ptr<Texture> ResourceManager::GetTexture(const std::string &name) {
+    if (textures.contains(name))
+      return textures[name];
     return Engine::Log::Error("Unknown texture: " + name);
+  }
+
+  std::shared_ptr<Sprite> ResourceManager::GetSprite(const std::string &name) {
+    if (sprites.contains(name))
+      return sprites[name];
+    return CreateSprite(name);
+  }
+
+  std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> ResourceManager::LoadTextureAndSprite(
+    const std::string &filePath, const bool alpha, const std::string &name
+  ) {
+    auto texture = LoadTexture(filePath, alpha, name);
+    auto sprite = CreateSprite(name);
+    return {texture, sprite};
+  }
+
+  std::shared_ptr<Sprite> ResourceManager::CreateSprite(const std::string &textureName) {
+    if (!textures.contains(textureName))
+      return Engine::Log::Error("Texture not found: " + textureName);
+
+    const auto &texture = textures[textureName];
+
+    auto sprite = std::make_shared<Sprite>();
+    sprite->texture = texture;
+
+    return sprites[textureName] = sprite;
   }
 
   void ResourceManager::Clear() {

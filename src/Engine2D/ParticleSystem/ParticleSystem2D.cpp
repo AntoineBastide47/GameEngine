@@ -12,8 +12,8 @@
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/ResourceManager.hpp"
-#include "Engine2D/Rendering/Shader.hpp"
+#include "Engine/ResourceManager.hpp"
+#include "Engine/Rendering/Shader.hpp"
 #include "Engine2D/Types/Vector2.hpp"
 
 namespace Engine2D {
@@ -44,7 +44,7 @@ namespace Engine2D {
       simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), duration(1),
       emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0), instanceVBO(0), quadVAO(0), quadVBO(0),
       initialized(false), aliveCount(0) {
-    this->shader = ResourceManager::GetShader("particle");
+    this->shader = Engine::ResourceManager::GetShader("particle");
   }
 
   void ParticleSystem2D::SetDuration(const float duration) {
