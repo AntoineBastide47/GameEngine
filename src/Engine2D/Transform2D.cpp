@@ -15,8 +15,10 @@
 #include "Engine2D/Types/Vector2.hpp"
 
 namespace Engine2D {
-  Transform2D::Transform2D(const glm::vec2 position, const float rotation, const glm::vec2 scale)
-    : parent(nullptr), isDirty(true), visible(true), projectionMatrix(glm::mat4(1.0f)) {
+  Transform2D::Transform2D(
+    const glm::vec2 position, const float rotation, const glm::vec2 scale, const std::shared_ptr<Entity2D> &parent
+  )
+    : parent(parent), initialized(false), isDirty(true), visible(true), projectionMatrix(glm::mat4(1.0f)) {
     SetPositionRotationAndScale(position, rotation, scale);
   }
 
@@ -83,10 +85,12 @@ namespace Engine2D {
   void Transform2D::SetPositionRotationAndScale(
     const glm::vec2 newPosition, const float newRotation, const glm::vec2 newScale
   ) {
-    position = newPosition;
-    rotation = fmod(newRotation, 360.0f);
-    scale = newScale;
-    onTransformChange();
+    if (!initialized || !Entity()->isStatic) {
+      position = newPosition;
+      rotation = fmod(newRotation, 360.0f);
+      scale = newScale;
+      onTransformChange();
+    }
   }
 
   void Transform2D::UpdatePosition(const glm::vec2 positionIncrement) {
@@ -116,10 +120,12 @@ namespace Engine2D {
   void Transform2D::UpdatePositionRotationAndScale(
     const glm::vec2 positionIncrement, const float rotationIncrement, const glm::vec2 scaleIncrement
   ) {
-    position += positionIncrement;
-    rotation = fmod(rotation + rotationIncrement, 360.0f);
-    scale += scaleIncrement;
-    onTransformChange();
+    if (!initialized || !Entity()->isStatic) {
+      position += positionIncrement;
+      rotation = fmod(rotation + rotationIncrement, 360.0f);
+      scale += scaleIncrement;
+      onTransformChange();
+    }
   }
 
   glm::vec2 Transform2D::Forward() const {
@@ -131,6 +137,9 @@ namespace Engine2D {
   }
 
   void Transform2D::SetParent(const std::shared_ptr<Entity2D> &parent) {
+    if (initialized && Entity()->isStatic)
+      return;
+
     if (this->parent == parent)
       return;
 

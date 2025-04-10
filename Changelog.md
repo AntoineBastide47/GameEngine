@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] -2025-09-10
+### Added
+- **[SpriteRenderer]**: sprites can be flipped on X and Y coordinates now
+- **[Entity2D]**: framework for future static rendering
+### Changed
+- **[Transform2D]**: static entities's transform cannot be updated once the entity is initialized
+
 ## [0.5.4] - 2025-09-04
 ### Added
 - **[Sprite]**: wrapper around Texture for rendering

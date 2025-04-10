@@ -13,7 +13,6 @@
 #include "Engine2D/Component2D.hpp"
 
 namespace Engine2D {
-  class Entity2D;
   /**
    * Represents the position, rotation, and scale of a 2D entity.
    * This class is used to define and manage the spatial transformations (position, rotation, scale)
@@ -28,8 +27,12 @@ namespace Engine2D {
        * @param position Initial position of the transform, defaulted to (0, 0).
        * @param rotation Initial rotation in degrees, defaulted to 0.
        * @param scale Initial scale of the transform, defaulted to (1, 1).
+       * @param parent The parent of the Entity this component is attached to
        */
-      explicit Transform2D(glm::vec2 position = glm::vec2(0), float rotation = 0, glm::vec2 scale = glm::vec2(1));
+      explicit Transform2D(
+        glm::vec2 position = glm::vec2(0), float rotation = 0, glm::vec2 scale = glm::vec2(1),
+        const std::shared_ptr<Entity2D> &parent = nullptr
+      );
 
       /// Equality operator to compare two Transform2D objects.
       bool operator==(const Transform2D &other) const;
@@ -175,6 +178,8 @@ namespace Engine2D {
       /// The list of all the children of this entity
       std::vector<std::shared_ptr<Entity2D>> childList;
 
+      /// Whether the Entity and it's Transform2D were initialized
+      bool initialized;
       /// If the transform matrix needs to be recomputed
       bool isDirty;
       /// Position of the transform in 2D space.

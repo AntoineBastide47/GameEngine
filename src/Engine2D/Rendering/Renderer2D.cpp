@@ -73,15 +73,12 @@ namespace Engine2D::Rendering {
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
 
     // --- Set up the instance buffer ---
-    // We are going to store, for each sprite, 20 floats:
-    //  • 16 floats for the model matrix (4 columns of vec4)
-    //  •  4 floats for the sprite color.
     glGenBuffers(1, &batchVBO);
     glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
     glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
 
     // The stride (in bytes) for one instance
-    constexpr GLsizei stride = 27 * sizeof(float);
+    constexpr GLsizei stride = STRIDE;
     constexpr GLsizei vec4Size = 4 * sizeof(float);
 
     // Attribute locations 1–4 will hold the 4 columns of the model matrix.
@@ -186,6 +183,9 @@ namespace Engine2D::Rendering {
       if (!entity || !entity->IsActive() || !entity->transform->GetIsVisible())
         continue;
 
+      if (instanceCount >= MAX_INSTANCE_COUNT || batchData.size() >= MAX_BATCH_SIZE_WITH_STRIDE)
+        flush();
+
       // Get the model matrix
       const auto &modelMatrix = entity->transform->GetWorldMatrix();
       // Append the 16 floats (column-major order) from the model matrix.
@@ -210,9 +210,6 @@ namespace Engine2D::Rendering {
       batchData.push_back(spriteRenderer->sprite->pixelsPerUnit);
 
       instanceCount++;
-
-      if (instanceCount >= MAX_INSTANCE_COUNT)
-        flush();
     }
 
     // Draw any leftover sprites
@@ -233,6 +230,8 @@ namespace Engine2D::Rendering {
 
     batchData.clear();
     instanceCount = 0;
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
   }
 
   void Renderer2D::addRenderer(const std::shared_ptr<SpriteRenderer> &renderer) {

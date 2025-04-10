@@ -161,9 +161,11 @@ namespace Engine2D {
       glfwSetWindowShouldClose(instance->window, true);
   }
 
-  std::shared_ptr<Entity2D> Game2D::AddEntity(std::string name) {
+  std::shared_ptr<Entity2D> Game2D::AddEntity(
+    std::string name, bool isStatic, glm::vec2 position, float rotation, glm::vec2 scale, std::shared_ptr<Entity2D> parent
+  ) {
     if (instance) {
-      auto entity = std::make_shared<Entity2D>(name);
+      auto entity = std::make_shared<Entity2D>(name, isStatic, position, rotation, scale, parent);
       instance->entitiesToAdd.push_back(entity);
       entity->initialize();
       return entity;

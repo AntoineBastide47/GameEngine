@@ -16,7 +16,6 @@
 using Engine::Rendering::Texture;
 
 namespace Engine2D {
-  class Component2D;
   class Behaviour;
 
   namespace Physics {
@@ -37,8 +36,16 @@ namespace Engine2D {
       /**
        * Constructs an Entity2D with a given name.
        * @param name The name of the entity.
+       * @param isStatic Whether this entity is static in the scene
+       * @param position The position of the entity
+       * @param rotation The rotation of the entity
+       * @param scale The scale of the entity
+       * @param parent The parent of this entity
        */
-      explicit Entity2D(std::string name);
+      explicit Entity2D(
+        std::string name, bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), std::shared_ptr<Entity2D> parent = nullptr
+      );
 
       /// Equality operator that checks if the current entity is the same as the given entity
       bool operator==(const Entity2D &entity) const;
@@ -136,6 +143,8 @@ namespace Engine2D {
       void SetActive(bool active);
       /// @returns True if this entity and all it's parents are enabled, false if not
       [[nodiscard]] bool IsActive() const;
+      /// @returns True if this entity is static, false if not
+      [[nodiscard]] bool IsStatic() const;
       /// Removes this Entity2D and all it's attached components from the game
       void Destroy();
     private:
@@ -143,6 +152,8 @@ namespace Engine2D {
       bool active;
       /// If the parents of the current entity are active in the scene
       bool parentsActive;
+      /// Whether this entity is static
+      bool isStatic;
       /// The list of built-in components linked to this entity
       std::vector<std::shared_ptr<Component2D>> components;
       /// The list of user defined components linked to this entity

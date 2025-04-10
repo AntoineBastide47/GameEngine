@@ -56,7 +56,10 @@ namespace Engine2D {
       /// Closes/Quits the game
       static void Close(Engine::Input::KeyboardAndMouseContext context);
       /// Creates an entity of with the given name
-      static std::shared_ptr<Entity2D> AddEntity(std::string name = "Entity");
+      static std::shared_ptr<Entity2D> AddEntity(
+        std::string name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), std::shared_ptr<Entity2D> parent = nullptr
+      );
       /// @returns The entity with the given name if it was found, nullptr if not
       static std::shared_ptr<Entity2D> Find(const std::string &name);
     protected:

@@ -7,7 +7,9 @@
 #ifndef SPRITE_RENDERER_H
 #define SPRITE_RENDERER_H
 
+#define STRIDE (27 * sizeof(float))
 #define MAX_BATCH_SIZE (128 * 1024 * 1024)
+#define MAX_BATCH_SIZE_WITH_STRIDE (MAX_BATCH_SIZE / STRIDE)
 #define MAX_INSTANCE_COUNT 10000
 
 namespace Engine2D::Rendering {
@@ -46,24 +48,19 @@ namespace Engine2D::Rendering {
     /// The id of the previously drawn texture
     static uint lastBoundTexture;
 
-
     /// The current number of instances to render
     static uint instanceCount;
     /// The last shader that was used
     static uint lastShaderID;
     /// The last texture id that was used
     static uint lastTextureID;
-    /// Data linked to all the
+    /// Data linked to all the renderers in the scene
     static std::vector<float> batchData;
-
 
     Renderer2D();
     ~Renderer2D();
 
-    /**
-     * Initializes the vertex data and buffers for rendering a quad.
-     * This setup is performed once in the constructor and is used throughout the object's lifetime.
-     */
+    /// Initializes the vertex data and buffers for rendering a quad.
     static void initRenderData();
     /// Renders all the given entities
     static void render();

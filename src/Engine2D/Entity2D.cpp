@@ -4,8 +4,6 @@
 // Date: 03/11/2024
 //
 
-#include <iostream>
-
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp"
@@ -15,8 +13,12 @@
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 
 namespace Engine2D {
-  Entity2D::Entity2D(std::string name)
-    : name(std::move(name)), transform(std::make_shared<Transform2D>()), active(true), parentsActive(true) {}
+  Entity2D::Entity2D(
+    std::string name, const bool isStatic, glm::vec2 position, float rotation, glm::vec2 scale,
+    std::shared_ptr<Entity2D> parent
+  )
+    : name(std::move(name)), transform(std::make_shared<Transform2D>(position, rotation, scale, parent)), active(true),
+      parentsActive(true), isStatic(isStatic) {}
 
   bool Entity2D::operator==(const Entity2D &entity) const {
     return name == entity.name && transform == entity.transform;
@@ -36,6 +38,10 @@ namespace Engine2D {
     return this->active && this->parentsActive;
   }
 
+  bool Entity2D::IsStatic() const {
+    return this->isStatic;
+  }
+
   void Entity2D::Destroy() {
     Game2D::instance->removeEntity(shared_from_this());
   }
@@ -48,6 +54,7 @@ namespace Engine2D {
     transform->onParentHierarchyChange();
     if (!transform->parent)
       transform->SetParent(nullptr);
+    transform->initialized = true;
   }
 
   void Entity2D::destroy() {
