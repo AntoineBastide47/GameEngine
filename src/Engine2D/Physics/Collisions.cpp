@@ -8,7 +8,7 @@
 #include <glm/gtx/norm.hpp>
 
 #include "Engine2D/Physics/Collisions.hpp"
-#include "Engine2D/Entity2D.hpp"
+#include "Engine2D/Transform2D.hpp"
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Types/Vector2.hpp"
 

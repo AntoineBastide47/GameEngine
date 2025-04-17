@@ -44,8 +44,14 @@ int main(const int argc, const char *argv[]) {
 
   bool useEngineCommands = false;
   std::ifstream cmake("CMakeLists.txt");
-  if (std::string firstLine; cmake && std::getline(cmake, firstLine)) {
-    useEngineCommands = (firstLine == "## Engine CMake <-- do not remove line");
+  if (cmake) {
+    std::string line;
+    while (std::getline(cmake, line)) {
+      if (line.find("add_library(Engine2D STATIC") != std::string::npos) {
+        useEngineCommands = true;
+        break;
+      }
+    }
   }
 
   const auto commands = useEngineCommands ? CreateEngineCommands() : CreateProjectCommands();

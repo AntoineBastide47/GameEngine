@@ -7,17 +7,20 @@
 #ifndef PARTICLE_SYSTEM2D_H
 #define PARTICLE_SYSTEM2D_H
 
+#include <random>
+
 #include "Engine2D/Component2D.hpp"
 
 namespace Engine::Rendering {
-  class Texture;
   class Shader;
 }
 
 using Engine::Rendering::Shader;
-using Engine::Rendering::Texture;
 
 namespace Engine2D {
+  namespace Rendering {
+    class Sprite;
+  }
   class ParticleSystem2D final : public Component2D {
     friend class Game2D;
     friend class Entity2D;
@@ -34,6 +37,8 @@ namespace Engine2D {
       float particleLifetime;
       /// The initial position of the particles
       glm::vec2 startPosition;
+      /// Rendering priority: higher value means higher priority
+      int16_t renderOrder;
 
       /// Whether particles will have their own start and end velocities
       bool useGlobalVelocities;
@@ -65,8 +70,8 @@ namespace Engine2D {
 
       /// The shader of used to render the particles, defaults to the "particle" shader
       std::shared_ptr<Shader> shader;
-      /// The texture used to render the particles
-      std::shared_ptr<Texture> texture;
+      /// The sprite used to render the particles
+      std::shared_ptr<Rendering::Sprite> sprite;
 
       ParticleSystem2D();
 
@@ -115,17 +120,26 @@ namespace Engine2D {
       /// The index of the last dead particle in the list
       uint lastUsedParticle;
 
-      uint instanceVBO;
+      /// The VAO used to render the particles
       uint quadVAO;
+      /// The VBO used to render the particles
       uint quadVBO;
-      bool initialized;
+      /// The VBO used to send particle data
+      uint instanceVBO;
+      /// How many particles are alive
       uint aliveCount;
+      /// Whether this component has been initialized or not
+      bool initialized;
 
+      /// The vertices used to define the quad used to render the particles
       static const float quadVertices[];
 
-      void update();
       /// Initializes the particle system
       void initialize();
+      /// Checks whether the current particle is in a valid state
+      bool validParticle(const Particle &p) const;
+      /// Updates all the particles
+      void update();
       /// Renders the particle system
       void render();
 

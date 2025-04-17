@@ -15,11 +15,11 @@
 #include "Engine/Macros/Utils.hpp"
 #include "Engine/Settings.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp"
-#include "Engine2D/Rendering/ShapeRenderer.hpp"
 #include "Engine/Input/Gamepad.hpp"
 #include "Engine/Input/Keyboard.hpp"
 #include "Engine/Input/Mouse.hpp"
 #include "Engine2D/Behaviour.hpp"
+#include "Engine/Macros/PlatformDetection.hpp"
 
 using Engine::ResourceManager;
 
@@ -70,15 +70,22 @@ namespace Engine2D {
     nextFrameTime = std::chrono::high_resolution_clock::now();
     frameCounter = 0;
 
+    #if MULTI_THREAD
     // IMPORTANT:
     // GLFW requires event processing (glfwPollEvents) in the main thread.
     // So we run the update loop on the main thread.
     // We then release the GL context so the render thread can make it current.
     glfwMakeContextCurrent(nullptr);
-
     renderThread = std::thread(&Game2D::renderLoop, this);
+    #else
+    glfwMakeContextCurrent(window);
+    #endif
+
     updateLoop();
+
+    #if MULTI_THREAD
     renderThread.join();
+    #endif
 
     this->quit();
   }
@@ -90,7 +97,8 @@ namespace Engine2D {
       this->deltaTime = std::chrono::duration<float>(currentFrameTime - lastTime).count() * timeScale;
       lastTime = currentFrameTime;
 
-      glfwPollEvents();
+      if (!window || !glfwWindowShouldClose(window))
+        glfwPollEvents();
 
       this->addEntities();
       this->removeEntities();
@@ -99,6 +107,7 @@ namespace Engine2D {
       this->fixedUpdate();
       this->update();
 
+      #if MULTI_THREAD
       // Handoff engine data to the render thread
       {
         std::unique_lock lock(syncMutex);
@@ -111,10 +120,12 @@ namespace Engine2D {
         renderFinished = false;
       }
       cv.notify_one();
-
-      this->limitFrameRate();
+      #else
+      this->render();
+      #endif
 
       // FPS calculation
+      this->limitFrameRate();
       oneSecondTimer += deltaTime;
       while (oneSecondTimer >= 1.0f) {
         std::cout << "FPS: " << frameCounter << std::endl;
@@ -123,14 +134,18 @@ namespace Engine2D {
         physicsAccumulator = 0.0f;
       }
     }
+
+    #if MULTI_THREAD
     // In case the window is closing, ensure the render thread isn’t left waiting.
     {
       std::unique_lock lock(syncMutex);
       updateFinished = true;
     }
     cv.notify_one();
+    #endif
   }
 
+  #if MULTI_THREAD
   void Game2D::renderLoop() {
     // Make the GL context current in this thread.
     glfwMakeContextCurrent(window);
@@ -151,6 +166,7 @@ namespace Engine2D {
       cv.notify_one();
     }
   }
+  #endif
 
   void Game2D::SetGameResourceLoader(ResourceLoader resourceLoader) {
     this->resourceLoader = std::move(resourceLoader);
@@ -193,7 +209,7 @@ namespace Engine2D {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    #ifdef __APPLE__
+    #ifdef ENGINE_MACOS
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     #endif
 
@@ -225,7 +241,8 @@ namespace Engine2D {
 
     // Make some OpenGL properties better for 2D and enable alpha channel.
     glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -246,7 +263,7 @@ namespace Engine2D {
     const glm::mat4 projection = glm::ortho(
       -static_cast<float>(width) * screenScaleFactor * 0.5f, static_cast<float>(width) * screenScaleFactor * 0.5f,
       -static_cast<float>(height) * screenScaleFactor * 0.5f, static_cast<float>(height) * screenScaleFactor * 0.5f,
-      -1.0f, 1.0f
+      -32768.0f, 32768.0f // int16_t range
     );
 
     // Create and configure the sprite renderer
@@ -260,10 +277,6 @@ namespace Engine2D {
     );
     ResourceManager::GetShader("particle")->SetInteger("sprite", 0, true);
     ResourceManager::GetShader("particle")->SetMatrix4("projection", projection);
-
-    ResourceManager::LoadShader("Engine/Shaders/shape.vert", "Engine/Shaders/shape.frag", "", "shape");
-    ResourceManager::GetShader("shape")->SetMatrix4("projection", projection, true);
-    Rendering::ShapeRenderer::shader = ResourceManager::GetShader("shape");
 
     physics2D = new Physics2D();
 
@@ -314,7 +327,7 @@ namespace Engine2D {
 
   void Game2D::render() {
     // Make sure there is something to render
-    if (!entities.empty() ) {
+    if (!entities.empty()) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       Rendering::Renderer2D::render();

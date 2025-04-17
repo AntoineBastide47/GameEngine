@@ -8,7 +8,6 @@
 #define GAME2D_H
 
 #include <thread>
-#include <string>
 #include <cmrc/cmrc.hpp>
 
 #include "Engine/RenderingHeaders.hpp"
@@ -133,8 +132,11 @@ namespace Engine2D {
 
       /// The update loop called on the main thread
       void updateLoop();
+
+      #if MULTI_THREAD
       /// The render loop called on the render thread
       void renderLoop();
+      #endif
 
       /// Initializes the game
       void initialize();

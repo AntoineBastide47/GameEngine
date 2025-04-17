@@ -7,7 +7,6 @@
 #ifndef TRANSFORM2D_H
 #define TRANSFORM2D_H
 
-#include <vector>
 #include <glm/glm.hpp>
 
 #include "Engine2D/Component2D.hpp"

@@ -4,10 +4,10 @@
 // Date: 16/12/2024
 //
 
+#include "Engine/RenderingHeaders.hpp"
 #include "Engine/Settings.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
-#include "Engine/RenderingHeaders.hpp"
 
 namespace Engine {
   glm::vec<2, size_t> Settings::Window::resolution = glm::vec<2, size_t>(800, 600);

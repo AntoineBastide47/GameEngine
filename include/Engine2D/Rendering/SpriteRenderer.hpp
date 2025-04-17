@@ -18,7 +18,21 @@ namespace Engine::Rendering {
 namespace Engine2D::Rendering {
   class Sprite;
   class SpriteRenderer final : public Component2D {
+    friend class Renderer2D;
     public:
+      SpriteRenderer();
+
+      void SetShader(const std::shared_ptr<Engine::Rendering::Shader> &shader);
+      std::shared_ptr<Engine::Rendering::Shader> GetShader() const;
+      void SetSprite(const std::shared_ptr<Sprite> &sprite);
+      std::shared_ptr<Sprite> GetSprite() const;
+      void SetColor(const glm::vec4 &color);
+      const glm::vec4 &GetColor() const;
+      void SetFlip(glm::vec<2, bool> flip);
+      const glm::vec<2, bool> &GetFlip() const;
+      void SetRenderOrder(size_t order);
+      size_t GetRenderOrder() const;
+    private:
       /// The shader used to render the target sprite
       std::shared_ptr<Engine::Rendering::Shader> shader;
       /// The sprite to render
@@ -27,12 +41,10 @@ namespace Engine2D::Rendering {
       glm::vec4 color;
       /// If the sprite should be flipped on a given axis
       glm::vec<2, bool> flip;
-      /// The layer on which to render the sprite
-      uint32_t renderLayer;
-      /// The ordering of the sprite within the render layer
-      int renderOrder;
-
-      SpriteRenderer();
+      /// Rendering priority: higher value means higher priority
+      int16_t renderOrder;
+      /// Whether the sprite renderer was updated
+      bool dirty;
   };
 }
 

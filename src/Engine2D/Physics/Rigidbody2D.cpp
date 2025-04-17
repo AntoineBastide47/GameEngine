@@ -6,7 +6,6 @@
 
 #include "Engine2D/Physics/Rigidbody2D.hpp"
 #include "Engine2D/Entity2D.hpp"
-#include "Engine2D/Game2D.hpp"
 #include "Engine/Settings.hpp"
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Types/Vector2.hpp"

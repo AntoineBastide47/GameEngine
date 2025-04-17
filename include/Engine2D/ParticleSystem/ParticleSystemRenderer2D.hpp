@@ -8,7 +8,10 @@
 #define PARTICLE_SYSTEM_RENDERER2D_H
 
 #include <vector>
+
+#if MULTI_THREAD
 #include <mutex>
+#endif
 
 namespace Engine2D {
   class ParticleSystem2D;
@@ -18,7 +21,12 @@ namespace Engine2D {
 
     /// All the particle systems in the game
     static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystems;
+    static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystemsToAdd;
+    static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystemsToRemove;
+
+    #if MULTI_THREAD
     static std::mutex particleSystemMutex;
+    #endif
 
     static void update();
     static void render();

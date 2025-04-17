@@ -7,13 +7,10 @@
 #ifndef ENTITY2D_H
 #define ENTITY2D_H
 
+#include <vector>
 #include <string>
 
 #include "Engine2D/Transform2D.hpp"
-#include "Engine2D/Physics/Collider2D.hpp"
-#include "Engine/Rendering/Texture.hpp"
-
-using Engine::Rendering::Texture;
 
 namespace Engine2D {
   class Behaviour;

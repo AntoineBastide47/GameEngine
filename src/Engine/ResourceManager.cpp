@@ -73,7 +73,14 @@ namespace Engine {
     return Engine::Log::Error("Unknown shader: " + name);
   }
 
-  std::shared_ptr<Texture> ResourceManager::LoadTexture(
+  std::shared_ptr<Shader> ResourceManager::GetShaderById(const uint id) {
+    for (auto &val: shaders | std::views::values)
+      if (val->id == id)
+        return val;
+    return Engine::Log::Error("Unknown shader with id: " + std::to_string(id));
+  }
+
+  std::shared_ptr<Texture> ResourceManager::LoadTexture2D(
     const std::string &filePath, const bool alpha, const std::string &name
   ) {
     if (filePath.empty())
@@ -114,36 +121,58 @@ namespace Engine {
     return textures[name] = texture;
   }
 
-  std::shared_ptr<Texture> ResourceManager::GetTexture(const std::string &name) {
+  std::shared_ptr<Texture> ResourceManager::GetTexture2D(const std::string &name) {
     if (textures.contains(name))
       return textures[name];
     return Engine::Log::Error("Unknown texture: " + name);
   }
 
+  std::shared_ptr<Texture> ResourceManager::GetTexture2DById(uint id) {
+    for (auto &val: textures | std::views::values)
+      if (val->id == id)
+        return val;
+    return Engine::Log::Error("Unknown texture with id: " + std::to_string(id));
+  }
+
   std::shared_ptr<Sprite> ResourceManager::GetSprite(const std::string &name) {
     if (sprites.contains(name))
       return sprites[name];
-    return CreateSprite(name);
+    return CreateSpriteFromTexture(name);
   }
 
-  std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> ResourceManager::LoadTextureAndSprite(
+  std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> ResourceManager::LoadTexture2DAndSprite(
     const std::string &filePath, const bool alpha, const std::string &name
   ) {
-    auto texture = LoadTexture(filePath, alpha, name);
-    auto sprite = CreateSprite(name);
+    auto texture = LoadTexture2D(filePath, alpha, name);
+    auto sprite = CreateSpriteFromTexture(name);
     return {texture, sprite};
   }
 
-  std::shared_ptr<Sprite> ResourceManager::CreateSprite(const std::string &textureName) {
+  std::shared_ptr<Sprite> ResourceManager::CreateSpriteFromTexture(const std::string &textureName) {
     if (!textures.contains(textureName))
       return Engine::Log::Error("Texture not found: " + textureName);
 
     const auto &texture = textures[textureName];
 
-    auto sprite = std::make_shared<Sprite>();
+    const auto sprite = std::make_shared<Sprite>();
     sprite->texture = texture;
 
     return sprites[textureName] = sprite;
+  }
+
+  std::shared_ptr<Sprite> ResourceManager::CreateSprite(
+    const std::string &spriteName, const std::string &textureName, const glm::vec4 &rect
+  ) {
+    if (!textures.contains(textureName))
+      return Log::Error("Texture not found: " + textureName);
+    if (sprites.contains(spriteName))
+      return Log::Error("Sprite already exists: " + spriteName);
+
+    const auto &texture = textures[textureName];
+    const auto sprite = std::make_shared<Sprite>();
+    sprite->texture = texture;
+    sprite->rect = rect;
+    return sprites[spriteName] = sprite;
   }
 
   void ResourceManager::Clear() {

@@ -3,14 +3,29 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.5] -2025-09-10
+## [0.6.0] - 2025-04-17
+### Added
+- **[CMakeLists]**: MULTI_THREAD macro, used to enable and disable multi-threading, helpful for debugging
+- **[Renderer2D]**: static entities have a different render pass from the non-static entities
+- **[ResourceManager]**: sprites can be created from texture atlases 
+### Changed
+- **[engine-cli]**: looks for engine static library declaration instead of comment to determine if cli is in the engine or project directory
+- **[Renderer2D]**: CPU sorts by shader and texture id and GPU sorts by render order (=depth)
+- **[Game2D, ParticleSystemRenderer2D]**: multithreading code only compiled if MULTI_THREAD is set to 1
+- **[ParticleSystem2D]**: uses a map buffer range instead of a float array for better performance
+### Fixed
+- **[ParticleSystem2D]**: particles no longer jitter 
+### Removed
+- **[Renderer2D]**: renderLayer as it is the same as render order currently
+
+## [0.5.5] - 2025-04-10
 ### Added
 - **[SpriteRenderer]**: sprites can be flipped on X and Y coordinates now
 - **[Entity2D]**: framework for future static rendering
 ### Changed
-- **[Transform2D]**: static entities's transform cannot be updated once the entity is initialized
+- **[Transform2D]**: static entities' transform cannot be updated once the entity is initialized
 
-## [0.5.4] - 2025-09-04
+## [0.5.4] - 2025-04-09
 ### Added
 - **[Sprite]**: wrapper around Texture for rendering
 - **[SpriteRenderer]**: component used to render entity sprites
@@ -21,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **[Entity2D]**: no longer has texture and textureColor as member variables
 - **[Game2D]**: entitiesToRender are now stored in the Renderer2D class
 
-## [0.5.3] - 2025-03-04
+## [0.5.3] - 2025-04-03
 ### Added
 - **[engine-cli]**: rebuild command rebuilds the cli's binary executable
 ### Changed
@@ -30,7 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - **[engine-cli]**: version command works correctly when in the Engine folder
 
-## [0.5.2] - 2025-31-03
+## [0.5.2] - 2025-03-31
 ### Added
 - **[CMakeLists]**: made most dependencies submodules
 - **[engine-cli]**: simple binary that replaces the old makefile

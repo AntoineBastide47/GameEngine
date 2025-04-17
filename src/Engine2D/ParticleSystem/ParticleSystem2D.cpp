@@ -4,9 +4,9 @@
 // Date: 14/01/2025
 //
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/compatibility.hpp>
-#include <random>
+#define STRIDE (16)
+#define STRIDE_SIZE (STRIDE * sizeof(float))
+
 #include <vector>
 
 #include "Engine/RenderingHeaders.hpp"
@@ -14,18 +14,19 @@
 #include "Engine2D/Game2D.hpp"
 #include "Engine/ResourceManager.hpp"
 #include "Engine/Rendering/Shader.hpp"
-#include "Engine2D/Types/Vector2.hpp"
+#include "Engine/Rendering/Texture.hpp"
+#include "Engine2D/Rendering/Sprite.hpp"
 
 namespace Engine2D {
   const float ParticleSystem2D::quadVertices[] = {
-    // pos         // tex
-    -0.5f, 0.5f, 0.0f, 1.0f,  // Top-left corner
-    0.5f, -0.5f, 1.0f, 0.0f,  // Bottom-right corner
-    -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-left corner
+    // pos      // tex
+    0.0f, 1.0f, 0.0f, 1.0f, // Top-left
+    1.0f, 0.0f, 1.0f, 0.0f, // Bottom-right
+    0.0f, 0.0f, 0.0f, 0.0f, // Bottom-left
 
-    -0.5f, 0.5f, 0.0f, 1.0f, // Top-left corner
-    0.5f, 0.5f, 1.0f, 1.0f,  // Top-right corner
-    0.5f, -0.5f, 1.0f, 0.0f  // Bottom-right corner
+    0.0f, 1.0f, 0.0f, 1.0f, // Top-left
+    1.0f, 1.0f, 1.0f, 1.0f, // Top-right
+    1.0f, 0.0f, 1.0f, 0.0f  // Bottom-right
   };
 
   bool ParticleSystem2D::Particle::Visible() const {
@@ -38,7 +39,7 @@ namespace Engine2D {
   }
 
   ParticleSystem2D::ParticleSystem2D()
-    : loop(false), restart(false), startDelay(0), particleLifetime(1), startPosition(glm::vec2(0)),
+    : loop(false), restart(false), startDelay(0), particleLifetime(1), startPosition(glm::vec2(0)), renderOrder(0),
       useGlobalVelocities(false), startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)), startAngularVelocity(0),
       endAngularVelocity(), startSize(glm::vec2(1)), endSize(glm::vec2(0)), startColor(glm::vec4(1)), endColor(glm::vec4(1)),
       simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), duration(1),
@@ -80,36 +81,43 @@ namespace Engine2D {
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
 
     // Create the instance VBO for per-particle data.
-    // Each instance will provide: instancePosition (vec2), instanceScale (vec2), instanceColor (vec4)
-    // Total stride: 8 floats.
     glGenBuffers(1, &instanceVBO);
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    // Allocate buffer with enough space for all particles.
-    glBufferData(GL_ARRAY_BUFFER, particles.size() * 9 * sizeof(float), nullptr, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, particles.size() * STRIDE_SIZE, nullptr, GL_STREAM_DRAW);
 
     // Setup instance attributes:
-    // Attribute location 1: instancePosition (vec2)
+    constexpr GLsizei vec4Size = 4 * sizeof(float);
+    // Attribute location 1: position and scale
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), nullptr);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, nullptr);
     glVertexAttribDivisor(1, 1);
 
-    // Attribute location 2: instanceScale (vec2)
+    // Attribute location 2: color
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(vec4Size));
     glVertexAttribDivisor(2, 1);
 
-    // Attribute location 3: instanceColor (vec4)
+    // Attribute location 3: rect
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), reinterpret_cast<void *>(4 * sizeof(float)));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(2 * vec4Size));
     glVertexAttribDivisor(3, 1);
 
-    // Attribute location 4: instanceRotation (vec1)
+    // Attribute location 4: pivot, rotation and renderOrder
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), reinterpret_cast<void *>(8 * sizeof(float)));
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(3 * vec4Size));
     glVertexAttribDivisor(4, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+  }
+
+  bool ParticleSystem2D::validParticle(const Particle &p) const {
+    const glm::vec2 minSize = glm::min(startSize, endSize);
+    const glm::vec2 maxSize = glm::max(startSize, endSize);
+
+    return p.lifeTime > 0.0f &&
+           p.size.x >= minSize.x && p.size.y >= minSize.y &&
+           p.size.x <= maxSize.x && p.size.y <= maxSize.y;
   }
 
   void ParticleSystem2D::update() {
@@ -148,19 +156,20 @@ namespace Engine2D {
         continue;
 
       p.lifeTime -= dt;
-      if (p.lifeTime > 0.0f) {
-        ++aliveCount;
-
+      if (validParticle(p)) {
         const float t = p.lifeTime * dA;
-        p.color = glm::lerp(startColor, endColor, 1.0f - t);
-        p.size = glm::lerp(endSize, startSize, t);
-        p.rotation += glm::lerp(startAngularVelocity, endAngularVelocity, t) * dt;
+        p.color = glm::mix(startColor, endColor, 1.0f - t);
+        p.size = glm::mix(endSize, startSize, t);
+        p.rotation += glm::mix(startAngularVelocity, endAngularVelocity, t) * dt;
 
-        p.position += dt * glm::lerp(
+        p.position += dt * glm::mix(
           useGlobalVelocities ? startVelocity : p.startVelocity,
           useGlobalVelocities ? endVelocity : p.endVelocity,
           t
         );
+
+        if (p.Visible())
+          ++aliveCount;
       }
     }
 
@@ -175,14 +184,18 @@ namespace Engine2D {
       initialize();
 
     this->shader->Use();
-    this->texture->bind();
+    this->sprite->texture->bind();
 
-    const size_t instanceDataSize = aliveCount * 9;
-    const auto instanceData = new float[instanceDataSize];
-    size_t i = 0;
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, particles.size() * STRIDE_SIZE, nullptr, GL_STREAM_DRAW);
+
+    auto gpuPtr = static_cast<float *>(glMapBufferRange(GL_ARRAY_BUFFER, 0, aliveCount * STRIDE_SIZE, GL_MAP_WRITE_BIT));
+
+    if (!gpuPtr)
+      return;
 
     for (const auto &particle: particles) {
-      if (particle.lifeTime <= 0 || !particle.Visible())
+      if (!validParticle(particle) || !particle.Visible())
         continue;
 
       const glm::vec2 scale = particle.size;
@@ -192,28 +205,36 @@ namespace Engine2D {
       else
         pos = glm::vec2(Transform()->GetWorldMatrix() * glm::vec4(particle.position, 0, 1));
 
-      instanceData[i + 0] = pos.x;
-      instanceData[i + 1] = pos.y;
-      instanceData[i + 2] = scale.x;
-      instanceData[i + 3] = scale.y;
-      instanceData[i + 4] = particle.color.r;
-      instanceData[i + 5] = particle.color.g;
-      instanceData[i + 6] = particle.color.b;
-      instanceData[i + 7] = particle.color.a;
-      instanceData[i + 8] = particle.rotation;
-      i += 9;
-    }
+      // Position and scale
+      *gpuPtr++ = pos.x;
+      *gpuPtr++ = pos.y;
+      *gpuPtr++ = scale.x / sprite->pixelsPerUnit;
+      *gpuPtr++ = scale.y / sprite->pixelsPerUnit;
 
-    // Update the instance VBO with new per-particle data.
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, instanceDataSize * sizeof(float), instanceData);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+      // Color
+      *gpuPtr++ = particle.color.r;
+      *gpuPtr++ = particle.color.g;
+      *gpuPtr++ = particle.color.b;
+      *gpuPtr++ = particle.color.a;
+
+      // Rect
+      *gpuPtr++ = sprite->rect.x;
+      *gpuPtr++ = sprite->rect.y;
+      *gpuPtr++ = sprite->rect.z;
+      *gpuPtr++ = sprite->rect.w;
+
+      // Pivot, rotation and renderOrder
+      *gpuPtr++ = sprite->pivot.x;
+      *gpuPtr++ = sprite->pivot.y;
+      *gpuPtr++ = particle.rotation;
+      *gpuPtr++ = renderOrder;
+    }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
 
     // Bind the quad VAO and draw all instances in a single draw call.
     glBindVertexArray(quadVAO);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 6, aliveCount);
     glBindVertexArray(0);
-    delete[] instanceData;
   }
 
   void ParticleSystem2D::respawnParticle(const uint index) {

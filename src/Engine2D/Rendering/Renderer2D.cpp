@@ -4,19 +4,18 @@
 // Date: 10/11/2024 (modified 02/03/2025)
 //
 
-#include <iostream>
 #include <vector>
-#include <map>
 
 #include "Engine2D/Rendering/Renderer2D.hpp"
-#include "Engine2D/Game2D.hpp"
+#include "Engine/ResourceManager.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine/Rendering/Shader.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
+#include "Engine/Rendering/Texture.hpp"
 
 namespace Engine2D::Rendering {
-  const float Renderer2D::vertices[24] = {
+  const float Renderer2D::vertices[] = {
     // pos      // tex
     0.0f, 1.0f, 0.0f, 1.0f, // Top-left
     1.0f, 0.0f, 1.0f, 0.0f, // Bottom-right
@@ -28,17 +27,23 @@ namespace Engine2D::Rendering {
   };
 
   std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::renderers;
+  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::staticRenderers;
+
   std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::renderersToAdd;
   std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::renderersToRemove;
 
   uint Renderer2D::quadVAO{};
   uint Renderer2D::batchVBO{};
+  uint Renderer2D::staticBatchVBO{};
   uint Renderer2D::lastBoundTexture{};
 
   uint Renderer2D::instanceCount;
   uint Renderer2D::lastShaderID;
   uint Renderer2D::lastTextureID;
+
   std::vector<float> Renderer2D::batchData;
+  std::vector<float> Renderer2D::staticBatchData;
+  std::vector<std::tuple<uint32_t, uint32_t, uint32_t, uint32_t>> Renderer2D::staticFlushList;
 
   Renderer2D::Renderer2D() {
     batchData.reserve(MAX_BATCH_SIZE);
@@ -53,9 +58,20 @@ namespace Engine2D::Rendering {
       glDeleteBuffers(1, &batchVBO);
       batchVBO = 0;
     }
-    renderers.clear();
+    if (staticBatchVBO > 0) {
+      glDeleteBuffers(1, &staticBatchVBO);
+      staticBatchVBO = 0;
+    }
+
     renderersToAdd.clear();
     renderersToRemove.clear();
+
+    renderers.clear();
+    batchData.clear();
+
+    staticRenderers.clear();
+    staticBatchData.clear();
+    staticFlushList.clear();
   }
 
   void Renderer2D::initRenderData() {
@@ -77,161 +93,267 @@ namespace Engine2D::Rendering {
     glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
     glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
 
-    // The stride (in bytes) for one instance
-    constexpr GLsizei stride = STRIDE;
+    // Setup instance attributes:
     constexpr GLsizei vec4Size = 4 * sizeof(float);
-
-    // Attribute locations 1–4 will hold the 4 columns of the model matrix.
-    // (Remember: OpenGL expects matrices to be supplied as 4 vec4 attributes.)
+    // Attribute location 1: scale and rotation
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, nullptr);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, nullptr);
     glVertexAttribDivisor(1, 1);
-
+    // Attribute location 2: position and sprite pivot
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(vec4Size));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(vec4Size));
     glVertexAttribDivisor(2, 1);
-
+    // Attribute location 3: sprite color
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(2 * vec4Size));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(2 * vec4Size));
     glVertexAttribDivisor(3, 1);
-
+    // Attribute location 4: sprite rect
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(3 * vec4Size));
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(3 * vec4Size));
     glVertexAttribDivisor(4, 1);
-
-    // Attribute location 5: sprite color (vec4)
+    // Attribute location 5: sprite renderOrder and pixelPerUnit
     glEnableVertexAttribArray(5);
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(4 * vec4Size));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(4 * vec4Size));
     glVertexAttribDivisor(5, 1);
 
-    // Attribute location 6: sprite rect
-    glEnableVertexAttribArray(6);
-    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(5 * vec4Size));
-    glVertexAttribDivisor(6, 1);
-
-    // Attribute location 6: sprite pivot
-    glEnableVertexAttribArray(7);
-    glVertexAttribPointer(7, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(6 * vec4Size + 0 * sizeof(float)));
-    glVertexAttribDivisor(7, 1);
-
-    // Attribute location 6: sprite pixelsPerUnit
-    glEnableVertexAttribArray(8);
-    glVertexAttribPointer(8, 1, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void *>(6 * vec4Size + 2 * sizeof(float)));
-    glVertexAttribDivisor(8, 1);
+    // --- Set up the static instance buffer ---
+    glGenBuffers(1, &staticBatchVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, staticBatchVBO);
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
 
     // Cleanup: unbind the VBO and VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
   }
 
-  void Renderer2D::render() {
-    // Add all pending renderers
-    for (auto &renderer: renderersToAdd)
-      renderers.emplace_back(renderer);
-    // Remove all pending renderers
-    for (auto &renderer: renderersToRemove)
-      std::erase(renderers, renderer);
+  bool Renderer2D::cannotBeRendered(const std::shared_ptr<SpriteRenderer> &r) {
+    return !r || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader || !r->sprite ||
+           !r->sprite->texture;
+  }
 
-    if (!renderersToAdd.empty()) {
-      std::ranges::sort(
-        renderers, [](
-        const std::shared_ptr<SpriteRenderer> &a, const std::shared_ptr<SpriteRenderer> &b
-      ) {
-          const bool aInvalid = !a->shader || !a->sprite || !a->sprite->texture;
+  bool Renderer2D::sortRenderers(const std::shared_ptr<SpriteRenderer> &a, const std::shared_ptr<SpriteRenderer> &b) {
+    if (const bool aValid = cannotBeRendered(a); aValid != cannotBeRendered(b))
+      return !aValid;
 
-          if (const bool bInvalid = !b->shader || !b->sprite || !b->sprite->texture; aInvalid != bInvalid)
-            return !aInvalid;
+    if (a->shader->id != b->shader->id)
+      return a->shader->id < b->shader->id;
+    return a->sprite->texture->id < b->sprite->texture->id;
+  }
 
-          return std::tie(a->renderLayer, a->renderOrder, a->shader->id, a->sprite->texture->id) <
-                 std::tie(b->renderLayer, b->renderOrder, b->shader->id, b->sprite->texture->id);
-        }
-      );
-    }
-    renderersToAdd.clear();
-    renderersToRemove.clear();
-
-    if (renderers.empty())
+  void Renderer2D::extractRendererData(
+    const std::shared_ptr<SpriteRenderer> &renderer, float *data
+  ) {
+    if (const auto entity = renderer->Entity(); !renderer->Entity()->IsActive() || !renderer->Transform()->GetIsVisible())
       return;
 
-    if (!quadVAO)
-      initRenderData();
+    // Get the model matrix
+    auto modelMatrix = renderer->Transform()->GetWorldMatrix();
+    int offset = 0;
+    //modelMatrix[3][2] = renderer->renderOrder;
+    // Append the 16 floats (column-major order) from the model matrix.
+    //const float *matrixPtr = glm::value_ptr(modelMatrix);
+    //std::memcpy(data, matrixPtr, 16 * sizeof(float));
 
-    glBindVertexArray(quadVAO);
-    lastShaderID = 0;
-    lastTextureID = 0;
+    // Add scale and rotation
+    data[offset++] = modelMatrix[0][0];
+    data[offset++] = modelMatrix[0][1];
+    data[offset++] = modelMatrix[1][0];
+    data[offset++] = modelMatrix[1][1];
 
-    for (const auto spriteRenderer: renderers) {
-      if (!spriteRenderer->shader || !spriteRenderer->sprite->texture)
-        continue;
+    // Add position and pivot
+    data[offset++] = modelMatrix[3][0];
+    data[offset++] = modelMatrix[3][1];
+    data[offset++] = renderer->sprite->pivot.x;
+    data[offset++] = renderer->sprite->pivot.y;
 
+    // Add color
+    data[offset++] = renderer->color.x;
+    data[offset++] = renderer->color.y;
+    data[offset++] = renderer->color.z;
+    data[offset++] = renderer->color.w;
+
+    // Add rect
+    data[offset++] = renderer->sprite->rect.x;
+    data[offset++] = renderer->sprite->rect.y;
+    data[offset++] = renderer->sprite->rect.z;
+    data[offset++] = renderer->sprite->rect.w;
+
+    // Add renderOrder and pixelsPerUnit
+    data[offset++] = renderer->renderOrder;
+    data[offset++] = renderer->sprite->pixelsPerUnit;
+    data[offset++] = 0;
+    data[offset] = 0;
+  }
+
+  void Renderer2D::updateStaticBatch() {
+    // Find all the dirty sprite renderers
+    std::vector<size_t> dirtyIndices;
+    for (size_t i = 0; i < staticRenderers.size(); i++)
+      if (staticRenderers[i] && staticRenderers[i]->dirty)
+        dirtyIndices.push_back(i);
+
+    // Update them
+    for (const size_t i: dirtyIndices) {
+      auto &renderer = staticRenderers[i];
+      const size_t offset = i * STRIDE;
+      extractRendererData(renderer, &staticBatchData[offset]);
+      renderer->dirty = false;
+    }
+  }
+
+  void Renderer2D::buildAndRenderStaticBatch(const bool rebuild) {
+    if (rebuild) {
+      std::ranges::sort(staticRenderers, sortRenderers);
+
+      staticBatchData.clear();
+      staticFlushList.clear();
+
+      uint32_t start = 0, count = 0, currentShaderID = 0, currentTextureID = 0, index = 0;
+
+      // Only extract data for valid sprite renderers
+      const auto it = std::ranges::find_if(staticRenderers, cannotBeRendered);
+      const auto validRange = std::ranges::subrange(staticRenderers.begin(), it);
+      staticBatchData.reserve(validRange.size() * STRIDE);
+      staticBatchData.resize(validRange.size() * STRIDE);
+      for (auto &renderer: validRange) {
+        const uint32_t shaderID = renderer->shader->id;
+
+        // Check for change in key
+        if (const uint32_t textureID = renderer->sprite->texture->id;
+          shaderID != currentShaderID || textureID != currentTextureID) {
+          // Save the previous flush range if any
+          if (count > 0) {
+            staticFlushList.emplace_back(currentShaderID, currentTextureID, start, count);
+            start += count;
+            count = 0;
+          }
+
+          currentShaderID = shaderID;
+          currentTextureID = textureID;
+        }
+
+        extractRendererData(renderer, &staticBatchData[index * STRIDE]);
+        count++;
+        index++;
+      }
+      if (count > 0)
+        staticFlushList.emplace_back(currentShaderID, currentTextureID, start, count);
+    } else
+      updateStaticBatch();
+
+    for (auto &[shaderID, textureID, start, count]: staticFlushList) {
+      if (shaderID != lastShaderID) {
+        lastShaderID = shaderID;
+        Engine::ResourceManager::GetShaderById(shaderID)->Use();
+      }
+      if (textureID != lastTextureID) {
+        lastTextureID = textureID;
+        Engine::ResourceManager::GetTexture2DById(textureID)->bind();
+      }
+
+      flush(staticBatchVBO, &staticBatchData[start * STRIDE], GL_STATIC_DRAW, count);
+    }
+  }
+
+  void Renderer2D::buildAndRenderDynamicBatch() {
+    const auto it = std::ranges::find_if(renderers, cannotBeRendered);
+    const auto validRange = std::ranges::subrange(renderers.begin(), it);
+
+    batchData.resize(validRange.size() * STRIDE);
+    for (const auto &renderer: validRange) {
       // Bind a new shader if needed
-      if (lastShaderID != spriteRenderer->shader->id && spriteRenderer->shader->id > 0) {
-        flush();
-        lastShaderID = spriteRenderer->shader->id;
-        spriteRenderer->shader->Use();
+      if (lastShaderID != renderer->shader->id && renderer->shader->id > 0) {
+        flush(batchVBO, &batchData[0], GL_DYNAMIC_DRAW, instanceCount);
+        batchData.clear();
+        instanceCount = 0;
+        renderer->shader->Use();
+        lastShaderID = renderer->shader->id;
       }
 
       // Bind a new texture if needed
-      if (lastTextureID != spriteRenderer->sprite->texture->id && spriteRenderer->sprite->texture->id > 0) {
-        flush();
-        lastTextureID = spriteRenderer->sprite->texture->id;
-        spriteRenderer->sprite->texture->bind();
+      if (lastTextureID != renderer->sprite->texture->id && renderer->sprite->texture->id > 0) {
+        flush(batchVBO, &batchData[0], GL_DYNAMIC_DRAW, instanceCount);
+        batchData.clear();
+        instanceCount = 0;
+        renderer->sprite->texture->bind();
+        lastTextureID = renderer->sprite->texture->id;
       }
 
-      const auto entity = spriteRenderer->Entity();
+      if (instanceCount >= MAX_INSTANCE_COUNT || batchData.size() >= MAX_BATCH_SIZE_WITH_STRIDE) {
+        flush(batchVBO, &batchData[0], GL_DYNAMIC_DRAW, instanceCount);
+        batchData.clear();
+        instanceCount = 0;
+      }
 
-      if (!entity || !entity->IsActive() || !entity->transform->GetIsVisible())
-        continue;
-
-      if (instanceCount >= MAX_INSTANCE_COUNT || batchData.size() >= MAX_BATCH_SIZE_WITH_STRIDE)
-        flush();
-
-      // Get the model matrix
-      const auto &modelMatrix = entity->transform->GetWorldMatrix();
-      // Append the 16 floats (column-major order) from the model matrix.
-      const float *matrixPtr = glm::value_ptr(modelMatrix);
-      batchData.insert(batchData.end(), matrixPtr, matrixPtr + 16);
-
-      // Append the sprite color
-      batchData.push_back(spriteRenderer->color.r);
-      batchData.push_back(spriteRenderer->color.g);
-      batchData.push_back(spriteRenderer->color.b);
-      batchData.push_back(spriteRenderer->color.a);
-      batchData.push_back(spriteRenderer->sprite->rect.x);
-      batchData.push_back(spriteRenderer->sprite->rect.y);
-      batchData.push_back(spriteRenderer->sprite->rect.z);
-      batchData.push_back(spriteRenderer->sprite->rect.w);
-
-      // Add pivot
-      batchData.push_back(spriteRenderer->sprite->pivot.x);
-      batchData.push_back(spriteRenderer->sprite->pivot.y);
-
-      // Add pixelsPerUnit
-      batchData.push_back(spriteRenderer->sprite->pixelsPerUnit);
-
+      extractRendererData(renderer, &batchData[instanceCount * STRIDE]);
       instanceCount++;
     }
 
     // Draw any leftover sprites
     if (instanceCount > 0) {
-      flush();
-      glBindVertexArray(0);
+      flush(batchVBO, &batchData[0], GL_DYNAMIC_DRAW, instanceCount);
+      batchData.clear();
+      instanceCount = 0;
     }
   }
 
-  void Renderer2D::flush() {
+  void Renderer2D::render() {
+    const size_t lastStaticCount = staticRenderers.size();
+    const bool sort = !renderersToAdd.empty();
+
+    // Add all pending renderers
+    for (auto &renderer: renderersToAdd)
+      if (renderer->Entity()->IsStatic())
+        staticRenderers.emplace_back(renderer);
+      else
+        renderers.emplace_back(renderer);
+    renderersToAdd.clear();
+
+    // Remove all pending renderers
+    for (auto &renderer: renderersToRemove)
+      if (renderer->Entity()->IsStatic())
+        std::erase(staticRenderers, renderer);
+      else
+        std::erase(renderers, renderer);
+    renderersToRemove.clear();
+
+    if (renderers.empty() && staticRenderers.empty())
+      return;
+
+    if (sort)
+      std::ranges::sort(renderers, sortRenderers);
+
+    if (!quadVAO)
+      initRenderData();
+
+    lastShaderID = 0;
+    lastTextureID = 0;
+
+    glBindVertexArray(quadVAO);
+    buildAndRenderStaticBatch(lastStaticCount != staticRenderers.size());
+    buildAndRenderDynamicBatch();
+    glBindVertexArray(0);
+  }
+
+  void Renderer2D::flush(const uint VBO, const float *data, const int drawMode, const uint32_t count) {
+    if (!count || !data)
+      return;
+
     // Update the instance VBO with the new data.
-    glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
-    glBufferData(GL_ARRAY_BUFFER, batchData.size() * sizeof(float), batchData.data(), GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, count * STRIDE_SIZE, data, drawMode);
+
+    // Reset all the vertex attribute pointers
+    constexpr GLsizei vec4Size = 4 * sizeof(float);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, nullptr);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(vec4Size));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(2 * vec4Size));
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(3 * vec4Size));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, STRIDE_SIZE, reinterpret_cast<void *>(4 * vec4Size));
 
     // Draw all sprites in the batch in a single call.
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 6, instanceCount);
-
-    batchData.clear();
-    instanceCount = 0;
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 6, count);
   }
 
   void Renderer2D::addRenderer(const std::shared_ptr<SpriteRenderer> &renderer) {

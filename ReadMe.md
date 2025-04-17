@@ -104,7 +104,8 @@ Versions are currently formatted as follows: `[major].[feature].[patch].[beta]` 
 For detailed commit history, see the [Changelog.md](https://github.com/AntoineBastide47/GameEngine/blob/main/Changelog.md).
 
 ## Releases
-Releases begin with version 1.0.0 and are available for Windows, macOS, and Linux. Future releases (version X.1.0) will focus on performance and memory optimizations.
+Releases will begin with version 1.0.0 and are available for Windows, macOS, and Linux.
+The ones following major releases (version X.1.0) will focus on performance and memory optimizations.
 
 ## Modifying the engine
 Feel free to fork and modify the engine. After making changes:

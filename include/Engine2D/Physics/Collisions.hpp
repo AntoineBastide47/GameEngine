@@ -13,6 +13,7 @@ namespace Engine2D::Physics {
   class Collisions {
     friend class Physics2D;
     friend class CollisionGrid;
+
     /**
      * Checks if the given rigidbodies AABB collide
      * @param a The first rigidbody AABB

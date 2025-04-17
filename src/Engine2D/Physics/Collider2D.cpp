@@ -9,10 +9,9 @@
 
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Entity2D.hpp"
-#include "Engine2D/Transform2D.hpp"
 #include "Engine2D/Physics/Rigidbody2D.hpp"
 #include "Engine2D/Rendering/ShapeRenderer.hpp"
-#include "Engine2D/Types/Vector2.hpp"
+
 
 namespace Engine2D::Physics {
   Collider2D::Collider2D()

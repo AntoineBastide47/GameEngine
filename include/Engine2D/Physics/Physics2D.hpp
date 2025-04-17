@@ -9,7 +9,6 @@
 
 #include "Engine2D/Physics/CollisionGrid.hpp"
 #include "Engine2D/Physics/CollisionManifold.hpp"
-#include "Engine2D/Physics/Collider2D.hpp"
 
 namespace Engine {
   class Settings;
@@ -21,8 +20,6 @@ namespace Engine2D {
 }
 
 namespace Engine2D::Physics {
-  class Rigidbody2D;
-
   struct ContactPair {
     std::shared_ptr<Collider2D> collider1;
     std::shared_ptr<Collider2D> collider2;

@@ -9,6 +9,7 @@
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
+#include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 

@@ -1,9 +1,10 @@
 #version 330 core
-layout (location = 0) in vec4 vertex; // <vec2 position, vec2 texCoords>
-layout (location = 1) in vec2 instancePosition;
-layout (location = 2) in vec2 instanceScale;
-layout (location = 3) in vec4 instanceColor;
-layout (location = 4) in float rotation;
+
+layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
+layout (location = 1) in vec4 positionAndScale; // <vec2 position, vec2 scale>
+layout (location = 2) in vec4 color;
+layout (location = 3) in vec4 rect;
+layout (location = 4) in vec4 pivotRotationAndOrder; // <vec2 pivot, float rotation, float renderOrder
 
 out vec2 TexCoords;
 out vec4 ParticleColor;
@@ -11,20 +12,20 @@ out vec4 ParticleColor;
 uniform mat4 projection;
 
 void main() {
-    TexCoords = vertex.zw;
-    ParticleColor = instanceColor;
+    // Apply pivot, scale and PPU
+    vec2 scaledPosition = (vertex.xy - pivotRotationAndOrder.xy) * positionAndScale.zw;
 
-    // Compute rotation matrix
-    float cosTheta = cos(rotation);
-    float sinTheta = sin(rotation);
+    // Apply rotation
+    float cosTheta = cos(pivotRotationAndOrder.z);
+    float sinTheta = sin(pivotRotationAndOrder.z);
+    mat2 rotMat = mat2(cosTheta, -sinTheta, sinTheta, cosTheta);
+    vec2 rotatedPos = scaledPosition * rotMat;
 
-    mat2 rotationMatrix = mat2(
-        cosTheta, -sinTheta,
-        sinTheta, cosTheta
-    );
+    vec4 pos = projection * vec4(rotatedPos + positionAndScale.xy, 0.0, 1.0);
+    pos.z = pivotRotationAndOrder.w;
+    gl_Position = pos;
 
-    // Apply rotation, then scaling and translation
-    vec2 localPosition = vec2(vertex.xy) * instanceScale;
-    vec2 rotatedPosition = localPosition * rotationMatrix;
-    gl_Position = projection * vec4(rotatedPosition + instancePosition, 0.0, 1.0);
+    // Remap texCoords using the rect
+    TexCoords = rect.xy + vertex.zw * rect.zw;
+    ParticleColor = color;
 }

@@ -8,6 +8,7 @@
 
 #include "Engine/Rendering/Shader.hpp"
 #include "Engine/Log.hpp"
+#include "Engine/ResourceManager.hpp"
 
 namespace Engine::Rendering {
   Shader &Shader::Use() {
