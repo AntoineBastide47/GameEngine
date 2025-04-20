@@ -15,6 +15,7 @@
 #include "Engine/ResourceManager.hpp"
 #include "Engine/Rendering/Shader.hpp"
 #include "Engine/Rendering/Texture.hpp"
+#include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
 
 namespace Engine2D {
@@ -30,12 +31,18 @@ namespace Engine2D {
   };
 
   bool ParticleSystem2D::Particle::Visible() const {
-    return !(
-      position.x + size.x * 0.5f < -Game2D::ViewportWidth() * 0.5f ||
-      position.x - size.x * 0.5f > Game2D::ViewportWidth() * 0.5f ||
-      position.y + size.y * 0.5f < -Game2D::ViewportHeight() * 0.5f ||
-      position.y - size.y * 0.5f > Game2D::ViewportHeight() * 0.5f
-    );
+    if (Game2D::Initialized() && Game2D::MainCamera()) {
+      const glm::mat4 viewProjection = Game2D::MainCamera()->GetViewProjectionMatrix();
+      const glm::vec2 min = position - size * 0.5f;
+      const glm::vec2 max = position + size * 0.5f;
+      auto isInsideClip = [&](const glm::vec2 &point) {
+        glm::vec4 clipPos = viewProjection * glm::vec4(point, 0.0f, 1.0f);
+        clipPos /= clipPos.w;
+        return clipPos.x >= -1.0f && clipPos.x <= 1.0f && clipPos.y >= -1.0f && clipPos.y <= 1.0f;
+      };
+      return isInsideClip(min) || isInsideClip(max) || isInsideClip({min.x, max.y}) || isInsideClip({max.x, min.y});
+    }
+    return false;
   }
 
   ParticleSystem2D::ParticleSystem2D()
@@ -43,8 +50,8 @@ namespace Engine2D {
       useGlobalVelocities(false), startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)), startAngularVelocity(0),
       endAngularVelocity(), startSize(glm::vec2(1)), endSize(glm::vec2(0)), startColor(glm::vec4(1)), endColor(glm::vec4(1)),
       simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), duration(1),
-      emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0), instanceVBO(0), quadVAO(0), quadVBO(0),
-      initialized(false), aliveCount(0) {
+      emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0), quadVAO(0), quadVBO(0), instanceVBO(0),
+      aliveCount(0), initialized(false) {
     this->shader = Engine::ResourceManager::GetShader("particle");
   }
 
@@ -183,8 +190,9 @@ namespace Engine2D {
     if (!initialized)
       initialize();
 
-    this->shader->Use();
-    this->sprite->texture->bind();
+    shader->use();
+    shader->SetMatrix4("projection", Game2D::MainCamera()->GetViewProjectionMatrix());
+    sprite->texture->bind();
 
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferData(GL_ARRAY_BUFFER, particles.size() * STRIDE_SIZE, nullptr, GL_STREAM_DRAW);

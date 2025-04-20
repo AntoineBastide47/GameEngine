@@ -46,11 +46,9 @@ namespace Engine {
 
   void Settings::Graphics::SetVsyncEnabled(const bool newState) {
     vsyncEnabled = newState;
-    glfwSwapInterval(vsyncEnabled);
+    glfwSwapInterval(vsyncEnabled ? 1 : 0);
 
-    if (vsyncEnabled)
-      Engine2D::Game2D::instance->targetFrameRate = 0;
-    else if (targetFrameRate > 0) {
+    if (!vsyncEnabled && targetFrameRate > 0) {
       Engine2D::Game2D::instance->targetFrameRate = targetFrameRate;
       Engine2D::Game2D::instance->targetRenderRate = 1.0f / targetFrameRate;
     }

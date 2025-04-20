@@ -7,3 +7,6 @@
 [submodule "vendor/cpptrace"]
 	path = vendor/cpptrace
 	url = https://github.com/jeremy-rifkin/cpptrace.git
+[submodule "vendor/imgui"]
+	path = vendor/imgui
+	url = https://github.com/ocornut/imgui.git

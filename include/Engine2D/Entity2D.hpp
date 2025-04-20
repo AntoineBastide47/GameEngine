@@ -50,9 +50,9 @@ namespace Engine2D {
       bool operator!=(const Entity2D &entity) const;
 
       /// Creates a component of the given type and adds it to the entity
-      template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
-      std::shared_ptr<T> AddComponent() {
-        auto component = std::make_shared<T>();
+      template<typename T, typename... Args> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
+      std::shared_ptr<T> AddComponent(Args&&... args) {
+        auto component = std::make_shared<T>(std::forward<Args>(args)...);
         component->setEntity(shared_from_this());
         if (auto behaviour = std::dynamic_pointer_cast<Behaviour>(component)) {
           behaviours.emplace_back(behaviour);

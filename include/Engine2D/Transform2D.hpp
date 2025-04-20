@@ -144,7 +144,7 @@ namespace Engine2D {
       /// @returns The scale of the Entity2D this transform is attached to in world coordinates divided by 2
       [[nodiscard]] glm::vec2 GetWorldHalfScale() const;
       /// @returns The transform matrix of this entity
-      [[nodiscard]] glm::mat4 GetWorldMatrix();
+      [[nodiscard]] const glm::mat4 &GetWorldMatrix();
 
       /// @returns The given point for world to local coordinates
       [[nodiscard]] glm::vec2 WorldToLocal(const glm::vec2 &point);

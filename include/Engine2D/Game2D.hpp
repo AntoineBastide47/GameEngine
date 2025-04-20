@@ -22,13 +22,17 @@ namespace Engine {
 }
 
 namespace Engine2D {
+  namespace Rendering {
+    class Camera2D;
+  }
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Entity2D;
     friend class Engine::ResourceManager;
-    friend class Transform2D;
     friend class Engine::Settings;
     public:
+      /// @returns True if the Game2D instance has been initialized, False if not
+      [[nodiscard]] static bool Initialized();
       /// @returns The width of the viewport of the window
       [[nodiscard]] static float ViewportWidth();
       /// @returns The height of the viewport of the window
@@ -39,6 +43,8 @@ namespace Engine2D {
       [[nodiscard]] static float DeltaTime();
       /// @returns The fixed time span between the physics updates
       [[nodiscard]] static float FixedDeltaTime();
+      /// @returns A reference to the main camera of the game
+      [[nodiscard]] static std::shared_ptr<Rendering::Camera2D> MainCamera();
 
       /**
        * Start's and Run's the current game
@@ -111,8 +117,10 @@ namespace Engine2D {
       float targetRenderRate;
       /// Counts the number of frames renderer during the current second of elapsed time
       int frameCounter;
-      /// The remaining time until the next frame should be rendered
-      std::chrono::time_point<std::chrono::steady_clock> nextFrameTime;
+      /// Simple accumulator to count to 1 second
+      float oneSecondTimer;
+      /// The time at which the previous frame was run
+      std::chrono::time_point<std::chrono::steady_clock> lastTime;
 
       /// Physics simulator
       Physics::Physics2D *physics2D;
@@ -129,6 +137,8 @@ namespace Engine2D {
       std::condition_variable cv;
       /// The thread responsible for rendering the game
       std::thread renderThread;
+
+      std::shared_ptr<Entity2D> mainCamera;
 
       /// The update loop called on the main thread
       void updateLoop();
@@ -149,7 +159,7 @@ namespace Engine2D {
       /// Renders the game
       void render();
       /// Limits the frame rate of the game if needed
-      void limitFrameRate();
+      void limitFrameRate() const;
       /// Quits the game
       void quit();
 

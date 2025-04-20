@@ -10,6 +10,8 @@
 #include "Engine2D/Transform2D.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine/Log.hpp"
+#include "Engine2D/Physics/Collider2D.hpp"
+#include "Engine2D/Rendering/Camera2D.hpp"
 
 namespace Engine2D {
   Transform2D::Transform2D(
@@ -238,7 +240,7 @@ namespace Engine2D {
     return visible;
   }
 
-  glm::mat4 Transform2D::GetWorldMatrix() {
+  const glm::mat4 &Transform2D::GetWorldMatrix() {
     if (isDirty) {
       projectionMatrix =
         glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition, 0.0f)) *
@@ -274,13 +276,22 @@ namespace Engine2D {
       return;
 
     isDirty = true;
-    const glm::vec2 worldScaleHalf = worldScale * 0.5f;
-    visible = Game2D::instance && !(
-                worldPosition.x + worldScaleHalf.x < -Game2D::ViewportWidth() * 0.5f ||
-                worldPosition.x - worldScaleHalf.x > Game2D::ViewportWidth() * 0.5f ||
-                worldPosition.y + worldScaleHalf.y < -Game2D::ViewportHeight() * 0.5f ||
-                worldPosition.y - worldScaleHalf.y > Game2D::ViewportHeight() * 0.5f
-              );
+
+    // Determine if the sprite is currently visible to the camera
+    if (Game2D::Initialized() && Game2D::MainCamera()) {
+      const glm::vec2 worldScaleHalf = worldScale * 0.5f;
+      const glm::mat4 viewProjection = Game2D::MainCamera()->GetViewProjectionMatrix();
+      const glm::vec2 min = worldPosition - worldScaleHalf;
+      const glm::vec2 max = worldPosition + worldScaleHalf;
+      auto isInsideClip = [&](const glm::vec2 &point) {
+        glm::vec4 clipPos = viewProjection * glm::vec4(point, 0.0f, 1.0f);
+        clipPos /= clipPos.w;
+        return clipPos.x >= -1.0f && clipPos.x <= 1.0f &&
+               clipPos.y >= -1.0f && clipPos.y <= 1.0f;
+      };
+      visible = isInsideClip(min) || isInsideClip(max) || isInsideClip({min.x, max.y}) || isInsideClip({max.x, min.y});
+    } else
+      visible = false;
 
     // Update the children of this transform as they depend on the transform of their parent
     for (const auto child: childList)

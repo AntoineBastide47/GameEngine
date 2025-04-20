@@ -33,6 +33,14 @@ namespace Engine2D {
     this->active = active;
     for (const auto child: *transform)
       child->transform->onParentHierarchyChange();
+
+    // All change the state of the renderer
+    if (const auto renderer = GetComponent<Rendering::SpriteRenderer>(); renderer) {
+      if (!active)
+        Rendering::Renderer2D::removeRenderer(renderer);
+      else
+        Rendering::Renderer2D::addRenderer(renderer);
+    }
   }
 
   bool Entity2D::IsActive() const {

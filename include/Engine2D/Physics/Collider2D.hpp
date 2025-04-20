@@ -48,8 +48,6 @@ namespace Engine2D::Physics {
       glm::vec2 position;
       /// Determines whether the collider is configured as a trigger.
       bool isTrigger;
-      /// If the bounds of the collider should be drawn to the screen or not
-      bool draw;
 
       /// @returns The points at which this rigidbody collided with another rigidbody
       [[nodiscard]] std::vector<glm::vec2> ContactPoints() const;
@@ -93,8 +91,6 @@ namespace Engine2D::Physics {
       std::vector<glm::vec2> contactPoints;
       /// @return A std::array containing the min and max points of the AABB.
       [[nodiscard]] AABB getAABB();
-
-      void drawGizmos2D() const;
   };
 
   /** Collider for 2D physics representing a circle. */

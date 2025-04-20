@@ -38,8 +38,8 @@ namespace Engine {
        * @return The loaded shader
        */
       static std::shared_ptr<Shader> LoadShader(
-        const std::string &vShaderFile, const std::string &fShaderFile, const std::string &gShaderFile,
-        const std::string &name
+        const std::string &name, const std::string &vShaderFile, const std::string &fShaderFile,
+        const std::string &gShaderFile = ""
       );
 
       /**
@@ -59,14 +59,13 @@ namespace Engine {
       /**
        * Loads a texture to memory
        * @param filePath The texture file path
-       * @param alpha If the texture has an alpha channel
        * @param name The name of this texture
        * @note Calling this method will log an error if:
        * - parameters file or name are empty, or if a texture with the given name already exists
        * - the file can't be read or is empty
        * @return The loaded texture
        */
-      static std::shared_ptr<Texture> LoadTexture2D(const std::string &filePath, bool alpha, const std::string &name);
+      static std::shared_ptr<Texture> LoadTexture2D(const std::string &filePath, const std::string &name);
 
       /**
        * Finds and returns the texture with the given name
@@ -110,7 +109,6 @@ namespace Engine {
       /**
        * Loads a texture to memory
        * @param filePath The texture file path
-       * @param alpha If the texture has an alpha channel
        * @param name The name of this texture
        * @note Calling this method will log an error if:
        * - parameters file or name are empty, or if a texture with the given name already exists
@@ -118,7 +116,7 @@ namespace Engine {
        * @return The loaded texture
        */
       static std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> LoadTexture2DAndSprite(
-        const std::string &filePath, bool alpha, const std::string &name
+        const std::string &filePath, const std::string &name
       );
 
       /// Deletes all the loaded textures and shaders

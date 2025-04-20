@@ -11,7 +11,7 @@
 #include "Engine/ResourceManager.hpp"
 
 namespace Engine::Rendering {
-  Shader &Shader::Use() {
+  Shader &Shader::use() {
     glUseProgram(this->id);
     return *this;
   }
@@ -57,37 +57,37 @@ namespace Engine::Rendering {
 
   void Shader::SetFloat(const char *name, const float value, const bool useShader) {
     if (useShader)
-      this->Use();
+      this->use();
     glUniform1f(glGetUniformLocation(this->id, name), value);
   }
 
   void Shader::SetInteger(const char *name, const int value, const bool useShader) {
     if (useShader)
-      this->Use();
+      this->use();
     glUniform1i(glGetUniformLocation(this->id, name), value);
   }
 
   void Shader::SetVector2f(const char *name, const float x, const float y, const bool useShader) {
     if (useShader)
-      this->Use();
+      this->use();
     glUniform2f(glGetUniformLocation(this->id, name), x, y);
   }
 
   void Shader::SetVector2f(const char *name, const glm::vec2 &value, const bool useShader) {
     if (useShader)
-      this->Use();
+      this->use();
     glUniform2f(glGetUniformLocation(this->id, name), value.x, value.y);
   }
 
   void Shader::SetVector3f(const char *name, const float x, const float y, const float z, const bool useShader) {
     if (useShader)
-      this->Use();
+      this->use();
     glUniform3f(glGetUniformLocation(this->id, name), x, y, z);
   }
 
   void Shader::SetVector3f(const char *name, const glm::vec3 &value, const bool useShader) {
     if (useShader)
-      this->Use();
+      this->use();
     glUniform3f(glGetUniformLocation(this->id, name), value.x, value.y, value.z);
   }
 
@@ -95,19 +95,19 @@ namespace Engine::Rendering {
     const char *name, const float x, const float y, const float z, const float w, const bool useShader
   ) {
     if (useShader)
-      this->Use();
+      this->use();
     glUniform4f(glGetUniformLocation(this->id, name), x, y, z, w);
   }
 
   void Shader::SetVector4f(const char *name, const glm::vec4 &value, const bool useShader) {
     if (useShader)
-      this->Use();
+      this->use();
     glUniform4f(glGetUniformLocation(this->id, name), value.x, value.y, value.z, value.w);
   }
 
   void Shader::SetMatrix4(const char *name, const glm::mat4 &matrix, const bool useShader) {
     if (useShader)
-      this->Use();
+      this->use();
     glUniformMatrix4fv(glGetUniformLocation(this->id, name), 1, false, value_ptr(matrix));
   }
 

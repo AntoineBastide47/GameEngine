@@ -13,6 +13,8 @@
 #include "Engine2D/Rendering/Sprite.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 #include "Engine/Rendering/Texture.hpp"
+#include "Engine2D/Game2D.hpp"
+#include "Engine2D/Rendering/Camera2D.hpp"
 
 namespace Engine2D::Rendering {
   const float Renderer2D::vertices[] = {
@@ -84,7 +86,7 @@ namespace Engine2D::Rendering {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Attribute 0: vertex data (vec4: position.xy, texCoords.xy)
+    // Attribute 0: position and texCoord
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
 
@@ -148,53 +150,44 @@ namespace Engine2D::Rendering {
 
     // Get the model matrix
     auto modelMatrix = renderer->Transform()->GetWorldMatrix();
-    int offset = 0;
-    //modelMatrix[3][2] = renderer->renderOrder;
-    // Append the 16 floats (column-major order) from the model matrix.
-    //const float *matrixPtr = glm::value_ptr(modelMatrix);
-    //std::memcpy(data, matrixPtr, 16 * sizeof(float));
 
     // Add scale and rotation
-    data[offset++] = modelMatrix[0][0];
-    data[offset++] = modelMatrix[0][1];
-    data[offset++] = modelMatrix[1][0];
-    data[offset++] = modelMatrix[1][1];
+    *data++ = modelMatrix[0][0];
+    *data++ = modelMatrix[0][1];
+    *data++ = modelMatrix[1][0];
+    *data++ = modelMatrix[1][1];
 
     // Add position and pivot
-    data[offset++] = modelMatrix[3][0];
-    data[offset++] = modelMatrix[3][1];
-    data[offset++] = renderer->sprite->pivot.x;
-    data[offset++] = renderer->sprite->pivot.y;
+    *data++ = modelMatrix[3][0];
+    *data++ = modelMatrix[3][1];
+    *data++ = renderer->sprite->pivot.x;
+    *data++ = renderer->sprite->pivot.y;
 
     // Add color
-    data[offset++] = renderer->color.x;
-    data[offset++] = renderer->color.y;
-    data[offset++] = renderer->color.z;
-    data[offset++] = renderer->color.w;
+    *data++ = renderer->color.x;
+    *data++ = renderer->color.y;
+    *data++ = renderer->color.z;
+    *data++ = renderer->color.w;
 
     // Add rect
-    data[offset++] = renderer->sprite->rect.x;
-    data[offset++] = renderer->sprite->rect.y;
-    data[offset++] = renderer->sprite->rect.z;
-    data[offset++] = renderer->sprite->rect.w;
+    *data++ = renderer->sprite->rect.x;
+    *data++ = renderer->sprite->rect.y;
+    *data++ = renderer->sprite->rect.z;
+    *data++ = renderer->sprite->rect.w;
 
     // Add renderOrder and pixelsPerUnit
-    data[offset++] = renderer->renderOrder;
-    data[offset++] = renderer->sprite->pixelsPerUnit;
-    data[offset++] = 0;
-    data[offset] = 0;
+    *data++ = renderer->renderOrder;
+    *data++ = renderer->sprite->pixelsPerUnit;
+    *data++ = 0;
+    *data = 0;
   }
 
   void Renderer2D::updateStaticBatch() {
-    // Find all the dirty sprite renderers
-    std::vector<size_t> dirtyIndices;
-    for (size_t i = 0; i < staticRenderers.size(); i++)
-      if (staticRenderers[i] && staticRenderers[i]->dirty)
-        dirtyIndices.push_back(i);
-
-    // Update them
-    for (const size_t i: dirtyIndices) {
+    for (size_t i = 0; i < staticRenderers.size(); i++) {
       auto &renderer = staticRenderers[i];
+      if (!renderer->dirty)
+        continue;
+
       const size_t offset = i * STRIDE;
       extractRendererData(renderer, &staticBatchData[offset]);
       renderer->dirty = false;
@@ -215,10 +208,10 @@ namespace Engine2D::Rendering {
       const auto validRange = std::ranges::subrange(staticRenderers.begin(), it);
       staticBatchData.reserve(validRange.size() * STRIDE);
       staticBatchData.resize(validRange.size() * STRIDE);
-      for (auto &renderer: validRange) {
-        const uint32_t shaderID = renderer->shader->id;
 
+      for (auto &renderer: validRange) {
         // Check for change in key
+        const uint32_t shaderID = renderer->shader->id;
         if (const uint32_t textureID = renderer->sprite->texture->id;
           shaderID != currentShaderID || textureID != currentTextureID) {
           // Save the previous flush range if any
@@ -238,13 +231,16 @@ namespace Engine2D::Rendering {
       }
       if (count > 0)
         staticFlushList.emplace_back(currentShaderID, currentTextureID, start, count);
-    } else
-      updateStaticBatch();
+    }
+
+    updateStaticBatch();
 
     for (auto &[shaderID, textureID, start, count]: staticFlushList) {
       if (shaderID != lastShaderID) {
         lastShaderID = shaderID;
-        Engine::ResourceManager::GetShaderById(shaderID)->Use();
+        const auto shader = Engine::ResourceManager::GetShaderById(shaderID);
+        shader->use();
+        shader->SetMatrix4("projection", Game2D::MainCamera()->GetViewProjectionMatrix());
       }
       if (textureID != lastTextureID) {
         lastTextureID = textureID;
@@ -266,7 +262,7 @@ namespace Engine2D::Rendering {
         flush(batchVBO, &batchData[0], GL_DYNAMIC_DRAW, instanceCount);
         batchData.clear();
         instanceCount = 0;
-        renderer->shader->Use();
+        renderer->shader->use();
         lastShaderID = renderer->shader->id;
       }
 
@@ -328,6 +324,8 @@ namespace Engine2D::Rendering {
 
     lastShaderID = 0;
     lastTextureID = 0;
+
+    Game2D::MainCamera()->computeViewMatrix();
 
     glBindVertexArray(quadVAO);
     buildAndRenderStaticBatch(lastStaticCount != staticRenderers.size());

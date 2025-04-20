@@ -20,6 +20,7 @@
 #include "Engine/Input/Mouse.hpp"
 #include "Engine2D/Behaviour.hpp"
 #include "Engine/Macros/PlatformDetection.hpp"
+#include "Engine2D/Rendering/Camera2D.hpp"
 
 using Engine::ResourceManager;
 
@@ -36,6 +37,10 @@ namespace Engine2D {
     if (width <= 0 || height <= 0)
       throw std::invalid_argument("ERROR::GAME2D: Game window size must be greater than zero");
     instance = this;
+  }
+
+  bool Game2D::Initialized() {
+    return instance;
   }
 
   float Game2D::ViewportWidth() {
@@ -58,16 +63,20 @@ namespace Engine2D {
     return Engine::Settings::Physics::GetFixedDeltaTime();
   }
 
-  float oneSecondTimer = 0.0f;
-  auto lastTime = std::chrono::high_resolution_clock::now();
+  std::shared_ptr<Rendering::Camera2D> Game2D::MainCamera() {
+    if (instance->mainCamera && instance->mainCamera->HasComponent<Rendering::Camera2D>())
+      return instance->mainCamera->GetComponent<Rendering::Camera2D>();
+    return nullptr;
+  }
 
   void Game2D::Run() {
     this->initialize();
 
     // Set the render variables
+    oneSecondTimer = 0.0f;
+    lastTime = std::chrono::steady_clock::now();
     targetFrameRate = Engine::Settings::Graphics::GetTargetFrameRate();
     targetRenderRate = targetFrameRate == 0 ? 0.0f : 1.0f / targetFrameRate;
-    nextFrameTime = std::chrono::high_resolution_clock::now();
     frameCounter = 0;
 
     #if MULTI_THREAD
@@ -259,26 +268,17 @@ namespace Engine2D {
     Engine::Input::Keyboard::initialize(this->window);
     Engine::Input::Mouse::initialize(this->window);
 
-    // Prepare the shader projection
-    const glm::mat4 projection = glm::ortho(
-      -static_cast<float>(width) * screenScaleFactor * 0.5f, static_cast<float>(width) * screenScaleFactor * 0.5f,
-      -static_cast<float>(height) * screenScaleFactor * 0.5f, static_cast<float>(height) * screenScaleFactor * 0.5f,
-      -32768.0f, 32768.0f // int16_t range
-    );
-
-    // Create and configure the sprite renderer
-    ResourceManager::LoadShader("Engine/Shaders/sprite.vert", "Engine/Shaders/sprite.frag", "", "sprite");
-    ResourceManager::GetShader("sprite")->SetInteger("sprite", 0, true);
-    ResourceManager::GetShader("sprite")->SetMatrix4("projection", projection);
-
-    // Configure the particle system shader
-    ResourceManager::LoadShader(
-      "Engine/Shaders/particle.vert", "Engine/Shaders/particle.frag", "", "particle"
-    );
-    ResourceManager::GetShader("particle")->SetInteger("sprite", 0, true);
-    ResourceManager::GetShader("particle")->SetMatrix4("projection", projection);
+    // Load the engine shaders
+    ResourceManager::LoadShader("sprite", "Engine/Shaders/sprite.vert", "Engine/Shaders/sprite.frag");
+    ResourceManager::LoadShader("particle", "Engine/Shaders/particle.vert", "Engine/Shaders/particle.frag");
 
     physics2D = new Physics2D();
+    mainCamera = AddEntity("Camera");
+    mainCamera->AddComponent<Rendering::Camera2D>(
+      -static_cast<float>(width >> 1) * screenScaleFactor, static_cast<float>(width >> 1) * screenScaleFactor,
+      static_cast<float>(height >> 1) * screenScaleFactor, -static_cast<float>(height >> 1) * screenScaleFactor,
+      -32768.0f, 32768.0f // int16_t range
+    );
 
     this->OnInitialize();
   }
@@ -339,22 +339,24 @@ namespace Engine2D {
     }
   }
 
-  void Game2D::limitFrameRate() {
-    // Check if vsync is enabled to limit the frame rate
-    if (Engine::Settings::Graphics::GetVsyncEnabled()) {
-      const GLFWvidmode *mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-      targetRenderRate = 1.0f / mode->refreshRate;
-    }
+  void Game2D::limitFrameRate() const {
+    using namespace std::chrono;
 
-    // Limit the frame rate if needed
-    if (targetFrameRate > 0 || Engine::Settings::Graphics::GetVsyncEnabled()) {
-      nextFrameTime += std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-        std::chrono::duration<float>(targetRenderRate)
-      );
-      if (const auto currentTime = std::chrono::high_resolution_clock::now(); nextFrameTime > currentTime) {
-        std::this_thread::sleep_for(nextFrameTime - currentTime - std::chrono::milliseconds(1));
-        while (std::chrono::high_resolution_clock::now() < nextFrameTime);
-      }
+    if (Engine::Settings::Graphics::GetVsyncEnabled())
+      return;
+
+    static auto nextFrameTime = steady_clock::now();
+    nextFrameTime += duration_cast<steady_clock::duration>(
+      duration<float>(targetRenderRate)
+    );
+
+    if (const auto now = steady_clock::now(); nextFrameTime > now) {
+      // sleep coarse then spin-wait
+      if (const auto sleepTime = nextFrameTime - now - microseconds(200); sleepTime > microseconds(0))
+        std::this_thread::sleep_for(sleepTime);
+      while (steady_clock::now() < nextFrameTime) {}
+    } else {
+      nextFrameTime = now;
     }
   }
 

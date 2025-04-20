@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2025-04-20
+### Added
+- **[Camera2D]**: 2D orthographic camera
+### Changed
+- **[Renderer2D]**: now uses a map buffer range like the particle system
+- **[Texture]**: id, width and height are now accessed with getters
+- **[ResourceManager]**: auto detect image data for texture loading parameters
+### Fixed
+- **[Renderer2D]**: disabled static sprites still being rendered
+- **[Game2D]**: frame rate limiting no longer causes jittering
+### Removed
+- **[Texture]**: all unnecessary texture loading variables
+
 ## [0.6.0] - 2025-04-17
 ### Added
 - **[CMakeLists]**: MULTI_THREAD macro, used to enable and disable multi-threading, helpful for debugging

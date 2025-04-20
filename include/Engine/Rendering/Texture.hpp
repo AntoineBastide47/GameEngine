@@ -6,6 +6,7 @@
 
 #ifndef TEXTURE_H
 #define TEXTURE_H
+#include <string>
 
 namespace Engine {
   class ResourceManager;
@@ -24,34 +25,41 @@ namespace Engine::Rendering {
     friend class Engine::ResourceManager;
     friend class Engine2D::ParticleSystem2D;
     public:
+      explicit Texture(const std::string &path);
+
+      /// @returns the width of this texture
+      inline int GetWidth() const {
+        return width;
+      }
+
+      /// @returns the height of this texture
+      inline int GetHeight() const {
+        return height;
+      }
+
+      /// @returns the id of this texture
+      inline unsigned int GetId() const {
+        return id;
+      }
+    private:
       /// The OpenGL id of this texture
       unsigned int id;
-      ///  The width of this texture in pixels.
+      /// The width of this texture in pixels.
       int width;
-      ///  The height of this texture in pixels.
+      /// The height of this texture in pixels.
       int height;
-      /// Specifies the format in which OpenGL stores the texture (e.g., GL_RGB, GL_RGBA).
-      int internalFormat;
-      ///  Specifies the format of the image data being passed in (e.g., GL_RGB, GL_RGBA).
-      int imageFormat;
-      /// Defines how the texture should behave if the coordinates exceed the texture bounds horizontally (e.g., GL_REPEAT, GL_CLAMP_TO_EDGE).
-      int wrapS;
-      /// Defines how the texture should behave if the coordinates exceed the texture bounds vertically (e.g., GL_REPEAT, GL_CLAMP_TO_EDGE).
-      int wrapT;
-      /// Determines how the texture is sampled when minified (e.g., GL_LINEAR, GL_NEAREST).
-      int filterMin;
-      /// Determines how the texture is sampled when magnified (e.g., GL_LINEAR, GL_NEAREST).
-      int filterMax;
+      /// Where the texture file is stored on disc
+      std::string path;
 
-      Texture();
-    private:
       /**
        * Sets up the texture with specified width, height, and pixel data.
        * @param width The width of the texture in pixels.
        * @param height The height of the texture in pixels.
        * @param data The pixel data for the texture, typically loaded from an image file.
+       * @param format The format of this texture
+       * @param blended Whether to blend the pixels or not
        */
-      void generate(int width, int height, const unsigned char *data);
+      void generate(int width, int height, const unsigned char *data, int format, bool blended = false);
       /// Makes this texture active so that subsequent rendering operations use it.
       void bind() const;
       /// Unloads the texture data and prepares the object for reuse.

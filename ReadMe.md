@@ -28,6 +28,7 @@ Build the command-line interface (CLI) to manage the engine and projects:
 cd CLI
 cmake -B build
 cmake --build build
+cd ..
 ```
 Run the CLI with:
 ```bash
@@ -38,7 +39,7 @@ Run the CLI with:
 ```bash
 ./engine-cli --build debug
 ```
-- **Release Mode** (recommended for production; optimized performance):
+- **Release Mode** (recommended for production; optimized performance, smaller executables):
 ```bash
 ./engine-cli --build release
 ```

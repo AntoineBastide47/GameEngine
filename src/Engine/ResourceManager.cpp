@@ -25,15 +25,14 @@ namespace Engine {
   std::map<std::string, std::shared_ptr<Sprite>> ResourceManager::sprites;
 
   std::shared_ptr<Shader> ResourceManager::LoadShader(
-    const std::string &vShaderFile, const std::string &fShaderFile, const std::string &gShaderFile,
-    const std::string &name
+    const std::string &name, const std::string &vShaderFile, const std::string &fShaderFile, const std::string &gShaderFile
   ) {
     if (vShaderFile.empty())
-      return Engine::Log::Error("Vertex shader file path is required to load a shader");
+      return Log::Error("Vertex shader file path is required to load a shader");
     if (fShaderFile.empty())
-      return Engine::Log::Error("Fragment shader file path is required to load a shader");
+      return Log::Error("Fragment shader file path is required to load a shader");
     if (name.empty())
-      return Engine::Log::Error("Shader name is required to load a shader");
+      return Log::Error("Shader name is required to load a shader");
     if (shaders.contains(name))
       return shaders[name];
 
@@ -42,20 +41,20 @@ namespace Engine {
     const cmrc::file vertexShaderFile = Game2D::instance->loadResource(vShaderFile);
     const auto vertexCode = std::string(vertexShaderFile.begin(), vertexShaderFile.end());
     if (vertexCode.empty())
-      return Engine::Log::Error("Vertex Shader is empty");
+      return Log::Error("Vertex Shader is empty");
 
     // Load fragment shader
     const cmrc::file fragmentShaderFile = Game2D::instance->loadResource(fShaderFile);
     const auto fragmentCode = std::string(fragmentShaderFile.begin(), fragmentShaderFile.end());
     if (fragmentCode.empty())
-      return Engine::Log::Error("Vertex Shader is empty");
+      return Log::Error("Vertex Shader is empty");
 
     // Load geometry shader if provided
     if (!gShaderFile.empty()) {
       const cmrc::file geometryShaderFile = Game2D::instance->loadResource(gShaderFile);
       geometryCode = std::string(geometryShaderFile.begin(), geometryShaderFile.end());
       if (geometryCode.empty())
-        Engine::Log::Warning("Geometry Shader is empty, it won't be used");
+        Log::Warning("Geometry Shader is empty, it won't be used");
     }
 
     // Create the shader
@@ -70,39 +69,32 @@ namespace Engine {
   std::shared_ptr<Shader> ResourceManager::GetShader(const std::string &name) {
     if (shaders.contains(name))
       return shaders[name];
-    return Engine::Log::Error("Unknown shader: " + name);
+    return Log::Error("Unknown shader: " + name);
   }
 
   std::shared_ptr<Shader> ResourceManager::GetShaderById(const uint id) {
     for (auto &val: shaders | std::views::values)
       if (val->id == id)
         return val;
-    return Engine::Log::Error("Unknown shader with id: " + std::to_string(id));
+    return Log::Error("Unknown shader with id: " + std::to_string(id));
   }
 
   std::shared_ptr<Texture> ResourceManager::LoadTexture2D(
-    const std::string &filePath, const bool alpha, const std::string &name
+    const std::string &filePath, const std::string &name
   ) {
     if (filePath.empty())
-      return Engine::Log::Error("File path is required to load a texture");
+      return Log::Error("File path is required to load a texture");
     if (name.empty())
-      return Engine::Log::Error("Name is required to load a texture");
+      return Log::Error("Name is required to load a texture");
     if (textures.contains(name))
       return textures[name];
-
-    // Create the texture
-    const auto texture = std::make_shared<Texture>();
-    if (alpha) {
-      texture->imageFormat = GL_RGBA;
-      texture->internalFormat = GL_RGBA;
-    }
 
     // Load the image from cmrc
     const auto file = Game2D::instance->loadResource(filePath);
     std::string content(file.begin(), file.end());
 
     if (content.empty())
-      return Engine::Log::Error("File is empty");
+      return Log::Error("File is empty");
 
     // Load the data of the image
     int width, height, nrChannels;
@@ -112,11 +104,22 @@ namespace Engine {
     );
     if (!data) {
       stbi_image_free(data);
-      return Engine::Log::Error("Failed to load image: " + filePath + "\nReason: " + stbi_failure_reason());
+      return Log::Error("Failed to load image: " + filePath + "\nReason: " + stbi_failure_reason());
+    }
+
+    int format;
+    switch (nrChannels) {
+      case 3: format = GL_RGB;
+        break;
+      case 4: format = GL_RGBA;
+        break;
+      default: format = GL_RGBA;
+        break;
     }
 
     // Generate the texture and free the image data
-    texture->generate(width, height, data);
+    const auto texture = std::make_shared<Texture>(filePath);
+    texture->generate(width, height, data, format);
     stbi_image_free(data);
     return textures[name] = texture;
   }
@@ -124,14 +127,14 @@ namespace Engine {
   std::shared_ptr<Texture> ResourceManager::GetTexture2D(const std::string &name) {
     if (textures.contains(name))
       return textures[name];
-    return Engine::Log::Error("Unknown texture: " + name);
+    return Log::Error("Unknown texture: " + name);
   }
 
   std::shared_ptr<Texture> ResourceManager::GetTexture2DById(uint id) {
     for (auto &val: textures | std::views::values)
       if (val->id == id)
         return val;
-    return Engine::Log::Error("Unknown texture with id: " + std::to_string(id));
+    return Log::Error("Unknown texture with id: " + std::to_string(id));
   }
 
   std::shared_ptr<Sprite> ResourceManager::GetSprite(const std::string &name) {
@@ -141,16 +144,16 @@ namespace Engine {
   }
 
   std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> ResourceManager::LoadTexture2DAndSprite(
-    const std::string &filePath, const bool alpha, const std::string &name
+    const std::string &filePath, const std::string &name
   ) {
-    auto texture = LoadTexture2D(filePath, alpha, name);
+    auto texture = LoadTexture2D(filePath, name);
     auto sprite = CreateSpriteFromTexture(name);
     return {texture, sprite};
   }
 
   std::shared_ptr<Sprite> ResourceManager::CreateSpriteFromTexture(const std::string &textureName) {
     if (!textures.contains(textureName))
-      return Engine::Log::Error("Texture not found: " + textureName);
+      return Log::Error("Texture not found: " + textureName);
 
     const auto &texture = textures[textureName];
 

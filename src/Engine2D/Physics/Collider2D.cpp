@@ -10,13 +10,11 @@
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Physics/Rigidbody2D.hpp"
-#include "Engine2D/Rendering/ShapeRenderer.hpp"
-
 
 namespace Engine2D::Physics {
   Collider2D::Collider2D()
-    : bounciness(1), offset(glm::vec2(0)), autoCompute(true), position(glm::vec2(0)), isTrigger(false), draw(false),
-      type(None), initialized(false), lastModelMatrix() {}
+    : bounciness(1), offset(glm::vec2(0)), autoCompute(true), position(glm::vec2(0)), isTrigger(false), type(None),
+      initialized(false), lastModelMatrix() {}
 
   std::vector<glm::vec2> Collider2D::ContactPoints() const {
     return contactPoints;
@@ -37,16 +35,6 @@ namespace Engine2D::Physics {
     lastModelMatrix = matrix;
     computeAABB();
     return aabb;
-  }
-
-  void Collider2D::drawGizmos2D() const {
-    if (!draw)
-      return;
-
-    if (type == Circle)
-      Rendering::ShapeRenderer::DrawCircleWireframe(getPosition(), getScale().x, glm::vec4(0, 1, 0, 1), 32);
-    else
-      Rendering::ShapeRenderer::DrawPolygonWireframe(transformedVertices, glm::vec4(1, 0, 0, 1));
   }
 
   glm::vec2 Collider2D::getPosition() const {

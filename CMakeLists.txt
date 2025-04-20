@@ -55,8 +55,6 @@ add_library(Engine2D STATIC
     include/Engine2D/ParticleSystem/ParticleSystem2D.hpp
     src/Engine2D/ParticleSystem/ParticleSystemRenderer2D.cpp
     include/Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp
-    src/Engine2D/Rendering/ShapeRenderer.cpp
-    include/Engine2D/Rendering/ShapeRenderer.hpp
     src/Engine2D/Behaviour.cpp
     include/Engine2D/Behaviour.hpp
     include/Engine/Macros/Utils.hpp
@@ -65,6 +63,8 @@ add_library(Engine2D STATIC
     include/Engine2D/Rendering/Sprite.hpp
     src/Engine2D/Rendering/SpriteRenderer.cpp
     include/Engine2D/Rendering/SpriteRenderer.hpp
+    src/Engine2D/Rendering/Camera2D.cpp
+    include/Engine2D/Rendering/Camera2D.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES
@@ -102,6 +102,9 @@ add_subdirectory(vendor/cpptrace)
 add_library(cpptrace STATIC vendor/cpptrace/src/cpptrace.cpp)
 target_include_directories(cpptrace PUBLIC vendor/cpptrace/include vendor/cpptrace/src)
 
+# === ImGUI ===
+add_subdirectory(vendor/imgui)
+
 # === OS Specific Requirements ===
 if (APPLE)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0")
@@ -116,9 +119,13 @@ elseif (WIN32)
   message(WARNING "Windows build is not fully supported yet.")
 endif ()
 
-target_link_libraries(Engine2D PUBLIC
+target_link_libraries(Engine2D PRIVATE
     OpenGL::GL GLEW::GLEW glfw glm-header-only
-    cmrc cpptrace::cpptrace
+    cmrc cpptrace::cpptrace imgui
+)
+
+target_link_directories(Engine2D PRIVATE
+  vendor/imgui
 )
 
 # --------------------------
@@ -150,5 +157,5 @@ add_custom_command(TARGET Engine2D POST_BUILD
 target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Release>:ENGINE_DEBUG=0>
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
-    MULTI_THREAD=1
+    MULTI_THREAD=0
 )

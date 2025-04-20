@@ -13,21 +13,24 @@ namespace Engine {
   class ResourceManager;
 }
 
+namespace Engine2D {
+  class ParticleSystem2D;
+  namespace Rendering {
+    class Renderer2D;
+  }
+}
+
 namespace Engine::Rendering {
   /// Represents an OpenGL shader program, managing shader compilation, linking, and uniform settings.
   class Shader {
+    friend class Engine2D::Rendering::Renderer2D;
     friend class Engine::ResourceManager;
+    friend class Engine2D::ParticleSystem2D;
     public:
       /// Used to reference and manage this shader program within OpenGL.
       uint id;
 
       Shader() = default;
-
-      /**
-       * Sets the current shader as active and returns a reference to this Shader object, enabling method chaining.
-       * @return Reference to this Shader object.
-       */
-      Shader &Use();
 
       /**
        * Sets a float uniform in the shader program.
@@ -107,6 +110,11 @@ namespace Engine::Rendering {
        */
       void SetMatrix4(const char *name, const glm::mat4 &matrix, bool useShader = false);
     private:
+      /**
+       * Sets the current shader as active and returns a reference to this Shader object, enabling method chaining.
+       * @return Reference to this Shader object.
+       */
+      Shader &use();
       /**
        * Compiles the shader program from provided source code.
        * Supports vertex, fragment, and optional geometry shaders, compiling each
