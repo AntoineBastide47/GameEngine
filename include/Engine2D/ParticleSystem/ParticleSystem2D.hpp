@@ -50,10 +50,10 @@ namespace Engine2D {
       float startAngularVelocity;
       /// The final angular velocity of the particles
       float endAngularVelocity;
-      /// The initial size of the particles
-      glm::vec2 startSize;
-      /// The final size of the particles
-      glm::vec2 endSize;
+      /// The initial scale of the particles
+      glm::vec2 startScale;
+      /// The scale of the particles at the end of there life
+      glm::vec2 endScale;
       /// The initial color of the particles
       glm::vec4 startColor;
       /// The final color of the particles
@@ -91,18 +91,19 @@ namespace Engine2D {
         glm::vec2 position;
         /// The rotation of the particle
         float rotation;
-        /// The size of the particle
-        glm::vec2 size;
-        /// The color of the particle
-        glm::vec4 color;
         /// The remaining life span of the particle
         float lifeTime;
+        /// The scale of the particle
+        glm::vec2 scale;
+        /// The color of the particle
+        glm::vec4 color;
         /// The initial velocity of the particles
         glm::vec2 startVelocity;
         /// The final velocity of the particles
         glm::vec2 endVelocity;
 
-        bool Visible() const;
+        bool visible;
+        bool Visible();
       };
 
       /// How long the particle system will be simulated

@@ -325,7 +325,7 @@ namespace Engine2D::Rendering {
     lastShaderID = 0;
     lastTextureID = 0;
 
-    Game2D::MainCamera()->computeViewMatrix();
+    Game2D::MainCamera()->updateCamera();
 
     glBindVertexArray(quadVAO);
     buildAndRenderStaticBatch(lastStaticCount != staticRenderers.size());

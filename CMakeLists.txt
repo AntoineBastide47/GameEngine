@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.6.0)
+project(GameEngine VERSION 0.7.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -157,5 +157,5 @@ add_custom_command(TARGET Engine2D POST_BUILD
 target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Release>:ENGINE_DEBUG=0>
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
-    MULTI_THREAD=0
+    MULTI_THREAD=1
 )

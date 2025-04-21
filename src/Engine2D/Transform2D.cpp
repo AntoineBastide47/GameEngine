@@ -17,7 +17,7 @@ namespace Engine2D {
   Transform2D::Transform2D(
     const glm::vec2 position, const float rotation, const glm::vec2 scale, const std::shared_ptr<Entity2D> &parent
   )
-    : parent(parent), initialized(false), isDirty(true), visible(true), projectionMatrix(glm::mat4(1.0f)) {
+    : parent(parent), initialized(false), dirty(true), visible(true), projectionMatrix(glm::mat4(1.0f)) {
     SetPositionRotationAndScale(position, rotation, scale);
   }
 
@@ -145,20 +145,20 @@ namespace Engine2D {
     if (this->parent)
       this->parent->transform->removeChild(Entity());
 
+    dirty = true;
+    this->parent = parent;
+    onParentHierarchyChange();
+
     // If no parent is specified, set the parent to null
     if (!parent) {
-      this->parent = nullptr;
       position = worldPosition;
       rotation = worldRotation;
       scale = worldScale;
-      onParentHierarchyChange();
       return;
     }
 
     // Create the parent hierarchy
-    this->parent = parent;
     this->parent->transform->addChild(Entity());
-    onParentHierarchyChange();
 
     // Convert the transform properties from world space to local space
     auto localTransform = glm::inverse(this->parent->transform->GetWorldMatrix()) * GetWorldMatrix();
@@ -241,12 +241,12 @@ namespace Engine2D {
   }
 
   const glm::mat4 &Transform2D::GetWorldMatrix() {
-    if (isDirty) {
+    if (dirty) {
       projectionMatrix =
         glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition, 0.0f)) *
         glm::rotate(glm::mat4(1.0f), -glm::radians(worldRotation), glm::vec3(0.0f, 0.0f, 1.0f)) *
         glm::scale(glm::mat4(1.0f), glm::vec3(worldScale * glm::vec2(1, -1), 1.0f));
-      isDirty = false;
+      dirty = false;
     }
     return projectionMatrix;
   }
@@ -275,23 +275,10 @@ namespace Engine2D {
     if (oldWorldPosition == worldPosition && oldWorldRotation == worldRotation && oldWorldScale == worldScale)
       return;
 
-    isDirty = true;
-
     // Determine if the sprite is currently visible to the camera
-    if (Game2D::Initialized() && Game2D::MainCamera()) {
-      const glm::vec2 worldScaleHalf = worldScale * 0.5f;
-      const glm::mat4 viewProjection = Game2D::MainCamera()->GetViewProjectionMatrix();
-      const glm::vec2 min = worldPosition - worldScaleHalf;
-      const glm::vec2 max = worldPosition + worldScaleHalf;
-      auto isInsideClip = [&](const glm::vec2 &point) {
-        glm::vec4 clipPos = viewProjection * glm::vec4(point, 0.0f, 1.0f);
-        clipPos /= clipPos.w;
-        return clipPos.x >= -1.0f && clipPos.x <= 1.0f &&
-               clipPos.y >= -1.0f && clipPos.y <= 1.0f;
-      };
-      visible = isInsideClip(min) || isInsideClip(max) || isInsideClip({min.x, max.y}) || isInsideClip({max.x, min.y});
-    } else
-      visible = false;
+    dirty = true;
+    visible = Game2D::Initialized() && Game2D::MainCamera() &&
+      Game2D::MainCamera()->IsInViewport(worldPosition, worldScale);
 
     // Update the children of this transform as they depend on the transform of their parent
     for (const auto child: childList)

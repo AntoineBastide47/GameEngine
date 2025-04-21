@@ -180,7 +180,7 @@ namespace Engine2D {
       /// Whether the Entity and it's Transform2D were initialized
       bool initialized;
       /// If the transform matrix needs to be recomputed
-      bool isDirty;
+      bool dirty;
       /// Position of the transform in 2D space.
       glm::vec2 worldPosition;
       /// Rotation of the transform in degrees.

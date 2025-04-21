@@ -30,25 +30,17 @@ namespace Engine2D {
     1.0f, 0.0f, 1.0f, 0.0f  // Bottom-right
   };
 
-  bool ParticleSystem2D::Particle::Visible() const {
-    if (Game2D::Initialized() && Game2D::MainCamera()) {
-      const glm::mat4 viewProjection = Game2D::MainCamera()->GetViewProjectionMatrix();
-      const glm::vec2 min = position - size * 0.5f;
-      const glm::vec2 max = position + size * 0.5f;
-      auto isInsideClip = [&](const glm::vec2 &point) {
-        glm::vec4 clipPos = viewProjection * glm::vec4(point, 0.0f, 1.0f);
-        clipPos /= clipPos.w;
-        return clipPos.x >= -1.0f && clipPos.x <= 1.0f && clipPos.y >= -1.0f && clipPos.y <= 1.0f;
-      };
-      return isInsideClip(min) || isInsideClip(max) || isInsideClip({min.x, max.y}) || isInsideClip({max.x, min.y});
-    }
-    return false;
+  bool ParticleSystem2D::Particle::Visible() {
+    return visible = Game2D::Initialized() && Game2D::MainCamera() && Game2D::MainCamera()->IsInViewport(
+                       position, scale
+                     );
   }
 
   ParticleSystem2D::ParticleSystem2D()
     : loop(false), restart(false), startDelay(0), particleLifetime(1), startPosition(glm::vec2(0)), renderOrder(0),
       useGlobalVelocities(false), startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)), startAngularVelocity(0),
-      endAngularVelocity(), startSize(glm::vec2(1)), endSize(glm::vec2(0)), startColor(glm::vec4(1)), endColor(glm::vec4(1)),
+      endAngularVelocity(), startScale(glm::vec2(1)), endScale(glm::vec2(0)), startColor(glm::vec4(1)),
+      endColor(glm::vec4(1)),
       simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), duration(1),
       emissionAcc(0), durationAcc(0), simulationFinished(false), lastUsedParticle(0), quadVAO(0), quadVBO(0), instanceVBO(0),
       aliveCount(0), initialized(false) {
@@ -119,12 +111,12 @@ namespace Engine2D {
   }
 
   bool ParticleSystem2D::validParticle(const Particle &p) const {
-    const glm::vec2 minSize = glm::min(startSize, endSize);
-    const glm::vec2 maxSize = glm::max(startSize, endSize);
+    const glm::vec2 minSize = glm::min(startScale, endScale);
+    const glm::vec2 maxSize = glm::max(startScale, endScale);
 
     return p.lifeTime > 0.0f &&
-           p.size.x >= minSize.x && p.size.y >= minSize.y &&
-           p.size.x <= maxSize.x && p.size.y <= maxSize.y;
+           p.scale.x >= minSize.x && p.scale.y >= minSize.y &&
+           p.scale.x <= maxSize.x && p.scale.y <= maxSize.y;
   }
 
   void ParticleSystem2D::update() {
@@ -166,7 +158,7 @@ namespace Engine2D {
       if (validParticle(p)) {
         const float t = p.lifeTime * dA;
         p.color = glm::mix(startColor, endColor, 1.0f - t);
-        p.size = glm::mix(endSize, startSize, t);
+        p.scale = glm::mix(endScale, startScale, t);
         p.rotation += glm::mix(startAngularVelocity, endAngularVelocity, t) * dt;
 
         p.position += dt * glm::mix(
@@ -203,10 +195,10 @@ namespace Engine2D {
       return;
 
     for (const auto &particle: particles) {
-      if (!validParticle(particle) || !particle.Visible())
+      if (!validParticle(particle) || !particle.visible)
         continue;
 
-      const glm::vec2 scale = particle.size;
+      const glm::vec2 scale = particle.scale;
       glm::vec2 pos;
       if (simulateInWorldSpace)
         pos = particle.position;
@@ -255,7 +247,7 @@ namespace Engine2D {
     particle.lifeTime = particleLifetime;
     particle.startVelocity = startVelocity;
     particle.endVelocity = endVelocity;
-    particle.size = startSize;
+    particle.scale = startScale;
     particle.position = (simulateInWorldSpace ? Transform()->GetWorldPosition() : glm::vec2(0))
                         + startPosition + glm::vec2(dist_random(gen), dist_random(gen));
     lastUsedParticle = --lastUsedParticle % particles.size();
