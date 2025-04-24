@@ -4,11 +4,14 @@
 // Date: 29/11/2024
 //
 
+#include <unordered_set>
+
 #include "Engine2D/Physics/Physics2D.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Physics/Collisions.hpp"
 #include "Engine2D/Physics/Rigidbody2D.hpp"
 #include "Engine/Settings.hpp"
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Types/Vector2.hpp"
 
@@ -49,6 +52,8 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::step() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     // Update the collider vector
     addColliders();
     removeColliders();
@@ -81,6 +86,8 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::findActiveColliders() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     // Find all the active colliders
     bool foundNull = false;
     for (const auto collider: colliders) {
@@ -104,6 +111,8 @@ namespace Engine2D::Physics {
     const std::shared_ptr<Collider2D> &sender, const std::shared_ptr<Collider2D> &receiver,
     const CollisionEventType eventType
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     if (sender->isTrigger) {
       switch (eventType) {
         case Stay:
@@ -138,45 +147,70 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::broadPhase(const std::vector<std::shared_ptr<Collider2D>> &collidersToChecks) {
-    // Check collisions for all the rigidbodies that are active
-    for (int i = 0; i < collidersToChecks.size() - 1; i++) {
-      const auto col1 = collidersToChecks[i];
-      const auto col1AABB = col1->getAABB();
-      for (int j = i + 1; j < collidersToChecks.size(); j++) {
-        const auto col2 = collidersToChecks[j];
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
+    // Precompute AABBs
+    std::vector<std::pair<std::shared_ptr<Collider2D>, Collider2D::AABB>> colliderPairs;
+    for (const auto &col: collidersToChecks)
+      colliderPairs.emplace_back(col, col->getAABB());
+
+    // Sweep and Prune: Sort colliders by AABB min.x
+    std::ranges::sort(
+      colliderPairs, [](const auto &a, const auto &b) {
+        return a.second.min.x < b.second.min.x;
+      }
+    );
+
+    // Collision check loop
+    for (size_t i = 0; i < colliderPairs.size(); ++i) {
+      const auto &[col1, col1AABB] = colliderPairs[i];
+
+      for (size_t j = i + 1; j < colliderPairs.size(); ++j) {
+        const auto &[col2, col2AABB] = colliderPairs[j];
+
+        // Stop if no overlap on X-axis
+        if (col2AABB.min.x > col1AABB.max.x || col1AABB.min.x > col1AABB.max.x)
+          break;
+
+        // Skip self-collisions
+        if (col1->Entity() == col2->Entity())
+          continue;
+
+        // Parent-child relationship check, making sure that both have a rigidbody
         const auto rb1 = col1->rigidbody;
         const auto rb2 = col2->rigidbody;
+        const bool col1ChildCol2 = col1->Entity()->transform->IsChildOf(col2->Entity()) && !(rb1 && rb2);
+        const bool col2ChildCol1 = col2->Entity()->transform->IsChildOf(col1->Entity()) && !(rb1 && rb2);
+        if ((!rb1 && !rb2) || col1ChildCol2 || col2ChildCol1)
+          continue;
 
-        // Create the contact pair using pointer address for ordering to ensure consistency
+        // AABB overlap check on Y-axis
+        if (col2AABB.min.y > col1AABB.max.y || col1AABB.min.y > col1AABB.max.y)
+          continue;
+
+        // Canonical ordering for each contact pair
         ContactPair contactPair{
           col1 < col2 ? col1 : col2,
           col1 < col2 ? col2 : col1,
           col1 < col2 ? rb1 : rb2,
-          col1 < col2 ? rb2 : rb1,
+          col1 < col2 ? rb2 : rb1
         };
-        // Check if the colliders have a parent-child relationship and if they do not have a rigidbody each
-        const bool col1ChildCol2 = col1->Entity()->transform->IsChildOf(col2->Entity()) && !(rb1 && rb2);
-        const bool col2ChildCol1 = col2->Entity()->transform->IsChildOf(col1->Entity()) && !(rb1 && rb2);
-        // Make sure it is not a collision between two static colliders, prevent entities colliding with themselves
-        // and do a cheap collision check for early out
-        if ((!rb1 && !rb2) || col1->Entity() == col2->Entity() || col1ChildCol2 || col2ChildCol1 ||
-            !Collisions::collideAABB(col1AABB, col2->getAABB())) {
-          if (std::ranges::find(previousCollisionPairs, contactPair) != previousCollisionPairs.end()) {
-            notifyCollisions(col1, col2, Exit);
-            notifyCollisions(col2, col1, Exit);
-          }
 
-          continue;
+        // Handle previous collision exit notifications
+        if (std::ranges::find(previousCollisionPairs, contactPair) != previousCollisionPairs.end()) {
+          notifyCollisions(col1, col2, Exit);
+          notifyCollisions(col2, col1, Exit);
         }
 
-        // Save the indices of the bodies that collided using Canonical ordering
+        // Store contact pair
         contactPairs.emplace_back(contactPair);
       }
     }
   }
 
   void Physics2D::narrowPhase() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     if (contactPairs.empty()) {
       previousCollisionPairs.clear();
       return;
@@ -226,6 +260,8 @@ namespace Engine2D::Physics {
     const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2,
     const std::shared_ptr<Rigidbody2D> &rb1, const std::shared_ptr<Rigidbody2D> &rb2, const glm::vec2 mtv
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     const bool separateBody1 = rb1 && !rb1->isKinematic && !col1->isTrigger;
     const bool separateBody2 = rb2 && !rb2->isKinematic && !col2->isTrigger;
     const float invMass1 = separateBody1 ? rb1->massInv : 0.0f;
@@ -244,6 +280,8 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::resolveCollision(const Engine::Physics::CollisionManifold &contact) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     const float bounciness = std::min(contact.col1->bounciness, contact.col2->bounciness);
     std::array<glm::vec2, 2> impulses;
     std::array<float, 2> jList;

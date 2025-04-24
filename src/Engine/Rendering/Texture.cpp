@@ -6,21 +6,24 @@
 
 #include "Engine/Rendering/Texture.hpp"
 #include "Engine/RenderingHeaders.hpp"
+#include "Engine/Macros/Profiling.hpp"
 
 namespace Engine::Rendering {
-  Texture::Texture(const std::string &path)
-    : id(0), width(0), height(0), path(path) {}
+  Texture::Texture(const std::string &path) : id(0), width(0), height(0), path(path) {}
 
   void Texture::generate(
-    const int width, const int height, const unsigned char *data, const int format, const bool blended
+    const int width, const int height, const unsigned char *data, const int internalFormat, const int dataFormat,
+    const bool blended
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     this->width = width;
     this->height = height;
 
     // create Texture
     glGenTextures(1, &this->id);
     glBindTexture(GL_TEXTURE_2D, this->id);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
 
     // set Texture wrap and filter modes
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

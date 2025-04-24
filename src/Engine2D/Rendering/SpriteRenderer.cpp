@@ -9,7 +9,7 @@
 
 namespace Engine2D::Rendering {
   SpriteRenderer::SpriteRenderer()
-    : color(1), flip({0, 0}), renderOrder(0), dirty(false) {
+    : dirty(false), color(1), flip({0, 0}), renderOrder(0) {
     shader = Engine::ResourceManager::GetShader("sprite");
   }
 
@@ -40,7 +40,7 @@ namespace Engine2D::Rendering {
     return this->color;
   }
 
-  void SpriteRenderer::SetFlip(const glm::vec<2, bool> flip) {
+  void SpriteRenderer::SetFlip(const glm::vec<2, bool> &flip) {
     this->flip = flip;
     this->dirty = true;
   }
@@ -49,7 +49,7 @@ namespace Engine2D::Rendering {
     return this->flip;
   }
 
-  void SpriteRenderer::SetRenderOrder(size_t order) {
+  void SpriteRenderer::SetRenderOrder(const int16_t order) {
     this->renderOrder = order;
     this->dirty = true;
   }

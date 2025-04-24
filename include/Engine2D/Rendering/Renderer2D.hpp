@@ -9,7 +9,7 @@
 
 #define STRIDE (20)
 #define STRIDE_SIZE (STRIDE * sizeof(float))
-#define MAX_BATCH_SIZE (128 * 1024 * 1024)
+#define MAX_BATCH_SIZE (1024 * 1024)
 #define MAX_BATCH_SIZE_WITH_STRIDE (MAX_BATCH_SIZE / STRIDE_SIZE)
 #define MAX_INSTANCE_COUNT 10000
 
@@ -25,13 +25,6 @@ using Engine::Rendering::Shader;
 
 namespace Engine2D::Rendering {
   class SpriteRenderer;
-
-  using StaticPair = std::pair<uint32_t, uint32_t>;
-  struct StaticPairHash {
-    std::size_t operator()(const StaticPair &pair) const {
-      return std::hash<uint32_t>{}(pair.first) ^ (std::hash<uint32_t>{}(pair.second) << 1);
-    }
-  };
 
   /// Class responsible for rendering all the textures/sprites in the game
   class Renderer2D {

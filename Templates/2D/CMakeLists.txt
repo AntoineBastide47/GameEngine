@@ -54,6 +54,20 @@ elseif (WIN32)
 endif ()
 
 file(GLOB ENGINE_LIB ${ENGINE_LOCATION}/include/*-[0-9]*.[0-9]*.[0-9]*.*)
+if (BUILD_TYPE STREQUAL "debug")
+  set(CMAKE_BUILD_TYPE "Debug")
+  list(FILTER ENGINE_LIB INCLUDE REGEX "-[0-9]+\\.[0-9]+\\.[0-9]+d\\.[^.]+$")
+elseif (BUILD_TYPE STREQUAL "profile")
+  set(CMAKE_BUILD_TYPE "Debug")
+  list(FILTER ENGINE_LIB INCLUDE REGEX "-[0-9]+\\.[0-9]+\\.[0-9]+dp\\.[^.]+$")
+elseif (BUILD_TYPE STREQUAL "release")
+  set(CMAKE_BUILD_TYPE "Release")
+  list(FILTER ENGINE_LIB INCLUDE REGEX "-[0-9]+\\.[0-9]+\\.[0-9]+\\.[^.]+$")
+else()
+  set(CMAKE_BUILD_TYPE "Debug")
+  list(FILTER ENGINE_LIB INCLUDE REGEX "-[0-9]+\\.[0-9]+\\.[0-9]+d\\.[^.]+$")
+endif ()
+
 list(LENGTH ENGINE_LIB ENGINE_COUNT)
 if (ENGINE_COUNT EQUAL 0)
   message(FATAL_ERROR "Engine static library not found in EngineInclude.")
@@ -122,8 +136,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 # --------------------------
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
-    $<$<CONFIG:Release>:ENGINE_DEBUG=0>
-    $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
+    $<$<CONFIG:Debug>:GAME_DEBUG=1>
 )
 
 ########################################################################################################################

@@ -7,7 +7,7 @@
 #include "commands/LinkProject.hpp"
 
 LinkProject::LinkProject()
-    : Command("Links an existing project to the engine", "<path>", 1, "~/Projects/Test") {}
+    : Command("Links an existing project to the engine", "{path}", 1, "~/Projects/Test") {}
 
 static std::string trim(const std::string& s) {
     const size_t start = s.find_first_not_of(" \t");

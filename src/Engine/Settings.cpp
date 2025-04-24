@@ -176,4 +176,23 @@ namespace Engine {
   float Settings::Input::GetGamepadTriggerThreshold() {
     return gamepadTriggerThreshold;
   }
+
+  Settings::Profiling::ProfilingLevel Settings::Profiling::profilingLevel = ProfilingLevel::Disabled;
+  size_t Settings::Profiling::profilingThreshold = 50;
+
+  void Settings::Profiling::SetProfilingLevel(const ProfilingLevel newValue) {
+    profilingLevel = newValue;
+  }
+
+  Settings::Profiling::ProfilingLevel Settings::Profiling::GetProfilingLevel() {
+    return profilingLevel;
+  }
+
+  void Settings::Profiling::SetProfilingThreshold(const size_t newValue) {
+    profilingThreshold = newValue;
+  }
+
+  size_t Settings::Profiling::GetProfilingThreshold() {
+    return profilingThreshold;
+  }
 }

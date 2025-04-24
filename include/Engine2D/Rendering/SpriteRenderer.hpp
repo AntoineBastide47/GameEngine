@@ -40,11 +40,11 @@ namespace Engine2D::Rendering {
       /// @returns the color of the sprite
       const glm::vec4 &GetColor() const;
       /// Sets on which axis to flip the sprite
-      void SetFlip(glm::vec<2, bool> flip);
+      void SetFlip(const glm::vec<2, bool> &flip);
       /// @returns on which axis the sprite is flipped
       const glm::vec<2, bool> &GetFlip() const;
       /// Sets the render order of this sprite
-      void SetRenderOrder(size_t order);
+      void SetRenderOrder(int16_t order);
       /// @returns the render order of this sprite
       size_t GetRenderOrder() const;
       /// Whether the sprite renderer was updated

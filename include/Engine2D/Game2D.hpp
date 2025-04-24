@@ -47,11 +47,6 @@ namespace Engine2D {
       [[nodiscard]] static std::shared_ptr<Rendering::Camera2D> MainCamera();
 
       /**
-       * Start's and Run's the current game
-       * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
-       */
-      void Run();
-      /**
        * Set's the given resource loader of the game to load embedded resources
        * @param resourceLoader The resource loader that contains the resources to load
        * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
@@ -67,6 +62,11 @@ namespace Engine2D {
       );
       /// @returns The entity with the given name if it was found, nullptr if not
       static std::shared_ptr<Entity2D> Find(const std::string &name);
+      /**
+       * Start's and Run's the current game
+       * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
+       */
+      void Run();
     protected:
       /**
        * Creates a game
@@ -80,7 +80,7 @@ namespace Engine2D {
       /// Called during initialization, allowing derived classes to customize behavior.
       virtual void OnInitialize() {}
     private:
-      /// Used to resize the coordinate space. If initial window is 1920x1080 and factor is 0.1f, the coordinate space will
+      /// Used to resize the coordinate space. If the initial window is 1920x1080 and factor is 0.1f, the coordinate space will
       /// be 192x108.
       static const float screenScaleFactor;
       /// The current aspect ratio of the window
@@ -97,6 +97,7 @@ namespace Engine2D {
 
       /// The current game instance, unique
       static Game2D *instance;
+      std::shared_ptr<Rendering::Camera2D> cameraComponent;
       /// The resource loader for embedded resources
       ResourceLoader resourceLoader;
 

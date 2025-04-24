@@ -6,6 +6,8 @@
 
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp"
+
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
 
 namespace Engine2D {
@@ -17,6 +19,8 @@ namespace Engine2D {
   #endif
 
   void ParticleSystemRenderer2D::update() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     #if MULTI_THREAD
     std::lock_guard lock(particleSystemMutex);
     #endif
@@ -26,6 +30,8 @@ namespace Engine2D {
   }
 
   void ParticleSystemRenderer2D::render() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     #if MULTI_THREAD
     std::lock_guard lock(particleSystemMutex);
     #endif

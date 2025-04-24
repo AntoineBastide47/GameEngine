@@ -41,8 +41,12 @@ static inline std::string CLI_COMMAND() {
   return "./" + CLI_COMMAND_NAME;
 }
 
+static inline std::string CLI_EXECUTE_COMMAND_NO_QUOTES(const std::string &name) {
+  return CLI_COMMAND() + " --" + name;
+}
+
 static inline std::string CLI_EXECUTE_COMMAND(const std::string &name) {
-  return "'" + CLI_COMMAND() + " --" + name + "'";
+  return "'" + CLI_EXECUTE_COMMAND_NO_QUOTES(name) + "'";
 }
 
 class Command {
@@ -51,15 +55,16 @@ class Command {
     const std::string description;
     const std::string args;
     const std::string defaultArg;
+    const std::string note;
     const int argCount;
     const bool argsAreOptional;
 
     explicit Command(
-      std::string description, std::string args = "", int argCount = 0, std::string defaultArg = "",
-      bool argsAreOptional = false
+      std::string description, std::string args = "", const int argCount = 0, std::string defaultArg = "",
+      const bool argsAreOptional = false, std::string note = ""
     )
-      : description(std::move(description)), args(std::move(args)), defaultArg(std::move(defaultArg)), argCount(argCount),
-        argsAreOptional(argsAreOptional) {}
+      : description(std::move(description)), args(std::move(args)), defaultArg(std::move(defaultArg)), note(std::move(note)),
+        argCount(argCount), argsAreOptional(argsAreOptional) {}
 
     virtual ~Command() = default;
     virtual void Run(

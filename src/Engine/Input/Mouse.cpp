@@ -6,6 +6,8 @@
 
 #include "Engine/Input/Mouse.hpp"
 
+#include "Engine/Macros/Profiling.hpp"
+
 namespace Engine::Input {
   MouseButtonEvent Mouse::LEFT{};
   MouseButtonEvent Mouse::RIGHT{};
@@ -46,24 +48,9 @@ namespace Engine::Input {
     Mouse::window = window;
   }
 
-  void Mouse::processButton(const int keyCode, MouseButtonEvent *event, KeyboardAndMouseContext &ctx) {
-    const int state = glfwGetMouseButton(window, keyCode);
-    const bool isPressed = state == GLFW_PRESS;
-
-    // Get previous state
-    const bool wasPressed = previousKeyStates[keyCode];
-    previousKeyStates[keyCode] = isPressed;
-
-    // Process action if it's valid
-    if (wasPressed || isPressed) {
-      ctx.pressed = !wasPressed && isPressed;
-      ctx.held = wasPressed && isPressed;
-      ctx.released = wasPressed && !isPressed;
-      event->trigger(ctx);
-    }
-  }
-
   void Mouse::processInput() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     KeyboardAndMouseContext ctx = {
       .leftShiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_RELEASE,
       .rightShiftPressed = glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) != GLFW_RELEASE,
@@ -85,6 +72,23 @@ namespace Engine::Input {
     processButton(GLFW_MOUSE_BUTTON_6, &BUTTON_6, ctx);
     processButton(GLFW_MOUSE_BUTTON_7, &BUTTON_7, ctx);
     processButton(GLFW_MOUSE_BUTTON_8, &BUTTON_8, ctx);
+  }
+
+  void Mouse::processButton(const int keyCode, MouseButtonEvent *event, KeyboardAndMouseContext &ctx) {
+    const int state = glfwGetMouseButton(window, keyCode);
+    const bool isPressed = state == GLFW_PRESS;
+
+    // Get previous state
+    const bool wasPressed = previousKeyStates[keyCode];
+    previousKeyStates[keyCode] = isPressed;
+
+    // Process action if it's valid
+    if (wasPressed || isPressed) {
+      ctx.pressed = !wasPressed && isPressed;
+      ctx.held = wasPressed && isPressed;
+      ctx.released = wasPressed && !isPressed;
+      event->trigger(ctx);
+    }
   }
 
   void Mouse::processScroll(const double scroll) {

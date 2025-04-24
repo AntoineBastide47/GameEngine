@@ -15,13 +15,6 @@ namespace Engine2D::Physics {
     friend class CollisionGrid;
 
     /**
-     * Checks if the given rigidbodies AABB collide
-     * @param a The first rigidbody AABB
-     * @param b The second rigidbody AABB
-     * @return True if the AABBs collide, false if not
-     */
-    [[nodiscard]] static bool collideAABB(Collider2D::AABB a, Collider2D::AABB b);
-    /**
      * Checks if the given rigidbodies collide
      * @param col1 The first rigidbody
      * @param col2 The second rigidbody

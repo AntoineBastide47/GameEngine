@@ -56,10 +56,11 @@ namespace Engine::Rendering {
        * @param width The width of the texture in pixels.
        * @param height The height of the texture in pixels.
        * @param data The pixel data for the texture, typically loaded from an image file.
-       * @param format The format of this texture
+       * @param internalFormat
+       * @param dataFormat
        * @param blended Whether to blend the pixels or not
        */
-      void generate(int width, int height, const unsigned char *data, int format, bool blended = false);
+      void generate(int width, int height, const unsigned char *data, int internalFormat, int dataFormat, bool blended = false);
       /// Makes this texture active so that subsequent rendering operations use it.
       void bind() const;
       /// Unloads the texture data and prepares the object for reuse.

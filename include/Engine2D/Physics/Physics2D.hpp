@@ -31,7 +31,20 @@ namespace Engine2D::Physics {
              rigidbody1 == other.rigidbody1 && rigidbody2 == other.rigidbody2;
     }
   };
+}
 
+template<>
+struct std::hash<Engine2D::Physics::ContactPair> {
+  std::size_t operator()(const Engine2D::Physics::ContactPair& pair) const noexcept {
+    const auto h1 = reinterpret_cast<std::uintptr_t>(pair.collider1.get());
+    const auto h2 = reinterpret_cast<std::uintptr_t>(pair.collider2.get());
+    // Use a fast bitwise combination
+    return h1 ^ (h2 << 1);
+  }
+};
+
+
+namespace Engine2D::Physics {
   class Physics2D {
     friend class Engine2D::Entity2D;
     friend class Engine2D::Game2D;
@@ -78,6 +91,7 @@ namespace Engine2D::Physics {
     void step();
     /// Filters all the colliders in the game and keeps only the ones that are active
     void findActiveColliders();
+    ///
     static void notifyCollisions(
       const std::shared_ptr<Collider2D> &sender, const std::shared_ptr<Collider2D> &receiver, CollisionEventType eventType
     );

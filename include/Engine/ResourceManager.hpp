@@ -28,19 +28,14 @@ namespace Engine {
     public:
       /**
        * Loads a shader to memory with the given OpenGL source shader files
-       * @param vShaderFile The vertex shader file path
-       * @param fShaderFile The fragment shader file path
-       * @param gShaderFile The geometry shader file path (Optional)
+       * @param filePath The vertex shader file path
        * @param name The name of this shader
        * @note Calling this method will log an error if:
        * - parameters vShaderFile, fShaderFile or name are empty, or if a shader with the given name already exists
        * - the files can't be read or are empty
        * @return The loaded shader
        */
-      static std::shared_ptr<Shader> LoadShader(
-        const std::string &name, const std::string &vShaderFile, const std::string &fShaderFile,
-        const std::string &gShaderFile = ""
-      );
+      static std::shared_ptr<Shader> LoadShader(const std::string &name, const std::string &filePath);
 
       /**
        * Finds and returns the shader with the given name
@@ -60,12 +55,15 @@ namespace Engine {
        * Loads a texture to memory
        * @param filePath The texture file path
        * @param name The name of this texture
+       * @param blend
        * @note Calling this method will log an error if:
        * - parameters file or name are empty, or if a texture with the given name already exists
        * - the file can't be read or is empty
        * @return The loaded texture
        */
-      static std::shared_ptr<Texture> LoadTexture2D(const std::string &filePath, const std::string &name);
+      static std::shared_ptr<Texture> LoadTexture2D(
+        const std::string &filePath, const std::string &name, bool blend = false
+      );
 
       /**
        * Finds and returns the texture with the given name
@@ -110,13 +108,14 @@ namespace Engine {
        * Loads a texture to memory
        * @param filePath The texture file path
        * @param name The name of this texture
+       * @param blend
        * @note Calling this method will log an error if:
        * - parameters file or name are empty, or if a texture with the given name already exists
        * - the file can't be read or is empty
        * @return The loaded texture
        */
       static std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> LoadTexture2DAndSprite(
-        const std::string &filePath, const std::string &name
+        const std::string &filePath, const std::string &name, bool blend = false
       );
 
       /// Deletes all the loaded textures and shaders

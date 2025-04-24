@@ -8,6 +8,7 @@
 
 #include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine/ResourceManager.hpp"
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine/Rendering/Shader.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
@@ -77,6 +78,8 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::initRenderData() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     glGenVertexArrays(1, &quadVAO);
     glBindVertexArray(quadVAO);
 
@@ -129,8 +132,8 @@ namespace Engine2D::Rendering {
   }
 
   bool Renderer2D::cannotBeRendered(const std::shared_ptr<SpriteRenderer> &r) {
-    return !r || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader || !r->sprite ||
-           !r->sprite->texture;
+    return !r || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader || !r->sprite
+           || !r->sprite->texture;
   }
 
   bool Renderer2D::sortRenderers(const std::shared_ptr<SpriteRenderer> &a, const std::shared_ptr<SpriteRenderer> &b) {
@@ -145,6 +148,8 @@ namespace Engine2D::Rendering {
   void Renderer2D::extractRendererData(
     const std::shared_ptr<SpriteRenderer> &renderer, float *data
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     if (const auto entity = renderer->Entity(); !renderer->Entity()->IsActive() || !renderer->Transform()->GetIsVisible())
       return;
 
@@ -183,6 +188,8 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::updateStaticBatch() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     for (size_t i = 0; i < staticRenderers.size(); i++) {
       auto &renderer = staticRenderers[i];
       if (!renderer->dirty)
@@ -195,6 +202,8 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::buildAndRenderStaticBatch(const bool rebuild) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     if (rebuild) {
       std::ranges::sort(staticRenderers, sortRenderers);
 
@@ -252,6 +261,8 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::buildAndRenderDynamicBatch() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     const auto it = std::ranges::find_if(renderers, cannotBeRendered);
     const auto validRange = std::ranges::subrange(renderers.begin(), it);
 
@@ -294,6 +305,8 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::render() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     const size_t lastStaticCount = staticRenderers.size();
     const bool sort = !renderersToAdd.empty();
 
@@ -325,8 +338,6 @@ namespace Engine2D::Rendering {
     lastShaderID = 0;
     lastTextureID = 0;
 
-    Game2D::MainCamera()->updateCamera();
-
     glBindVertexArray(quadVAO);
     buildAndRenderStaticBatch(lastStaticCount != staticRenderers.size());
     buildAndRenderDynamicBatch();
@@ -334,6 +345,8 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::flush(const uint VBO, const float *data, const int drawMode, const uint32_t count) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     if (!count || !data)
       return;
 

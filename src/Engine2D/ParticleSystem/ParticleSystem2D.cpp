@@ -68,6 +68,8 @@ namespace Engine2D {
   }
 
   void ParticleSystem2D::initialize() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     initialized = true;
 
     glGenVertexArrays(1, &quadVAO);
@@ -120,6 +122,8 @@ namespace Engine2D {
   }
 
   void ParticleSystem2D::update() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     if ((!restart && !loop && simulationFinished) || duration == 0 || particles.size() == 0)
       return;
 
@@ -176,6 +180,8 @@ namespace Engine2D {
   }
 
   void ParticleSystem2D::render() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     if ((!restart && !loop && simulationFinished) || duration == 0)
       return;
 
@@ -238,6 +244,8 @@ namespace Engine2D {
   }
 
   void ParticleSystem2D::respawnParticle(const uint index) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution dist_random(-maxStartPositionOffset, maxStartPositionOffset);

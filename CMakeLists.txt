@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.7.0)
+project(GameEngine VERSION 0.7.1)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -65,11 +65,15 @@ add_library(Engine2D STATIC
     include/Engine2D/Rendering/SpriteRenderer.hpp
     src/Engine2D/Rendering/Camera2D.cpp
     include/Engine2D/Rendering/Camera2D.hpp
+    src/Engine/Profiling/Timer.cpp
+    include/Engine/Profiling/Timer.hpp
+    src/Engine/Profiling/Instrumentor.cpp
+    include/Engine/Profiling/Instrumentor.hpp
+    include/Engine/Macros/Profiling.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-${PROJECT_VERSION}
-    DEBUG_POSTFIX d
+    OUTPUT_NAME Engine2D-${PROJECT_VERSION}$<IF:$<STREQUAL:$<CONFIG>,Debug>,d,>$<IF:$<BOOL:${Profile}>,p,>
     PREFIX ""
 )
 target_include_directories(Engine2D PUBLIC include)
@@ -147,7 +151,7 @@ endif ()
 add_custom_command(TARGET Engine2D POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E rename
     $<TARGET_FILE:Engine2D>
-    ${CMAKE_CURRENT_BINARY_DIR}/../include/$<TARGET_FILE_NAME:Engine2D>
+    ${CMAKE_CURRENT_BINARY_DIR}/../../include/$<TARGET_FILE_NAME:Engine2D>
 )
 
 # --------------------------
@@ -155,7 +159,7 @@ add_custom_command(TARGET Engine2D POST_BUILD
 # --------------------------
 
 target_compile_definitions(Engine2D PUBLIC
-    $<$<CONFIG:Release>:ENGINE_DEBUG=0>
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
+    $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
     MULTI_THREAD=1
 )

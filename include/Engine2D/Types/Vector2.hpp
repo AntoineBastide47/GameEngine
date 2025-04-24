@@ -49,7 +49,7 @@ namespace glm {
 
   static inline glm::vec2 smoothDamp(
     const glm::vec2 &current, const glm::vec2 &target, glm::vec2 &currentVelocity, const float smoothTime,
-    const float deltaTime = 1, const float maxSpeed = std::numeric_limits<float>::infinity()
+    const float deltaTime, const float maxSpeed = std::numeric_limits<float>::infinity()
   ) {
     const float omega = 2.0f / smoothTime;
     const float x = omega * deltaTime;

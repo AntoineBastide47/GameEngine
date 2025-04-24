@@ -11,4 +11,10 @@
 #define EXPAND_MACRO(x) x
 #define STRINGIFY_MACRO(x) #x
 
+#ifdef _MSC_VER
+#define ENGINE_FUNC_SIG __FUNCSIG__
+#else
+#define ENGINE_FUNC_SIG __PRETTY_FUNCTION__
+#endif
+
 #endif //UTILS_H

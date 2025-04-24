@@ -41,3 +41,4 @@ todo.txt
 include/*.a
 **/engine-cli
 CLI/build
+build

@@ -9,6 +9,7 @@
 #include "Engine/Rendering/Shader.hpp"
 #include "Engine/Log.hpp"
 #include "Engine/ResourceManager.hpp"
+#include "Engine/Macros/Profiling.hpp"
 
 namespace Engine::Rendering {
   Shader &Shader::use() {
@@ -17,6 +18,8 @@ namespace Engine::Rendering {
   }
 
   void Shader::compile(const char *vertexSource, const char *fragmentSource, const char *geometrySource) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     uint gShader = 0;
 
     // Create the vertex shader

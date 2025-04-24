@@ -7,6 +7,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Engine2D/Rendering/Camera2D.hpp"
+
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine2D/Transform2D.hpp"
@@ -82,11 +84,15 @@ namespace Engine2D::Rendering {
   }
 
   void Camera2D::updateCamera() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     /// Update the camera's transform
     if (followTarget) {
       auto velocity = glm::vec2(0);
       const glm::vec2 target = followTarget->transform->GetWorldPosition() + positionOffset;
-      Transform()->SetPosition(glm::smoothDamp(Transform()->GetWorldPosition(), target, velocity, damping));
+      Transform()->SetPosition(
+        glm::smoothDamp(Transform()->GetWorldPosition(), target, velocity, damping, Game2D::DeltaTime())
+      );
       Transform()->SetRotation(rotationOffset + followTarget->transform->GetWorldRotation());
     }
 
@@ -115,6 +121,8 @@ namespace Engine2D::Rendering {
   }
 
   glm::vec2 Camera2D::getCameraShake(const float frac) const {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     if (frac <= 0.0f || frac >= 1.0f)
       return glm::vec2(0.0f);
 

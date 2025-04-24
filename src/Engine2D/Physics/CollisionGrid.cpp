@@ -18,6 +18,8 @@ namespace Engine2D::Physics {
   }
 
   void CollisionGrid::setGridSize(const glm::vec<2, size_t> gridSize) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     this->gridSize = gridSize;
     for (auto &col: grid)
       for (auto &cell: col)
@@ -26,6 +28,8 @@ namespace Engine2D::Physics {
   }
 
   void CollisionGrid::update(const std::vector<std::shared_ptr<Collider2D>> &colliders) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     // Clear the cells
     for (auto &col: grid)
       for (auto &cell: col)

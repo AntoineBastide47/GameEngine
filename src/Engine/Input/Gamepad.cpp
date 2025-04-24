@@ -6,6 +6,7 @@
 
 #include "Engine/Input/Gamepad.hpp"
 #include "Engine/Settings.hpp"
+#include "Engine/Macros/Profiling.hpp"
 
 namespace Engine::Input {
   GamepadButtonEvent Gamepad::BUTTON_NORTH{};
@@ -32,6 +33,8 @@ namespace Engine::Input {
   GLFWgamepadstate Gamepad::state{};
 
   void Gamepad::processInput() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     if (glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
       if (glfwGetGamepadState(GLFW_JOYSTICK_1, &state)) {
         processButton(GLFW_GAMEPAD_BUTTON_A, &BUTTON_SOUTH);

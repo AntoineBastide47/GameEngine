@@ -29,8 +29,10 @@ void Help::Run(const std::vector<std::string> &args, const OrderedMap<std::strin
 }
 
 void Help::displayCommandInfo(const std::string &name, const std::unique_ptr<Command> &command) {
-  std::cout << BOLD << name << RESET << ": " << command->description << "\n"
-    << "    Usage:   " << CLI_EXECUTE_COMMAND(name) << " " << command->args;
+  std::cout << BOLD << name << RESET << ": " << command->description << "\n";
+  if (!command->note.empty())
+    std::cout << "    Note:   " << command->note << "\n";
+  std::cout << "    Usage:   " << CLI_EXECUTE_COMMAND_NO_QUOTES(name) << " " << command->args;
   if (!command->defaultArg.empty())
-    std::cout << "\n    Example: " << CLI_EXECUTE_COMMAND(name) << " " << command->defaultArg;
+    std::cout << "\n    Example: " << CLI_EXECUTE_COMMAND_NO_QUOTES(name) << " " << command->defaultArg;
 }

@@ -18,9 +18,10 @@
 #include "Engine/Input/Gamepad.hpp"
 #include "Engine/Input/Keyboard.hpp"
 #include "Engine/Input/Mouse.hpp"
+#include "Engine/Profiling/Instrumentor.hpp"
 #include "Engine2D/Behaviour.hpp"
-#include "Engine/Macros/PlatformDetection.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
+#include "Engine/Macros/Profiling.hpp"
 
 using Engine::ResourceManager;
 
@@ -64,12 +65,51 @@ namespace Engine2D {
   }
 
   std::shared_ptr<Rendering::Camera2D> Game2D::MainCamera() {
-    if (instance->mainCamera && instance->mainCamera->HasComponent<Rendering::Camera2D>())
-      return instance->mainCamera->GetComponent<Rendering::Camera2D>();
+    if (!instance->mainCamera)
+      return nullptr;
+
+    if (!instance->cameraComponent)
+      instance->cameraComponent = instance->mainCamera->GetComponent<Rendering::Camera2D>();
+
+    return instance->cameraComponent;
+  }
+
+  void Game2D::SetGameResourceLoader(ResourceLoader resourceLoader) {
+    this->resourceLoader = std::move(resourceLoader);
+  }
+
+  void Game2D::Close(const Engine::Input::KeyboardAndMouseContext context) {
+    if (context.released)
+      glfwSetWindowShouldClose(instance->window, true);
+  }
+
+  std::shared_ptr<Entity2D> Game2D::AddEntity(
+    std::string name, bool isStatic, glm::vec2 position, float rotation, glm::vec2 scale, std::shared_ptr<Entity2D> parent
+  ) {
+    if (instance) {
+      auto entity = std::make_shared<Entity2D>(name, isStatic, position, rotation, scale, parent);
+      instance->entitiesToAdd.push_back(entity);
+      entity->initialize();
+      return entity;
+    }
+    return nullptr;
+  }
+
+  std::shared_ptr<Entity2D> Game2D::Find(const std::string &name) {
+    for (const auto entity: instance->entitiesToAdd)
+      if (entity->name == name)
+        return entity;
+    for (const auto entity: instance->entities)
+      if (entity->name == name)
+        return entity;
     return nullptr;
   }
 
   void Game2D::Run() {
+    #ifdef ENGINE_PROFILING
+    Engine::Profiling::Instrumentor::Get().BeginSession("profiler");
+    #endif
+
     this->initialize();
 
     // Set the render variables
@@ -97,9 +137,92 @@ namespace Engine2D {
     #endif
 
     this->quit();
+
+    #ifdef ENGINE_PROFILING
+    Engine::Profiling::Instrumentor::Get().EndSession();
+    #endif
+  }
+
+  void Game2D::initialize() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
+    // Initialize and Configure GLFW
+    if (!glfwInit()) {
+      std::cerr << "ERROR: GLFW could not initialize" << std::endl;
+      this->quit();
+      exit(EXIT_FAILURE);
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    #endif
+
+    // Set window hints
+    glfwWindowHint(GLFW_RESIZABLE, Engine::Settings::Window::GetAllowResize());
+
+    // Create the window
+    window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+    if (!window) {
+      std::cerr << "ERROR: Failed to create window" << std::endl;
+      this->quit();
+      exit(EXIT_FAILURE);
+    }
+    glViewport(0, 0, width, height);
+
+    // Set window callbacks
+    glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+
+    glfwSwapInterval(Engine::Settings::Graphics::GetVsyncEnabled());
+
+    // The official code for "Setting Your Raster Position to a Pixel Location" (i.e. set up a camera for 2D screen)
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, width, height, 0, -1, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // Make some OpenGL properties better for 2D and enable alpha channel.
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    // Initialize GLEW
+    glewExperimental = GL_TRUE;
+    if (const GLenum err = glewInit(); err != GLEW_OK) {
+      std::cerr << "ERROR: Failed to initialize GLEW: " << err << std::endl;
+      this->quit();
+      exit(EXIT_FAILURE);
+    }
+
+    // Initialize input system
+    Engine::Input::Keyboard::initialize(this->window);
+    Engine::Input::Mouse::initialize(this->window);
+
+    // Load the engine shaders
+    ResourceManager::LoadShader("particle", "Engine/Shaders/particle.glsl");
+    ResourceManager::LoadShader("sprite", "Engine/Shaders/sprite.glsl");
+
+    physics2D = new Physics2D();
+    mainCamera = AddEntity("Camera");
+    mainCamera->AddComponent<Rendering::Camera2D>(
+      -static_cast<float>(width / 2) * screenScaleFactor, static_cast<float>(width / 2) * screenScaleFactor,
+      static_cast<float>(height / 2) * screenScaleFactor, -static_cast<float>(height / 2) * screenScaleFactor,
+      -32768.0f, 32768.0f // int16_t range
+    );
+
+    this->OnInitialize();
   }
 
   void Game2D::updateLoop() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerThread);
+
     while (!glfwWindowShouldClose(window)) {
       // Calculate the current deltaTime
       const auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -154,8 +277,82 @@ namespace Engine2D {
     #endif
   }
 
+  // ReSharper disable once CppMemberFunctionMayBeStatic
+  void Game2D::processInput() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
+    if (Engine::Settings::Input::GetAllowMouseInput())
+      Engine::Input::Mouse::processInput();
+    if (Engine::Settings::Input::GetAllowKeyboardInput())
+      Engine::Input::Keyboard::processInput();
+    if (Engine::Settings::Input::GetAllowGamepadInput())
+      Engine::Input::Gamepad::processInput();
+  }
+
+  void Game2D::fixedUpdate() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
+    physicsAccumulator += deltaTime;
+    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
+    while (physicsAccumulator >= fixedDeltaTime) {
+      for (const auto &entity: entities)
+        if (entity->IsActive())
+          for (const auto &behaviour: entity->behaviours)
+            behaviour->OnFixedUpdate();
+      physics2D->step();
+      physicsAccumulator -= fixedDeltaTime;
+    }
+  }
+
+  void Game2D::update() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
+    bool foundNull = false;
+    for (const auto &entity: entities) {
+      if (entity && entity->IsActive())
+        for (const auto &behaviour: entity->behaviours)
+          behaviour->OnUpdate();
+      else if (!entity)
+        foundNull = true;
+    }
+    if (foundNull)
+      for (auto it = entities.begin(); it != entities.end();) {
+        if (*it == nullptr)
+          it = entities.erase(it);
+        else
+          ++it;
+      }
+    ParticleSystemRenderer2D::update();
+    MainCamera()->updateCamera();
+  }
+
+  void Game2D::limitFrameRate() const {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
+    using namespace std::chrono;
+
+    if (Engine::Settings::Graphics::GetVsyncEnabled())
+      return;
+
+    static auto nextFrameTime = steady_clock::now();
+    nextFrameTime += duration_cast<steady_clock::duration>(
+      duration<float>(targetRenderRate)
+    );
+
+    if (const auto now = steady_clock::now(); nextFrameTime > now) {
+      // sleep coarse then spin-wait
+      if (const auto sleepTime = nextFrameTime - now - microseconds(200); sleepTime > microseconds(0))
+        std::this_thread::sleep_for(sleepTime);
+      while (steady_clock::now() < nextFrameTime) {}
+    } else {
+      nextFrameTime = now;
+    }
+  }
+
   #if MULTI_THREAD
   void Game2D::renderLoop() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerThread);
+
     // Make the GL context current in this thread.
     glfwMakeContextCurrent(window);
 
@@ -177,190 +374,26 @@ namespace Engine2D {
   }
   #endif
 
-  void Game2D::SetGameResourceLoader(ResourceLoader resourceLoader) {
-    this->resourceLoader = std::move(resourceLoader);
-  }
-
-  void Game2D::Close(const Engine::Input::KeyboardAndMouseContext context) {
-    if (context.released)
-      glfwSetWindowShouldClose(instance->window, true);
-  }
-
-  std::shared_ptr<Entity2D> Game2D::AddEntity(
-    std::string name, bool isStatic, glm::vec2 position, float rotation, glm::vec2 scale, std::shared_ptr<Entity2D> parent
-  ) {
-    if (instance) {
-      auto entity = std::make_shared<Entity2D>(name, isStatic, position, rotation, scale, parent);
-      instance->entitiesToAdd.push_back(entity);
-      entity->initialize();
-      return entity;
-    }
-    return nullptr;
-  }
-
-  std::shared_ptr<Entity2D> Game2D::Find(const std::string &name) {
-    for (const auto entity: instance->entitiesToAdd)
-      if (entity->name == name)
-        return entity;
-    for (const auto entity: instance->entities)
-      if (entity->name == name)
-        return entity;
-    return nullptr;
-  }
-
-  void Game2D::initialize() {
-    // Initialize and Configure GLFW
-    if (!glfwInit()) {
-      std::cerr << "ERROR: GLFW could not initialize" << std::endl;
-      this->quit();
-      exit(EXIT_FAILURE);
-    }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    #ifdef ENGINE_MACOS
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    #endif
-
-    // Set window hints
-    glfwWindowHint(GLFW_RESIZABLE, Engine::Settings::Window::GetAllowResize());
-
-    // Create the window
-    window = glfwCreateWindow(width, height, title, nullptr, nullptr);
-    if (!window) {
-      std::cerr << "ERROR: Failed to create window" << std::endl;
-      this->quit();
-      exit(EXIT_FAILURE);
-    }
-    glViewport(0, 0, width, height);
-
-    // Set window callbacks
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-
-    glfwSwapInterval(Engine::Settings::Graphics::GetVsyncEnabled());
-
-    // The official code for "Setting Your Raster Position to a Pixel Location" (i.e. set up a camera for 2D screen)
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, width, height, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    // Make some OpenGL properties better for 2D and enable alpha channel.
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    // Initialize GLEW
-    glewExperimental = GL_TRUE;
-    if (const GLenum err = glewInit(); err != GLEW_OK) {
-      std::cerr << "ERROR: Failed to initialize GLEW: " << err << std::endl;
-      this->quit();
-      exit(EXIT_FAILURE);
-    }
-
-    // Initialize input system
-    Engine::Input::Keyboard::initialize(this->window);
-    Engine::Input::Mouse::initialize(this->window);
-
-    // Load the engine shaders
-    ResourceManager::LoadShader("sprite", "Engine/Shaders/sprite.vert", "Engine/Shaders/sprite.frag");
-    ResourceManager::LoadShader("particle", "Engine/Shaders/particle.vert", "Engine/Shaders/particle.frag");
-
-    physics2D = new Physics2D();
-    mainCamera = AddEntity("Camera");
-    mainCamera->AddComponent<Rendering::Camera2D>(
-      -static_cast<float>(width >> 1) * screenScaleFactor, static_cast<float>(width >> 1) * screenScaleFactor,
-      static_cast<float>(height >> 1) * screenScaleFactor, -static_cast<float>(height >> 1) * screenScaleFactor,
-      -32768.0f, 32768.0f // int16_t range
-    );
-
-    this->OnInitialize();
-  }
-
-  // ReSharper disable once CppMemberFunctionMayBeStatic
-  void Game2D::processInput() {
-    if (Engine::Settings::Input::GetAllowMouseInput())
-      Engine::Input::Mouse::processInput();
-    if (Engine::Settings::Input::GetAllowKeyboardInput())
-      Engine::Input::Keyboard::processInput();
-    if (Engine::Settings::Input::GetAllowGamepadInput())
-      Engine::Input::Gamepad::processInput();
-  }
-
-  void Game2D::fixedUpdate() {
-    physicsAccumulator += deltaTime;
-    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
-    while (physicsAccumulator >= fixedDeltaTime) {
-      for (const auto &entity: entities)
-        if (entity->IsActive())
-          for (const auto &behaviour: entity->behaviours)
-            behaviour->OnFixedUpdate();
-      physics2D->step();
-      physicsAccumulator -= fixedDeltaTime;
-    }
-  }
-
-  void Game2D::update() {
-    bool foundNull = false;
-    for (const auto &entity: entities) {
-      if (entity && entity->IsActive())
-        for (const auto &behaviour: entity->behaviours)
-          behaviour->OnUpdate();
-      else if (!entity)
-        foundNull = true;
-    }
-    if (foundNull)
-      for (auto it = entities.begin(); it != entities.end();) {
-        if (*it == nullptr)
-          it = entities.erase(it);
-        else
-          ++it;
-      }
-    ParticleSystemRenderer2D::update();
-  }
-
   void Game2D::render() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     // Make sure there is something to render
     if (!entities.empty()) {
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
       Rendering::Renderer2D::render();
       ParticleSystemRenderer2D::render();
 
       // Prepare the next frame
       glfwSwapBuffers(window);
       frameCounter++;
-    }
-  }
 
-  void Game2D::limitFrameRate() const {
-    using namespace std::chrono;
-
-    if (Engine::Settings::Graphics::GetVsyncEnabled())
-      return;
-
-    static auto nextFrameTime = steady_clock::now();
-    nextFrameTime += duration_cast<steady_clock::duration>(
-      duration<float>(targetRenderRate)
-    );
-
-    if (const auto now = steady_clock::now(); nextFrameTime > now) {
-      // sleep coarse then spin-wait
-      if (const auto sleepTime = nextFrameTime - now - microseconds(200); sleepTime > microseconds(0))
-        std::this_thread::sleep_for(sleepTime);
-      while (steady_clock::now() < nextFrameTime) {}
-    } else {
-      nextFrameTime = now;
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      //glFinish();
     }
   }
 
   void Game2D::quit() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     // Remove all the entities from the game
     entitiesToAdd.clear();
     entitiesToRemove.clear();

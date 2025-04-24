@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Transform2D.hpp"
 
 namespace Engine2D {
@@ -51,7 +52,9 @@ namespace Engine2D {
 
       /// Creates a component of the given type and adds it to the entity
       template<typename T, typename... Args> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
-      std::shared_ptr<T> AddComponent(Args&&... args) {
+      std::shared_ptr<T> AddComponent(Args &&... args) {
+        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
         auto component = std::make_shared<T>(std::forward<Args>(args)...);
         component->setEntity(shared_from_this());
         if (auto behaviour = std::dynamic_pointer_cast<Behaviour>(component)) {
@@ -64,37 +67,6 @@ namespace Engine2D {
         return component;
       }
 
-      /// Removes the given component to the current entity
-      template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
-      void RemoveComponent(const std::shared_ptr<T> &component) {
-        if (auto behaviour = std::dynamic_pointer_cast<Behaviour>(component)) {
-          behaviour->OnDestroy();
-          std::erase(behaviours, behaviour);
-        } else {
-          recallComponent(component);
-          std::erase(components, component);
-        }
-      }
-
-      /**
-       * Try's to find a component of the given type on the current entity
-       * @tparam T The type of the component to find, must inherit from Component2D
-       * @return The first component that matches the given type found on the current entity, nullptr if none were found
-       */
-      template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] bool HasComponent() const {
-        if constexpr (std::is_same_v<T, Transform2D>)
-          return true;
-        else if constexpr (std::is_base_of_v<Behaviour, T>)
-          for (const auto &component: behaviours)
-            if (auto casted = std::dynamic_pointer_cast<T>(component))
-              return true;
-        for (auto component: components)
-          if (auto casted = std::dynamic_pointer_cast<T>(component))
-            return true;
-        return false;
-      }
-
       /**
        * Try's to find a component of the given type on the current entity
        * @tparam T The type of the component to find, must inherit from Component2D
@@ -102,6 +74,8 @@ namespace Engine2D {
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
       [[nodiscard]] std::shared_ptr<T> GetComponent() const {
+        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
         if constexpr (std::is_same_v<T, Transform2D>)
           return transform;
         else if constexpr (std::is_base_of_v<Behaviour, T>)
@@ -115,12 +89,40 @@ namespace Engine2D {
       }
 
       /**
+       * Try's to find a component of the given type on the current entity
+       * @tparam T The type of the component to find, must inherit from Component2D
+       * @return The first component that matches the given type found on the current entity, nullptr if none were found
+       */
+      template<typename T> requires std::is_base_of_v<Component2D, T>
+      [[nodiscard]] bool HasComponent() const {
+        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
+        return GetComponent<T>() != nullptr;
+      }
+
+      /// Removes the given component to the current entity
+      template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
+      void RemoveComponent(const std::shared_ptr<T> &component) {
+        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
+        if (auto behaviour = std::dynamic_pointer_cast<Behaviour>(component)) {
+          behaviour->OnDestroy();
+          std::erase(behaviours, behaviour);
+        } else {
+          recallComponent(component);
+          std::erase(components, component);
+        }
+      }
+
+      /**
        * Try's to find multiple components of the given type on the current entity
        * @tparam T The type of the component to find, must inherit from Component2D
        * @return The components that match the given type found on the current entity, nullptr if none were found
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
       [[nodiscard]] std::vector<std::shared_ptr<T>> GetComponents() const {
+        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
         if constexpr (std::is_same_v<T, Transform2D>)
           return {transform};
         std::vector<std::shared_ptr<T>> res;

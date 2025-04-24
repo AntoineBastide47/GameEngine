@@ -15,6 +15,7 @@
 #include "Engine/ResourceManager.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine/Log.hpp"
+#include "Engine/Macros/Assert.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
 
 using Engine2D::Game2D;
@@ -24,45 +25,66 @@ namespace Engine {
   std::map<std::string, std::shared_ptr<Shader>> ResourceManager::shaders;
   std::map<std::string, std::shared_ptr<Sprite>> ResourceManager::sprites;
 
-  std::shared_ptr<Shader> ResourceManager::LoadShader(
-    const std::string &name, const std::string &vShaderFile, const std::string &fShaderFile, const std::string &gShaderFile
-  ) {
-    if (vShaderFile.empty())
-      return Log::Error("Vertex shader file path is required to load a shader");
-    if (fShaderFile.empty())
-      return Log::Error("Fragment shader file path is required to load a shader");
+  std::shared_ptr<Shader> ResourceManager::LoadShader(const std::string &name, const std::string &filePath) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
+    if (filePath.empty())
+      return Log::Error("Shader file path is required to load a shader");
     if (name.empty())
       return Log::Error("Shader name is required to load a shader");
     if (shaders.contains(name))
       return shaders[name];
 
-    std::string geometryCode;
-    // Load vertex shader
-    const cmrc::file vertexShaderFile = Game2D::instance->loadResource(vShaderFile);
-    const auto vertexCode = std::string(vertexShaderFile.begin(), vertexShaderFile.end());
-    if (vertexCode.empty())
-      return Log::Error("Vertex Shader is empty");
+    // Load the whole shader file
+    const cmrc::file shaderFile = Game2D::instance->loadResource(filePath);
+    const std::string shaderSource(shaderFile.begin(), shaderFile.end());
+    if (shaderSource.empty())
+      return Log::Error("Shader source is empty");
 
-    // Load fragment shader
-    const cmrc::file fragmentShaderFile = Game2D::instance->loadResource(fShaderFile);
-    const auto fragmentCode = std::string(fragmentShaderFile.begin(), fragmentShaderFile.end());
-    if (fragmentCode.empty())
-      return Log::Error("Vertex Shader is empty");
+    // Split shader stages
+    std::string vertexCode, fragmentCode, geometryCode;
+    enum class ShaderType {
+      None, Vertex, Fragment, Geometry
+    };
+    auto currentType = ShaderType::None;
 
-    // Load geometry shader if provided
-    if (!gShaderFile.empty()) {
-      const cmrc::file geometryShaderFile = Game2D::instance->loadResource(gShaderFile);
-      geometryCode = std::string(geometryShaderFile.begin(), geometryShaderFile.end());
-      if (geometryCode.empty())
-        Log::Warning("Geometry Shader is empty, it won't be used");
+    std::istringstream stream(shaderSource);
+    std::string line;
+    while (std::getline(stream, line)) {
+      if (line.find("#define TYPE VERTEX") != std::string::npos)
+        currentType = ShaderType::Vertex;
+      else if (line.find("#define TYPE FRAGMENT") != std::string::npos ||
+               line.find("#define TYPE PIXEL") != std::string::npos)
+        currentType = ShaderType::Fragment;
+      else if (line.find("#define TYPE GEOMETRY") != std::string::npos)
+        currentType = ShaderType::Geometry;
+      else {
+        switch (currentType) {
+          case ShaderType::Vertex: vertexCode += line + '\n';
+            break;
+          case ShaderType::Fragment: fragmentCode += line + '\n';
+            break;
+          case ShaderType::Geometry: geometryCode += line + '\n';
+            break;
+          default: break;
+        }
+      }
     }
 
-    // Create the shader
+    // Validate stages
+    if (vertexCode.empty())
+      return Log::Error("Vertex shader stage missing");
+    if (fragmentCode.empty())
+      return Log::Error("Fragment shader stage missing");
+
+    // Compile shader
     const auto shader = std::make_shared<Shader>();
     shader->compile(
-      vertexCode.c_str(), fragmentCode.c_str(),
-      !gShaderFile.empty() && !geometryCode.empty() ? geometryCode.c_str() : nullptr
+      vertexCode.c_str(),
+      fragmentCode.c_str(),
+      geometryCode.empty() ? nullptr : geometryCode.c_str()
     );
+
     return shaders[name] = shader;
   }
 
@@ -73,6 +95,8 @@ namespace Engine {
   }
 
   std::shared_ptr<Shader> ResourceManager::GetShaderById(const uint id) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     for (auto &val: shaders | std::views::values)
       if (val->id == id)
         return val;
@@ -80,8 +104,10 @@ namespace Engine {
   }
 
   std::shared_ptr<Texture> ResourceManager::LoadTexture2D(
-    const std::string &filePath, const std::string &name
+    const std::string &filePath, const std::string &name, const bool blend
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     if (filePath.empty())
       return Log::Error("File path is required to load a texture");
     if (name.empty())
@@ -107,19 +133,26 @@ namespace Engine {
       return Log::Error("Failed to load image: " + filePath + "\nReason: " + stbi_failure_reason());
     }
 
-    int format;
-    switch (nrChannels) {
-      case 3: format = GL_RGB;
-        break;
-      case 4: format = GL_RGBA;
-        break;
-      default: format = GL_RGBA;
-        break;
+    int internalFormat = 0, dataFormat = 0;
+    if (nrChannels == 1) {
+      internalFormat = GL_R8;
+      dataFormat = GL_RED;
+    } else if (nrChannels == 2) {
+      internalFormat = GL_RG8;
+      dataFormat = GL_RG;
+    } else if (nrChannels == 3) {
+      internalFormat = GL_RGB8;
+      dataFormat = GL_RGB;
+    } else if (nrChannels == 4) {
+      internalFormat = GL_RGBA8;
+      dataFormat = GL_RGBA;
     }
+
+    ENGINE_ASSERT(internalFormat & dataFormat, "Image format is not supported");
 
     // Generate the texture and free the image data
     const auto texture = std::make_shared<Texture>(filePath);
-    texture->generate(width, height, data, format);
+    texture->generate(width, height, data, internalFormat, dataFormat, blend);
     stbi_image_free(data);
     return textures[name] = texture;
   }
@@ -130,7 +163,9 @@ namespace Engine {
     return Log::Error("Unknown texture: " + name);
   }
 
-  std::shared_ptr<Texture> ResourceManager::GetTexture2DById(uint id) {
+  std::shared_ptr<Texture> ResourceManager::GetTexture2DById(const uint id) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     for (auto &val: textures | std::views::values)
       if (val->id == id)
         return val;
@@ -144,9 +179,11 @@ namespace Engine {
   }
 
   std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> ResourceManager::LoadTexture2DAndSprite(
-    const std::string &filePath, const std::string &name
+    const std::string &filePath, const std::string &name, const bool blend
   ) {
-    auto texture = LoadTexture2D(filePath, name);
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
+    auto texture = LoadTexture2D(filePath, name, blend);
     auto sprite = CreateSpriteFromTexture(name);
     return {texture, sprite};
   }

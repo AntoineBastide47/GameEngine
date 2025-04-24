@@ -7,6 +7,8 @@
 #include <ranges>
 
 #include "Engine/Input/Keyboard.hpp"
+
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine/Macros/Utils.hpp"
 
 namespace Engine::Input {
@@ -200,6 +202,8 @@ namespace Engine::Input {
   }
 
   void Keyboard::processInput() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     ctx = {
       .leftShiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_RELEASE,
       .rightShiftPressed = glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) != GLFW_RELEASE,

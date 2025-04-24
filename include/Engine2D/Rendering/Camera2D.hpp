@@ -11,9 +11,13 @@
 
 #include "Engine2D/Component2D.hpp"
 
+namespace Engine2D {
+  class Game2D;
+}
+
 namespace Engine2D::Rendering {
   class Camera2D : public Component2D {
-    friend class Renderer2D;
+    friend class Engine2D::Game2D;
     public:
       struct ShakeWave {
         float amplitude;
@@ -30,6 +34,7 @@ namespace Engine2D::Rendering {
       /// The offset scale of the camera
       float damping;
 
+      /// Coefficients that control the shake of the camera
       std::array<std::vector<ShakeWave>, 2> shakeCoefficients;
 
       Camera2D(float left, float right, float bottom, float top, float near = -1, float far = 1);

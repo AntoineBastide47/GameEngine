@@ -10,6 +10,7 @@
 #include "Engine2D/Transform2D.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine/Log.hpp"
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 
@@ -207,6 +208,8 @@ namespace Engine2D {
   }
 
   void Transform2D::RemoveAllChildren() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     for (const auto child: childList)
       if (child)
         child->transform->SetParent(nullptr);
@@ -214,6 +217,8 @@ namespace Engine2D {
   }
 
   std::shared_ptr<Entity2D> Transform2D::Find(const std::string &name) const {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     for (auto child: childList)
       if (child && child->name == name)
         return child;
@@ -221,6 +226,8 @@ namespace Engine2D {
   }
 
   std::shared_ptr<Entity2D> Transform2D::GetChild(const int index) const {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     if (index < 0 || index >= childList.size())
       return Engine::Log::Error("Transform2D::GetChild: index out of bounds");
     return childList.at(index);
@@ -241,6 +248,7 @@ namespace Engine2D {
   }
 
   const glm::mat4 &Transform2D::GetWorldMatrix() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
     if (dirty) {
       projectionMatrix =
         glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition, 0.0f)) *
@@ -278,7 +286,7 @@ namespace Engine2D {
     // Determine if the sprite is currently visible to the camera
     dirty = true;
     visible = Game2D::Initialized() && Game2D::MainCamera() &&
-      Game2D::MainCamera()->IsInViewport(worldPosition, worldScale);
+              Game2D::MainCamera()->IsInViewport(worldPosition, worldScale);
 
     // Update the children of this transform as they depend on the transform of their parent
     for (const auto child: childList)

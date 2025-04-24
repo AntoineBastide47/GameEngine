@@ -8,19 +8,18 @@
 #include <glm/gtx/norm.hpp>
 
 #include "Engine2D/Physics/Collisions.hpp"
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Transform2D.hpp"
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Types/Vector2.hpp"
 
 namespace Engine2D::Physics {
-  bool Collisions::collideAABB(const Collider2D::AABB a, const Collider2D::AABB b) {
-    return !(a.max.x <= b.min.x || b.max.x <= a.min.x || a.max.y <= b.min.y || b.max.y <= a.min.y);
-  }
-
   bool Collisions::collide(
     const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, glm::vec<2, double> *normal,
     double *depth
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     if (col1->type == Collider2D::Circle && col2->type == Collider2D::Circle)
       return circlesIntersect(
         col1->getPosition(), col1->getScale(), col2->getPosition(), col2->getScale(), normal, depth
@@ -46,6 +45,8 @@ namespace Engine2D::Physics {
     const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, glm::vec2 *contactPoint1,
     glm::vec2 *contactPoint2, uint8_t *contactCount
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     if (col1->type == Collider2D::Circle && col2->type == Collider2D::Circle) {
       findCirclesContactPoint(
         col1->getPosition(), col2->getPosition(), col1->Transform()->GetWorldHalfScale().x, contactPoint1
@@ -67,6 +68,8 @@ namespace Engine2D::Physics {
     const glm::vec2 centerA, const glm::vec2 scaleA, const glm::vec2 centerB, const glm::vec2 scaleB,
     glm::vec<2, double> *normal, double *depth
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     // Calculate the vector between the circle centers
     const float distance = glm::distance(centerA, centerB);
     const float combinedRadius = scaleA.x + scaleB.x;
@@ -83,6 +86,8 @@ namespace Engine2D::Physics {
     const std::vector<glm::vec2> &verticesA, const glm::vec2 positionA, const std::vector<glm::vec2> &verticesB,
     const glm::vec2 positionB, glm::vec<2, double> *normal, double *depth
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     double minA, maxA, minB, maxB, axisDepth;
     glm::vec2 pointA, pointB, axis;
 
@@ -130,6 +135,8 @@ namespace Engine2D::Physics {
     const std::vector<glm::vec2> &polygonVertices, const glm::vec2 polygonCenter, const glm::vec2 circleCenter,
     const glm::vec2 circleHalfScale, glm::vec<2, double> *normal, double *depth
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
     double minA, maxA, minB, maxB, axisDepth;
     glm::vec2 axis;
 
@@ -193,15 +200,16 @@ namespace Engine2D::Physics {
   }
 
   glm::vec2 Collisions::closestPointOnPolygon(const glm::vec2 circleCenter, const std::vector<glm::vec2> &vertices) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     auto closestPoint = glm::vec2(0);
     double minDistanceSquared = std::numeric_limits<float>::max();
 
-    for (const auto vertex: vertices) {
+    for (const auto vertex: vertices)
       if (const double distance = glm::distance(vertex, circleCenter); distance < minDistanceSquared) {
         minDistanceSquared = distance;
         closestPoint = vertex;
       }
-    }
 
     return closestPoint;
   }
@@ -215,6 +223,8 @@ namespace Engine2D::Physics {
   void Collisions::findCircleAndPolygonContactPoint(
     const glm::vec2 circleCenter, const std::vector<glm::vec2> &vertices, glm::vec2 *contactPoint
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     double minDistanceSquared = std::numeric_limits<double>::max();
     for (int i = 0; i < vertices.size(); ++i) {
       const glm::vec2 v1 = vertices[i];
@@ -235,6 +245,8 @@ namespace Engine2D::Physics {
     const std::vector<glm::vec2> &verticesA, const std::vector<glm::vec2> &verticesB, glm::vec2 *contactPoint1,
     glm::vec2 *contactPoint2, uint8_t *contactCount
   ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+
     double minDistanceSquared = std::numeric_limits<double>::max();
 
     for (size_t i = 0; i < verticesA.size(); ++i) {

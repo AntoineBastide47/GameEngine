@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2025-04-24
+### Added
+- **[Timer]**: RAII timer to determine the running time of a function/scope
+- **[Instrumentor]**: profiler that writes the timer data to a JSON file so that it can be displayed on [Chrome Tracer](chrome://tracing)
+- **[Profiling]**: macros to run profiling on functions and scopes
+### Changed
+- **[ResourceManager]**: shaders are now single files
+- **[engine-cli]**: the build command builds three static libraries: debug, debug with profiling and optionally release
+- **[Templates/2D/CMakeLists.txt]**: links to the appropriate engine static library
+- **[Physics2D]**: made broadPhase() more efficient thanks to profiler
+
 ## [0.7.0] - 2025-04-21
 ### Added
 - **[Camera2D]**: follow target and camera shake
@@ -79,7 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [0.5.1] - 2025-02-19
 ### Added
-- **[Game2D]**: render thread for as much fps as possible
+- **[Game2D]**: render thread handles rendering concurrently while the update loop executes
 - **[Behaviour]**: base class for user defined components that has the callbacks Entity2D had
 - **[ParticleSystemRenderer2D]**: mutex for data synchronization
 ### Changed
@@ -95,7 +106,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - **[Physics2D]**: extra infinite impulse application removed
 ### Removed
-- **[Vector2]**: custom vector classed changed in favor of glm vectors
+- **[Vector2]**: custom vector classed changed in favour of glm vectors
 
 ## [0.4.3] - 2025-01-18
 ### Added
@@ -113,7 +124,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - fixed textures being flipped on the X axis because of incorrect scaling in the projectionMatrix
 - **[Physics2D]**:
   - child collider will only collide with parent if both have a rigidbody, rotations would cause problems in colliders
-  - more than one impulse applied when colliders stay in collision
+  - more than one impulse is applied when colliders stay in collision
 ### Removed
 - **[Property]**: used much more memory than needed, replaced by getters, setters and updaters
 - **[Settings]**: frame skipping as it will become unmanageable as the engine grows, if a good solution is found later on it might be brought back
@@ -140,7 +151,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **[Transform2D]**: conversion from world coords to local coords
 - **[Collider2D]**: new flag `draw` allows the visualization of collider bounds in debug builds
 ### Changed
-- **[CMakeLists]**: static library is now a dynamic library, makes building the game faster and removes unnecessary imports in the game's CMakeLists file
+- **[CMakeLists]**: the static library is now a dynamic library, makes building the game faster and removes unnecessary imports in the game's CMakeLists file
 - **[Log]**: messages, warnings and errors are sent only once to declutter the console
 ### Fixed
 - **[Game2D]**: window not re-rendering on move/resize when enabling frame skipping
@@ -152,9 +163,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Finished the first version of the physics engine.
 ### Added
 - **[Rigidbody2D]**: isKinematic flag which allows the physics engine to apply forces to the body
-- **[Collider2D]**: added flag autoCompute to allow the engine to automatically compute the collider, if disabled the user must pass in all the position, width, height and radius information to the collider
+- **[Collider2D]**: added flag autoCompute to allow the engine to automatically compute the collider, if disabled, the user must pass in all the position, width, height and radius information to the collider
 ### Changed
-- **[Rigidbody2D]**: changed isStatic to isKinematic, made the velocities public
+- **[Rigidbody2D]**: changed isStatic to isKinematic, made the velocity public
 - **[Game2D, Entity2D]**: changes message naming convention, message callbacks now all start with the prefix "On"
 - **[Transform2D]**: added preCallback to rotation to clamp it between 0 and 360
 - **[Property]**: changed type of preCallback to T(T newValue), it is now used to process the newValue before setting it
