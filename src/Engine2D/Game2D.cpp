@@ -262,6 +262,7 @@ namespace Engine2D {
       removeEntities();
 
       // FPS calculation
+      frameCounter++;
       limitFrameRate();
       oneSecondTimer += deltaTime;
       while (oneSecondTimer >= 1.0f) {
@@ -382,20 +383,23 @@ namespace Engine2D {
   }
   #endif
 
-  void Game2D::render() {
+  void Game2D::render() const {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     // Make sure there is something to render
     if (!entities.empty()) {
-      Rendering::Renderer2D::render();
+      Rendering::Renderer2D::prerender();
+      // Render opaque first
+      Rendering::Renderer2D::render(false);
+      // Render particles
       ParticleSystemRenderer2D::render();
+      // Render transparent last
+      Rendering::Renderer2D::render(true);
 
       // Prepare the next frame
       glfwSwapBuffers(window);
-      frameCounter++;
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      //glFinish();
     }
   }
 

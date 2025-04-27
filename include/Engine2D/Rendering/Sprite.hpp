@@ -39,6 +39,9 @@ namespace Engine2D::Rendering {
        * For example, 100 means 100 pixels in the texture = 1 unit in the world.
        */
       float pixelsPerUnit{1.0f};
+
+      /// Set to true if the sprite's texture contains transparent pixels, false if not
+      bool transparent{false};
   };
 }
 

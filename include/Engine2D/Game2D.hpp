@@ -164,7 +164,7 @@ namespace Engine2D {
       /// Animates all entities
       static void animate();
       /// Renders the game
-      void render();
+      void render() const;
       /// Limits the frame rate of the game if needed
       void limitFrameRate() const;
       /// Quits the game

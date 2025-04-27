@@ -175,20 +175,22 @@ namespace Engine {
   std::shared_ptr<Sprite> ResourceManager::GetSprite(const std::string &name) {
     if (sprites.contains(name))
       return sprites[name];
-    return CreateSpriteFromTexture(name);
+    return nullptr;
   }
 
   std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> ResourceManager::LoadTexture2DAndSprite(
-    const std::string &filePath, const std::string &name, const bool blend
+    const std::string &filePath, const std::string &name, const bool transparent, const glm::vec4 &rect, const bool blend
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     auto texture = LoadTexture2D(filePath, name, blend);
-    auto sprite = CreateSpriteFromTexture(name);
+    auto sprite = CreateSpriteFromTexture(name, transparent, rect);
     return {texture, sprite};
   }
 
-  std::shared_ptr<Sprite> ResourceManager::CreateSpriteFromTexture(const std::string &textureName) {
+  std::shared_ptr<Sprite> ResourceManager::CreateSpriteFromTexture(
+    const std::string &textureName, const bool transparent, const glm::vec4 &rect
+  ) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);
 
@@ -196,12 +198,14 @@ namespace Engine {
 
     const auto sprite = std::make_shared<Sprite>();
     sprite->texture = texture;
+    sprite->transparent = transparent;
+    sprite->rect = rect;
 
     return sprites[textureName] = sprite;
   }
 
   std::shared_ptr<Sprite> ResourceManager::CreateSprite(
-    const std::string &spriteName, const std::string &textureName, const glm::vec4 &rect
+    const std::string &spriteName, const std::string &textureName, const bool transparent, const glm::vec4 &rect
   ) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);
@@ -212,6 +216,7 @@ namespace Engine {
     const auto sprite = std::make_shared<Sprite>();
     sprite->texture = texture;
     sprite->rect = rect;
+    sprite->transparent = transparent;
     return sprites[spriteName] = sprite;
   }
 

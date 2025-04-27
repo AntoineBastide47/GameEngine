@@ -82,24 +82,30 @@ namespace Engine {
       /**
        * Creates a sprite using the texture with the given name
        * @param textureName The name of the texture to base this sprite on
+       * @param transparent If the texture has transparent pixels
+       * @param rect The normalized area of the texture to use to represent the sprite in the given format: (u, v, width, height)
        * @note Log's an error if no texture with the given name was found
        */
-      static std::shared_ptr<Sprite> CreateSpriteFromTexture(const std::string &textureName);
+      static std::shared_ptr<Sprite> CreateSpriteFromTexture(
+        const std::string &textureName, bool transparent, const glm::vec4 &rect = glm::vec4(0, 0, 1, 1)
+      );
 
       /**
        * Creates a sprite using the texture with the given name
        * @param spriteName The name of the new sprite
        * @param textureName The name of the texture to base this sprite on
+       * @param transparent If the texture has transparent pixels
        * @param rect The normalized area of the texture to use to represent the sprite in the given format: (u, v, width, height)
        * @note Log's an error if no texture with the given name was found
        */
       static std::shared_ptr<Sprite> CreateSprite(
-        const std::string &spriteName, const std::string &textureName, const glm::vec4 &rect = glm::vec4(0, 0, 1, 1)
+        const std::string &spriteName, const std::string &textureName, bool transparent,
+        const glm::vec4 &rect = glm::vec4(0, 0, 1, 1)
       );
 
       /**
        * Finds or create the sprite with the given name and returns it
-       * @param name The name of the sprite, must be the same as the loaded textures name
+       * @param name The name of the sprite
        * @note Log's an error if no texture with the given name was found
        */
       static std::shared_ptr<Sprite> GetSprite(const std::string &name);
@@ -108,6 +114,8 @@ namespace Engine {
        * Loads a texture to memory
        * @param filePath The texture file path
        * @param name The name of this texture
+       * @param transparent If the texture has transparent pixels
+       * @param rect The normalized area of the texture to use to represent the sprite in the given format: (u, v, width, height)
        * @param blend
        * @note Calling this method will log an error if:
        * - parameters file or name are empty, or if a texture with the given name already exists
@@ -115,7 +123,8 @@ namespace Engine {
        * @return The loaded texture
        */
       static std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> LoadTexture2DAndSprite(
-        const std::string &filePath, const std::string &name, bool blend = false
+        const std::string &filePath, const std::string &name, bool transparent,
+        const glm::vec4 &rect = glm::vec4(0, 0, 1, 1), bool blend = false
       );
 
       /// Deletes all the loaded textures and shaders

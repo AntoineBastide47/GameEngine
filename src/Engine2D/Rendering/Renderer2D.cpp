@@ -8,6 +8,7 @@
 
 #include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine/ResourceManager.hpp"
+#include "Engine/Macros/Assert.hpp"
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine/Rendering/Shader.hpp"
@@ -26,8 +27,10 @@ namespace Engine2D::Rendering {
     1.0f, 1.0f, 1.0f, 1.0f  // Top-right
   };
 
-  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::renderers;
-  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::staticRenderers;
+  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::opaqueRenderers;
+  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::transparentRenderers;
+  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::opaqueStaticRenderers;
+  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::transparentStaticRenderers;
 
   std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::renderersToAdd;
   std::unordered_set<std::shared_ptr<SpriteRenderer>> Renderer2D::renderersToRemove;
@@ -40,10 +43,14 @@ namespace Engine2D::Rendering {
   uint Renderer2D::instanceCount;
   uint Renderer2D::lastShaderID;
   uint Renderer2D::lastTextureID;
+  size_t Renderer2D::lastOpaqueCount;
+  size_t Renderer2D::lastTransparentCount;
 
   std::vector<float> Renderer2D::batchData;
-  std::vector<float> Renderer2D::staticBatchData;
-  std::vector<std::tuple<uint32_t, uint32_t, uint32_t, uint32_t>> Renderer2D::staticFlushList;
+  std::vector<float> Renderer2D::opaqueStaticBatchData;
+  std::vector<float> Renderer2D::transparentStaticBatchData;
+  std::vector<Flush> Renderer2D::opaqueStaticFlushList;
+  std::vector<Flush> Renderer2D::transparentStaticFlushList;
 
   Renderer2D::Renderer2D() {
     batchData.reserve(MAX_BATCH_SIZE);
@@ -66,12 +73,16 @@ namespace Engine2D::Rendering {
     renderersToAdd.clear();
     renderersToRemove.clear();
 
-    renderers.clear();
+    opaqueRenderers.clear();
+    transparentRenderers.clear();
     batchData.clear();
 
-    staticRenderers.clear();
-    staticBatchData.clear();
-    staticFlushList.clear();
+    opaqueStaticRenderers.clear();
+    transparentStaticRenderers.clear();
+    opaqueStaticBatchData.clear();
+    transparentStaticBatchData.clear();
+    opaqueStaticFlushList.clear();
+    transparentStaticFlushList.clear();
   }
 
   void Renderer2D::initRenderData() {
@@ -129,7 +140,7 @@ namespace Engine2D::Rendering {
   }
 
   bool Renderer2D::cannotBeRendered(const std::shared_ptr<SpriteRenderer> &r) {
-    return !r->IsActive()  || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader || !r->sprite
+    return !r->IsActive() || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader || !r->sprite
            || !r->sprite->texture;
   }
 
@@ -143,12 +154,12 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::extractRendererData(
-    const std::shared_ptr<SpriteRenderer> &renderer, float *data
+    const std::shared_ptr<SpriteRenderer> &renderer, float *data, const bool transparent
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
     if (const auto entity = renderer->Entity(); !renderer->Entity()->IsActive() || !renderer->IsActive()
-      || !renderer->Transform()->GetIsVisible())
+                                                || !renderer->Transform()->GetIsVisible())
       return;
 
     // Get the model matrix and other data
@@ -188,25 +199,31 @@ namespace Engine2D::Rendering {
     *data = 0;
   }
 
-  void Renderer2D::updateStaticBatch() {
+  void Renderer2D::updateStaticBatch(
+    const std::vector<std::shared_ptr<SpriteRenderer>> &renderers, std::vector<float> &staticBatchData,
+    const bool transparent
+  ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
-    for (size_t i = 0; i < staticRenderers.size(); i++) {
-      auto &renderer = staticRenderers[i];
-      if (!renderer->dirty)
+    for (size_t i = 0; i < renderers.size(); i++) {
+      auto &renderer = renderers[i];
+      if (!renderer || !renderer->dirty)
         continue;
 
       const size_t offset = i * STRIDE;
-      extractRendererData(renderer, &staticBatchData[offset]);
+      extractRendererData(renderer, &staticBatchData[offset], transparent);
       renderer->dirty = false;
     }
   }
 
-  void Renderer2D::buildAndRenderStaticBatch(const bool rebuild) {
+  void Renderer2D::buildAndRenderStaticBatch(
+    std::vector<std::shared_ptr<SpriteRenderer>> &renderers, std::vector<float> &staticBatchData,
+    std::vector<Flush> &staticFlushList, const bool transparent, const uint lastStaticCount
+  ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
-    if (rebuild) {
-      std::ranges::sort(staticRenderers, sortRenderers);
+    if (renderers.size() != lastStaticCount) {
+      std::ranges::sort(renderers, sortRenderers);
 
       staticBatchData.clear();
       staticFlushList.clear();
@@ -214,8 +231,8 @@ namespace Engine2D::Rendering {
       uint32_t start = 0, count = 0, currentShaderID = 0, currentTextureID = 0, index = 0;
 
       // Only extract data for valid sprite renderers
-      const auto it = std::ranges::find_if(staticRenderers, cannotBeRendered);
-      const auto validRange = std::ranges::subrange(staticRenderers.begin(), it);
+      const auto it = std::ranges::find_if(renderers, cannotBeRendered);
+      const auto validRange = std::ranges::subrange(renderers.begin(), it);
       staticBatchData.reserve(validRange.size() * STRIDE);
       staticBatchData.resize(validRange.size() * STRIDE);
 
@@ -235,7 +252,7 @@ namespace Engine2D::Rendering {
           currentTextureID = textureID;
         }
 
-        extractRendererData(renderer, &staticBatchData[index * STRIDE]);
+        extractRendererData(renderer, &staticBatchData[index * STRIDE], transparent);
         count++;
         index++;
       }
@@ -243,14 +260,13 @@ namespace Engine2D::Rendering {
         staticFlushList.emplace_back(currentShaderID, currentTextureID, start, count);
     }
 
-    updateStaticBatch();
+    updateStaticBatch(renderers, staticBatchData, transparent);
 
     for (auto &[shaderID, textureID, start, count]: staticFlushList) {
       if (shaderID != lastShaderID) {
         lastShaderID = shaderID;
-        const auto shader = Engine::ResourceManager::GetShaderById(shaderID);
-        shader->use();
-        shader->SetMatrix4("projection", Game2D::MainCamera()->GetViewProjectionMatrix());
+        Engine::ResourceManager::GetShaderById(shaderID)->
+          SetMatrix4("projection", Game2D::MainCamera()->GetViewProjectionMatrix(), true);
       }
       if (textureID != lastTextureID) {
         lastTextureID = textureID;
@@ -261,12 +277,15 @@ namespace Engine2D::Rendering {
     }
   }
 
-  void Renderer2D::buildAndRenderDynamicBatch() {
+  void Renderer2D::buildAndRenderDynamicBatch(
+    const std::vector<std::shared_ptr<SpriteRenderer>> &renderers, const bool transparent
+  ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     const auto it = std::ranges::find_if(renderers, cannotBeRendered);
     const auto validRange = std::ranges::subrange(renderers.begin(), it);
 
+    batchData.clear();
     batchData.resize(validRange.size() * STRIDE);
     for (const auto &renderer: validRange) {
       // Bind a new shader if needed
@@ -274,7 +293,7 @@ namespace Engine2D::Rendering {
         flush(batchVBO, &batchData[0], GL_DYNAMIC_DRAW, instanceCount);
         batchData.clear();
         instanceCount = 0;
-        renderer->shader->use();
+        renderer->shader->SetMatrix4("projection", Game2D::MainCamera()->GetViewProjectionMatrix(), true);
         lastShaderID = renderer->shader->id;
       }
 
@@ -293,7 +312,7 @@ namespace Engine2D::Rendering {
         instanceCount = 0;
       }
 
-      extractRendererData(renderer, &batchData[instanceCount * STRIDE]);
+      extractRendererData(renderer, &batchData[instanceCount * STRIDE], transparent);
       instanceCount++;
     }
 
@@ -305,35 +324,72 @@ namespace Engine2D::Rendering {
     }
   }
 
-  void Renderer2D::render() {
+  void Renderer2D::prerender() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
-    const size_t lastStaticCount = staticRenderers.size();
+    lastOpaqueCount = opaqueStaticRenderers.size();
+    lastTransparentCount = transparentStaticRenderers.size();
     const bool sort = !renderersToAdd.empty();
 
     // Add all pending renderers
     if (!renderersToAdd.empty()) {
-      auto partition_point = std::ranges::stable_partition(
+      for (const auto &renderer: renderersToAdd)
+        ENGINE_ASSERT(renderer->sprite, "SpriteRenderer missing a sprite");
+
+      // First partition: static vs. non-static
+      auto static_end = std::ranges::stable_partition(
         renderersToAdd, [](const auto &renderer) {
           return renderer->Entity()->IsStatic();
         }
       );
 
-      staticRenderers.insert(staticRenderers.end(), renderersToAdd.begin(), partition_point.begin());
-      renderers.insert(renderers.end(), partition_point.begin(), renderersToAdd.end());
+      // Second partition within static: opaque vs. transparent
+      auto static_transparent_end = std::ranges::stable_partition(
+        renderersToAdd.begin(), static_end.begin(), [](const auto &renderer) {
+          return renderer->sprite->transparent;
+        }
+      );
+
+      // Third partition within non-static: opaque vs. transparent
+      auto dynamic_transparent_end = std::ranges::stable_partition(
+        static_end.begin(), renderersToAdd.end(), [](const auto &renderer) {
+          return renderer->sprite->transparent;
+        }
+      );
+
+      transparentStaticRenderers.insert(
+        transparentStaticRenderers.end(), renderersToAdd.begin(), static_transparent_end.begin()
+      );
+      opaqueStaticRenderers.insert(
+        opaqueStaticRenderers.end(), static_transparent_end.begin(), static_transparent_end.end()
+      );
+      transparentRenderers.insert(transparentRenderers.end(), static_transparent_end.end(), dynamic_transparent_end.begin());
+      opaqueRenderers.insert(
+        opaqueRenderers.end(), dynamic_transparent_end.begin(), dynamic_transparent_end.end()
+      );
+
       renderersToAdd.clear();
     }
 
     // Remove all pending renderers
     if (!renderersToRemove.empty()) {
       std::erase_if(
-        staticRenderers, [&](const auto &r) {
+        opaqueStaticRenderers, [&](const auto &r) {
           return renderersToRemove.contains(r);
         }
       );
-
       std::erase_if(
-        renderers, [&](const auto &r) {
+        transparentStaticRenderers, [&](const auto &r) {
+          return renderersToRemove.contains(r);
+        }
+      );
+      std::erase_if(
+        transparentRenderers, [&](const auto &r) {
+          return renderersToRemove.contains(r);
+        }
+      );
+      std::erase_if(
+        opaqueRenderers, [&](const auto &r) {
           return renderersToRemove.contains(r);
         }
       );
@@ -341,11 +397,18 @@ namespace Engine2D::Rendering {
       renderersToRemove.clear();
     }
 
-    if (renderers.empty() && staticRenderers.empty())
-      return;
+    if (sort) {
+      std::ranges::sort(opaqueRenderers, sortRenderers);
+      std::ranges::sort(transparentRenderers, sortRenderers);
+    }
+  }
 
-    if (sort)
-      std::ranges::sort(renderers, sortRenderers);
+  void Renderer2D::render(const bool renderTransparent) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
+    if (opaqueRenderers.empty() && transparentRenderers.empty() && opaqueStaticRenderers.empty() &&
+        transparentStaticRenderers.empty())
+      return;
 
     if (!quadVAO)
       initRenderData();
@@ -354,8 +417,17 @@ namespace Engine2D::Rendering {
     lastTextureID = 0;
 
     glBindVertexArray(quadVAO);
-    buildAndRenderStaticBatch(lastStaticCount != staticRenderers.size());
-    buildAndRenderDynamicBatch();
+    if (!renderTransparent) {
+      buildAndRenderStaticBatch(opaqueStaticRenderers, opaqueStaticBatchData, opaqueStaticFlushList, false, lastOpaqueCount);
+      buildAndRenderDynamicBatch(opaqueRenderers, false);
+    } else {
+      // Reset the depth buffer
+      glClear(GL_DEPTH_BUFFER_BIT);
+      buildAndRenderStaticBatch(
+        transparentStaticRenderers, transparentStaticBatchData, transparentStaticFlushList, true, lastTransparentCount
+      );
+      buildAndRenderDynamicBatch(transparentRenderers, true);
+    }
     glBindVertexArray(0);
   }
 
