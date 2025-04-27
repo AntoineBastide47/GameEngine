@@ -45,7 +45,6 @@ inline std::string GetAssertLocation(const char *file, const int line) {
 #define ENGINE_ASSERT(...) EXPAND_MACRO( ENGINE_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(__VA_ARGS__) )
 #else
 #define ENGINE_ASSERT(...)
-#define ENGINE_CORE_ASSERT(...)
 #endif
 
 #endif //ASSERT_H

@@ -7,6 +7,7 @@
 #ifndef PARTICLE_SYSTEM_RENDERER2D_H
 #define PARTICLE_SYSTEM_RENDERER2D_H
 
+#include <unordered_set>
 #include <vector>
 
 #if MULTI_THREAD
@@ -22,7 +23,7 @@ namespace Engine2D {
     /// All the particle systems in the game
     static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystems;
     static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystemsToAdd;
-    static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystemsToRemove;
+    static std::unordered_set<std::shared_ptr<ParticleSystem2D>> particleSystemsToRemove;
 
     #if MULTI_THREAD
     static std::mutex particleSystemMutex;

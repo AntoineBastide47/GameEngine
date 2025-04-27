@@ -65,7 +65,7 @@ namespace Engine2D::Physics {
     /// The list of colliders to add to the future physics simulations steps
     std::vector<std::shared_ptr<Collider2D>> collidersToAdd;
     /// The list of colliders to remove from the future physics simulations steps
-    std::vector<std::shared_ptr<Collider2D>> collidersToRemove;
+    std::unordered_set<std::shared_ptr<Collider2D>> collidersToRemove;
     /// The list of currently active rigidbodies
     std::vector<std::shared_ptr<Collider2D>> activeColliders;
 

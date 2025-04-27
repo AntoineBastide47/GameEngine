@@ -33,8 +33,6 @@ namespace Engine2D {
 
       /// How long to wait before running the first simulation
       float startDelay;
-      /// How long particles will be visible on screen
-      float particleLifetime;
       /// The initial position of the particles
       glm::vec2 startPosition;
       /// Rendering priority: higher value means higher priority
@@ -84,33 +82,45 @@ namespace Engine2D {
       void SetMaxParticles(size_t maxParticles);
       /// @returns The maximum of particles this particle system will simulate
       [[nodiscard]] uint32_t GetMaxParticles() const;
+      void SetParticleLifetime(float lifetime);
+      [[nodiscard]] float GetParticleLifetime() const;
     private:
       /// Represents a single particle and it's state
-      struct Particle {
-        /// The position of the particle
-        glm::vec2 position;
-        /// The rotation of the particle
-        float rotation;
-        /// The remaining life span of the particle
-        float lifeTime;
-        /// The scale of the particle
-        glm::vec2 scale;
-        /// The color of the particle
-        glm::vec4 color;
-        /// The initial velocity of the particles
-        glm::vec2 startVelocity;
-        /// The final velocity of the particles
-        glm::vec2 endVelocity;
+      struct ParticleSystemData {
+        alignas(64) std::vector<glm::vec2> positions;
+        alignas(64) std::vector<float> rotations;
+        alignas(64) std::vector<float> lifeTimes;
+        alignas(64) std::vector<glm::vec2> scales;
+        alignas(64) std::vector<glm::vec4> colors;
+        alignas(64) std::vector<glm::vec2> startVelocities;
+        alignas(64) std::vector<glm::vec2> endVelocities;
+        alignas(64) std::vector<uint8_t> renderable;
 
-        bool visible;
-        bool Visible();
+        // Reserve
+        explicit ParticleSystemData(const size_t N) {
+          positions.resize(N);
+          rotations.resize(N);
+          lifeTimes.resize(N);
+          scales.resize(N);
+          colors.resize(N);
+          startVelocities.resize(N);
+          endVelocities.resize(N);
+          renderable.resize(N);
+        }
+
+        inline size_t size() const {
+          return lifeTimes.size();
+        }
       };
 
       /// How long the particle system will be simulated
       float duration;
+      /// How long particles will be visible on screen
+      float particleLifetime;
+      float inverseLifetime;
 
       /// The list of all the simulated particles
-      std::vector<Particle> particles;
+      ParticleSystemData particles;
       /// Emission accumulator timer
       float emissionAcc;
       /// Duration accumulator timer
@@ -127,7 +137,7 @@ namespace Engine2D {
       uint quadVBO;
       /// The VBO used to send particle data
       uint instanceVBO;
-      /// How many particles are alive
+      /// How many particles are currently alive
       uint aliveCount;
       /// Whether this component has been initialized or not
       bool initialized;
@@ -137,15 +147,13 @@ namespace Engine2D {
 
       /// Initializes the particle system
       void initialize();
-      /// Checks whether the current particle is in a valid state
-      bool validParticle(const Particle &p) const;
       /// Updates all the particles
       void update();
       /// Renders the particle system
-      void render();
+      void render(uint32_t framebuffer = 0);
 
       /// Updates the dead particle at the given index and brings it back to life
-      void respawnParticle(uint index);
+      void respawnParticle();
   };
 }
 

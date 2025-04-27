@@ -25,10 +25,11 @@ void main() {
 
     vec2 scaledPosition = (vertex.xy - positionAndPivot.zw) / renderOrderAndPPU.y;
     vec4 worldPosition = model * vec4(scaledPosition, 0.0, 1.0);
-    gl_Position = projection * worldPosition;
 
     TexCoords = rect.xy + vertex.zw * rect.zw;
     SpriteColor = color;
+
+    gl_Position = projection * worldPosition;
 }
 
 #define TYPE FRAGMENT

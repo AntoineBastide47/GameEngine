@@ -33,37 +33,39 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::addColliders() {
-    if (!collidersToAdd.empty())
-      for (auto collider: collidersToAdd)
-        colliders.emplace_back(collider);
-    collidersToAdd.clear();
+    if (!collidersToAdd.empty()) {
+      colliders.insert(colliders.end(), collidersToAdd.begin(), collidersToAdd.end());
+      collidersToAdd.clear();
+    }
   }
 
   void Physics2D::removeCollider(const std::shared_ptr<Collider2D> &collider) {
     if (collider)
-      collidersToRemove.emplace_back(collider);
+      collidersToRemove.insert(collider);
   }
 
   void Physics2D::removeColliders() {
-    if (!collidersToRemove.empty())
-      for (auto collider: collidersToRemove)
-        std::erase(colliders, collider);
-    collidersToRemove.clear();
+    if (!collidersToRemove.empty()) {
+      std::erase_if(
+        colliders, [&](const auto &c) {
+          return collidersToRemove.contains(c);
+        }
+      );
+      collidersToRemove.clear();
+    }
   }
 
   void Physics2D::step() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
-    // Update the collider vector
     addColliders();
-    removeColliders();
 
     // Skip the collision detection if there are no active colliders
     findActiveColliders();
     if (!activeColliders.empty()) {
       for (const auto collider: activeColliders)
-        if (collider->rigidbody)
-          collider->rigidbody->step();
+        if (const auto &rb = collider->rigidbody; rb && rb->IsActive())
+          rb->step();
 
       if (Engine::Settings::Physics::GetUseScreenPartitioning()) {
         // Update the collision grid
@@ -83,28 +85,17 @@ namespace Engine2D::Physics {
       activeColliders.clear();
       contactPairs.clear();
     }
+
+    removeColliders();
   }
 
   void Physics2D::findActiveColliders() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
     // Find all the active colliders
-    bool foundNull = false;
-    for (const auto collider: colliders) {
+    for (const auto collider: colliders)
       if (collider && collider->IsActive() && collider->type != Collider2D::None)
         activeColliders.push_back(collider);
-      else if (!collider)
-        foundNull = true;
-    }
-
-    // Remove all the null pointers if at least one is found
-    if (foundNull)
-      for (auto it = colliders.begin(); it != colliders.end();) {
-        if (*it == nullptr)
-          it = colliders.erase(it);
-        else
-          ++it;
-      }
   }
 
   void Physics2D::notifyCollisions(
@@ -169,7 +160,7 @@ namespace Engine2D::Physics {
         const auto &[col2, col2AABB] = colliderPairs[j];
 
         // Stop if no overlap on X-axis
-        if (col2AABB.min.x > col1AABB.max.x || col1AABB.min.x > col1AABB.max.x)
+        if (col2AABB.min.x > col1AABB.max.x)
           break;
 
         // Skip self-collisions

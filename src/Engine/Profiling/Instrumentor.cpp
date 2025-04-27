@@ -7,33 +7,30 @@
 #include "Engine/Profiling/Instrumentor.hpp"
 
 #include "Engine/Settings.hpp"
-#include "Engine/Macros/Utils.hpp"
 
 namespace Engine::Profiling {
-  Instrumentor::Instrumentor() : currentSession(nullptr), profileCount(0) {}
+  Instrumentor::Instrumentor() : profileCount(0) {}
 
-  void Instrumentor::BeginSession(const std::string &name, const std::string &filepath) {
+  void Instrumentor::beginSession(const std::string &filepath) {
     outputStream.open(filepath);
-    WriteHeader();
-    currentSession = new InstrumentationSession{name};
+    writeHeader();
   }
 
-  void Instrumentor::EndSession() {
-    WriteFooter();
+  void Instrumentor::endSession() {
+    writeFooter();
     outputStream.close();
-    SAFE_DELETE(currentSession);
     profileCount = 0;
   }
 
-  void Instrumentor::WriteHeader() {
+  void Instrumentor::writeHeader() {
     outputStream << "{\"otherData\": {},\"traceEvents\":[";
     outputStream.flush();
   }
 
-  void Instrumentor::WriteProfile(const ProfileResult &result) {
+  void Instrumentor::writeProfile(const ProfileResult &result) {
     std::lock_guard lock(mutex);
 
-    if (Settings::Profiling::GetProfilingLevel() > result.level)
+    if (result.level > Settings::Profiling::GetProfilingLevel())
       return;
     const long long duration = result.end - result.start;
     if (duration < Settings::Profiling::GetProfilingThreshold())
@@ -57,12 +54,12 @@ namespace Engine::Profiling {
     outputStream.flush();
   }
 
-  void Instrumentor::WriteFooter() {
+  void Instrumentor::writeFooter() {
     outputStream << "]}";
     outputStream.flush();
   }
 
-  Instrumentor &Instrumentor::Get() {
+  Instrumentor &Instrumentor::get() {
     static Instrumentor instance;
     return instance;
   }

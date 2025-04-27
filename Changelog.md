@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2025-04-dd
+### Added
+- **[Animation2D]**: creates a horizontal or vertical animation from a sprite sheet
+- **[Animator2D]**: manages a list of Animation2D and updates them accordingly
+- **[AnimationSystem]**: updates all animators
+### Changed
+- **[Renderer2D, ParticleRenderer2D]**: better performance with correct use of GL_TRIANGLE_STRIPS and other memory dereferencing changes
+### Fixed
+- **[Instrumentor]**: profiling level condition is no longer inverted and made it a private class as it is an engine-only class
+
 ## [0.7.1] - 2025-04-24
 ### Added
 - **[Timer]**: RAII timer to determine the running time of a function/scope

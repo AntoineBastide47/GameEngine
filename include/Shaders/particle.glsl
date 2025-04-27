@@ -24,6 +24,7 @@ void main() {
 
     TexCoords = rect.xy + vertex.zw * rect.zw;
     ParticleColor = color;
+
     gl_Position = projection * vec4(rotatedPos + positionAndScale.xy, pivotRotationAndOrder.w, 1.0);
 }
 

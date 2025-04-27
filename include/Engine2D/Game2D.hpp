@@ -8,12 +8,16 @@
 #define GAME2D_H
 
 #include <thread>
+#include <unordered_set>
 #include <cmrc/cmrc.hpp>
 
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine/Input/InputContexts.hpp"
 
+namespace Engine2D::Animation {
+  class AnimationSystem;
+}
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
 namespace Engine {
@@ -106,7 +110,7 @@ namespace Engine2D {
       /// Entities scheduled to be added to the game
       std::vector<std::shared_ptr<Entity2D>> entitiesToAdd;
       /// Entities scheduled to be removed from the game
-      std::vector<std::shared_ptr<Entity2D>> entitiesToRemove;
+      std::unordered_set<std::shared_ptr<Entity2D>> entitiesToRemove;
 
       /// The time during two frames
       float deltaTime;
@@ -116,7 +120,7 @@ namespace Engine2D {
       float targetFrameRate;
       /// The rate at which the game should update
       float targetRenderRate;
-      /// Counts the number of frames renderer during the current second of elapsed time
+      /// Counts the number of frames rendered during the current second of elapsed time
       int frameCounter;
       /// Simple accumulator to count to 1 second
       float oneSecondTimer;
@@ -152,11 +156,13 @@ namespace Engine2D {
       /// Initializes the game
       void initialize();
       /// Processes all the inputs to the game
-      void processInput();
+      static void processInput();
       /// Update the game
       void update();
       /// Simulates a step of the physics simulation
       void fixedUpdate();
+      /// Animates all entities
+      static void animate();
       /// Renders the game
       void render();
       /// Limits the frame rate of the game if needed

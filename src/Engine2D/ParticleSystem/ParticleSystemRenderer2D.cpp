@@ -6,14 +6,13 @@
 
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp"
-
-#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
+#include "Engine/Macros/Profiling.hpp"
 
 namespace Engine2D {
   std::vector<std::shared_ptr<ParticleSystem2D>> ParticleSystemRenderer2D::particleSystems;
   std::vector<std::shared_ptr<ParticleSystem2D>> ParticleSystemRenderer2D::particleSystemsToAdd;
-  std::vector<std::shared_ptr<ParticleSystem2D>> ParticleSystemRenderer2D::particleSystemsToRemove;
+  std::unordered_set<std::shared_ptr<ParticleSystem2D>> ParticleSystemRenderer2D::particleSystemsToRemove;
   #if MULTI_THREAD
   std::mutex ParticleSystemRenderer2D::particleSystemMutex;
   #endif
@@ -24,6 +23,21 @@ namespace Engine2D {
     #if MULTI_THREAD
     std::lock_guard lock(particleSystemMutex);
     #endif
+
+    // Add and remove all the pending particle systems
+    if (!particleSystemsToAdd.empty()) {
+      particleSystems.insert(particleSystems.end(), particleSystemsToAdd.begin(), particleSystemsToAdd.end());
+      particleSystemsToAdd.clear();
+    }
+    // remove in one pass
+    if (!particleSystemsToRemove.empty()) {
+      std::erase_if(
+        particleSystems, [&](auto &ps) {
+          return particleSystemsToRemove.count(ps);
+        }
+      );
+      particleSystemsToRemove.clear();
+    }
 
     for (const auto &particleSystem: particleSystems)
       particleSystem->update();
@@ -36,14 +50,6 @@ namespace Engine2D {
     std::lock_guard lock(particleSystemMutex);
     #endif
 
-    // Add and remove all the pending particle systems
-    for (const auto &particleSystem: particleSystemsToAdd)
-      particleSystems.emplace_back(particleSystem);
-    particleSystemsToAdd.clear();
-    for (const auto &particleSystem: particleSystemsToRemove)
-      std::erase(particleSystems, particleSystem);
-    particleSystemsToRemove.clear();
-
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     for (const auto &particleSystem: particleSystems)
       particleSystem->render();
@@ -55,6 +61,6 @@ namespace Engine2D {
   }
 
   void ParticleSystemRenderer2D::removeParticleSystem(const std::shared_ptr<ParticleSystem2D> &particleSystem) {
-    particleSystemsToRemove.emplace_back(particleSystem);
+    particleSystemsToRemove.insert(particleSystem);
   }
 } // Engine2D

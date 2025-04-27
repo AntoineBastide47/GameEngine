@@ -12,6 +12,8 @@
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
+#include "Engine2D/Animation/Animator2D.hpp"
+#include "Engine2D/Animation/AnimationSystem.hpp"
 
 namespace Engine2D {
   Entity2D::Entity2D(
@@ -82,6 +84,8 @@ namespace Engine2D {
       ParticleSystemRenderer2D::addParticleSystem(particleSystem);
     if (const auto spriteRenderer = std::dynamic_pointer_cast<Rendering::SpriteRenderer>(component))
       Rendering::Renderer2D::addRenderer(spriteRenderer);
+    if (const auto animator = std::dynamic_pointer_cast<Animation::Animator2D>(component))
+      Animation::AnimationSystem::addAnimator(animator);
   }
 
   void Entity2D::recallComponent(const std::shared_ptr<Component2D> &component) {
@@ -91,5 +95,7 @@ namespace Engine2D {
       ParticleSystemRenderer2D::removeParticleSystem(particleSystem);
     if (const auto spriteRenderer = std::dynamic_pointer_cast<Rendering::SpriteRenderer>(component))
       Rendering::Renderer2D::removeRenderer(spriteRenderer);
+    if (const auto animator = std::dynamic_pointer_cast<Animation::Animator2D>(component))
+      Animation::AnimationSystem::removeAnimator(animator);
   }
 }

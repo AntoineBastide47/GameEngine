@@ -90,7 +90,7 @@ namespace Engine {
        * Creates a sprite using the texture with the given name
        * @param spriteName The name of the new sprite
        * @param textureName The name of the texture to base this sprite on
-       * @param rect The area of the texture to use to represent the sprite
+       * @param rect The normalized area of the texture to use to represent the sprite in the given format: (u, v, width, height)
        * @note Log's an error if no texture with the given name was found
        */
       static std::shared_ptr<Sprite> CreateSprite(

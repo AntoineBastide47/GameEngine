@@ -12,6 +12,7 @@
 #define MAX_BATCH_SIZE (1024 * 1024)
 #define MAX_BATCH_SIZE_WITH_STRIDE (MAX_BATCH_SIZE / STRIDE_SIZE)
 #define MAX_INSTANCE_COUNT 10000
+#include <unordered_set>
 
 namespace Engine2D {
   class Game2D;
@@ -42,7 +43,7 @@ namespace Engine2D::Rendering {
     /// All the sprite renderers pending to be added
     static std::vector<std::shared_ptr<SpriteRenderer>> renderersToAdd;
     /// All the sprite renderers pending to be removed
-    static std::vector<std::shared_ptr<SpriteRenderer>> renderersToRemove;
+    static std::unordered_set<std::shared_ptr<SpriteRenderer>> renderersToRemove;
 
     /// Stores the vertex array configuration for the quad.
     static uint quadVAO;
@@ -88,7 +89,7 @@ namespace Engine2D::Rendering {
     /// Renders all the given entities
     static void render();
     /// Sends all the data to the GPU
-    static void flush(uint VBO, const float *data, int drawMode, uint32_t count);
+    static void flush(uint VBO, const float *data, int drawMode, uint32_t count, uint32_t framebuffer = 0);
 
     /// Adds a new sprite renderer to the list of ones to be rendered
     static void addRenderer(const std::shared_ptr<SpriteRenderer> &renderer);

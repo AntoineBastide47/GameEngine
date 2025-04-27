@@ -20,20 +20,17 @@
 namespace Engine2D::Rendering {
   const float Renderer2D::vertices[] = {
     // pos      // tex
-    0.0f, 1.0f, 0.0f, 1.0f, // Top-left
-    1.0f, 0.0f, 1.0f, 0.0f, // Bottom-right
     0.0f, 0.0f, 0.0f, 0.0f, // Bottom-left
-
+    1.0f, 0.0f, 1.0f, 0.0f, // Bottom-right
     0.0f, 1.0f, 0.0f, 1.0f, // Top-left
-    1.0f, 1.0f, 1.0f, 1.0f, // Top-right
-    1.0f, 0.0f, 1.0f, 0.0f  // Bottom-right
+    1.0f, 1.0f, 1.0f, 1.0f  // Top-right
   };
 
   std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::renderers;
   std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::staticRenderers;
 
   std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::renderersToAdd;
-  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::renderersToRemove;
+  std::unordered_set<std::shared_ptr<SpriteRenderer>> Renderer2D::renderersToRemove;
 
   uint Renderer2D::quadVAO{};
   uint Renderer2D::batchVBO{};
@@ -132,7 +129,7 @@ namespace Engine2D::Rendering {
   }
 
   bool Renderer2D::cannotBeRendered(const std::shared_ptr<SpriteRenderer> &r) {
-    return !r || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader || !r->sprite
+    return !r->IsActive()  || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader || !r->sprite
            || !r->sprite->texture;
   }
 
@@ -150,11 +147,15 @@ namespace Engine2D::Rendering {
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
-    if (const auto entity = renderer->Entity(); !renderer->Entity()->IsActive() || !renderer->Transform()->GetIsVisible())
+    if (const auto entity = renderer->Entity(); !renderer->Entity()->IsActive() || !renderer->IsActive()
+      || !renderer->Transform()->GetIsVisible())
       return;
 
-    // Get the model matrix
+    // Get the model matrix and other data
     auto modelMatrix = renderer->Transform()->GetWorldMatrix();
+    const auto sprite = renderer->sprite;
+    const auto color = renderer->color;
+    const auto rect = sprite->rect;
 
     // Add scale and rotation
     *data++ = modelMatrix[0][0];
@@ -165,24 +166,24 @@ namespace Engine2D::Rendering {
     // Add position and pivot
     *data++ = modelMatrix[3][0];
     *data++ = modelMatrix[3][1];
-    *data++ = renderer->sprite->pivot.x;
-    *data++ = renderer->sprite->pivot.y;
+    *data++ = sprite->pivot.x;
+    *data++ = sprite->pivot.y;
 
     // Add color
-    *data++ = renderer->color.x;
-    *data++ = renderer->color.y;
-    *data++ = renderer->color.z;
-    *data++ = renderer->color.w;
+    *data++ = color.x;
+    *data++ = color.y;
+    *data++ = color.z;
+    *data++ = color.w;
 
     // Add rect
-    *data++ = renderer->sprite->rect.x;
-    *data++ = renderer->sprite->rect.y;
-    *data++ = renderer->sprite->rect.z;
-    *data++ = renderer->sprite->rect.w;
+    *data++ = rect.x;
+    *data++ = rect.y;
+    *data++ = rect.z;
+    *data++ = rect.w;
 
     // Add renderOrder and pixelsPerUnit
     *data++ = renderer->renderOrder;
-    *data++ = renderer->sprite->pixelsPerUnit;
+    *data++ = sprite->pixelsPerUnit;
     *data++ = 0;
     *data = 0;
   }
@@ -219,7 +220,7 @@ namespace Engine2D::Rendering {
       staticBatchData.resize(validRange.size() * STRIDE);
 
       for (auto &renderer: validRange) {
-        // Check for change in key
+        // Check for change in shader id
         const uint32_t shaderID = renderer->shader->id;
         if (const uint32_t textureID = renderer->sprite->texture->id;
           shaderID != currentShaderID || textureID != currentTextureID) {
@@ -311,20 +312,34 @@ namespace Engine2D::Rendering {
     const bool sort = !renderersToAdd.empty();
 
     // Add all pending renderers
-    for (auto &renderer: renderersToAdd)
-      if (renderer->Entity()->IsStatic())
-        staticRenderers.emplace_back(renderer);
-      else
-        renderers.emplace_back(renderer);
-    renderersToAdd.clear();
+    if (!renderersToAdd.empty()) {
+      auto partition_point = std::ranges::stable_partition(
+        renderersToAdd, [](const auto &renderer) {
+          return renderer->Entity()->IsStatic();
+        }
+      );
+
+      staticRenderers.insert(staticRenderers.end(), renderersToAdd.begin(), partition_point.begin());
+      renderers.insert(renderers.end(), partition_point.begin(), renderersToAdd.end());
+      renderersToAdd.clear();
+    }
 
     // Remove all pending renderers
-    for (auto &renderer: renderersToRemove)
-      if (renderer->Entity()->IsStatic())
-        std::erase(staticRenderers, renderer);
-      else
-        std::erase(renderers, renderer);
-    renderersToRemove.clear();
+    if (!renderersToRemove.empty()) {
+      std::erase_if(
+        staticRenderers, [&](const auto &r) {
+          return renderersToRemove.contains(r);
+        }
+      );
+
+      std::erase_if(
+        renderers, [&](const auto &r) {
+          return renderersToRemove.contains(r);
+        }
+      );
+
+      renderersToRemove.clear();
+    }
 
     if (renderers.empty() && staticRenderers.empty())
       return;
@@ -344,11 +359,17 @@ namespace Engine2D::Rendering {
     glBindVertexArray(0);
   }
 
-  void Renderer2D::flush(const uint VBO, const float *data, const int drawMode, const uint32_t count) {
+  void Renderer2D::flush(
+    const uint VBO, const float *data, const int drawMode, const uint32_t count, const uint32_t framebuffer
+  ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
     if (!count || !data)
       return;
+
+    // Bind the target frame buffer
+    if (framebuffer > 0)
+      glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
     // Update the instance VBO with the new data.
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -364,7 +385,11 @@ namespace Engine2D::Rendering {
 
     // Draw all sprites in the batch in a single call.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 6, count);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, count);
+
+    // Unbind the target frame buffer
+    if (framebuffer > 0)
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
   void Renderer2D::addRenderer(const std::shared_ptr<SpriteRenderer> &renderer) {
@@ -372,6 +397,6 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::removeRenderer(const std::shared_ptr<SpriteRenderer> &renderer) {
-    renderersToRemove.emplace_back(renderer);
+    renderersToRemove.insert(renderer);
   }
 }

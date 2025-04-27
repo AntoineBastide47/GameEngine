@@ -18,10 +18,13 @@
 #include "Engine/Input/Gamepad.hpp"
 #include "Engine/Input/Keyboard.hpp"
 #include "Engine/Input/Mouse.hpp"
+#if ENGINE_PROFILING
 #include "Engine/Profiling/Instrumentor.hpp"
+#endif
 #include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine2D/Animation/AnimationSystem.hpp"
 
 using Engine::ResourceManager;
 
@@ -107,7 +110,7 @@ namespace Engine2D {
 
   void Game2D::Run() {
     #ifdef ENGINE_PROFILING
-    Engine::Profiling::Instrumentor::Get().BeginSession("profiler");
+    Engine::Profiling::Instrumentor::get().beginSession("profiler");
     #endif
 
     this->initialize();
@@ -139,7 +142,7 @@ namespace Engine2D {
     this->quit();
 
     #ifdef ENGINE_PROFILING
-    Engine::Profiling::Instrumentor::Get().EndSession();
+    Engine::Profiling::Instrumentor::get().endSession();
     #endif
   }
 
@@ -178,20 +181,22 @@ namespace Engine2D {
 
     glfwSwapInterval(Engine::Settings::Graphics::GetVsyncEnabled());
 
-    // The official code for "Setting Your Raster Position to a Pixel Location" (i.e. set up a camera for 2D screen)
+    // The official code for "Setting Your Raster Position to a Pixel Location" (i.e., set up a camera for 2D screen)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, width, height, 0, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // Make some OpenGL properties better for 2D and enable alpha channel.
+    // Make some OpenGL properties better for 2D and enable blending
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    glClearDepth(32768.0f);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
     // Initialize GLEW
     glewExperimental = GL_TRUE;
@@ -201,7 +206,7 @@ namespace Engine2D {
       exit(EXIT_FAILURE);
     }
 
-    // Initialize input system
+    // Initialize an input system
     Engine::Input::Keyboard::initialize(this->window);
     Engine::Input::Mouse::initialize(this->window);
 
@@ -228,16 +233,14 @@ namespace Engine2D {
       const auto currentFrameTime = std::chrono::high_resolution_clock::now();
       this->deltaTime = std::chrono::duration<float>(currentFrameTime - lastTime).count() * timeScale;
       lastTime = currentFrameTime;
+      glfwPollEvents();
 
-      if (!window || !glfwWindowShouldClose(window))
-        glfwPollEvents();
+      addEntities();
 
-      this->addEntities();
-      this->removeEntities();
-
-      this->processInput();
-      this->fixedUpdate();
-      this->update();
+      processInput();
+      update();
+      fixedUpdate();
+      animate();
 
       #if MULTI_THREAD
       // Handoff engine data to the render thread
@@ -256,8 +259,10 @@ namespace Engine2D {
       this->render();
       #endif
 
+      removeEntities();
+
       // FPS calculation
-      this->limitFrameRate();
+      limitFrameRate();
       oneSecondTimer += deltaTime;
       while (oneSecondTimer >= 1.0f) {
         std::cout << "FPS: " << frameCounter << std::endl;
@@ -277,7 +282,6 @@ namespace Engine2D {
     #endif
   }
 
-  // ReSharper disable once CppMemberFunctionMayBeStatic
   void Game2D::processInput() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
@@ -302,6 +306,10 @@ namespace Engine2D {
       physics2D->step();
       physicsAccumulator -= fixedDeltaTime;
     }
+  }
+
+  void Game2D::animate() {
+    Animation::AnimationSystem::update();
   }
 
   void Game2D::update() {
@@ -396,8 +404,7 @@ namespace Engine2D {
 
     // Remove all the entities from the game
     entitiesToAdd.clear();
-    entitiesToRemove.clear();
-    entitiesToRemove.swap(entities);
+    entitiesToRemove.insert(entities.begin(), entities.end());
     removeEntities();
     entities.clear();
 
@@ -422,29 +429,25 @@ namespace Engine2D {
   }
 
   void Game2D::addEntities() {
-    for (auto entity: entitiesToAdd) {
-      entities.emplace_back(entity);
-      entity->initialize();
+    if (!entitiesToAdd.empty()) {
+      for (const auto &entity: entitiesToAdd)
+        entity->initialize();
+      entities.insert(entities.end(), entitiesToAdd.begin(), entitiesToAdd.end());
+      entitiesToAdd.clear();
     }
-    entitiesToAdd.clear();
   }
 
   void Game2D::removeEntities() {
-    for (auto it = instance->entitiesToRemove.begin(); it != instance->entitiesToRemove.end();) {
-      const auto entity = *it;
-
-      // Remove the entity from the game
+    for (const auto &entity: instance->entitiesToRemove) {
       std::erase(entities, entity);
       entity->destroy();
-
-      // Erase the entity and update the iterator
-      it = instance->entitiesToRemove.erase(it);
     }
+    instance->entitiesToRemove.clear();
   }
 
   void Game2D::removeEntity(const std::shared_ptr<Entity2D> &entity) {
     if (entity && instance && !instance->entities.empty())
-      instance->entitiesToRemove.emplace_back(entity);
+      instance->entitiesToRemove.insert(entity);
   }
 
   void Game2D::framebuffer_size_callback(GLFWwindow *window, const int, const int) {

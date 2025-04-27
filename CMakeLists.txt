@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.7.1)
+project(GameEngine VERSION 0.7.2)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -70,6 +70,12 @@ add_library(Engine2D STATIC
     src/Engine/Profiling/Instrumentor.cpp
     include/Engine/Profiling/Instrumentor.hpp
     include/Engine/Macros/Profiling.hpp
+    src/Engine2D/Animation/Animation2D.cpp
+    include/Engine2D/Animation/Animation2D.hpp
+    src/Engine2D/Animation/Animator2D.cpp
+    include/Engine2D/Animation/Animator2D.hpp
+    src/Engine2D/Animation/AnimationSystem.cpp
+    include/Engine2D/Animation/AnimationSystem.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES
@@ -105,9 +111,6 @@ cmrc_add_resource_library(cmrc NAMESPACE engineResources Assets)
 add_subdirectory(vendor/cpptrace)
 add_library(cpptrace STATIC vendor/cpptrace/src/cpptrace.cpp)
 target_include_directories(cpptrace PUBLIC vendor/cpptrace/include vendor/cpptrace/src)
-
-# === ImGUI ===
-add_subdirectory(vendor/imgui)
 
 # === OS Specific Requirements ===
 if (APPLE)

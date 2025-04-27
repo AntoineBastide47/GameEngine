@@ -19,6 +19,6 @@ namespace Engine::Profiling {
       count();
     const long long end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
     const uint32_t threadID = std::hash<std::thread::id>{}(std::this_thread::get_id());
-    Instrumentor::Get().WriteProfile({name, start, end, threadID, level});
+    Instrumentor::get().writeProfile({name, start, end, threadID, level});
   }
 }

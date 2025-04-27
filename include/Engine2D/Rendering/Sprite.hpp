@@ -22,7 +22,7 @@ namespace Engine2D::Rendering {
 
       /**
        * The subregion of the texture to use.
-       * Format: (x, y, width, height), in normalized UV space [0.0, 1.0].
+       * Format: (u, v, width, height), in normalized UV space [0.0, 1.0].
        * Use (0, 0, 1, 1) to use the full texture.
        */
       glm::vec4 rect{0, 0, 1, 1};

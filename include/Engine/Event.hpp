@@ -27,7 +27,7 @@ namespace Engine {
       /// Addition assignment for shorthand call to Event::AddCallbacks
       template<typename... Callbacks> void operator+=(const Callbacks &... callback) {
         (AddCallback(callback), ...);
-      };
+      }
       /// Addition assignment for shorthand call to Event::RemoveCallbacks
       template<typename... Callbacks> void operator-=(const Callbacks &... callback) {
         (RemoveCallback(callback), ...);
