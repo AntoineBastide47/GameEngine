@@ -35,8 +35,6 @@ namespace Engine2D {
       float startDelay;
       /// The initial position of the particles
       glm::vec2 startPosition;
-      /// Rendering priority: higher value means higher priority
-      int16_t renderOrder;
 
       /// Whether particles will have their own start and end velocities
       bool useGlobalVelocities;
@@ -68,8 +66,6 @@ namespace Engine2D {
 
       /// The shader of used to render the particles, defaults to the "particle" shader
       std::shared_ptr<Shader> shader;
-      /// The sprite used to render the particles
-      std::shared_ptr<Rendering::Sprite> sprite;
 
       ParticleSystem2D();
 
@@ -82,9 +78,22 @@ namespace Engine2D {
       void SetMaxParticles(size_t maxParticles);
       /// @returns The maximum of particles this particle system will simulate
       [[nodiscard]] uint32_t GetMaxParticles() const;
+      /// Sets how long each particle will live for
       void SetParticleLifetime(float lifetime);
+      /// @returns how long each particle lives for
       [[nodiscard]] float GetParticleLifetime() const;
+      /// Sets the sprite used to render the particles
+      void SetSprite(const std::shared_ptr<Rendering::Sprite> &sprite);
+      /// @returns the sprite used to render the particles
+      [[nodiscard]] std::shared_ptr<Rendering::Sprite> GetSprite() const;
+      /// Sets the rendering order of the particle system
+      void SetRenderOrder(int16_t renderOrder);
+      /// @returns the rendering order of the particle system
+      [[nodiscard]] int16_t GetRenderOrder() const;
     private:
+      enum RenderOrderType {
+        BehindSprite, InFrontOfSprite
+      };
       /// Represents a single particle and it's state
       struct ParticleSystemData {
         alignas(64) std::vector<glm::vec2> positions;
@@ -112,6 +121,12 @@ namespace Engine2D {
           return lifeTimes.size();
         }
       };
+
+      /// The sprite used to render the particles
+      std::shared_ptr<Rendering::Sprite> sprite;
+      /// Rendering priority: higher value means higher priority
+      int16_t renderOrder;
+      RenderOrderType renderOrderType;
 
       /// How long the particle system will be simulated
       float duration;

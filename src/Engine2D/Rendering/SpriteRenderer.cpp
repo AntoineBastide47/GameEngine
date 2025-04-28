@@ -9,13 +9,13 @@
 
 namespace Engine2D::Rendering {
   SpriteRenderer::SpriteRenderer()
-    : dirty(false), color(1), flip({0, 0}), renderOrder(0) {
+    : color(1), flip({0, 0}), renderOrder(0), dirty(false), spriteDirty(0) {
     shader = Engine::ResourceManager::GetShader("sprite");
   }
 
   void SpriteRenderer::SetShader(const std::shared_ptr<Shader> &shader) {
     this->shader = shader;
-    this->dirty = true;
+    dirty = true;
   }
 
   std::shared_ptr<Shader> SpriteRenderer::GetShader() const {
@@ -24,7 +24,7 @@ namespace Engine2D::Rendering {
 
   void SpriteRenderer::SetSprite(const std::shared_ptr<Sprite> &sprite) {
     this->sprite = sprite;
-    this->dirty = true;
+    dirty = true;
   }
 
   std::shared_ptr<Sprite> SpriteRenderer::GetSprite() const {
@@ -33,7 +33,7 @@ namespace Engine2D::Rendering {
 
   void SpriteRenderer::SetColor(const glm::vec4 &color) {
     this->color = color;
-    this->dirty = true;
+    dirty = true;
   }
 
   const glm::vec4 &SpriteRenderer::GetColor() const {
@@ -42,7 +42,7 @@ namespace Engine2D::Rendering {
 
   void SpriteRenderer::SetFlip(const glm::vec<2, bool> &flip) {
     this->flip = flip;
-    this->dirty = true;
+    dirty = true;
   }
 
   const glm::vec<2, bool> &SpriteRenderer::GetFlip() const {
@@ -51,7 +51,7 @@ namespace Engine2D::Rendering {
 
   void SpriteRenderer::SetRenderOrder(const int16_t order) {
     this->renderOrder = order;
-    this->dirty = true;
+    dirty = true;
   }
 
   size_t SpriteRenderer::GetRenderOrder() const {

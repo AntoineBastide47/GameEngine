@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.7.3)
+project(GameEngine VERSION 0.7.4)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -164,5 +164,5 @@ add_custom_command(TARGET Engine2D POST_BUILD
 target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
-    MULTI_THREAD=1
+    MULTI_THREAD=1 # Set this to 0 if you have mutex errors when modifying the engine
 )

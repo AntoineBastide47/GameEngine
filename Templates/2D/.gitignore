@@ -1,0 +1,47 @@
+# For macos executables: ignore all files, the keep directories and finally keep files with extentions
+**/*
+!**/*/
+!**/*.*
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Fortran module files
+*.mod
+*.smod
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Idea
+**/.idea
+
+# cmake
+**/cmake-build-debug
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/install_manifest.txt
+**/CMakeFiles/
+**/CTestTestfile.cmake
+**/cmake-build-debug/Makefile
+**/*.cbp
+**/CMakeScripts
+**/compile_commands.json
+
+# other
+**/.DS_Store
+CMakeConfig.txt
+build
+profiling_data.json

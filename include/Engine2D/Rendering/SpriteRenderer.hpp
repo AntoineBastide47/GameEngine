@@ -47,8 +47,6 @@ namespace Engine2D::Rendering {
       void SetRenderOrder(int16_t order);
       /// @returns the render order of this sprite
       size_t GetRenderOrder() const;
-      /// Whether the sprite renderer was updated
-      bool dirty;
     private:
       /// The shader used to render the target sprite
       std::shared_ptr<Engine::Rendering::Shader> shader;
@@ -60,6 +58,10 @@ namespace Engine2D::Rendering {
       glm::vec<2, bool> flip;
       /// Rendering priority: higher value means higher priority
       int16_t renderOrder;
+      /// Whether the sprite renderer was updated
+      bool dirty;
+      /// Whether the sprite of the renderer was updated
+      bool spriteDirty;
   };
 }
 

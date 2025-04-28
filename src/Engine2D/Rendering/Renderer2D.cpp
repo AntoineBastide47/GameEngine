@@ -421,8 +421,6 @@ namespace Engine2D::Rendering {
       buildAndRenderStaticBatch(opaqueStaticRenderers, opaqueStaticBatchData, opaqueStaticFlushList, false, lastOpaqueCount);
       buildAndRenderDynamicBatch(opaqueRenderers, false);
     } else {
-      // Reset the depth buffer
-      glClear(GL_DEPTH_BUFFER_BIT);
       buildAndRenderStaticBatch(
         transparentStaticRenderers, transparentStaticBatchData, transparentStaticFlushList, true, lastTransparentCount
       );

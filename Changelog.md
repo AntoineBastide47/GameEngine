@@ -3,12 +3,22 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.4] - 2025-05-28
+### Added
+- **[Templates/2D]**: added a .gitignore
+### Changed
+- **[ParticleSystemRenderer]**: split rendering into opaque and transparent
+- **[Camera2D]**: removed default shake values and split the coefficient array into X and Y variables
+### Fixed
+- **[Renderer2D]**: transparent sprites not being able to be rendered behind opaque sprites
+- **[ParticleSystemRenderer]**: transparent particles not rendering correctly in front of transparent entities
+
 ## [0.7.3] - 2025-04-27
 ### Added
 - **[Sprite]**: transparent flag
 ### Changed
 - **[ResourceManager]**: when loading or creating a sprite the transparent flag is needed, and rect optional
-- **[Renderer2D]**: split rendering into opaque then transparent
+- **[Renderer2D]**: split rendering into opaque and transparent
 ### Fixed
 - **[Renderer2D]**: particles not rendering correctly under transparent sprites
 

@@ -158,7 +158,7 @@ namespace Engine2D {
       /// Processes all the inputs to the game
       static void processInput();
       /// Update the game
-      void update();
+      void update() const;
       /// Simulates a step of the physics simulation
       void fixedUpdate();
       /// Animates all entities

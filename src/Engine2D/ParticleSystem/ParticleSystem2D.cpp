@@ -15,8 +15,10 @@
 #include "Engine/ResourceManager.hpp"
 #include "Engine/Rendering/Shader.hpp"
 #include "Engine/Rendering/Texture.hpp"
+#include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
+#include "Engine2D/Rendering/SpriteRenderer.hpp"
 
 namespace Engine2D {
   const float ParticleSystem2D::quadVertices[] = {
@@ -28,12 +30,13 @@ namespace Engine2D {
   };
 
   ParticleSystem2D::ParticleSystem2D()
-    : loop(false), restart(false), startDelay(0), startPosition(glm::vec2(0)), renderOrder(0), useGlobalVelocities(false),
+    : loop(false), restart(false), startDelay(0), startPosition(glm::vec2(0)), useGlobalVelocities(false),
       startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)), startAngularVelocity(0), endAngularVelocity(),
       startScale(glm::vec2(1)), endScale(glm::vec2(0)), startColor(glm::vec4(1)), endColor(glm::vec4(1)),
-      simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), duration(1),
-      particleLifetime(1), inverseLifetime(1), particles(0), emissionAcc(0), durationAcc(0), simulationFinished(false),
-      lastUsedParticle(0), quadVAO(0), quadVBO(0), instanceVBO(0), aliveCount(0), initialized(false) {
+      simulateInWorldSpace(true), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), renderOrder(0),
+      renderOrderType(InFrontOfSprite), duration(1), particleLifetime(1), inverseLifetime(1), particles(0), emissionAcc(0),
+      durationAcc(0), simulationFinished(false), lastUsedParticle(0), quadVAO(0), quadVBO(0), instanceVBO(0), aliveCount(0),
+      initialized(false) {
     this->shader = Engine::ResourceManager::GetShader("particle");
   }
 
@@ -67,6 +70,28 @@ namespace Engine2D {
 
   float ParticleSystem2D::GetParticleLifetime() const {
     return this->particleLifetime;
+  }
+
+  void ParticleSystem2D::SetSprite(const std::shared_ptr<Sprite> &sprite) {
+    this->sprite = sprite;
+    ParticleSystemRenderer2D::dirty = true;
+  }
+
+  std::shared_ptr<Sprite> ParticleSystem2D::GetSprite() const {
+    return this->sprite;
+  }
+
+  void ParticleSystem2D::SetRenderOrder(const int16_t renderOrder) {
+    this->renderOrder = renderOrder;
+    if (const auto renderer = Entity()->GetComponent<Rendering::SpriteRenderer>(); renderer)
+      renderOrderType = renderOrder > renderer->GetRenderOrder() ? InFrontOfSprite : BehindSprite;
+    else
+      renderOrderType = InFrontOfSprite;
+    ParticleSystemRenderer2D::dirty = true;
+  }
+
+  int16_t ParticleSystem2D::GetRenderOrder() const {
+    return this->renderOrder;
   }
 
   void ParticleSystem2D::initialize() {
@@ -197,8 +222,7 @@ namespace Engine2D {
     if (!initialized)
       initialize();
 
-    shader->use();
-    shader->SetMatrix4("projection", Game2D::MainCamera()->GetViewProjectionMatrix());
+    shader->SetMatrix4("projection", Game2D::MainCamera()->GetViewProjectionMatrix(), true);
     sprite->texture->bind();
 
     // Bind the target frame buffer

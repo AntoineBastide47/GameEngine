@@ -45,7 +45,7 @@ target_include_directories(cpptrace PUBLIC ${ENGINE_LOCATION}/vendor/cpptrace/in
 # --------------------------
 
 if (APPLE)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0")
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "16.0")
   set(ENGINE_PLATFORM_LIBS "-framework CoreFoundation -framework IOKit -framework Cocoa")
 elseif (LINUX)
   message(WARNING "Linux build is not fully supported yet.")

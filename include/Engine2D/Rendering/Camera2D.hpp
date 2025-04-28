@@ -34,8 +34,10 @@ namespace Engine2D::Rendering {
       /// The offset scale of the camera
       float damping;
 
-      /// Coefficients that control the shake of the camera
-      std::array<std::vector<ShakeWave>, 2> shakeCoefficients;
+      /// Coefficients that control the shake of the camera on the X axis
+      std::vector<ShakeWave> shakeCoefficientsX;
+      /// Coefficients that control the shake of the camera on the Y axis
+      std::vector<ShakeWave> shakeCoefficientsY;
 
       Camera2D(float left, float right, float bottom, float top, float near = -1, float far = 1);
       ~Camera2D() override = default;

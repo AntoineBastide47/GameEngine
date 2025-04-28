@@ -313,24 +313,13 @@ namespace Engine2D {
     Animation::AnimationSystem::update();
   }
 
-  void Game2D::update() {
+  void Game2D::update() const {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
-    bool foundNull = false;
-    for (const auto &entity: entities) {
+    for (const auto &entity: entities)
       if (entity && entity->IsActive())
         for (const auto &behaviour: entity->behaviours)
           behaviour->OnUpdate();
-      else if (!entity)
-        foundNull = true;
-    }
-    if (foundNull)
-      for (auto it = entities.begin(); it != entities.end();) {
-        if (*it == nullptr)
-          it = entities.erase(it);
-        else
-          ++it;
-      }
     ParticleSystemRenderer2D::update();
     MainCamera()->updateCamera();
   }
@@ -391,10 +380,11 @@ namespace Engine2D {
       Rendering::Renderer2D::prerender();
       // Render opaque first
       Rendering::Renderer2D::render(false);
-      // Render particles
-      ParticleSystemRenderer2D::render();
+      ParticleSystemRenderer2D::render(false, ParticleSystem2D::RenderOrderType::InFrontOfSprite);
       // Render transparent last
+      ParticleSystemRenderer2D::render(true, ParticleSystem2D::RenderOrderType::BehindSprite);
       Rendering::Renderer2D::render(true);
+      ParticleSystemRenderer2D::render(true, ParticleSystem2D::RenderOrderType::InFrontOfSprite);
 
       // Prepare the next frame
       glfwSwapBuffers(window);
