@@ -55,7 +55,7 @@ namespace Engine2D::Animation {
     if (!sprite)
       return;
 
-    glm::vec4 &rect = sprite->rect;
+    auto &rect = sprite->rect;
     if (Animation2D &animation = *currentAnimation; !animation.paused && !animation.completed) {
       // Set the current frame of the animation
       const int frameCount = animation.vertical ? animation.frameCountY : animation.frameCountX;

@@ -42,8 +42,8 @@ namespace Engine::Rendering {
     }
   }
 
-  void Texture::bind() const {
-    glActiveTexture(GL_TEXTURE0);
+  void Texture::bind(const int offset) const {
+    glActiveTexture(GL_TEXTURE0 + offset);
     glBindTexture(GL_TEXTURE_2D, this->id);
   }
 

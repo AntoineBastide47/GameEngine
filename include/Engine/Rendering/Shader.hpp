@@ -27,10 +27,9 @@ namespace Engine::Rendering {
     friend class Engine::ResourceManager;
     friend class Engine2D::ParticleSystem2D;
     public:
-      /// Used to reference and manage this shader program within OpenGL.
-      uint id;
-
       Shader() = default;
+
+      uint Id() const;
 
       /**
        * Sets a float uniform in the shader program.
@@ -110,6 +109,9 @@ namespace Engine::Rendering {
        */
       void SetMatrix4(const char *name, const glm::mat4 &matrix, bool useShader = false);
     private:
+      /// Used to reference and manage this shader program within OpenGL.
+      uint id;
+
       /**
        * Sets the current shader as active and returns a reference to this Shader object, enabling method chaining.
        * @return Reference to this Shader object.

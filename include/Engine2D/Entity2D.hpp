@@ -20,11 +20,16 @@ namespace Engine2D {
     class Physics2D;
   }
 
+  namespace Rendering {
+    class Renderable2D;
+  }
+
   /// Entity2D represents objects in the scene
   class Entity2D final : public std::enable_shared_from_this<Entity2D> {
     friend class Game2D;
     friend class Transform2D;
     friend class Physics::Physics2D;
+    friend class Rendering::Renderable2D;
     public:
       /// The name of the entity.
       std::string name;

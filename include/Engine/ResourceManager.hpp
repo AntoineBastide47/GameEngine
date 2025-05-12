@@ -10,6 +10,8 @@
 #include <map>
 #include <glm/glm.hpp>
 
+#include "Engine/Types/float01.hpp"
+
 namespace Engine::Rendering {
   class Shader;
   class Texture;
@@ -87,7 +89,7 @@ namespace Engine {
        * @note Log's an error if no texture with the given name was found
        */
       static std::shared_ptr<Sprite> CreateSpriteFromTexture(
-        const std::string &textureName, bool transparent, const glm::vec4 &rect = glm::vec4(0, 0, 1, 1)
+        const std::string &textureName, bool transparent, const glm::vec<4, float01> &rect = glm::vec4(0, 0, 1, 1)
       );
 
       /**
@@ -100,7 +102,7 @@ namespace Engine {
        */
       static std::shared_ptr<Sprite> CreateSprite(
         const std::string &spriteName, const std::string &textureName, bool transparent,
-        const glm::vec4 &rect = glm::vec4(0, 0, 1, 1)
+        const glm::vec<4, float01> &rect = glm::vec4(0, 0, 1, 1)
       );
 
       /**
@@ -124,7 +126,7 @@ namespace Engine {
        */
       static std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> LoadTexture2DAndSprite(
         const std::string &filePath, const std::string &name, bool transparent,
-        const glm::vec4 &rect = glm::vec4(0, 0, 1, 1), bool blend = false
+        const glm::vec<4, float01> &rect = glm::vec4(0, 0, 1, 1), bool blend = false
       );
 
       /// Deletes all the loaded textures and shaders

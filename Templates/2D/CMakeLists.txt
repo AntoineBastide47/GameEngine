@@ -76,13 +76,6 @@ elseif (ENGINE_COUNT GREATER 1)
 endif ()
 
 # --------------------------
-# Shader Embedding
-# --------------------------
-
-file(GLOB_RECURSE SHADERS Engine/Shaders/*)
-cmrc_add_resource_library(shaders NAMESPACE engine_resources ${SHADERS})
-
-# --------------------------
 # Executable Definition
 # --------------------------
 
@@ -98,8 +91,29 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     GLEW::GLEW
     glfw
     cpptrace::cpptrace
-    shaders
 )
+
+# --------------------------
+# Shader Embedding
+# --------------------------
+
+# Copy the shaders
+set(ENGINE_TEMP_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/Temp")
+file(MAKE_DIRECTORY "${ENGINE_TEMP_LOCATION}/Engine")
+file(COPY "${ENGINE_LOCATION}/include/Shaders" DESTINATION "${ENGINE_TEMP_LOCATION}/Engine")
+
+# Embed the shaders
+file(GLOB_RECURSE SHADERS "${ENGINE_TEMP_LOCATION}/Engine/Shaders/*.glsl")
+cmrc_add_resource_library(shaders
+    NAMESPACE engine_resources
+    WHENCE "${ENGINE_TEMP_LOCATION}/Engine/Shaders"
+    PREFIX "Engine/Shaders"
+    ${SHADERS}
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE shaders)
+
+# Remove the copied shaders
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E remove_directory "${ENGINE_TEMP_LOCATION}")
 
 # --------------------------
 # Build Configs
@@ -151,6 +165,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 
 # Embed the assets into the executable
 file(GLOB_RECURSE ASSET_FILES ${CMAKE_SOURCE_DIR}/Game/Assets/*)
+list(FILTER ASSET_FILES EXCLUDE REGEX "\\.DS_Store$")
 cmrc_add_resource_library(assets NAMESPACE resources ${ASSET_FILES})
 
 # --------------------------

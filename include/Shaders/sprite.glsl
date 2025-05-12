@@ -1,45 +1,58 @@
-#define TYPE VERTEX
+#region VERTEX
 #version 330 core
 
-// Vertex data: position + texCoords
-layout (location = 0) in vec4 vertex;
-// Instance attributes for the model matrix (each column is a vec4)
-layout (location = 1) in vec4 scaleAndRotation;
-layout (location = 2) in vec4 positionAndPivot; // <vec2 position, vec2 pivot>
-layout (location = 3) in vec4 color;
-layout (location = 4) in vec4 rect;
-layout (location = 5) in vec4 renderOrderAndPPU; // <float renderOrder, float PPU, 0, 0>
+// --- Vertex data ---
+// <vec2 position, vec2 textureCoords>
+layout (location = 0) in vec4 aVertex;
 
-out vec2 TexCoords;
-out vec4 SpriteColor;
+// --- Instance attributes ---
+// <vec2 position, vec2 scale>
+layout (location = 1) in vec4 aPositionAndScale;
+// <float r, float g, float b, float a>
+layout (location = 2) in vec4 aColor;
+// <float u, floatv, float witdth, float height>
+layout (location = 3) in vec4 aRect;
+// <float packedPivot, float rotation, float renderOrder, float textureIndex>
+layout (location = 4) in vec4 aOther;
 
-uniform mat4 projection;
+out vec4 vTextureData;
+out vec4 vVertColor;
 
-void main() {
-    mat4 model = mat4(
-    vec4(scaleAndRotation.x, scaleAndRotation.z, 0, 0), // column 0
-    vec4(scaleAndRotation.y, scaleAndRotation.w, 0, 0), // column 1
-    vec4(0, 0, 1, 0), // column 2
-    vec4(positionAndPivot.x, positionAndPivot.y, renderOrderAndPPU.x, 1.0) // column 3: translation + renderOrder
-    );
+#define Matrices
 
-    vec2 scaledPosition = (vertex.xy - positionAndPivot.zw) / renderOrderAndPPU.y;
-    vec4 worldPosition = model * vec4(scaledPosition, 0.0, 1.0);
-
-    TexCoords = rect.xy + vertex.zw * rect.zw;
-    SpriteColor = color;
-
-    gl_Position = projection * worldPosition;
+vec2 unpackTwoFloats(float packed) {
+    uint raw = floatBitsToUint(packed);
+    float a = float(raw >> 16) / 65535.0;
+    float b = float(raw & 0xFFFFu) / 65535.0;
+    return vec2(a, b);
 }
 
-#define TYPE FRAGMENT
-#version 330 core
-in vec2 TexCoords;
-in vec4 SpriteColor;
-out vec4 color;
+void main() {
+    // Create the rotation matrix
+    float cosTheta = cos(aOther.y);
+    float sinTheta = sin(aOther.y);
+    mat2 rotMat = mat2(cosTheta, -sinTheta, sinTheta, cosTheta);
 
-uniform sampler2D sprite;
+    // Apply pivot and rotation
+    vec2 pivot = unpackTwoFloats(aOther.x);
+    vec2 scaledPosition = (aVertex.xy - pivot) * aPositionAndScale.zw;
+    vec2 rotatedPos = scaledPosition * rotMat;
+
+    vTextureData = vec4(aRect.xy + aVertex.zw * aRect.zw, aOther.w, 0.);
+    vVertColor = aColor;
+
+    gl_Position = uViewProjection * vec4(rotatedPos + aPositionAndScale.xy, aOther.z, 1.0);
+}
+
+#region FRAGMENT
+#version 330 core
+in vec4 vTextureData;
+in vec4 vVertColor;
+
+out vec4 vColor;
+
+#define Textures
 
 void main() {
-    color = SpriteColor * texture(sprite, TexCoords);
+    vColor = vVertColor * SampleTexture();
 }

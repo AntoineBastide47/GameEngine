@@ -58,6 +58,10 @@ namespace Engine::Rendering {
       glDeleteShader(gShader);
   }
 
+  uint Shader::Id() const {
+    return this->id;
+  }
+
   void Shader::SetFloat(const char *name, const float value, const bool useShader) {
     if (useShader)
       this->use();

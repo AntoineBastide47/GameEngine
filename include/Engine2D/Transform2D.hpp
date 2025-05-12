@@ -181,14 +181,14 @@ namespace Engine2D {
       bool initialized;
       /// If the transform matrix needs to be recomputed
       bool dirty;
+      /// If this entity is on screen
+      bool visible;
       /// Position of the transform in 2D space.
       glm::vec2 worldPosition;
       /// Rotation of the transform in degrees.
       float worldRotation;
       /// Scale of the transform in 2D space.
       glm::vec2 worldScale;
-      /// If this entity is on screen
-      bool visible;
       /// Transform matrix
       glm::mat4 projectionMatrix;
 

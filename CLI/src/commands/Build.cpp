@@ -43,9 +43,9 @@ void Build::Run(const std::vector<std::string> &args, const OrderedMap<std::stri
 
   // Debug + Profiling
   std::system(
-    "cmake -B build/debug-prof -S . -DCMAKE_BUILD_TYPE=Debug -DPROFILE=1 -Wdev -Wdeprecated --log-level=WARNING"
+    "cmake -B build/profiling -S . -DCMAKE_BUILD_TYPE=Debug -DPROFILE=1 -Wdev -Wdeprecated --log-level=WARNING"
   );
-  std::system("cmake --build build/debug-prof");
+  std::system("cmake --build build/profiling");
 
   // Release
   if (buildRelease == "true") {

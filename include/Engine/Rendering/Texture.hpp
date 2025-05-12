@@ -62,7 +62,7 @@ namespace Engine::Rendering {
        */
       void generate(int width, int height, const unsigned char *data, int internalFormat, int dataFormat, bool blended = false);
       /// Makes this texture active so that subsequent rendering operations use it.
-      void bind() const;
+      void bind(int offset = 0) const;
       /// Unloads the texture data and prepares the object for reuse.
       void clear();
       /// Unbinds any texture bound to the GL_TEXTURE_2D target.

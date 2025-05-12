@@ -14,7 +14,6 @@
 #include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine/Macros/Utils.hpp"
 #include "Engine/Settings.hpp"
-#include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp"
 #include "Engine/Input/Gamepad.hpp"
 #include "Engine/Input/Keyboard.hpp"
 #include "Engine/Input/Mouse.hpp"
@@ -24,6 +23,7 @@
 #include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine/Rendering/ShaderPreProcessor.hpp"
 #include "Engine2D/Animation/AnimationSystem.hpp"
 
 using Engine::ResourceManager;
@@ -33,7 +33,7 @@ namespace Engine2D {
   const float Game2D::screenScaleFactor{0.1f};
 
   Game2D::Game2D(const int width, const int height, const char *title)
-    : aspectRatio(glm::vec2(1)), title(title), width(width), height(height), window(nullptr),
+    : aspectRatio(glm::vec2(1)), aspectRatioInv(glm::vec2(1)), title(title), width(width), height(height), window(nullptr),
       deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), frameCounter(0), physics2D(nullptr),
       physicsAccumulator(0), updateFinished(false), renderFinished(true) {
     if (instance)
@@ -48,11 +48,15 @@ namespace Engine2D {
   }
 
   float Game2D::ViewportWidth() {
-    return screenScaleFactor * static_cast<float>(instance->width) / instance->aspectRatio.x;
+    return screenScaleFactor * static_cast<float>(instance->width) * instance->aspectRatioInv.x;
   }
 
   float Game2D::ViewportHeight() {
-    return screenScaleFactor * static_cast<float>(instance->height) / instance->aspectRatio.y;
+    return screenScaleFactor * static_cast<float>(instance->height) * instance->aspectRatioInv.y;
+  }
+
+  glm::vec2 Game2D::ViewportSize() {
+    return screenScaleFactor * glm::vec2(instance->width, instance->height) * instance->aspectRatioInv;
   }
 
   glm::vec2 Game2D::AspectRatio() {
@@ -207,18 +211,18 @@ namespace Engine2D {
     }
 
     // Initialize an input system
-    Engine::Input::Keyboard::initialize(this->window);
-    Engine::Input::Mouse::initialize(this->window);
+    Engine::Input::Keyboard::initialize(window);
+    Engine::Input::Mouse::initialize(window);
 
-    // Load the engine shaders
-    ResourceManager::LoadShader("particle", "Engine/Shaders/particle.glsl");
+    // Setup the shader preprocessor and load the engine shaders
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &Rendering::Renderer2D::MAX_TEXTURES);
     ResourceManager::LoadShader("sprite", "Engine/Shaders/sprite.glsl");
 
     physics2D = new Physics2D();
     mainCamera = AddEntity("Camera");
     mainCamera->AddComponent<Rendering::Camera2D>(
       -static_cast<float>(width / 2) * screenScaleFactor, static_cast<float>(width / 2) * screenScaleFactor,
-      static_cast<float>(height / 2) * screenScaleFactor, -static_cast<float>(height / 2) * screenScaleFactor,
+      -static_cast<float>(height / 2) * screenScaleFactor, static_cast<float>(height / 2) * screenScaleFactor,
       -32768.0f, 32768.0f // int16_t range
     );
 
@@ -303,7 +307,8 @@ namespace Engine2D {
       for (const auto &entity: entities)
         if (entity->IsActive())
           for (const auto &behaviour: entity->behaviours)
-            behaviour->OnFixedUpdate();
+            if (behaviour && behaviour->IsActive())
+              behaviour->OnFixedUpdate();
       physics2D->step();
       physicsAccumulator -= fixedDeltaTime;
     }
@@ -319,9 +324,9 @@ namespace Engine2D {
     for (const auto &entity: entities)
       if (entity && entity->IsActive())
         for (const auto &behaviour: entity->behaviours)
-          behaviour->OnUpdate();
-    ParticleSystemRenderer2D::update();
-    MainCamera()->updateCamera();
+          if (behaviour && behaviour->IsActive())
+            behaviour->OnUpdate();
+    //ParticleSystemUpdater2D::update();
   }
 
   void Game2D::limitFrameRate() const {
@@ -376,19 +381,12 @@ namespace Engine2D {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     // Make sure there is something to render
+    MainCamera()->updateCamera();
     if (!entities.empty()) {
-      Rendering::Renderer2D::prerender();
-      // Render opaque first
-      Rendering::Renderer2D::render(false);
-      ParticleSystemRenderer2D::render(false, ParticleSystem2D::RenderOrderType::InFrontOfSprite);
-      // Render transparent last
-      ParticleSystemRenderer2D::render(true, ParticleSystem2D::RenderOrderType::BehindSprite);
-      Rendering::Renderer2D::render(true);
-      ParticleSystemRenderer2D::render(true, ParticleSystem2D::RenderOrderType::InFrontOfSprite);
+      Rendering::Renderer2D::render();
 
       // Prepare the next frame
       glfwSwapBuffers(window);
-
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
   }
@@ -457,6 +455,7 @@ namespace Engine2D {
     const float ratioX = static_cast<float>(framebufferWidth) / static_cast<float>(initialSize.x);
     const float ratioY = static_cast<float>(framebufferHeight) / static_cast<float>(initialSize.y);
     instance->aspectRatio = glm::vec2(ratioX, ratioY);
+    instance->aspectRatioInv = 1.0f / instance->aspectRatio;
     const bool maintainAspectRatio = Engine::Settings::Graphics::GetMaintainAspectRatio();
 
     // Calculate the viewport dimensions

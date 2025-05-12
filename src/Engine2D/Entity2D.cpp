@@ -6,7 +6,7 @@
 
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp"
+#include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
 #include "Engine2D/Physics/Collider2D.hpp"
@@ -81,7 +81,7 @@ namespace Engine2D {
     if (const auto collider = std::dynamic_pointer_cast<Collider2D>(component))
       Game2D::instance->physics2D->addCollider(collider);
     if (const auto particleSystem = std::dynamic_pointer_cast<ParticleSystem2D>(component))
-      ParticleSystemRenderer2D::addParticleSystem(particleSystem);
+      ParticleSystemRegistry2D::addParticleSystem(particleSystem);
     if (const auto spriteRenderer = std::dynamic_pointer_cast<Rendering::SpriteRenderer>(component))
       Rendering::Renderer2D::addRenderer(spriteRenderer);
     if (const auto animator = std::dynamic_pointer_cast<Animation::Animator2D>(component))
@@ -92,7 +92,7 @@ namespace Engine2D {
     if (const auto collider = std::dynamic_pointer_cast<Collider2D>(component))
       Game2D::instance->physics2D->removeCollider(collider);
     if (const auto particleSystem = std::dynamic_pointer_cast<ParticleSystem2D>(component))
-      ParticleSystemRenderer2D::removeParticleSystem(particleSystem);
+      ParticleSystemRegistry2D::removeParticleSystem(particleSystem);
     if (const auto spriteRenderer = std::dynamic_pointer_cast<Rendering::SpriteRenderer>(component))
       Rendering::Renderer2D::removeRenderer(spriteRenderer);
     if (const auto animator = std::dynamic_pointer_cast<Animation::Animator2D>(component))

@@ -8,8 +8,9 @@
 #define PARTICLE_SYSTEM2D_H
 
 #include <random>
+#include <glm/glm.hpp>
 
-#include "Engine2D/Component2D.hpp"
+#include "Engine2D/Rendering/Renderable2D.hpp"
 
 namespace Engine::Rendering {
   class Shader;
@@ -20,24 +21,32 @@ using Engine::Rendering::Shader;
 namespace Engine2D {
   namespace Rendering {
     class Sprite;
+    class Renderer2D;
   }
-  class ParticleSystem2D final : public Component2D {
+  class ParticleSystem2D final : public Rendering::Renderable2D {
     friend class Game2D;
     friend class Entity2D;
-    friend class ParticleSystemRenderer2D;
+    friend class ParticleSystemRegistry2D;
+    friend class Rendering::Renderer2D;
     public:
+      enum BlendMode {
+        Alpha, Additive, Multiply, PremultipliedAlpha, Subtractive, SoftAdditive, Opaque
+      };
+
       /// If the particle system restarts after it finished simulating itself
       bool loop;
       /// If the particle system simulation should be restarted from the beginning
       bool restart;
+      /// Whether particles will have their own start and end velocities
+      bool useGlobalVelocities;
+      /// If the simulation is run in world or local space
+      bool simulateInWorldSpace;
 
       /// How long to wait before running the first simulation
       float startDelay;
       /// The initial position of the particles
       glm::vec2 startPosition;
 
-      /// Whether particles will have their own start and end velocities
-      bool useGlobalVelocities;
       /// The initial velocity of the particles
       glm::vec2 startVelocity;
       /// The final velocity of the particles
@@ -55,17 +64,14 @@ namespace Engine2D {
       /// The final color of the particles
       glm::vec4 endColor;
 
-      /// If the simulation is run in world or local space
-      bool simulateInWorldSpace;
       /// How fast the simulation is run, 1.0f runs at normal sped
       float simulationSpeed;
       /// How many particles are simulated per second, a good value for a fluid simulation is maxParticles / simulationSpeed;
       float emissionRate;
       /// The maximum value that will randomly be added/removed from the particles start position
       float maxStartPositionOffset;
-
-      /// The shader of used to render the particles, defaults to the "particle" shader
-      std::shared_ptr<Shader> shader;
+      /// How particles are blended on screen during rendering
+      BlendMode blendMode;
 
       ParticleSystem2D();
 
@@ -75,25 +81,14 @@ namespace Engine2D {
       [[nodiscard]] float GetDuration() const;
       /// Sets the maximum number of particles this particle system can simulate at once
       /// @note Once the particle system has been updated once, this method will not do anything
-      void SetMaxParticles(size_t maxParticles);
+      void SetMaxParticles(size_t maxParticles, bool uniformEmissionRate = true);
       /// @returns The maximum of particles this particle system will simulate
       [[nodiscard]] uint32_t GetMaxParticles() const;
       /// Sets how long each particle will live for
       void SetParticleLifetime(float lifetime);
       /// @returns how long each particle lives for
       [[nodiscard]] float GetParticleLifetime() const;
-      /// Sets the sprite used to render the particles
-      void SetSprite(const std::shared_ptr<Rendering::Sprite> &sprite);
-      /// @returns the sprite used to render the particles
-      [[nodiscard]] std::shared_ptr<Rendering::Sprite> GetSprite() const;
-      /// Sets the rendering order of the particle system
-      void SetRenderOrder(int16_t renderOrder);
-      /// @returns the rendering order of the particle system
-      [[nodiscard]] int16_t GetRenderOrder() const;
     private:
-      enum RenderOrderType {
-        BehindSprite, InFrontOfSprite
-      };
       /// Represents a single particle and it's state
       struct ParticleSystemData {
         alignas(64) std::vector<glm::vec2> positions;
@@ -122,29 +117,33 @@ namespace Engine2D {
         }
       };
 
-      /// The sprite used to render the particles
-      std::shared_ptr<Rendering::Sprite> sprite;
-      /// Rendering priority: higher value means higher priority
-      int16_t renderOrder;
-      RenderOrderType renderOrderType;
+      struct Particle {
+        glm::vec2 position;
+        glm::vec2 scale;
+        glm::vec2 startVelocity;
+        glm::vec2 endVelocity;
+        float rotation;
+        float lifeTime;
+      };
 
       /// How long the particle system will be simulated
       float duration;
       /// How long particles will be visible on screen
       float particleLifetime;
+      /// The inverse of how long particles will be visible on screen
       float inverseLifetime;
 
-      /// The list of all the simulated particles
-      ParticleSystemData particles;
+      /// All the simulated particles
+      std::vector<Particle> particles;
+      /// The index of the first alive particle
+      size_t head;
+      /// The maximum number of particles that can be rendered
+      size_t maxParticles;
+
       /// Emission accumulator timer
       float emissionAcc;
       /// Duration accumulator timer
       float durationAcc;
-
-      /// Whether the simulation is done or not
-      bool simulationFinished;
-      /// The index of the last dead particle in the list
-      uint lastUsedParticle;
 
       /// The VAO used to render the particles
       uint quadVAO;
@@ -153,19 +152,13 @@ namespace Engine2D {
       /// The VBO used to send particle data
       uint instanceVBO;
       /// How many particles are currently alive
-      uint aliveCount;
-      /// Whether this component has been initialized or not
-      bool initialized;
+      uint capacity;
 
-      /// The vertices used to define the quad used to render the particles
-      static const float quadVertices[];
+      /// Whether the simulation is done or not
+      bool simulationFinished;
 
-      /// Initializes the particle system
-      void initialize();
-      /// Updates all the particles
-      void update();
       /// Renders the particle system
-      void render(uint32_t framebuffer = 0);
+      void updateAndRender(uint textureIndex, float *data);
 
       /// Updates the dead particle at the given index and brings it back to life
       void respawnParticle();

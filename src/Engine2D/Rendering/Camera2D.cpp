@@ -7,7 +7,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Engine2D/Rendering/Camera2D.hpp"
-
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
@@ -15,11 +14,14 @@
 #include "Engine2D/Types/Vector2.hpp"
 
 namespace Engine2D::Rendering {
+  uint Camera2D::ENGINE_DATA_BINDING_PORT = 0;
+
   Camera2D::Camera2D(
     const float left, const float right, const float bottom, const float top, const float near, const float far
   )
     : positionOffset(0), rotationOffset(0), damping(0), projection(glm::ortho(left, right, bottom, top, near, far)),
-      view(1.0f), shaking(false), shakeElapsed(0), shakeDuration(0), m00(0), m01(0), m03(0), m10(0), m11(0), m13(0) {
+      view(1.0f), shaking(false), initialized(false), shakeElapsed(0), shakeDuration(0), ubo(0), m00(0), m01(0), m03(0),
+      m10(0), m11(0), m13(0) {
     viewProjection = projection * view;
   }
 
@@ -69,8 +71,24 @@ namespace Engine2D::Rendering {
     return this->viewProjection;
   }
 
+  void Camera2D::initialize() {
+    // Bind the engine data ubo
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // Set the binding port
+    glBindBufferBase(GL_UNIFORM_BUFFER, ENGINE_DATA_BINDING_PORT, ubo);
+
+    initialized = true;
+  }
+
   void Camera2D::updateCamera() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+
+    if (!initialized)
+      initialize();
 
     /// Update the camera's transform
     if (followTarget) {
@@ -104,6 +122,15 @@ namespace Engine2D::Rendering {
     m10 = viewProjection[0][1];
     m11 = viewProjection[1][1];
     m13 = viewProjection[3][1];
+
+    // Send the engine data to shaders
+    void *ptr = glMapBufferRange(
+      GL_UNIFORM_BUFFER, 0, 3 * sizeof(glm::mat4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT
+    );
+    memcpy(ptr, &view, sizeof(glm::mat4));
+    memcpy(static_cast<char *>(ptr) + sizeof(glm::mat4), &projection, sizeof(glm::mat4));
+    memcpy(static_cast<char *>(ptr) + 2 * sizeof(glm::mat4), &viewProjection, sizeof(glm::mat4));
+    glUnmapBuffer(GL_UNIFORM_BUFFER);
   }
 
   glm::vec2 Camera2D::getCameraShake(const float frac) const {

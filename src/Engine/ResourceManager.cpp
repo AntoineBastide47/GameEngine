@@ -16,6 +16,9 @@
 #include "Engine2D/Game2D.hpp"
 #include "Engine/Log.hpp"
 #include "Engine/Macros/Assert.hpp"
+#include "Engine/Rendering/ShaderPreProcessor.hpp"
+#include "Engine2D/Rendering/Camera2D.hpp"
+#include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
 
 using Engine2D::Game2D;
@@ -42,34 +45,7 @@ namespace Engine {
       return Log::Error("Shader source is empty");
 
     // Split shader stages
-    std::string vertexCode, fragmentCode, geometryCode;
-    enum class ShaderType {
-      None, Vertex, Fragment, Geometry
-    };
-    auto currentType = ShaderType::None;
-
-    std::istringstream stream(shaderSource);
-    std::string line;
-    while (std::getline(stream, line)) {
-      if (line.find("#define TYPE VERTEX") != std::string::npos)
-        currentType = ShaderType::Vertex;
-      else if (line.find("#define TYPE FRAGMENT") != std::string::npos ||
-               line.find("#define TYPE PIXEL") != std::string::npos)
-        currentType = ShaderType::Fragment;
-      else if (line.find("#define TYPE GEOMETRY") != std::string::npos)
-        currentType = ShaderType::Geometry;
-      else {
-        switch (currentType) {
-          case ShaderType::Vertex: vertexCode += line + '\n';
-            break;
-          case ShaderType::Fragment: fragmentCode += line + '\n';
-            break;
-          case ShaderType::Geometry: geometryCode += line + '\n';
-            break;
-          default: break;
-        }
-      }
-    }
+    const auto &[vertexCode, fragmentCode, geometryCode] = Rendering::ShaderPreProcessor::preprocess(shaderSource);
 
     // Validate stages
     if (vertexCode.empty())
@@ -80,10 +56,22 @@ namespace Engine {
     // Compile shader
     const auto shader = std::make_shared<Shader>();
     shader->compile(
-      vertexCode.c_str(),
-      fragmentCode.c_str(),
+      vertexCode.c_str(), fragmentCode.c_str(),
       geometryCode.empty() ? nullptr : geometryCode.c_str()
     );
+    shader->use();
+
+    // Bind the engine data to the shader
+    if (const GLuint blockIndex = glGetUniformBlockIndex(shader->Id(), "Matrices"); blockIndex != GL_INVALID_INDEX)
+      glUniformBlockBinding(shader->Id(), blockIndex, Engine2D::Rendering::Camera2D::ENGINE_DATA_BINDING_PORT);
+
+    // Tell the shader how many textures it can hold
+    if (const GLint texturesLoc = glGetUniformLocation(shader->Id(), "textures"); texturesLoc != -1) {
+      int locations[Engine2D::Rendering::Renderer2D::MAX_TEXTURES];
+      for (int i = 0; i < Engine2D::Rendering::Renderer2D::MAX_TEXTURES; ++i)
+        locations[i] = i;
+      glUniform1iv(texturesLoc, Engine2D::Rendering::Renderer2D::MAX_TEXTURES, locations);
+    }
 
     return shaders[name] = shader;
   }
@@ -179,7 +167,8 @@ namespace Engine {
   }
 
   std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> ResourceManager::LoadTexture2DAndSprite(
-    const std::string &filePath, const std::string &name, const bool transparent, const glm::vec4 &rect, const bool blend
+    const std::string &filePath, const std::string &name, const bool transparent, const glm::vec<4, float01> &rect,
+    const bool blend
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
@@ -189,7 +178,7 @@ namespace Engine {
   }
 
   std::shared_ptr<Sprite> ResourceManager::CreateSpriteFromTexture(
-    const std::string &textureName, const bool transparent, const glm::vec4 &rect
+    const std::string &textureName, const bool transparent, const glm::vec<4, float01> &rect
   ) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);
@@ -205,7 +194,7 @@ namespace Engine {
   }
 
   std::shared_ptr<Sprite> ResourceManager::CreateSprite(
-    const std::string &spriteName, const std::string &textureName, const bool transparent, const glm::vec4 &rect
+    const std::string &spriteName, const std::string &textureName, const bool transparent, const glm::vec<4, float01> &rect
   ) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);

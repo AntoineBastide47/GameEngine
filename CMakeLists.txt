@@ -53,8 +53,8 @@ add_library(Engine2D STATIC
     include/Engine2D/Physics/Collider2D.hpp
     src/Engine2D/ParticleSystem/ParticleSystem2D.cpp
     include/Engine2D/ParticleSystem/ParticleSystem2D.hpp
-    src/Engine2D/ParticleSystem/ParticleSystemRenderer2D.cpp
-    include/Engine2D/ParticleSystem/ParticleSystemRenderer2D.hpp
+    src/Engine2D/ParticleSystem/ParticleSystemRegistry2D.cpp
+    include/Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp
     src/Engine2D/Behaviour.cpp
     include/Engine2D/Behaviour.hpp
     include/Engine/Macros/Utils.hpp
@@ -76,10 +76,14 @@ add_library(Engine2D STATIC
     include/Engine2D/Animation/Animator2D.hpp
     src/Engine2D/Animation/AnimationSystem.cpp
     include/Engine2D/Animation/AnimationSystem.hpp
+    src/Engine/Rendering/ShaderPreProcessor.cpp
+    include/Engine/Rendering/ShaderPreProcessor.hpp
+    src/Engine2D/Rendering/Renderable2D.cpp
+    include/Engine2D/Rendering/Renderable2D.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-${PROJECT_VERSION}$<IF:$<STREQUAL:$<CONFIG>,Debug>,d,>$<IF:$<BOOL:${Profile}>,p,>
+    OUTPUT_NAME Engine2D-${PROJECT_VERSION}$<IF:$<STREQUAL:$<CONFIG>,Debug>,d,>$<IF:$<BOOL:${PROFILE}>,p,>
     PREFIX ""
 )
 target_include_directories(Engine2D PUBLIC include)
@@ -149,7 +153,24 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
   set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
   add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
-endif ()
+elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    set(SANITIZER_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
+    set(ASAN_OPTIONS_FLAGS "-fsanitize-recover=address -fsanitize=undefined -fsanitize-address-use-after-scope")
+    set(DEBUG_FLAGS "-g")
+
+    add_compile_definitions(ASAN_OPTIONS="verbosity=1:halt_on_error=1:detect_leaks=1:symbolize=1")
+
+    # Apply flags to all targets
+    set(ALL_SANITIZER_FLAGS "${SANITIZER_FLAGS} ${ASAN_OPTIONS_FLAGS} ${DEBUG_FLAGS}")
+
+    # Function to apply sanitizer flags to all targets
+    function(enable_sanitizers target)
+      target_compile_options(${target} PRIVATE ${ALL_SANITIZER_FLAGS})
+      target_link_options(${target} PRIVATE ${ALL_SANITIZER_FLAGS})
+    endfunction()
+  endif()
+endif()
 
 add_custom_command(TARGET Engine2D POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E rename

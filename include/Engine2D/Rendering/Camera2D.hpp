@@ -15,9 +15,14 @@ namespace Engine2D {
   class Game2D;
 }
 
+namespace Engine {
+  class ResourceManager;
+}
+
 namespace Engine2D::Rendering {
   class Camera2D : public Component2D {
     friend class Engine2D::Game2D;
+    friend class Engine::ResourceManager;
     public:
       struct ShakeWave {
         float amplitude;
@@ -57,21 +62,28 @@ namespace Engine2D::Rendering {
       const glm::mat4 &GetViewProjectionMatrix() const;
     private:
       /// The orthographic projection matrix that defines the camera's visible region in world space.
-      glm::mat4 projection;
+      const glm::mat4 projection;
       /// The view matrix representing the inverse of the camera's world transformation (position, rotation, scale).
       glm::mat4 view;
       /// The combined view-projection matrix used to transform world coordinates into clip space.
       glm::mat4 viewProjection;
       /// If the camera is currently shaking
       bool shaking;
+      /// Whether the camera is initialized or not
+      bool initialized;
       /// How long the camera has been shaking for
       float shakeElapsed;
       /// How long the camera should shake for
       float shakeDuration;
+      /// UBO used to send data to all shaders
+      uint ubo;
 
       float m00, m01, m03;
       float m10, m11, m13;
 
+      static uint ENGINE_DATA_BINDING_PORT;
+
+      void initialize();
       void updateCamera();
       glm::vec2 getCameraShake(float frac) const;
   };

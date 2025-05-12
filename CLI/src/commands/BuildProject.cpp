@@ -45,8 +45,6 @@ void BuildProject::Run(
   }
   fs::remove_all(fs::path("./" + projectName));
 
-  if (arg == "release")
-    std::system("cmake -E rm -rf build");
   std::system(("cmake -B build -S . -DBUILD_TYPE=" + arg + " -Wdev -Wdeprecated --log-level=WARNING").c_str());
   std::system("cmake --build build");
 }

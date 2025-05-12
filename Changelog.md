@@ -3,7 +3,24 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.7.4] - 2025-05-28
+## [0.7.5] - 2025-05-12
+### Added
+- **[ShadersPreProcessor]**: script that updates the shaders depending on the define statements they contain
+- **[Shaders]**: Matrices and Textures define statements that insert view/projection matrices and texture sampling in the shader
+- **[Renderable2D]**: base class for SpriteRenderer and ParticleSystem2D
+- **[ParticleSystem2D]**: blend modes for different render styles
+### Changed
+- **[Templates/2D]**: copies the shaders into the build directory and does not embed .DS_Store files
+- **[Camera2D]**: updates the shader matrices once per frame instead of once per frame per shader
+- **[ParticleSystem2D]**: combined the update and render functions into a single function
+- **[ParticleSystemRenderer2D]**: renamed to ParticleSystemRegistry2D
+- **[Renderer2D]**: now also renders particles, opaque non-static rendering is more performant
+### Fixed
+- **[Renderer2D]**: fixed transparent sprites and particles not respecting render order correctly
+### Removed
+- **[particle.glsl]**
+
+## [0.7.4] - 2025-04-28
 ### Added
 - **[Templates/2D]**: added a .gitignore
 ### Changed

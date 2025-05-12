@@ -37,10 +37,12 @@ namespace Engine2D {
     public:
       /// @returns True if the Game2D instance has been initialized, False if not
       [[nodiscard]] static bool Initialized();
-      /// @returns The width of the viewport of the window
+      /// @returns The width of the window's viewport
       [[nodiscard]] static float ViewportWidth();
-      /// @returns The height of the viewport of the window
+      /// @returns The height of the window's viewport
       [[nodiscard]] static float ViewportHeight();
+      /// @returns The size of the window's viewport
+      [[nodiscard]] static glm::vec2 ViewportSize();
       /// @returns The aspect ratio of the viewport
       [[nodiscard]] static glm::vec2 AspectRatio();
       /// @returns The time span between the current frame and the last frame
@@ -89,6 +91,8 @@ namespace Engine2D {
       static const float screenScaleFactor;
       /// The current aspect ratio of the window
       glm::vec2 aspectRatio;
+      /// The inverse of the current window's aspect ratio
+      glm::vec2 aspectRatioInv;
 
       /// The title of the game window
       const char *title;
