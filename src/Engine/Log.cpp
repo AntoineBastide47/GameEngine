@@ -50,7 +50,7 @@ namespace Engine {
     messagesSent.emplace_back(hash);
     std::cout << std::endl << msg << std::endl;
     if (showTrace) {
-      cpptrace::generate_trace().print();
+      cpptrace::generate_trace(2).print();
       std::cout << std::endl;
     }
   }

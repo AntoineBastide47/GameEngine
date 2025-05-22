@@ -9,6 +9,8 @@
 
 #include <memory>
 
+#include <Engine2D/Entity2D.hpp>
+#include <Engine2D/Transform2D.hpp>
 #include "Engine2D/Component2D.hpp"
 
 namespace Engine2D {

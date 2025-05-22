@@ -19,7 +19,7 @@ namespace Engine2D::Rendering {
   Camera2D::Camera2D(
     const float left, const float right, const float bottom, const float top, const float near, const float far
   )
-    : positionOffset(0), rotationOffset(0), damping(0), projection(glm::ortho(left, right, bottom, top, near, far)),
+    : positionOffset(0), rotationOffset(0), damping(1), projection(glm::ortho(left, right, bottom, top, near, far)),
       view(1.0f), shaking(false), initialized(false), shakeElapsed(0), shakeDuration(0), ubo(0), m00(0), m01(0), m03(0),
       m10(0), m11(0), m13(0) {
     viewProjection = projection * view;
@@ -84,6 +84,8 @@ namespace Engine2D::Rendering {
     initialized = true;
   }
 
+  auto velocity = glm::vec2(0.0f);
+
   void Camera2D::updateCamera() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
@@ -92,10 +94,11 @@ namespace Engine2D::Rendering {
 
     /// Update the camera's transform
     if (followTarget) {
-      auto velocity = glm::vec2(0);
       const glm::vec2 target = followTarget->transform->GetWorldPosition() + positionOffset;
       Transform()->SetPosition(
-        glm::smoothDamp(Transform()->GetWorldPosition(), target, velocity, damping, Game2D::DeltaTime())
+        glm::smoothDamp(
+          Transform()->GetWorldPosition(), target, velocity, std::clamp(damping, 1e-6f, 1.0f), Game2D::DeltaTime()
+        )
       );
       Transform()->SetRotation(rotationOffset + followTarget->transform->GetWorldRotation());
     }

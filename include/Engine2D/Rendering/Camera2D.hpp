@@ -36,7 +36,9 @@ namespace Engine2D::Rendering {
       glm::vec2 positionOffset;
       /// The offset rotation of the camera
       float rotationOffset;
-      /// The offset scale of the camera
+      /// Controls the smoothness of camera movement when following a target.
+      /// Lower values result in faster, snappier motion. Higher values produce slower, smoother tracking.
+      /// Must be greater than zero to avoid invalid calculations in smoothDamp.
       float damping;
 
       /// Coefficients that control the shake of the camera on the X axis

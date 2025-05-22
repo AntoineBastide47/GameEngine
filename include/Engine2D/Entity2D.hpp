@@ -62,9 +62,11 @@ namespace Engine2D {
 
         auto component = std::make_shared<T>(std::forward<Args>(args)...);
         component->setEntity(shared_from_this());
-        if (auto behaviour = std::dynamic_pointer_cast<Behaviour>(component)) {
-          behaviours.emplace_back(behaviour);
-          behaviour->OnInitialize();
+        if constexpr (std::is_base_of_v<Behaviour, T>) {
+          if (auto behaviour = std::dynamic_pointer_cast<Behaviour>(component)) {
+            behaviours.emplace_back(behaviour);
+            behaviour->OnInitialize();
+          }
         } else {
           components.emplace_back(component);
           forwardComponent(component);

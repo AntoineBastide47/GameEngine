@@ -121,6 +121,7 @@ namespace Engine {
       return Log::Error("Failed to load image: " + filePath + "\nReason: " + stbi_failure_reason());
     }
 
+    bool transparent = false;
     int internalFormat = 0, dataFormat = 0;
     if (nrChannels == 1) {
       internalFormat = GL_R8;
@@ -134,13 +135,20 @@ namespace Engine {
     } else if (nrChannels == 4) {
       internalFormat = GL_RGBA8;
       dataFormat = GL_RGBA;
+
+      for (int i = 0; i < width * height; ++i) {
+        if (data[i * 4 + 3] < 255) {
+          transparent = true;
+          break;
+        }
+      }
     }
 
     ENGINE_ASSERT(internalFormat & dataFormat, "Image format is not supported");
 
     // Generate the texture and free the image data
     const auto texture = std::make_shared<Texture>(filePath);
-    texture->generate(width, height, data, internalFormat, dataFormat, blend);
+    texture->generate(width, height, data, internalFormat, dataFormat, transparent, blend);
     stbi_image_free(data);
     return textures[name] = texture;
   }
@@ -167,18 +175,18 @@ namespace Engine {
   }
 
   std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> ResourceManager::LoadTexture2DAndSprite(
-    const std::string &filePath, const std::string &name, const bool transparent, const glm::vec<4, float01> &rect,
+    const std::string &filePath, const std::string &name, const glm::vec<4, float01> &rect,
     const bool blend
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     auto texture = LoadTexture2D(filePath, name, blend);
-    auto sprite = CreateSpriteFromTexture(name, transparent, rect);
+    auto sprite = CreateSpriteFromTexture(name, rect);
     return {texture, sprite};
   }
 
   std::shared_ptr<Sprite> ResourceManager::CreateSpriteFromTexture(
-    const std::string &textureName, const bool transparent, const glm::vec<4, float01> &rect
+    const std::string &textureName, const glm::vec<4, float01> &rect
   ) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);
@@ -187,14 +195,14 @@ namespace Engine {
 
     const auto sprite = std::make_shared<Sprite>();
     sprite->texture = texture;
-    sprite->transparent = transparent;
+    sprite->transparent = texture->transparent;
     sprite->rect = rect;
 
     return sprites[textureName] = sprite;
   }
 
   std::shared_ptr<Sprite> ResourceManager::CreateSprite(
-    const std::string &spriteName, const std::string &textureName, const bool transparent, const glm::vec<4, float01> &rect
+    const std::string &spriteName, const std::string &textureName, const glm::vec<4, float01> &rect
   ) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);
@@ -205,7 +213,7 @@ namespace Engine {
     const auto sprite = std::make_shared<Sprite>();
     sprite->texture = texture;
     sprite->rect = rect;
-    sprite->transparent = transparent;
+    sprite->transparent = texture->transparent;
     return sprites[spriteName] = sprite;
   }
 

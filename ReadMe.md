@@ -70,10 +70,13 @@ or
 ```
 
 ## Current Features
-- **Rendering Engine:** Efficient rendering of sprites and textures.<br>
-- **Entity Management:** Handles entities and their components.<br>
-- **Input Handling:** Supports keyboard, mouse, and gamepad input.<br>
-- **Physics Engine:** Provides rigid body dynamics and collision responses.<br>
+* **Rendering Engine:** Efficient rendering of sprites and textures.
+* **Entity Management:** Handles entities and their components.
+* **Input Handling:** Supports keyboard, mouse, and gamepad input.
+* **Physics Engine:** Provides rigid body dynamics and collision responses.
+* **CPU based Particle System:** Configurable particle emitters with control over lifetime, velocity, and color transitions.
+* **2D Camera System:** orthographic camera and follow-camera modes with zoom, pan, rotation and shake support.
+* **Animator:** Data-driven 2D animation system supporting transitions, conditions, triggers, and parameterized state machines.
 
 > [!NOTE]
 > For planned updates and upcoming features, see the
@@ -105,8 +108,7 @@ Versions are currently formatted as follows: `[major].[feature].[patch].[beta]` 
 For detailed commit history, see the [Changelog.md](https://github.com/AntoineBastide47/GameEngine/blob/main/Changelog.md).
 
 ## Releases
-Releases will begin with version 1.0.0 and are available for Windows, macOS, and Linux.
-The ones following major releases (version X.1.0) will focus on performance and memory optimizations.
+Releases will begin with version 1.0.0 and will be available for Windows, macOS, and Linux.
 
 ## Modifying the engine
 Feel free to fork and modify the engine. After making changes:
@@ -120,7 +122,7 @@ Feel free to fork and modify the engine. After making changes:
 > - The build pipeline may be updated, so check the changelog for major changes.
 
 > [!WARNING]
-> The engine is not backwards compatible to avoid increased binary size and reduced performance.
+> The engine is not backwards compatible to avoid increased binary size and potential performance issues.
 
 ## Limitations
 > [!WARNING]
@@ -130,10 +132,10 @@ Feel free to fork and modify the engine. After making changes:
 Contributions are welcome. As this is a personal learning project, contributions may not be merged immediately. Fork the repository and experiment freely.
 
 ## Learning Objectives
-**C++ Mastery:** Improve modern C++ skills.<br>
-**Game Development:** Learn the fundamentals of game engine design.<br>
-**Software Architecture:** Apply design patterns and architectural principles.<br>
-**Project Management:** Gain experience in planning, versioning, and documentation.
+* **C++ Mastery:** Improve modern C++ skills.
+* **Game Development:** Learn the fundamentals of game engine design.
+* **Software Architecture:** Apply design patterns and architectural principles.
+* **Project Management:** Gain experience in planning, versioning, and documentation.
 
 ## License
 This project is licensed under the Apache License Version 2.0.
@@ -141,7 +143,7 @@ This project is licensed under the Apache License Version 2.0.
 ## References
 The following references include a collection of articles and videos that have served as the foundation for building my
 engine (the list will evolve over time):
-- OpenGL, Particle System, Audio: [Learn OpenGL](https://learnopengl.com/)
-- Physics Engine: [Two-Bit Coding - Let's Make a Physics Engine](https://www.youtube.com/playlist?list=PLSlpr6o9vURwq3oxVZSimY8iC-cdd3kIs)<br>
+- OpenGL, Particle System: [Learn OpenGL](https://learnopengl.com/)
+- Physics Engine: [Two-Bit Coding - Let's Make a Physics Engine](https://www.youtube.com/playlist?list=PLSlpr6o9vURwq3oxVZSimY8iC-cdd3kIs)
 > [!Important]
 > These resources are guides. They provide insights but may not result in an identical engine implementation.

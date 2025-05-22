@@ -34,9 +34,17 @@ namespace Engine::Rendering {
           // Inject the SampleTexture function
         else if (usingName == "Textures") {
           processedSource
-            << "uniform sampler2D textures["
-            << Engine2D::Rendering::Renderer2D::MAX_TEXTURES
-            << "];\n\nvec4 SampleTexture() { return texture(textures[int(vTextureData.z)], vTextureData.xy); }\n";
+            << "uniform sampler2D textures[" << Engine2D::Rendering::Renderer2D::MAX_TEXTURES << "];\n\n"
+            << "vec4 SampleTexture() {\n"
+            << "  int idx = int(vTextureData.z);\n"
+            << "  if (idx == 0) return texture(textures[0], vTextureData.xy);\n";
+          for (int i = 1; i < Engine2D::Rendering::Renderer2D::MAX_TEXTURES; ++i) {
+            processedSource
+              << "  else if (idx == " << i << ") return texture(textures[" << i << "], vTextureData.xy);\n";
+          }
+          processedSource
+            << "    return vec4(1.0, 0.0, 1.0, 1.0);\n"
+            << "}\n";
         }
       } else
         processedSource << line << '\n';

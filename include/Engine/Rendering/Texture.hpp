@@ -50,6 +50,8 @@ namespace Engine::Rendering {
       int height;
       /// Where the texture file is stored on disc
       std::string path;
+      /// Whether this texture has transparent pixels or not
+      bool transparent;
 
       /**
        * Sets up the texture with specified width, height, and pixel data.
@@ -58,9 +60,10 @@ namespace Engine::Rendering {
        * @param data The pixel data for the texture, typically loaded from an image file.
        * @param internalFormat
        * @param dataFormat
+       * @param transparent
        * @param blended Whether to blend the pixels or not
        */
-      void generate(int width, int height, const unsigned char *data, int internalFormat, int dataFormat, bool blended = false);
+      void generate(int width, int height, const unsigned char *data, int internalFormat, int dataFormat, bool transparent, bool blended = false);
       /// Makes this texture active so that subsequent rendering operations use it.
       void bind(int offset = 0) const;
       /// Unloads the texture data and prepares the object for reuse.

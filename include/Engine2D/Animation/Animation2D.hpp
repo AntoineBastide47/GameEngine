@@ -7,6 +7,8 @@
 #ifndef ANIMATION2D_HPP
 #define ANIMATION2D_HPP
 
+#include <string>
+
 namespace Engine2D::Animation {
   class Animation2D {
     friend class Animator2D;
@@ -26,13 +28,34 @@ namespace Engine2D::Animation {
       /// Whether to play the animation in reverse
       bool reverse;
 
-      /// Creates a vertical animation from a vertical strip image
+      /**
+       * Creates a vertical animation from a vertical strip image
+       * @param spriteName The name of the sprite this animation is based on
+       * @param frameCount The number of frames in the sprite
+       * @param frameOffsetX Frame start index offset on the x-axis
+       * @param frameOffsetY Frame start index offset on the y-axis
+       * @param frameRate The time between each frame change
+       * @param loop If the animation should loop
+       * @param reverse If the animation should play in reverse
+       */
       static Animation2D CreateVertical(
-        int frameCount, int frameOffsetX, int frameOffsetY, float frameRate, bool loop, bool reverse
+        const std::string &spriteName, int frameCount, int frameOffsetX, int frameOffsetY, float frameRate, bool loop,
+        bool reverse
       );
-      /// Creates a horizontal animation from a horizontal strip image
+
+      /**
+       * Creates a horizontal animation from a horizontal strip image
+       * @param spriteName The name of the sprite this animation is based on
+       * @param frameCount The number of frames in the sprite
+       * @param frameOffsetX Frame start index offset on the x-axis
+       * @param frameOffsetY Frame start index offset on the y-axis
+       * @param frameRate The time between each frame change
+       * @param loop If the animation should loop
+       * @param reverse If the animation should play in reverse
+       */
       static Animation2D CreateHorizontal(
-        int frameCount, int frameOffsetX, int frameOffsetY, float frameRate, bool loop, bool reverse
+        const std::string &spriteName, int frameCount, int frameOffsetX, int frameOffsetY, float frameRate, bool loop,
+        bool reverse
       );
 
       /// Sets the duration of each frame in the animation
@@ -43,13 +66,6 @@ namespace Engine2D::Animation {
       void SetSpeed(float speed);
       /// @returns The speed of the animation
       [[nodiscard]] float GetSpeed() const;
-
-      /// Stops the animation from continuing to play
-      void Pause();
-      /// Allows the animation to play once again
-      void Resume();
-      /// Restarts the animation if it is non-looping
-      void Restart();
     private:
       /// True if vertical, False if horizontal
       bool vertical;
@@ -67,11 +83,14 @@ namespace Engine2D::Animation {
       float inverseSpeed;
       /// How long the animation has been running for
       float elapsedTime;
+      std::string spriteName;
 
       Animation2D(
-        int frameCountX, int frameCountY, int frameOffsetX, int frameOffsetY, float frameRate, bool vertical, bool loop,
-        bool reverse
+        const std::string &spriteName, int frameCountX, int frameCountY, int frameOffsetX, int frameOffsetY, float frameRate,
+        bool vertical, bool loop, bool reverse
       );
+
+      int FrameCount() const;
   };
 }
 

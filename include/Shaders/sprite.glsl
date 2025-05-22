@@ -10,9 +10,9 @@ layout (location = 0) in vec4 aVertex;
 layout (location = 1) in vec4 aPositionAndScale;
 // <float r, float g, float b, float a>
 layout (location = 2) in vec4 aColor;
-// <float u, floatv, float witdth, float height>
+// <float u, float v, float witdth, float height>
 layout (location = 3) in vec4 aRect;
-// <float packedPivot, float rotation, float renderOrder, float textureIndex>
+// <float packedPivot, float rotation, float packedRenderOrderAndtextureIndex, float packedFlip>
 layout (location = 4) in vec4 aOther;
 
 out vec4 vTextureData;
@@ -38,10 +38,16 @@ void main() {
     vec2 scaledPosition = (aVertex.xy - pivot) * aPositionAndScale.zw;
     vec2 rotatedPos = scaledPosition * rotMat;
 
-    vTextureData = vec4(aRect.xy + aVertex.zw * aRect.zw, aOther.w, 0.);
+    // Apply flip
+    vec2 flip = unpackTwoFloats(aOther.w);
+    vec2 coords = vec2(flip.x != 1.0 ? 1.0 - aVertex.z : aVertex.z, flip.y != 1.0 ? 1.0 - aVertex.w : aVertex.w);
+
+    int textureId = int(aOther.z) & 0xFFFF;
+    vTextureData = vec4(aRect.xy + coords * aRect.zw, textureId, 0.);
     vVertColor = aColor;
 
-    gl_Position = uViewProjection * vec4(rotatedPos + aPositionAndScale.xy, aOther.z, 1.0);
+    int renderOrder = int(aOther.z) >> 16;
+    gl_Position = uViewProjection * vec4(rotatedPos + aPositionAndScale.xy, renderOrder, 1.0);
 }
 
 #region FRAGMENT

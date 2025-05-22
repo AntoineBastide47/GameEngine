@@ -138,17 +138,8 @@ namespace Engine2D::Rendering {
     const auto sprite = renderer->sprite;
     const auto color = renderer->color;
     const float invPPU = 1.0f / sprite->pixelsPerUnit;
-    auto rect = sprite->rect;
-
-    // Apply flip
-    if (renderer->flip.x) {
-      rect.x += rect.z;
-      rect.z *= -1.0f;
-    }
-    if (renderer->flip.y) {
-      rect.y += rect.w;
-      rect.w *= -1.0f;
-    }
+    const auto rect = sprite->rect;
+    //const auto &transform = *renderer->Transform();
 
     // Position and scale
     *data++ = renderer->Transform()->GetWorldPosition().x;
@@ -168,11 +159,11 @@ namespace Engine2D::Rendering {
     *data++ = rect.z;
     *data++ = rect.w;
 
-    // Add renderOrder and pixelsPerUnit
+    // Pivot, rotation, render order, texture index and flip
     *data++ = PackTwoFloats(renderer->sprite->pivot.x, renderer->sprite->pivot.y);
     *data++ = renderer->Transform()->GetWorldRotation();
-    *data++ = renderer->renderOrder;
-    *data = textureIdToIndexMap.at(renderer->sprite->texture->id);
+    *data++ = renderer->renderOrder << 16 | textureIdToIndexMap.at(renderer->sprite->texture->id);
+    *data = PackTwoFloats(renderer->GetFlip().x ? -1.0f : 1.0, renderer->GetFlip().y ? -1.0f : 1.0);
   }
 
   void Renderer2D::mapTextureIdToIndex(const uint &textureId) {
@@ -619,8 +610,8 @@ namespace Engine2D::Rendering {
 
     // Render the static opaque sprites
     buildAndRenderStaticBatch(
-      staticOpaqueRenderers, staticOpaqueBatchData, staticOpaqueFlushList, staticOpaqueRenderers.size() != lastOpaqueStaticCount,
-      staticOpaqueBatchVBO, framebuffer
+      staticOpaqueRenderers, staticOpaqueBatchData, staticOpaqueFlushList,
+      staticOpaqueRenderers.size() != lastOpaqueStaticCount, staticOpaqueBatchVBO, framebuffer
     );
 
     // Prepare the non-static opaque sprites

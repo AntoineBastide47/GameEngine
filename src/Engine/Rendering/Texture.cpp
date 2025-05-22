@@ -13,12 +13,13 @@ namespace Engine::Rendering {
 
   void Texture::generate(
     const int width, const int height, const unsigned char *data, const int internalFormat, const int dataFormat,
-    const bool blended
+    const bool transparent, const bool blended
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     this->width = width;
     this->height = height;
+    this->transparent = transparent;
 
     // create Texture
     glGenTextures(1, &this->id);
