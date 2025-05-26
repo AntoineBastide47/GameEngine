@@ -8,6 +8,7 @@
 #define EVENT_H
 
 #include <functional>
+#include <ostream>
 
 namespace Engine {
   /**
@@ -21,67 +22,54 @@ namespace Engine {
   template<typename... Args> class Event {
     public:
       using Callback = std::function<void(Args...)>;
+      using CallbackHandle = std::shared_ptr<Callback>;
+
       Event() = default;
       virtual ~Event() = default;
 
       /// Addition assignment for shorthand call to Event::AddCallbacks
-      template<typename... Callbacks> void operator+=(const Callbacks &... callback) {
-        (AddCallback(callback), ...);
+      CallbackHandle operator+=(const Callback &callback) {
+        return AddCallback(callback);
       }
+
       /// Addition assignment for shorthand call to Event::RemoveCallbacks
-      template<typename... Callbacks> void operator-=(const Callbacks &... callback) {
-        (RemoveCallback(callback), ...);
+      void operator-=(const CallbackHandle &callback) {
+        RemoveCallback(callback);
       }
 
       /**
        * Registers a callback function that will be executed when the event is triggered.
        * @param callback The callback function to add. This should be a non-capturing lambda or function pointer.
+       * @returns the handle of this callback, used to late remove it if needed
        */
-      void AddCallback(const Callback &callback) {
-        callbacks.push_back(std::make_shared<Callback>(callback));
-      }
-
-      /**
-       * Registers multiple callback functions that will be executed when the event is triggered.
-       * @param callbacks The callback functions to add. Each should be a non-capturing lambda or function pointer.
-       */
-      template<typename... Callbacks> void AddCallbacks(const Callbacks &... callbacks) {
-        (AddCallback(callbacks), ...);
+      CallbackHandle AddCallback(Callback callback) {
+        auto handle = std::make_shared<Callback>(std::move(callback));
+        callbacks.push_back(handle);
+        return handle;
       }
 
       /**
        * Unregisters a callback function, preventing it from being executed when the event is triggered.
-       * @param callback The callback function to remove. Each should be a non-capturing lambda or function pointer.
+       * @param handle The handle of the callback to remove
        */
-      void RemoveCallback(const Callback &callback) {
-        auto it = std::remove_if(
-          callbacks.begin(), callbacks.end(),
-          [&callback](const Callback &ptr) {
-            return ptr.template target<void(Args...)>() == callback.template target<void(Args...)>();
-          }
-        );
-        callbacks.erase(it, callbacks.end());
-      }
-
-      /**
-       * Remove multiple callback functions that will be executed when the event is triggered.
-       * @param callbacks The callback functions to add. Each should be a non-capturing lambda or function pointer.
-       */
-      template<typename... Callbacks> void RemoveCallbacks(const Callbacks &... callbacks) {
-        (RemoveCallback(callbacks), ...);
+      void RemoveCallback(const CallbackHandle &handle) {
+        callbacks.erase(std::remove(callbacks.begin(), callbacks.end(), handle), callbacks.end());
       }
     protected:
-      /// Simple function before the Trigger function calls the callbacks
-      virtual void preTrigger() {}
-      /**
-       * Executes each callback function that has been registered with the
-       * event. Each callback is executed in the order it was registered.
-       */
+      /// Executes each callback function that has been registered with the event. Each callback is executed in the order it was registered.
       void trigger(Args... args) {
-        preTrigger();
-        for (const std::shared_ptr<Callback> callback: callbacks) {
-          (*callback.get())(args...);
-        }
+        callbacks.erase(
+          std::remove_if(
+            callbacks.begin(), callbacks.end(), [&](const std::shared_ptr<Callback> &cb) {
+              if (cb) {
+                (*cb)(args...);
+                return false;
+              }
+              return true;
+            }
+          ),
+          callbacks.end()
+        );
       }
     private:
       /// The list of all callbacks registered to this event

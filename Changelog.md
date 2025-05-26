@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1] - 2025-05-22
+### Added
+- **[ShaderPreProcessor]**: support for custom #define, #ifdef, #ifndef, #else, #endif statements
+### Changed
+- **[Event]**: += operator and AddCallback return a handle to remove the given callback easily
+### Fixed
+- **[Entity2D]**: destroy not calling the OnDestroy method of it's behaviours
+- **[Event]**: remove callback not actually removing the callback
+
 ## [0.8.0] - 2025-05-22
 ### Added
 - **[Animator2D]**: animator transitions that switch between different animations automatically based on user defined conditions
@@ -12,7 +21,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **[Entity2D]**: adding a Component2D would cause errors due to wrong casts to Behaviour
 - **[sprite.glsl]**: flip not being applied correctly
 - **[Log]**: no longer shows calls to internal logging in the stack trace
-### Removed
 
 ## [0.7.5] - 2025-05-12
 ### Added

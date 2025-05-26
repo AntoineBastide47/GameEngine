@@ -5,6 +5,7 @@
 //
 
 #include "Engine2D/Entity2D.hpp"
+#include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
@@ -73,7 +74,12 @@ namespace Engine2D {
       recallComponent(*it);
       it = components.erase(it);
     }
-    components.clear();
+
+    for (auto it = behaviours.begin(); it != behaviours.end();) {
+      (*it)->OnDestroy();
+      it = behaviours.erase(it);
+    }
+
     transform->RemoveAllChildren();
   }
 

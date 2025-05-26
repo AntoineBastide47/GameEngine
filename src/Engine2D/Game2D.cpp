@@ -325,7 +325,6 @@ namespace Engine2D {
         for (const auto &behaviour: entity->behaviours)
           if (behaviour && behaviour->IsActive())
             behaviour->OnUpdate();
-    //ParticleSystemUpdater2D::update();
   }
 
   void Game2D::limitFrameRate() const {
@@ -420,20 +419,23 @@ namespace Engine2D {
   }
 
   void Game2D::addEntities() {
-    if (!entitiesToAdd.empty()) {
-      for (const auto &entity: entitiesToAdd)
-        entity->initialize();
-      entities.insert(entities.end(), entitiesToAdd.begin(), entitiesToAdd.end());
-      entitiesToAdd.clear();
-    }
+    if (entitiesToAdd.empty())
+      return;
+
+    for (const auto &entity: entitiesToAdd)
+      entity->initialize();
+    entities.insert(entities.end(), entitiesToAdd.begin(), entitiesToAdd.end());
+    entitiesToAdd.clear();
   }
 
   void Game2D::removeEntities() {
-    for (const auto &entity: instance->entitiesToRemove) {
+    if (entitiesToRemove.empty())
+      return;
+
+    for (const auto &entity: entitiesToRemove) {
       std::erase(entities, entity);
       entity->destroy();
     }
-    instance->entitiesToRemove.clear();
   }
 
   void Game2D::removeEntity(const std::shared_ptr<Entity2D> &entity) {
