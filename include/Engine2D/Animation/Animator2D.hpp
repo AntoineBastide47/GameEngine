@@ -165,6 +165,9 @@ namespace Engine2D::Animation {
       /// The name of the animation currently played by the animator
       std::string defaultAnimationName;
 
+      void forward() override;
+      void recall() override;
+
       /// Updates the current animation and transitions
       void update();
       /// @returns the name of the next animation of the first transition that is valid, "" if not

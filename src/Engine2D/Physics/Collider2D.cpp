@@ -9,12 +9,22 @@
 
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Entity2D.hpp"
+#include "Engine2D/Game2D.hpp"
+#include "Engine2D/Physics/Physics2D.hpp"
 #include "Engine2D/Physics/Rigidbody2D.hpp"
 
 namespace Engine2D::Physics {
   Collider2D::Collider2D()
     : bounciness(1), offset(glm::vec2(0)), autoCompute(true), position(glm::vec2(0)), isTrigger(false), type(None),
       initialized(false), lastModelMatrix() {}
+
+  void Collider2D::forward() {
+    Physics2D::addCollider(std::dynamic_pointer_cast<Collider2D>(shared_from_this()));
+  }
+
+  void Collider2D::recall() {
+    Physics2D::removeCollider(std::dynamic_pointer_cast<Collider2D>(shared_from_this()));
+  }
 
   std::vector<glm::vec2> Collider2D::ContactPoints() const {
     return contactPoints;

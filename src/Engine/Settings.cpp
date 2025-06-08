@@ -104,7 +104,7 @@ namespace Engine {
 
   void Settings::Physics::SetPartitionSize(const glm::vec<2, size_t> newValue) {
     partitionSize = newValue;
-    Engine2D::Game2D::instance->physics2D->collisionGridNeedsResizing = true;
+    Physics2D::collisionGridNeedsResizing = true;
   }
 
   void Settings::Physics::SetGravity(const glm::vec2 newValue) {

@@ -10,7 +10,6 @@
 #include <glm/glm.hpp>
 
 #include "Engine/Types/float01.hpp"
-#include "Engine2D/Component2D.hpp"
 #include "Engine2D/Rendering/Renderable2D.hpp"
 
 namespace Engine::Rendering {
@@ -44,6 +43,9 @@ namespace Engine2D::Rendering {
       glm::vec<2, bool> flip;
       /// Whether the sprite renderer was updated
       bool dirty;
+
+      void forward() override;
+      void recall() override;
   };
 }
 

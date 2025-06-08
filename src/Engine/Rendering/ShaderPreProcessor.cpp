@@ -6,11 +6,9 @@
 
 #include <regex>
 #include <sstream>
-
-#include "Engine/Rendering/ShaderPreProcessor.hpp"
-
 #include <fstream>
 
+#include "Engine/Rendering/ShaderPreProcessor.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
 
 namespace Engine::Rendering {

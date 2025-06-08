@@ -29,11 +29,12 @@ namespace Engine2D {
   namespace Rendering {
     class Camera2D;
   }
+
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Entity2D;
-    friend class Engine::ResourceManager;
     friend class Engine::Settings;
+    friend class Engine::ResourceManager;
     public:
       /// @returns True if the Game2D instance has been initialized, False if not
       [[nodiscard]] static bool Initialized();
@@ -131,8 +132,6 @@ namespace Engine2D {
       /// The time at which the previous frame was run
       std::chrono::time_point<std::chrono::steady_clock> lastTime;
 
-      /// Physics simulator
-      Physics::Physics2D *physics2D;
       /// Timer used to check if the game is ready for the next physics update
       float physicsAccumulator;
 

@@ -9,6 +9,8 @@
 #include "Engine2D/Physics/Collider2D.hpp"
 
 namespace Engine2D::Physics {
+  CollisionGrid::CollisionGrid(): bottomLeft(), topRight(), cellSize(), gridSize() {}
+
   CollisionGrid::CollisionGrid(const glm::vec<2, size_t> gridSize) {
     this->bottomLeft = glm::vec2(Game2D::ViewportWidth() * -0.5f, Game2D::ViewportHeight() * -0.5f);
     this->topRight = -bottomLeft;

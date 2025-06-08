@@ -12,7 +12,6 @@
 #include "Engine2D/Physics/Physics2D.hpp"
 #include "Engine/Rendering/Shader.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
-#include "Engine/Macros/Utils.hpp"
 #include "Engine/Settings.hpp"
 #include "Engine/Input/Gamepad.hpp"
 #include "Engine/Input/Keyboard.hpp"
@@ -33,8 +32,8 @@ namespace Engine2D {
 
   Game2D::Game2D(const int width, const int height, const char *title)
     : aspectRatio(glm::vec2(1)), aspectRatioInv(glm::vec2(1)), title(title), width(width), height(height), window(nullptr),
-      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), frameCounter(0), physics2D(nullptr),
-      physicsAccumulator(0), updateFinished(false), renderFinished(true) {
+      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), frameCounter(0), physicsAccumulator(0),
+      updateFinished(false), renderFinished(true) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -213,11 +212,10 @@ namespace Engine2D {
     Engine::Input::Keyboard::initialize(window);
     Engine::Input::Mouse::initialize(window);
 
-    // Setup the shader preprocessor and load the engine shaders
+    // Set up the shader preprocessor and load the engine shaders
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &Rendering::Renderer2D::MAX_TEXTURES);
     ResourceManager::LoadShader("sprite", "Engine/Shaders/sprite.glsl");
 
-    physics2D = new Physics2D();
     mainCamera = AddEntity("Camera");
     mainCamera->AddComponent<Rendering::Camera2D>(
       -static_cast<float>(width / 2) * screenScaleFactor, static_cast<float>(width / 2) * screenScaleFactor,
@@ -308,7 +306,7 @@ namespace Engine2D {
           for (const auto &behaviour: entity->behaviours)
             if (behaviour && behaviour->IsActive())
               behaviour->OnFixedUpdate();
-      physics2D->step();
+      Physics2D::step();
       physicsAccumulator -= fixedDeltaTime;
     }
   }
@@ -400,7 +398,6 @@ namespace Engine2D {
 
     // Deallocate all the game resources
     ResourceManager::Clear();
-    SAFE_DELETE(physics2D);
 
     // Destroy the window and terminate all OpenGL processes
     if (window) {

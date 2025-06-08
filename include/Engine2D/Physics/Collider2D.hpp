@@ -15,6 +15,7 @@
 
 namespace Engine2D {
   class Game2D;
+  class Entity2D;
 }
 
 namespace Engine2D::Physics {
@@ -33,6 +34,7 @@ namespace Engine2D::Physics {
     friend class Collisions;
     friend class Rigidbody2D;
     friend class Engine2D::Game2D;
+    friend class Engine2D::Entity2D;
     public:
       enum Type {
         None = -1, Circle = 0, Rectangle = 1, Polygon = 2,
@@ -75,6 +77,9 @@ namespace Engine2D::Physics {
       std::shared_ptr<Rigidbody2D> rigidbody;
 
       Collider2D();
+
+      void forward() override;
+      void recall() override;
 
       /// Calculates the AABB of for the given collider type
       virtual void computeAABB() {}

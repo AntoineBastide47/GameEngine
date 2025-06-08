@@ -88,6 +88,9 @@ namespace Engine2D {
       void SetParticleLifetime(float lifetime);
       /// @returns how long each particle lives for
       [[nodiscard]] float GetParticleLifetime() const;
+    protected:
+      void forward() override;
+      void recall() override;
     private:
       /// Represents a single particle and it's state
       struct ParticleSystemData {

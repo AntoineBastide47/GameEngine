@@ -34,8 +34,8 @@ namespace Engine2D::Rendering {
 
   /// Class responsible for rendering all the textures/sprites in the game
   class Renderer2D {
+    friend class SpriteRenderer;
     friend class Engine2D::Game2D;
-    friend class Engine2D::Entity2D;
     friend class Engine2D::ParticleSystem2D;
     friend class Engine::ResourceManager;
     friend class Engine::Rendering::ShaderPreProcessor;

@@ -9,6 +9,7 @@
 #include "Engine/Macros/Assert.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
+#include "Engine2D/Animation/AnimationSystem.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 
@@ -243,6 +244,14 @@ namespace Engine2D::Animation {
       case IF_TRIGGER: return "IF_TRIGGER";
       default: return "UNKNOWN";
     }
+  }
+
+  void Animator2D::forward() {
+    AnimationSystem::addAnimator(std::dynamic_pointer_cast<Animator2D>(shared_from_this()));
+  }
+
+  void Animator2D::recall() {
+    AnimationSystem::removeAnimator(std::dynamic_pointer_cast<Animator2D>(shared_from_this()));
   }
 
   void Animator2D::update() {

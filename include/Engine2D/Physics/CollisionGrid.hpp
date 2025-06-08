@@ -24,6 +24,7 @@ namespace Engine2D::Physics {
     glm::vec<2, size_t> gridSize;
     std::vector<std::vector<std::vector<std::shared_ptr<Collider2D>>>> grid;
 
+    CollisionGrid();
     explicit CollisionGrid(glm::vec<2, size_t> gridSize);
     void setGridSize(glm::vec<2, size_t> gridSize);
 

@@ -18,7 +18,7 @@ namespace Engine2D {
    * If you need to create a component and want to link it to an Entity2D using Entity2D::AddComponent(), your component will
    * need to inherit from this class for it to work.
    */
-  class Component2D {
+  class Component2D : public std::enable_shared_from_this<Component2D> {
     friend class Entity2D;
     friend class Game2D;
     public:
@@ -34,6 +34,9 @@ namespace Engine2D {
       [[nodiscard]] std::shared_ptr<Entity2D> &Entity();
       /// @returns The transform attached to the entity this component is attached to
       [[nodiscard]] std::shared_ptr<Transform2D> Transform() const;
+    protected:
+      virtual void forward() {}
+      virtual void recall() {}
     private:
       /// Whether this component is active in the scene
       bool active;

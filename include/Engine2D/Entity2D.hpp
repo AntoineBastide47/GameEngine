@@ -62,15 +62,14 @@ namespace Engine2D {
 
         auto component = std::make_shared<T>(std::forward<Args>(args)...);
         component->setEntity(shared_from_this());
+        components.emplace_back(component);
         if constexpr (std::is_base_of_v<Behaviour, T>) {
           if (auto behaviour = std::dynamic_pointer_cast<Behaviour>(component)) {
             behaviours.emplace_back(behaviour);
             behaviour->OnInitialize();
           }
-        } else {
-          components.emplace_back(component);
-          forwardComponent(component);
-        }
+        } else
+          component->forward();
         return component;
       }
 
@@ -116,7 +115,7 @@ namespace Engine2D {
           behaviour->OnDestroy();
           std::erase(behaviours, behaviour);
         } else {
-          recallComponent(component);
+          component->recall();
           std::erase(components, component);
         }
       }
@@ -169,11 +168,6 @@ namespace Engine2D {
       void initialize();
       /// Cleans up resources when the game ends
       void destroy();
-
-      /// Checks if the given component needs to be sent to other classes
-      static void forwardComponent(const std::shared_ptr<Component2D> &component);
-      /// Checks if the given component needs to be removed from other classes
-      static void recallComponent(const std::shared_ptr<Component2D> &component);
   };
 }
 

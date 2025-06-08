@@ -17,9 +17,7 @@ namespace Engine2D {
     class Renderer2D;
   }
 
-  class ParticleSystem2D;
   class ParticleSystemRegistry2D {
-    friend class Entity2D;
     friend class Game2D;
     friend class ParticleSystem2D;
     friend class Rendering::Renderer2D;

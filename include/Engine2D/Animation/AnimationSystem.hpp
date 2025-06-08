@@ -16,8 +16,8 @@ namespace Engine2D {
 namespace Engine2D::Animation {
   class Animator2D;
   class AnimationSystem {
+    friend class Animator2D;
     friend class Engine2D::Game2D;
-    friend class Engine2D::Entity2D;
 
     static std::vector<std::shared_ptr<Animator2D>> animators;
 

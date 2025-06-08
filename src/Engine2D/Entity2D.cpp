@@ -7,14 +7,7 @@
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
-#include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
-#include "Engine2D/Physics/Physics2D.hpp"
-#include "Engine2D/Physics/Collider2D.hpp"
-#include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
-#include "Engine2D/Animation/Animator2D.hpp"
-#include "Engine2D/Animation/AnimationSystem.hpp"
 
 namespace Engine2D {
   Entity2D::Entity2D(
@@ -40,9 +33,9 @@ namespace Engine2D {
     // All change the state of the renderer
     if (const auto renderer = GetComponent<Rendering::SpriteRenderer>(); renderer) {
       if (!active)
-        Rendering::Renderer2D::removeRenderer(renderer);
+        renderer->recall();
       else
-        Rendering::Renderer2D::addRenderer(renderer);
+        renderer->forward();
     }
   }
 
@@ -71,37 +64,10 @@ namespace Engine2D {
 
   void Entity2D::destroy() {
     for (auto it = components.begin(); it != components.end();) {
-      recallComponent(*it);
+      it->get()->recall();
       it = components.erase(it);
     }
-
-    for (auto it = behaviours.begin(); it != behaviours.end();) {
-      (*it)->OnDestroy();
-      it = behaviours.erase(it);
-    }
-
+    behaviours.clear();
     transform->RemoveAllChildren();
-  }
-
-  void Entity2D::forwardComponent(const std::shared_ptr<Component2D> &component) {
-    if (const auto collider = std::dynamic_pointer_cast<Collider2D>(component))
-      Game2D::instance->physics2D->addCollider(collider);
-    if (const auto particleSystem = std::dynamic_pointer_cast<ParticleSystem2D>(component))
-      ParticleSystemRegistry2D::addParticleSystem(particleSystem);
-    if (const auto spriteRenderer = std::dynamic_pointer_cast<Rendering::SpriteRenderer>(component))
-      Rendering::Renderer2D::addRenderer(spriteRenderer);
-    if (const auto animator = std::dynamic_pointer_cast<Animation::Animator2D>(component))
-      Animation::AnimationSystem::addAnimator(animator);
-  }
-
-  void Entity2D::recallComponent(const std::shared_ptr<Component2D> &component) {
-    if (const auto collider = std::dynamic_pointer_cast<Collider2D>(component))
-      Game2D::instance->physics2D->removeCollider(collider);
-    if (const auto particleSystem = std::dynamic_pointer_cast<ParticleSystem2D>(component))
-      ParticleSystemRegistry2D::removeParticleSystem(particleSystem);
-    if (const auto spriteRenderer = std::dynamic_pointer_cast<Rendering::SpriteRenderer>(component))
-      Rendering::Renderer2D::removeRenderer(spriteRenderer);
-    if (const auto animator = std::dynamic_pointer_cast<Animation::Animator2D>(component))
-      Animation::AnimationSystem::removeAnimator(animator);
   }
 }

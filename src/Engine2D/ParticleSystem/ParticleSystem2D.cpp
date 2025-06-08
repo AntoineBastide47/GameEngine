@@ -63,6 +63,14 @@ namespace Engine2D {
     return this->particleLifetime;
   }
 
+  void ParticleSystem2D::forward() {
+    ParticleSystemRegistry2D::addParticleSystem(std::dynamic_pointer_cast<ParticleSystem2D>(shared_from_this()));
+  }
+
+  void ParticleSystem2D::recall() {
+    ParticleSystemRegistry2D::removeParticleSystem(std::dynamic_pointer_cast<ParticleSystem2D>(shared_from_this()));
+  }
+
   void ParticleSystem2D::updateAndRender(const uint textureIndex, float *data) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 

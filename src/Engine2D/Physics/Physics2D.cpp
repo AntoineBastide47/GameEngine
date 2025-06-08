@@ -16,7 +16,15 @@
 #include "Engine2D/Types/Vector2.hpp"
 
 namespace Engine2D::Physics {
-  Physics2D::Physics2D() : collisionGridNeedsResizing(false), collisionGrid(Engine::Settings::Physics::GetPartitionSize()) {}
+  bool Physics2D::initialized{false};
+  bool Physics2D::collisionGridNeedsResizing{false};
+  CollisionGrid Physics2D::collisionGrid{};
+  std::vector<std::shared_ptr<Collider2D>> Physics2D::colliders;
+  std::vector<std::shared_ptr<Collider2D>> Physics2D::collidersToAdd;
+  std::unordered_set<std::shared_ptr<Collider2D>> Physics2D::collidersToRemove;
+  std::vector<std::shared_ptr<Collider2D>> Physics2D::activeColliders;
+  std::vector<ContactPair> Physics2D::contactPairs;
+  std::vector<ContactPair> Physics2D::previousCollisionPairs;
 
   Physics2D::~Physics2D() {
     colliders.clear();
@@ -57,6 +65,11 @@ namespace Engine2D::Physics {
 
   void Physics2D::step() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
+    if (!initialized) {
+      collisionGrid = CollisionGrid{Engine::Settings::Physics::GetPartitionSize()};
+      initialized = true;
+    }
 
     addColliders();
 
