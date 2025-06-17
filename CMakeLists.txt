@@ -80,6 +80,7 @@ add_library(Engine2D STATIC
     include/Engine/Rendering/ShaderPreProcessor.hpp
     src/Engine2D/Rendering/Renderable2D.cpp
     include/Engine2D/Rendering/Renderable2D.hpp
+    include/Engine/Macros/Serialization.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES
@@ -118,16 +119,16 @@ target_include_directories(cpptrace PUBLIC vendor/cpptrace/include vendor/cpptra
 
 # === OS Specific Requirements ===
 if (APPLE)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0")
-  target_link_libraries(Engine2D PUBLIC
-      "-framework CoreFoundation"
-      "-framework IOKit"
-      "-framework Cocoa"
-  )
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0")
+    target_link_libraries(Engine2D PUBLIC
+        "-framework CoreFoundation"
+        "-framework IOKit"
+        "-framework Cocoa"
+    )
 elseif (LINUX)
-  message(WARNING "Linux build is not fully supported yet.")
+    message(WARNING "Linux build is not fully supported yet.")
 elseif (WIN32)
-  message(WARNING "Windows build is not fully supported yet.")
+    message(WARNING "Windows build is not fully supported yet.")
 endif ()
 
 target_link_libraries(Engine2D PRIVATE
@@ -136,7 +137,7 @@ target_link_libraries(Engine2D PRIVATE
 )
 
 target_link_directories(Engine2D PRIVATE
-  vendor/imgui
+    vendor/imgui
 )
 
 # --------------------------
@@ -144,33 +145,33 @@ target_link_directories(Engine2D PRIVATE
 # --------------------------
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-  target_compile_options(Engine2D PRIVATE
-      -O3 -DNDEBUG -finline-functions -fomit-frame-pointer
-      -ffunction-sections -fdata-sections
-      -fno-fast-math -fno-strict-aliasing -frounding-math
-  )
-  target_link_options(Engine2D PRIVATE -Wl,-O2)
-  set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-  add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
+    target_compile_options(Engine2D PRIVATE
+        -O3 -DNDEBUG -finline-functions -fomit-frame-pointer
+        -ffunction-sections -fdata-sections
+        -fno-fast-math -fno-strict-aliasing -frounding-math
+    )
+    target_link_options(Engine2D PRIVATE -Wl,-O2)
+    set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-    set(SANITIZER_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
-    set(ASAN_OPTIONS_FLAGS "-fsanitize-recover=address -fsanitize=undefined -fsanitize-address-use-after-scope")
-    set(DEBUG_FLAGS "-g")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+        set(SANITIZER_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
+        set(ASAN_OPTIONS_FLAGS "-fsanitize-recover=address -fsanitize=undefined -fsanitize-address-use-after-scope")
+        set(DEBUG_FLAGS "-g")
 
-    add_compile_definitions(ASAN_OPTIONS="verbosity=1:halt_on_error=1:detect_leaks=1:symbolize=1")
+        add_compile_definitions(ASAN_OPTIONS="verbosity=1:halt_on_error=1:detect_leaks=1:symbolize=1")
 
-    # Apply flags to all targets
-    set(ALL_SANITIZER_FLAGS "${SANITIZER_FLAGS} ${ASAN_OPTIONS_FLAGS} ${DEBUG_FLAGS}")
+        # Apply flags to all targets
+        set(ALL_SANITIZER_FLAGS "${SANITIZER_FLAGS} ${ASAN_OPTIONS_FLAGS} ${DEBUG_FLAGS}")
 
-    # Function to apply sanitizer flags to all targets
-    function(enable_sanitizers target)
-      target_compile_options(${target} PRIVATE ${ALL_SANITIZER_FLAGS})
-      target_link_options(${target} PRIVATE ${ALL_SANITIZER_FLAGS})
-    endfunction()
-  endif()
-endif()
+        # Function to apply sanitizer flags to all targets
+        function(enable_sanitizers target)
+            target_compile_options(${target} PRIVATE ${ALL_SANITIZER_FLAGS})
+            target_link_options(${target} PRIVATE ${ALL_SANITIZER_FLAGS})
+        endfunction()
+    endif ()
+endif ()
 
 add_custom_command(TARGET Engine2D POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E rename

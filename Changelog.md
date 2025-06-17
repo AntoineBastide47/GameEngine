@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] - 2025-06-17
+### Added
+- **[.clang-format]**: contains the formatting used for hpp and cpp files by the engine
+- **[Macros/Serialization]**: macros used to tell the parser which records, fields and pointers can be used for serialization
+- **[CLI]**: added the command build-tools
+- **[HeaderForge]**: start of the serialization engine with the parser
+- **[HeaderForge/Parser]**: reads header files and extracts the serializable data using clang
+### Changed
+- **[CLI]**: moved to tools/CLI
+
 ## [0.8.1] - 2025-05-22
 ### Added
 - **[ShaderPreProcessor]**: support for custom #define, #ifdef, #ifndef, #else, #endif statements

@@ -33,6 +33,7 @@ static constexpr std::string COMMAND_BUILD = "build";
 static constexpr std::string COMMAND_CREATE_PROJECT = "create-project";
 static constexpr std::string COMMAND_LINK_PROJECT = "link-project";
 static constexpr std::string COMMAND_REBUILD = "rebuild";
+static constexpr std::string COMMAND_BUILD_TOOLS = "build-tools";
 
 static constexpr std::string COMMAND_BUILD_PROJECT = "build-project";
 static constexpr std::string COMMAND_RUN_PROJECT = "run";

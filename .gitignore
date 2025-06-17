@@ -21,6 +21,7 @@
 *.app
 
 # Idea
+tools/CLI/.idea
 **/.idea
 
 # cmake
@@ -36,9 +37,8 @@
 **/compile_commands.json
 
 # other
-todo.txt
 **/.DS_Store
 include/*.a
+**/build
 **/engine-cli
-CLI/build
-build
+**/header-forge

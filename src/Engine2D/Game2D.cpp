@@ -9,20 +9,19 @@
 
 #include "Engine2D/Game2D.hpp"
 #include "Engine/ResourceManager.hpp"
-#include "Engine2D/Physics/Physics2D.hpp"
-#include "Engine/Rendering/Shader.hpp"
-#include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine/Settings.hpp"
 #include "Engine/Input/Gamepad.hpp"
 #include "Engine/Input/Keyboard.hpp"
 #include "Engine/Input/Mouse.hpp"
+#include "Engine2D/Physics/Physics2D.hpp"
+#include "Engine2D/Rendering/Renderer2D.hpp"
 #if ENGINE_PROFILING
 #include "Engine/Profiling/Instrumentor.hpp"
 #endif
-#include "Engine2D/Behaviour.hpp"
-#include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Animation/AnimationSystem.hpp"
+#include "Engine2D/Rendering/Camera2D.hpp"
 
 using Engine::ResourceManager;
 
@@ -31,9 +30,9 @@ namespace Engine2D {
   const float Game2D::screenScaleFactor{0.1f};
 
   Game2D::Game2D(const int width, const int height, const char *title)
-    : aspectRatio(glm::vec2(1)), aspectRatioInv(glm::vec2(1)), title(title), width(width), height(height), window(nullptr),
-      deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), frameCounter(0), physicsAccumulator(0),
-      updateFinished(false), renderFinished(true) {
+    : aspectRatio(glm::vec2(1)), aspectRatioInv(glm::vec2(1)), title(title), width(width), height(height),
+      window(nullptr), deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), frameCounter(0),
+      oneSecondTimer(0), physicsAccumulator(0), updateFinished(false), renderFinished(true) {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -89,7 +88,8 @@ namespace Engine2D {
   }
 
   std::shared_ptr<Entity2D> Game2D::AddEntity(
-    std::string name, bool isStatic, glm::vec2 position, float rotation, glm::vec2 scale, std::shared_ptr<Entity2D> parent
+    const std::string &name, bool isStatic, glm::vec2 position, float rotation, glm::vec2 scale,
+    const std::shared_ptr<Entity2D> &parent
   ) {
     if (instance) {
       auto entity = std::make_shared<Entity2D>(name, isStatic, position, rotation, scale, parent);
@@ -101,10 +101,10 @@ namespace Engine2D {
   }
 
   std::shared_ptr<Entity2D> Game2D::Find(const std::string &name) {
-    for (const auto entity: instance->entitiesToAdd)
+    for (const auto &entity: instance->entitiesToAdd)
       if (entity->name == name)
         return entity;
-    for (const auto entity: instance->entities)
+    for (const auto &entity: instance->entities)
       if (entity->name == name)
         return entity;
     return nullptr;
@@ -334,9 +334,7 @@ namespace Engine2D {
       return;
 
     static auto nextFrameTime = steady_clock::now();
-    nextFrameTime += duration_cast<steady_clock::duration>(
-      duration<float>(targetRenderRate)
-    );
+    nextFrameTime += duration_cast<steady_clock::duration>(duration<float>(targetRenderRate));
 
     if (const auto now = steady_clock::now(); nextFrameTime > now) {
       // sleep coarse then spin-wait
@@ -457,12 +455,12 @@ namespace Engine2D {
     const bool maintainAspectRatio = Engine::Settings::Graphics::GetMaintainAspectRatio();
 
     // Calculate the viewport dimensions
-    const int viewWidth = static_cast<int>(
-      static_cast<float>(initialSize.x) * (maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX)
-    );
-    const int viewHeight = static_cast<int>(
-      static_cast<float>(initialSize.y) * (maintainAspectRatio ? std::min(ratioX, ratioY) : ratioY)
-    );
+    const int viewWidth = static_cast<int>(static_cast<float>(initialSize.x) * (maintainAspectRatio
+                                             ? std::min(ratioX, ratioY)
+                                             : ratioX));
+    const int viewHeight = static_cast<int>(static_cast<float>(initialSize.y) * (maintainAspectRatio
+                                              ? std::min(ratioX, ratioY)
+                                              : ratioY));
 
     // Center the viewport
     glViewport((framebufferWidth - viewWidth) / 2, (framebufferHeight - viewHeight) / 2, viewWidth, viewHeight);

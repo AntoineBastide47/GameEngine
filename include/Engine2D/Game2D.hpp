@@ -12,8 +12,8 @@
 #include <cmrc/cmrc.hpp>
 
 #include "Engine/RenderingHeaders.hpp"
-#include "Engine2D/Entity2D.hpp"
 #include "Engine/Input/InputContexts.hpp"
+#include "Engine2D/Entity2D.hpp"
 
 namespace Engine2D::Animation {
   class AnimationSystem;
@@ -64,8 +64,8 @@ namespace Engine2D {
       static void Close(Engine::Input::KeyboardAndMouseContext context);
       /// Creates an entity of with the given name
       static std::shared_ptr<Entity2D> AddEntity(
-        std::string name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
-        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), std::shared_ptr<Entity2D> parent = nullptr
+        const std::string& name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), const std::shared_ptr<Entity2D>& parent = nullptr
       );
       /// @returns The entity with the given name if it was found, nullptr if not
       static std::shared_ptr<Entity2D> Find(const std::string &name);

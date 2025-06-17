@@ -4,15 +4,15 @@ designed to run 2D games and aims to provide a simple yet powerful framework for
 
 ## Getting Started
 ### 0. Prerequisites
-This project requires [cmake](https://cmake.org) and [GLEW](https://github.com/nigels-com/glew?tab=readme-ov-file#build) to be installed on your system for proper functionality.
+This project requires [cmake](https://cmake.org), [GLEW](https://github.com/nigels-com/glew?tab=readme-ov-file#build) and [llvm](https://llvm.org) to be installed on your system for proper functionality.
 - **macOS:**
 ```bash
-brew install cmake glew
+brew install cmake glew llvm
 ```
 - **Linux:**
 ```bash
 sudo apt-get update
-sudo apt-get install build-essential libgl1-mesa-dev libglew-dev
+sudo apt-get install build-essential libgl1-mesa-dev libglew-dev clang llvm
 sudo snap install cmake --classic
 ```
 - **Windows:**
@@ -20,15 +20,14 @@ Manual installation required, follow the links above to do so.
 ### 1. Clone the Repository:
 ```bash
 git clone --recursive -j8 https://github.com/AntoineBastide47/GameEngine.git
-cd GameEngine
 ```
 ### 2. Build the CLI
 Build the command-line interface (CLI) to manage the engine and projects:
 ```bash
-cd CLI
+cd ./tools/CLI
 cmake -B build
 cmake --build build
-cd ..
+cd ../..
 ```
 Run the CLI with:
 ```bash

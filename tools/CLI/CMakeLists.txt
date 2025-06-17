@@ -30,6 +30,8 @@ add_executable(${PROJECT_NAME}
     include/commands/Rebuild.hpp
     src/Utils.cpp
     include/Utils.hpp
+    src/commands/BuildTools.cpp
+    include/commands/BuildTools.hpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME engine-cli)
@@ -50,5 +52,5 @@ endif()
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E rename
     $<TARGET_FILE:${PROJECT_NAME}>
-    ${CMAKE_CURRENT_BINARY_DIR}/../../$<TARGET_FILE_NAME:${PROJECT_NAME}>
+    ${CMAKE_CURRENT_BINARY_DIR}/../../../$<TARGET_FILE_NAME:${PROJECT_NAME}>
 )

@@ -1,13 +1,14 @@
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
-#include <fstream>
 
-#include "Utils.hpp"
 #include "Command.hpp"
 #include "OrderedMap.hpp"
+#include "Utils.hpp"
 #include "commands/Build.hpp"
 #include "commands/BuildProject.hpp"
+#include "commands/BuildTools.hpp"
 #include "commands/CreateProject.hpp"
 #include "commands/Dependencies.hpp"
 #include "commands/Help.hpp"
@@ -21,6 +22,7 @@ static OrderedMap<std::string, std::unique_ptr<Command>> CreateEngineCommands() 
   cmds.insert(COMMAND_HELP, std::make_unique<Help>());
   cmds.insert(COMMAND_DEPENDENCIES, std::make_unique<Dependencies>());
   cmds.insert(COMMAND_BUILD, std::make_unique<Build>());
+  cmds.insert(COMMAND_BUILD_TOOLS, std::make_unique<BuildTools>());
   cmds.insert(COMMAND_CREATE_PROJECT, std::make_unique<CreateProject>());
   cmds.insert(COMMAND_LINK_PROJECT, std::make_unique<LinkProject>());
   cmds.insert(COMMAND_VERSION, std::make_unique<Version>());
