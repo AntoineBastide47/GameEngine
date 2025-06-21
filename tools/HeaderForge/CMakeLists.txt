@@ -5,11 +5,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Release")
 
-# Define the executable
+# Define the header-forge executable
 add_executable(${PROJECT_NAME}
     main.cpp
     src/Parser.cpp
     include/Parser.hpp
+    src/Injector.cpp
+    include/Injector.hpp
+    include/Concepts.hpp
+    include/Serializable.hpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
@@ -19,7 +23,7 @@ find_package(Clang REQUIRED CONFIG)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}
-    clangTooling clangFrontend clangASTMatchers clangAST clangBasic
+    clangTooling clangFrontend clangASTMatchers clangAST clangBasic libclang
 )
 
 # --------------------------
@@ -29,7 +33,7 @@ target_link_libraries(${PROJECT_NAME}
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_options(${PROJECT_NAME} PRIVATE
         -O3 -DNDEBUG -finline-functions -fomit-frame-pointer
-        -ffunction-sections -fdata-sections
+        -ffunction-sections -fdata-sections -flto
     )
     target_link_options(${PROJECT_NAME} PRIVATE -Wl,-O2)
     set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)

@@ -301,17 +301,19 @@ namespace Engine2D {
     physicsAccumulator += deltaTime;
     const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
     while (physicsAccumulator >= fixedDeltaTime) {
+      Physics2D::step();
+      physicsAccumulator -= fixedDeltaTime;
       for (const auto &entity: entities)
         if (entity->IsActive())
           for (const auto &behaviour: entity->behaviours)
             if (behaviour && behaviour->IsActive())
               behaviour->OnFixedUpdate();
-      Physics2D::step();
-      physicsAccumulator -= fixedDeltaTime;
     }
   }
 
   void Game2D::animate() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
     Animation::AnimationSystem::update();
   }
 

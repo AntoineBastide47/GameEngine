@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.3] - 2025-06-21
+### Added
+- **[HeaderForge/Concepts]**: moved all concepts from HeaderForge/Parser to a separate file for readability
+- **[HeaderForge/Parser]**: template parameters and fields from base classes/structs to Record
+- **[HeaderForge/Serializer]**: convert some classes from the STL and user classes marked as serializable to JSON
+- **[HeaderForge/Serializable]**: base class to allow the serializer to correctly serialize polymorphic classes
+- **[HeaderForge/Injector]**: once files have been parsed, adds save and load declaration for user classes in the Serializer and Deserializer
+### Changed
+- **[Macros]**: made internal engine macros start with _e_ to "hide" them
+
 ## [0.8.2] - 2025-06-17
 ### Added
 - **[.clang-format]**: contains the formatting used for hpp and cpp files by the engine

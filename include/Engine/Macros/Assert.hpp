@@ -34,15 +34,15 @@ inline std::string GetAssertLocation(const char *file, const int line) {
   return std::filesystem::path(file).filename().string() + ":" + std::to_string(line);
 }
 
-#define ENGINE_INTERNAL_ASSERT_IMPL(check, msg, ...) { if(!(check)) { Engine::Log::Error(msg); ENGINE_DEBUG_BREAK(); } }
-#define ENGINE_INTERNAL_ASSERT_WITH_MSG(check, msg) ENGINE_INTERNAL_ASSERT_IMPL(check, "Assertion failed: " msg)
+#define _e_ASSERT_IMPL(check, msg, ...) { if(!(check)) { Engine::Log::Error(msg); ENGINE_DEBUG_BREAK(); } }
+#define _e_ASSERT_WITH_MSG(check, msg) _e_ASSERT_IMPL(check, "Assertion failed: " msg)
 
-#define ENGINE_INTERNAL_ASSERT_NO_MSG(check) ENGINE_INTERNAL_ASSERT_IMPL(check, ("Assertion " STRINGIFY_MACRO(check) " failed at " + GetAssertLocation(__FILE__, __LINE__)).c_str())
+#define _e_ASSERT_NO_MSG(check) _e_ASSERT_IMPL(check, ("Assertion " STRINGIFY_MACRO(check) " failed at " + GetAssertLocation(__FILE__, __LINE__)).c_str())
 
-#define ENGINE_INTERNAL_ASSERT_GET_MACRO_NAME(arg1, arg2, macro, ...) macro
-#define ENGINE_INTERNAL_ASSERT_GET_MACRO(...) EXPAND_MACRO( ENGINE_INTERNAL_ASSERT_GET_MACRO_NAME(__VA_ARGS__, ENGINE_INTERNAL_ASSERT_WITH_MSG, ENGINE_INTERNAL_ASSERT_NO_MSG) )
+#define _e_ASSERT_GET_MACRO_NAME(arg1, arg2, macro, ...) macro
+#define _e_ASSERT_GET_MACRO(...) EXPAND_MACRO( _e_ASSERT_GET_MACRO_NAME(__VA_ARGS__, _e_ASSERT_WITH_MSG, _e_ASSERT_NO_MSG) )
 
-#define ENGINE_ASSERT(...) EXPAND_MACRO( ENGINE_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(__VA_ARGS__) )
+#define ENGINE_ASSERT(...) EXPAND_MACRO( _e_ASSERT_GET_MACRO(__VA_ARGS__)(__VA_ARGS__) )
 #else
 #define ENGINE_ASSERT(...)
 #endif
