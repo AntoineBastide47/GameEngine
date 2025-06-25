@@ -80,7 +80,10 @@ add_library(Engine2D STATIC
     include/Engine/Rendering/ShaderPreProcessor.hpp
     src/Engine2D/Rendering/Renderable2D.cpp
     include/Engine2D/Rendering/Renderable2D.hpp
-    include/Engine/Macros/Serialization.hpp
+    include/Engine/Reflection/Concepts.hpp
+    include/Engine/Reflection/Save.hpp
+    include/Engine/Reflection/Reflectable.hpp
+    include/Engine/Reflection/Serializer.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES

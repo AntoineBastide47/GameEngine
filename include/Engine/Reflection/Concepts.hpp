@@ -9,12 +9,15 @@
 
 #include <iterator>
 #include <memory>
+#include <sstream>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 
-namespace Engine::Serialization {
+namespace Engine::Reflection {
+  class Reflectable;
+
   template<typename T> concept IsString =
       std::is_convertible_v<std::decay_t<T>, std::string_view> ||
       std::is_same_v<std::decay_t<T>, char> ||
@@ -54,9 +57,40 @@ namespace Engine::Serialization {
              std::is_same_v<T, std::unique_ptr<typename T::element_type>>;
   };
 
-  template<typename T> concept IsNotSTL = requires(const T &data) {
-    { data->GetClass() } -> std::convertible_to<std::string_view>;
+  template<typename T> concept IsNotSTL = std::is_base_of_v<Reflectable, std::remove_cvref_t<T>>;
+  template<typename T> concept IsSTL = !IsNotSTL<T>;
+
+  enum Format {
+    JSON, TEXT, BINARY
   };
+
+  /// How many spaces to use for JSON pretty printing, set to 2 by default
+  static inline unsigned int JsonIndentSize = 2;
+
+  static inline void applyIndent(std::ostringstream &os, const bool prettyPrint, const int indent) {
+    if (prettyPrint)
+      os.write(std::string(indent * JsonIndentSize, ' ').c_str(), indent * JsonIndentSize);
+  }
+
+  // detection trait
+  template<typename, typename = void>
+  struct hasSaveFunction : std::false_type {};
+
+  template<typename U>
+  struct hasSaveFunction<
+        U,
+        std::void_t<
+          decltype(
+            _e_save(
+              std::declval<U>(),
+              std::declval<Format>(),
+              std::declval<std::ostringstream &>(),
+              std::declval<bool>(),
+              std::declval<int>()
+            )
+          )
+        >
+      > : std::true_type {};
 }
 
 #endif //CONCEPTS_HPP

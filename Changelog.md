@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.4] - 2025-06-21
+### Added
+- **[Macros/Utils]**: added macros for fully qualified class name
+### Changed
+- **[Save.hpp]**: moved all save functions in Serializer.hpp to a separate file
+- **[Serializer]**: only contains the To* functions
+- **[Reflectable]**: renamed from Serializable, contains the ENGINE_SERIALIZE and ENGINE_NON_SERIALIZABLE macros
+- **[HeaderForge/Generator]**: renamed from Injector, now procedurally creates SERIALIZE_${CLASS_NAME} macros that override function definitions in Reflectable so that the classes and pointers can be saved correctly
+### Removed
+- **[Macros/Serialization]**
+- **[Reflectable]**: TypeID() and StaticTypeID()
+- **[HeaderForge/Parser]**: template usages
+
 ## [0.8.3] - 2025-06-21
 ### Added
 - **[HeaderForge/Concepts]**: moved all concepts from HeaderForge/Parser to a separate file for readability

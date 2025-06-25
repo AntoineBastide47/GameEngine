@@ -10,10 +10,8 @@ add_executable(${PROJECT_NAME}
     main.cpp
     src/Parser.cpp
     include/Parser.hpp
-    src/Injector.cpp
-    include/Injector.hpp
-    include/Concepts.hpp
-    include/Serializable.hpp
+    src/Generator.cpp
+    include/Generator.hpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 

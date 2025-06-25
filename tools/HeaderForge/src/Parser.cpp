@@ -10,58 +10,44 @@
 #include <clang/AST/RecordLayout.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/AST/Type.h>
-#include <clang/AST/TypeLoc.h>
-#include <clang/Tooling/Tooling.h>
-#include <clang/Tooling/CommonOptionsParser.h>
-#include <clang/Tooling/CompilationDatabase.h>
-#include <clang/Frontend/FrontendActions.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/FrontendActions.h>
+#include <clang/Tooling/CompilationDatabase.h>
+#include <clang/Tooling/Tooling.h>
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <unordered_set>
 
 // Add the macro definitions
 #include "Parser.hpp"
-#include "../../../include/Engine/Macros/Serialization.hpp"
+#include "../../../include/Engine/Reflection/Reflectable.hpp"
 
 using namespace clang;
-using namespace Engine::Serialization;
+using namespace Engine::Reflection;
 namespace fs = std::filesystem;
 
 // Recursive AST Visitor to find serializable classes and their fields.
 class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor> {
   public:
-    SerializableVisitor(std::vector<Record> &recordsOut, std::set<std::string> &usages)
-      : records(recordsOut), usages(usages) {}
+    explicit SerializableVisitor(std::vector<Record> &recordsOut)
+      : records(recordsOut) {}
 
-    static bool shouldSkip(const std::string &name) {
-      if (name.rfind("std::", 0) == 0 || name.rfind("llvm::", 0) == 0 || name.rfind("clang::", 0) == 0)
+    static bool CanSerializeRecord(const CXXRecordDecl *decl, std::unordered_set<const CXXRecordDecl *> &visited) { // NOLINT(*-no-recursion)
+      decl = decl->getDefinition();
+      if (!decl || !decl->isCompleteDefinition() || !visited.insert(decl).second)
+        return false;
+
+      if (decl->getNameAsString().find("Reflectable") != std::string::npos)
         return true;
-      if (name.rfind("__", 0) == 0)
-        return true;
-      if (name.size() > 1 && name[0] == '_' && std::isupper(static_cast<unsigned char>(name[1])))
-        return true;
+
+      for (const auto &B: decl->bases())
+        if (const auto *BaseRD = B.getType()->getAsCXXRecordDecl())
+          if (CanSerializeRecord(BaseRD->getDefinition(), visited))
+            return true;
+
       return false;
-    }
-
-    static bool CanSerializeRecord(const CXXRecordDecl *decl) {
-      constexpr auto name = "Engine::Serialization::Serializer";
-
-      return std::ranges::any_of(
-        decl->friends(), [&](const auto *friendDecl) {
-          if (auto *friendType = friendDecl->getFriendType()) {
-            const QualType qt = friendType->getType();
-            if (const auto *friendRec = qt->getAsCXXRecordDecl())
-              return friendRec->getQualifiedNameAsString() == name;
-            return qt.getAsString().find(name) != std::string::npos;
-          }
-          if (auto *friendND = friendDecl->getFriendDecl()) {
-            return friendND->getQualifiedNameAsString() == name;
-          }
-          return false;
-        }
-      );
     }
 
     // Visit each CXXRecordDecl (class/struct) in the AST:
@@ -72,17 +58,18 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
           !decl->hasDefinition() || !decl->isCompleteDefinition() || !decl->getIdentifier() || decl->isUnion())
         return true;
 
-      SourceManager &SM = decl->getASTContext().getSourceManager();
-
       // Make sure we get the class from its source file
+      SourceManager &SM = decl->getASTContext().getSourceManager();
       if (SM.isInSystemHeader(decl->getLocation()))
         return true;
 
-      if (!CanSerializeRecord(decl))
+      if (std::unordered_set<const CXXRecordDecl *> visited;
+        !CanSerializeRecord(decl, visited) || decl->getNameAsString().find("Reflectable") != std::string::npos)
         return true;
 
       Record rec;
       rec.name = decl->getQualifiedNameAsString();
+      rec.isClass = decl->isClass();
 
       if (PresumedLoc ploc = SM.getPresumedLoc(decl->getLocation()); ploc.isValid())
         rec.filePath = ploc.getFilename();
@@ -112,7 +99,7 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
           if (const auto *ann = dyn_cast<AnnotateAttr>(attr)) {
             if (const StringRef annotation = ann->getAnnotation(); annotation == _e_SERIALIZE_STRING)
               isSerializable = true;
-            else if (annotation == _e_NON_SERIALIZABLE)
+            else if (annotation == _e_NON_SERIALIZABLE_STRING)
               isNonSerializable = true;
           }
         }
@@ -147,55 +134,18 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
       return true;
     }
 
-    // ReSharper disable once CppDFAConstantFunctionResult
-    [[nodiscard]] bool VisitTemplateSpecializationTypeLoc(const TemplateSpecializationTypeLoc TL) const {
-      const auto *TST = TL.getTypePtr();
-      if (!TST || TST->isDependentType())
-        return true;
-      for (const auto &arg: TST->template_arguments()) {
-        if (arg.getKind() == TemplateArgument::Type
-            && arg.getAsType()->isDependentType())
-          return true;
-      }
-
-      const TemplateDecl *TD = TST->getTemplateName().getAsTemplateDecl();
-      if (!TD)
-        return true;
-
-      const std::string name = TD->getQualifiedNameAsString();
-      if (shouldSkip(name))
-        return true;
-
-      PrintingPolicy policy{LangOptions()};
-      policy.SuppressScope = false;
-      policy.PrintCanonicalTypes = true;
-
-      std::string repr = name + "<";
-      llvm::raw_string_ostream os(repr);
-      const ArrayRef<TemplateArgument> args = TST->template_arguments();
-      for (unsigned i = 0, n = args.size(); i < n; ++i) {
-        args[i].print(policy, os, true);
-        if (i + 1 != n)
-          os << ", ";
-      }
-      repr += ">";
-
-      usages.insert(std::move(repr));
-      return true;
-    }
-
-    static void collectAllFields(const CXXRecordDecl *RD, std::vector<const FieldDecl *> &out) { // NOLINT(*-no-recursion)
-      RD = RD->getDefinition();
-      if (!RD || !RD->isCompleteDefinition())
+    static void collectAllFields(const CXXRecordDecl *decl, std::vector<const FieldDecl *> &out) { // NOLINT(*-no-recursion)
+      decl = decl->getDefinition();
+      if (!decl || !decl->isCompleteDefinition())
         return;
 
       // Find all inherited fields first
-      for (const auto &B: RD->bases())
+      for (const auto &B: decl->bases())
         if (const auto *BaseRD = B.getType()->getAsCXXRecordDecl())
           collectAllFields(BaseRD->getDefinition(), out);
 
       // Extract each field
-      for (const auto *FD: RD->fields())
+      for (const auto *FD: decl->fields())
         out.emplace_back(FD);
     }
 
@@ -243,14 +193,13 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
     }
   private:
     std::vector<Record> &records;
-    std::set<std::string> &usages;
 };
 
 // ASTConsumer that uses the visitor to traverse the AST
 class SerializableConsumer final : public ASTConsumer {
   public:
-    explicit SerializableConsumer(std::vector<Record> &recordsOut, std::set<std::string> &usages)
-      : visitor(recordsOut, usages) {}
+    explicit SerializableConsumer(std::vector<Record> &recordsOut)
+      : visitor(recordsOut) {}
 
     void HandleTranslationUnit(ASTContext &context) override {
       // Traverse the entire translation unit AST
@@ -263,24 +212,23 @@ class SerializableConsumer final : public ASTConsumer {
 // FrontendAction to run our ASTConsumer
 class SerializableAction final : public ASTFrontendAction, public tooling::FrontendActionFactory {
   public:
-    explicit SerializableAction(std::vector<Record> &recordsOut, std::set<std::string> &usages)
-      : records(recordsOut), usages(usages) {}
+    explicit SerializableAction(std::vector<Record> &recordsOut)
+      : records(recordsOut) {}
 
     std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef) override {
       CI.getDiagnostics().setClient(new IgnoringDiagConsumer(), true);
-      return std::make_unique<SerializableConsumer>(records, usages);
+      return std::make_unique<SerializableConsumer>(records);
     }
 
     std::unique_ptr<FrontendAction> create() override {
-      return std::make_unique<SerializableAction>(records, usages);
+      return std::make_unique<SerializableAction>(records);
     }
   private:
     std::vector<Record> &records;
-    std::set<std::string> &usages;
 };
 
-namespace Engine::Serialization {
-  void Parser::ParseHeader(const std::string &headerPath, std::vector<Record> &records, std::set<std::string> &usages) {
+namespace Engine::Reflection {
+  void Parser::ParseHeader(const std::string &headerPath, std::vector<Record> &records) {
     // Read the header file into a string
     std::ifstream inFile(headerPath);
     if (!inFile.is_open()) {
@@ -310,13 +258,13 @@ namespace Engine::Serialization {
 
     tooling::FixedCompilationDatabase Compilations(".", args);
     tooling::ClangTool Tool(Compilations, {headerPath});
-    SerializableAction factory(records, usages);
+    SerializableAction factory(records);
     Tool.run(&factory);
   }
 
   void Parser::PrintRecords(const std::vector<Record> &records) {
-    for (const auto &[name, filePath, fields, templateParameters]: records) {
-      std::cout << "Record: " << name << " (defined in " << filePath << ")\n";
+    for (const auto &[isClass, name, filePath, fields, templateParameters]: records) {
+      std::cout << "Record: " << (isClass ? "class " : "struct ") << name << " (defined in " << filePath << ")\n";
       if (!templateParameters.empty()) {
         std::cout << "  [TemplateParameters: " << templateParameters.size() << "]\n";
         for (const auto &templateParameter: templateParameters)
@@ -371,4 +319,4 @@ namespace Engine::Serialization {
     result.erase(std::ranges::remove(result, '\n').begin(), result.end());
     return result;
   }
-} // namespace Engine::Serialization
+} // namespace Engine::Reflection

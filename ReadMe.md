@@ -4,10 +4,12 @@ designed to run 2D games and aims to provide a simple yet powerful framework for
 
 ## Getting Started
 ### 0. Prerequisites
-This project requires [cmake](https://cmake.org), [GLEW](https://github.com/nigels-com/glew?tab=readme-ov-file#build) and [llvm](https://llvm.org) to be installed on your system for proper functionality.
+This project requires [cmake](https://cmake.org), [GLEW](https://github.com/nigels-com/glew?tab=readme-ov-file#build), [clang](https://clang.llvm.org) and [llvm](https://llvm.org) to be installed on your system for proper functionality.
 - **macOS:**
 ```bash
 brew install cmake glew llvm
+echo 'export PATH="/usr/local/opt/llvm/bin:$PATH"' >> ~/.bash_profile
+export PATH="/usr/local/opt/llvm/bin:$PATH"
 ```
 - **Linux:**
 ```bash

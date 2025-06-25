@@ -7,11 +7,10 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
-#include <set>
 #include <string>
 #include <vector>
 
-namespace Engine::Serialization {
+namespace Engine::Reflection {
   /// Represents a member variable with its fully-qualified type name and identifier.
   struct Variable {
     /// Fully qualified type name (including namespace, templates, pointers).
@@ -22,6 +21,8 @@ namespace Engine::Serialization {
 
   /// Represents a record (class/struct) with its name, location, and serializable fields.
   struct Record {
+    /// True if this record is a class, False if not
+    bool isClass;
     /// Fully qualified name of the class/struct.
     std::string name;
     /// File path where this class is defined.
@@ -34,7 +35,7 @@ namespace Engine::Serialization {
 
   /**
    * Parser class that uses Clang's AST to extract `Record` information from a C++ header.
-   * Only classes/structs that are friends of Engine::Serialization::Serializer are considered.
+   * Only classes/structs that are friends of Engine::Reflection::Serializer are considered.
    */
   class Parser final {
     public:
@@ -43,11 +44,10 @@ namespace Engine::Serialization {
        * serializable classes and their fields.
        * @param headerPath Path to the header file to parse.
        * @param records All the extracted records
-       * @param usages All the extracted record template usages
        * @return Vector of Record structures with class and field info.
        */
       static void ParseHeader(
-        const std::string &headerPath, std::vector<Record> &records, std::set<std::string> &usages
+        const std::string &headerPath, std::vector<Record> &records
       );
 
       /**
@@ -61,6 +61,6 @@ namespace Engine::Serialization {
       /// @returns The path to the macOS SDK
       static std::string getMacOSSDKPath();
   };
-} // namespace Engine::Serialization
+} // namespace Engine::Reflection
 
 #endif // PARSER_HPP
