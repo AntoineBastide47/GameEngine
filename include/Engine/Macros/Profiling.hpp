@@ -7,9 +7,9 @@
 #ifndef PROFILING_HPP
 #define PROFILING_HPP
 
+#include "Engine/Settings.hpp"
 #include "Engine/Macros/Utils.hpp"
 #include "Engine/Profiling/Timer.hpp"
-#include "Engine/Settings.hpp"
 
 #if defined(ENGINE_DEBUG) && defined(ENGINE_PROFILING)
 #define ENGINE_PROFILE_SCOPE(name, level) Engine::Profiling::Timer timer##__LINE__(name, level)

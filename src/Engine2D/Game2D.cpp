@@ -18,6 +18,10 @@
 #if ENGINE_PROFILING
 #include "Engine/Profiling/Instrumentor.hpp"
 #endif
+#include <fstream>
+
+#include "Engine/Data/JSON.hpp"
+#include "Engine/Data/JsonParser.hpp"
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Animation/AnimationSystem.hpp"
@@ -416,9 +420,6 @@ namespace Engine2D {
   }
 
   void Game2D::addEntities() {
-    if (entitiesToAdd.empty())
-      return;
-
     for (const auto &entity: entitiesToAdd)
       entity->initialize();
     entities.insert(entities.end(), entitiesToAdd.begin(), entitiesToAdd.end());
@@ -426,12 +427,9 @@ namespace Engine2D {
   }
 
   void Game2D::removeEntities() {
-    if (entitiesToRemove.empty())
-      return;
-
     for (const auto &entity: entitiesToRemove) {
-      std::erase(entities, entity);
       entity->destroy();
+      std::erase(entities, entity);
     }
   }
 
@@ -457,12 +455,12 @@ namespace Engine2D {
     const bool maintainAspectRatio = Engine::Settings::Graphics::GetMaintainAspectRatio();
 
     // Calculate the viewport dimensions
-    const int viewWidth = static_cast<int>(static_cast<float>(initialSize.x) * (maintainAspectRatio
-                                             ? std::min(ratioX, ratioY)
-                                             : ratioX));
-    const int viewHeight = static_cast<int>(static_cast<float>(initialSize.y) * (maintainAspectRatio
-                                              ? std::min(ratioX, ratioY)
-                                              : ratioY));
+    const int viewWidth = static_cast<int>(
+      static_cast<float>(initialSize.x) * (maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX)
+    );
+    const int viewHeight = static_cast<int>(
+      static_cast<float>(initialSize.y) * (maintainAspectRatio ? std::min(ratioX, ratioY) : ratioY)
+    );
 
     // Center the viewport
     glViewport((framebufferWidth - viewWidth) / 2, (framebufferHeight - viewHeight) / 2, viewWidth, viewHeight);

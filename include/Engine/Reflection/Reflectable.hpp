@@ -14,6 +14,7 @@
 
 // Since only the tool itself uses the annotations, only make the macros add them when the tool is run
 // This should prevent compilation errors on compilers that do not support custom annotation (ex: MSVC)
+// This allows the engine to be compiled with clang, gcc or MSVC but enforces the Header Forge to be compiled with clang
 #ifdef HEADER_FORGE_ENABLE_ANNOTATIONS
   #define ENGINE_SERIALIZE __attribute__((annotate(_e_SERIALIZE_STRING)))
   #define ENGINE_NON_SERIALIZABLE __attribute__((annotate(_e_NON_SERIALIZABLE_STRING)))

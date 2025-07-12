@@ -84,6 +84,10 @@ add_library(Engine2D STATIC
     include/Engine/Reflection/Save.hpp
     include/Engine/Reflection/Reflectable.hpp
     include/Engine/Reflection/Serializer.hpp
+    src/Engine/Data/JSON.cpp
+    include/Engine/Data/JSON.hpp
+    src/Engine/Data/JsonParser.cpp
+    include/Engine/Data/JsonParser.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES
