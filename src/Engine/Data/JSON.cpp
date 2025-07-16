@@ -4,10 +4,12 @@
 // Date: 05.07.2025
 //
 
+#include <sstream>
+
 #include "Engine/Data/JSON.hpp"
 #include "Engine/Data/JsonParser.hpp"
 
-namespace Engine::Data {
+namespace Engine {
   JSON::JSON()
     : type(Null), data(null) {}
 
@@ -76,7 +78,7 @@ namespace Engine::Data {
   }
 
   std::istream &operator>>(std::istream &is, JSON &value) {
-    value = JSONParser(&is).Parse();
+    value = JSONParser(is).Parse();
     return is;
   }
 
@@ -499,5 +501,9 @@ namespace Engine::Data {
     json.type = object;
     json.data = JSONObject(values.begin(), values.end());
     return json;
+  }
+
+  bool JSON::isComplexType() const {
+    return type == object || type == array;
   }
 }

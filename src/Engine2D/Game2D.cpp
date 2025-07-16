@@ -227,7 +227,7 @@ namespace Engine2D {
       -32768.0f, 32768.0f // int16_t range
     );
 
-    this->OnInitialize();
+    OnInitialize();
   }
 
   void Game2D::updateLoop() {

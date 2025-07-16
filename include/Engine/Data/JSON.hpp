@@ -10,10 +10,9 @@
 #include <string>
 #include <unordered_map>
 #include <variant>
+#include <vector>
 
-#include "Engine/Reflection/Concepts.hpp"
-
-namespace Engine::Data {
+namespace Engine {
   class JSON;
 
   /// Representation of a JSON null value
@@ -123,7 +122,7 @@ namespace Engine::Data {
           return std::get<bool>(data);
         else if constexpr (std::is_same_v<T, double>)
           return std::get<double>(data);
-        else if constexpr (Reflection::IsString<T>)
+        else if constexpr (std::is_same_v<T, std::string>)
           return std::get<std::string>(data);
         else if constexpr (std::is_same_v<T, JSONArray>)
           return std::get<JSONArray>(data);
@@ -141,15 +140,15 @@ namespace Engine::Data {
             static_cast<std::string>("Can not convert from: ") + typeToString(type) + " to : " + typeid(T).name()
           );
 
-        if constexpr (std::is_same_v<T, bool>)
+        if constexpr (std::is_same_v<std::remove_cvref_t<T>, bool>)
           return std::get<bool>(data);
-        else if constexpr (std::is_same_v<T, double>)
+        else if constexpr (std::is_same_v<std::remove_cvref_t<T>, double>)
           return std::get<double>(data);
-        else if constexpr (Reflection::IsString<T>)
+        else if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::string>)
           return std::get<std::string>(data);
-        else if constexpr (std::is_same_v<T, JSONArray>)
+        else if constexpr (std::is_same_v<std::remove_cvref_t<T>, JSONArray>)
           return std::get<JSONArray>(data);
-        else if constexpr (std::is_same_v<T, JSONObject>)
+        else if constexpr (std::is_same_v<std::remove_cvref_t<T>, JSONObject>)
           return std::get<JSONObject>(data);
         else
           return std::get<null_t>(data);
@@ -364,18 +363,21 @@ namespace Engine::Data {
       JSONType type;
       std::variant<null_t, bool, double, std::string, JSONArray, JSONObject> data;
 
+      /// @returns true if the instance is an array or an object, false if not
+      [[nodiscard]] bool isComplexType() const;
+
       template<typename T> bool typeMatches() const {
-        if constexpr (std::is_same_v<T, bool>)
+        if constexpr (std::is_same_v<std::remove_cvref_t<T>, bool>)
           return type == Boolean;
-        if constexpr (std::is_same_v<T, double>)
+        if constexpr (std::is_same_v<std::remove_cvref_t<T>, double>)
           return type == Number;
-        if constexpr (std::is_same_v<T, std::string>)
+        if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::string>)
           return type == String;
-        if constexpr (std::is_same_v<T, JSONArray>)
+        if constexpr (std::is_same_v<std::remove_cvref_t<T>, JSONArray>)
           return type == array;
-        if constexpr (std::is_same_v<T, JSONObject>)
+        if constexpr (std::is_same_v<std::remove_cvref_t<T>, JSONObject>)
           return type == object;
-        if constexpr (std::is_same_v<T, null_t>)
+        if constexpr (std::is_same_v<std::remove_cvref_t<T>, null_t>)
           return type == Null;
         return false;
       }

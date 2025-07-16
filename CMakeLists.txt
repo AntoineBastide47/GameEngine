@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.8.1)
+project(GameEngine VERSION 0.8.6)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -140,11 +140,7 @@ endif ()
 
 target_link_libraries(Engine2D PRIVATE
     OpenGL::GL GLEW::GLEW glfw glm-header-only
-    cmrc cpptrace::cpptrace imgui
-)
-
-target_link_directories(Engine2D PRIVATE
-    vendor/imgui
+    cmrc cpptrace::cpptrace
 )
 
 # --------------------------
