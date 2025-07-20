@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-07-20
+### Added
+- **[Engine/Data/JSON]**: new Get functions for each json type: GetNull, GetBoolean, GetNumber, GetArray and GetObject
+- **[Engine/Reflection/Save]**: save functions for enums, glm::vec, glm::mat and std::variant
+- **[Engine/Reflection/Load]**: load functions to mirror all the save functions
+- **[Engine/Reflection/Serializer]**: ToJsonString and ToJsonToFile to convert to a stringified json or, to convert to json and save to a file
+- **[Engine/Reflection/Deserializer]**: FromJson, FromJsonString and FromJsonFromFile to convert json to types 
+- **[Engine/Reflection/ReflectionFactory]**: factory to create shared and unique pointers of records that inherit from Engine::Reflection::Reflectable from their fully qualified string name
+### Changes
+- **[tools/CLI]**:
+  - made the build process faster by using all available CPU cores and using Ninja if it is detected on the system
+  - when running the link command, the header-forge binary is also sent to the game folder
+- **[Engine/Data/JSON]**: constructors accepts more types with templating
+- **[tools/HeaderForge]**: generates load functions, reflection factory code and, inject an include statement and the SERIALIZE_* macro into the .hpp files
+- **[Engine/Reflection/Save]**: save function create a JSON instance instead of building JSON strings
+### Removed
+- **[Engine/Data/JSON]**: Get<T> function
+
 ## [0.8.6] - 2025-07-16
 ### Changes
 - **[Engine/Data/JSONParser]**: changes the internal string parsing to use the istream parsing with a zero copy buffer, made the parsing ~50% faster

@@ -7,6 +7,8 @@
 #include <sstream>
 
 #include "Engine/Data/JSON.hpp"
+
+#include "Engine/Log.hpp"
 #include "Engine/Data/JsonParser.hpp"
 
 namespace Engine {
@@ -17,18 +19,6 @@ namespace Engine {
 
   JSON::JSON(const bool value)
     : type(Boolean), data(value) {}
-
-  JSON::JSON(const int value)
-    : type(Number), data(static_cast<double>(value)) {}
-
-  JSON::JSON(const double value)
-    : type(Number), data(value) {}
-
-  JSON::JSON(const char *value)
-    : JSON(std::string(value)) {}
-
-  JSON::JSON(std::string value)
-    : type(String), data(std::move(value)) {}
 
   JSON::JSON(const std::initializer_list<JSON> &values) {
     const bool isObject = std::ranges::all_of(
@@ -42,7 +32,7 @@ namespace Engine {
     if (isObject) {
       JSONObject obj;
       for (const auto &pair: values) {
-        obj.emplace(pair[0].Get<std::string>(), pair[1]);
+        obj.emplace(pair[0].GetString(), pair[1]);
       }
       data = std::move(obj);
     } else
@@ -82,67 +72,6 @@ namespace Engine {
     return is;
   }
 
-  JSON &JSON::operator=(const nullptr_t) {
-    type = Null;
-    data = null;
-    return *this;
-  }
-
-  JSON &JSON::operator=(const null_t) {
-    type = Null;
-    data = null;
-    return *this;
-  }
-
-  JSON &JSON::operator=(const bool value) {
-    type = Boolean;
-    data = value;
-    return *this;
-  }
-
-  JSON &JSON::operator=(const int value) {
-    type = Number;
-    data = static_cast<double>(value);
-    return *this;
-  }
-
-  JSON &JSON::operator=(double value) {
-    type = Number;
-    data = value;
-    return *this;
-  }
-
-  JSON &JSON::operator=(const char *value) {
-    return operator=(std::string(value));
-  }
-
-  JSON &JSON::operator=(std::string value) {
-    type = String;
-    data = std::move(value);
-    return *this;
-  }
-
-  JSON &JSON::operator=(const std::initializer_list<JSON> &values) {
-    const bool isObject = std::ranges::all_of(
-      values, [](const JSON &j) {
-        return j.IsArray() && j.Size() == 2 && j[0].IsString();
-      }
-    );
-
-    type = isObject ? object : array;
-
-    if (isObject) {
-      JSONObject obj;
-      for (const auto &pair: values) {
-        obj.emplace(pair[0].Get<std::string>(), pair[1]);
-      }
-      data = std::move(obj);
-    } else
-      data = values;
-
-    return *this;
-  }
-
   JSON &JSON::operator[](const size_t index) {
     if (type != array) {
       type = array;
@@ -158,7 +87,7 @@ namespace Engine {
 
   const JSON &JSON::operator[](const size_t index) const {
     if (type == array) {
-      if (const auto &array = Get<JSONArray>(); index < array.size())
+      if (const auto &array = GetArray(); index < array.size())
         return array[index];
       throw std::out_of_range("JSON::operator[]");
     }
@@ -176,11 +105,84 @@ namespace Engine {
 
   const JSON &JSON::operator[](const std::string &key) const {
     if (type == object) {
-      if (const auto &obj = Get<JSONObject>(); obj.contains(key))
+      if (const auto &obj = GetObject(); obj.contains(key))
         return obj.at(key);
-      throw std::out_of_range("JSON::operator[]");
+      Log::Error("JSON::operator[] key: \"" + key + "\" not found");
+      throw std::out_of_range("JSON::operator[] key: \"" + key + "\" not found");
     }
     throw std::logic_error("JSON::operator[] on a non object-type");
+  }
+
+  null_t &JSON::GetNull() {
+    if (type == Null)
+      return std::get<null_t>(data);
+    throw std::logic_error("JSON::GetNull called on a non-null type");
+  }
+
+  bool &JSON::GetBool() {
+    if (type == Boolean)
+      return std::get<bool>(data);
+    throw std::logic_error("JSON::GetBool called on a non-boolean type");
+  }
+
+  double &JSON::GetNumber() {
+    if (type == Number)
+      return std::get<double>(data);
+    throw std::logic_error("JSON::GetNumber called on a non-number type");
+  }
+
+  std::string &JSON::GetString() {
+    if (type == String)
+      return std::get<std::string>(data);
+    throw std::logic_error("JSON::GetString called on a non-string type");
+  }
+
+  JSON::JSONArray &JSON::GetArray() {
+    if (type == array)
+      return std::get<JSONArray>(data);
+    throw std::logic_error("JSON::GetArray called on a non-array type");
+  }
+
+  JSON::JSONObject &JSON::GetObject() {
+    if (type == object)
+      return std::get<JSONObject>(data);
+    throw std::logic_error("JSON::GetObject called on a non-object type");
+  }
+
+  const null_t &JSON::GetNull() const {
+    if (type == Null)
+      return std::get<null_t>(data);
+    throw std::logic_error("JSON::GetNull called on a non-null type");
+  }
+
+  const bool &JSON::GetBool() const {
+    if (type == Boolean)
+      return std::get<bool>(data);
+    throw std::logic_error("JSON::GetBool called on a non-boolean type");
+  }
+
+  const double &JSON::GetNumber() const {
+    if (type == Number)
+      return std::get<double>(data);
+    throw std::logic_error("JSON::GetNumber called on a non-number type");
+  }
+
+  const std::string &JSON::GetString() const {
+    if (type == String)
+      return std::get<std::string>(data);
+    throw std::logic_error("JSON::GetString called on a non-string type");
+  }
+
+  const JSON::JSONArray &JSON::GetArray() const {
+    if (type == array)
+      return std::get<JSONArray>(data);
+    throw std::logic_error("JSON::GetArray called on a non-array type");
+  }
+
+  const JSON::JSONObject &JSON::GetObject() const {
+    if (type == object)
+      return std::get<JSONObject>(data);
+    throw std::logic_error("JSON::GetObject called on a non-object type");
   }
 
   void JSON::PushBack(const JSON &value) {
@@ -207,7 +209,7 @@ namespace Engine {
       else
         std::get<JSONArray>(data).erase(array.begin() + index);
     }
-    throw std::logic_error("JSON::Erase on a non array-type");
+    throw std::logic_error("JSON::Erase on a non-array type");
   }
 
   void JSON::Resize(const size_t size) {
@@ -216,6 +218,15 @@ namespace Engine {
       data = JSONArray{};
     }
     std::get<JSONArray>(data).resize(size);
+  }
+
+  void JSON::Reserve(const size_t size) {
+    if (type == array)
+      std::get<JSONArray>(data).reserve(size);
+    else if (type == object)
+      std::get<JSONObject>(data).reserve(size);
+    else
+      throw std::logic_error("JSON::Reserve called on non-array and non-object type");
   }
 
   JSON &JSON::Front() {
@@ -256,7 +267,7 @@ namespace Engine {
 
   JSON &JSON::Value(const size_t index, JSON &defaultValue) {
     if (type == array) {
-      auto &array = Get<JSONArray>();
+      auto &array = GetArray();
       return array[index] == JSON{} ? defaultValue : array[index];
     }
     return defaultValue;
@@ -264,7 +275,7 @@ namespace Engine {
 
   const JSON &JSON::Value(const size_t index, JSON &defaultValue) const {
     if (type == array) {
-      const auto &array = Get<JSONArray>();
+      const auto &array = GetArray();
       return array[index] == JSON{} ? defaultValue : array[index];
     }
     return defaultValue;
@@ -320,7 +331,7 @@ namespace Engine {
 
   JSON &JSON::Value(const std::string &key, JSON &defaultValue) {
     if (type == object) {
-      auto &obj = Get<JSONObject>();
+      auto &obj = GetObject();
       return obj.at(key) == JSON{} ? defaultValue : obj.at(key);
     }
     return defaultValue;
@@ -328,21 +339,15 @@ namespace Engine {
 
   const JSON &JSON::Value(const std::string &key, JSON &defaultValue) const {
     if (type == object) {
-      const auto &obj = Get<JSONObject>();
+      const auto &obj = GetObject();
       return obj.at(key) == JSON{} ? defaultValue : obj.at(key);
     }
     return defaultValue;
   }
 
-  bool JSON::Contains(const std::string &key) const {
-    if (type == object)
-      return Get<JSONObject>().contains(key);
-    throw std::out_of_range("JSON::Size() called on non-object type");
-  }
-
   bool JSON::Contains(const JSON &value) const {
     if (type == object) {
-      const auto &obj = Get<JSONObject>();
+      const auto &obj = GetObject();
       return std::ranges::find_if(
                obj, [&](const auto &pair) {
                  return pair.second == value;
@@ -351,26 +356,36 @@ namespace Engine {
     }
 
     if (type == array) {
-      const auto &array = Get<JSONArray>();
+      const auto &array = GetArray();
       return std::ranges::find(array, value) != array.end();
     }
 
     throw std::out_of_range("JSON::Contains() called on non-array or non-object type");
   }
 
+  bool JSON::Contains(const std::string &key) const {
+    if (type == object)
+      return GetObject().contains(key);
+    throw std::out_of_range("JSON::Size() called on non-object type");
+  }
+
+  bool JSON::Contains(const char *key) const {
+    return Contains(std::string(key));
+  }
+
   size_t JSON::Size() const {
     if (type == array)
-      return Get<JSONArray>().size();
+      return GetArray().size();
     if (type == object)
-      return Get<JSONObject>().size();
+      return GetObject().size();
     throw std::out_of_range("JSON::Size() called on non-array or non-object type");
   }
 
   bool JSON::Empty() const {
     if (type == array)
-      return Get<JSONArray>().empty();
+      return GetArray().empty();
     if (type == object)
-      return Get<JSONObject>().empty();
+      return GetObject().empty();
     throw std::out_of_range("JSON::Empty() called on non-array or non-object type");
   }
 
@@ -416,17 +431,17 @@ namespace Engine {
         oss.write("null", 4);
         break;
       case Boolean: {
-        const auto &value = Get<bool>();
+        const auto &value = GetBool();
         oss.write(value ? "true" : "false", value ? 4 : 5);
         break;
       }
       case Number: {
-        const auto value = Get<double>();
+        const auto value = GetNumber();
         oss << value << (static_cast<int>(value) == value ? ".0" : "");
         break;
       }
       case String: {
-        const auto &value = Get<std::string>();
+        const auto &value = GetString();
         oss.put('"');
         oss.write(value.c_str(), value.size());
         oss.put('"');

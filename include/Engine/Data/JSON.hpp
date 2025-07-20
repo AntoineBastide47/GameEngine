@@ -12,6 +12,8 @@
 #include <variant>
 #include <vector>
 
+#include "../Reflection/Concepts.hpp"
+
 namespace Engine {
   class JSON;
 
@@ -33,6 +35,10 @@ namespace Engine {
 
   class JSON final {
     friend class JSONParser;
+
+    enum JSONType {
+      Null = 0, Boolean, Number, String, array, object
+    };
     public:
       using JSONArray = std::vector<JSON>;
       using JSONObject = std::unordered_map<std::string, JSON>;
@@ -41,16 +47,72 @@ namespace Engine {
       JSON();
       /// Creates a JSON boolean value
       JSON(bool value);
-      /// Creates a JSON number based on the given integer
-      JSON(int value);
-      /// Creates a JSON number based on the given double
-      JSON(double value);
-      /// Creates a JSON string based on the given C string
-      explicit JSON(const char *value);
-      /// Creates a JSON string based on the given C++ string
-      explicit JSON(std::string value);
-      // Creates either a JSON array or object based on the given values
+      /// Assigns the given array or object to this instance.
       JSON(const std::initializer_list<JSON> &values);
+
+      /// Assigns the given arithmetical typed value to this instance.
+      template<Reflection::IsNumber T> JSON(const T &value) {
+        type = Number;
+        data = static_cast<double>(value);
+      }
+
+      /// Assigns the given string typed value to this instance.
+      template<Reflection::IsString T> JSON(const T &value) {
+        type = String;
+        if constexpr (std::is_same_v<std::decay_t<T>, char>)
+          data = std::string(1, value);
+        else if constexpr (std::is_same_v<std::decay_t<T>, const char *>)
+          data = std::string(value);
+        else
+          data = static_cast<std::string>(value);
+      }
+
+      /// Assigns the given container typed value to this instance.
+      template<Reflection::IsContainer T> requires std::is_convertible_v<typename T::value_type, JSON>
+      JSON(const T &values) {
+        auto arr = JSONArray();
+        arr.reserve(std::distance(std::begin(values), std::end(values)));
+        for (const auto &v: values)
+          arr.emplace_back(v);
+
+        type = array;
+        data = arr;
+      }
+
+      /// Assigns the given map typed value to this instance.
+      template<Reflection::IsMap T> requires
+        std::is_convertible_v<typename T::key_type, std::string> && std::is_convertible_v<typename T::mapped_type, JSON>
+      JSON(const T &values) {
+        auto obj = JSONObject();
+        obj.reserve(std::distance(std::begin(values), std::end(values)));
+        for (const auto &[k, v]: values) {
+          if constexpr (std::is_same_v<typename T::key_type, std::string>)
+            obj.emplace(k, v);
+          else
+            obj.emplace(static_cast<std::string>(k), v);
+        }
+
+        type = object;
+        data = obj;
+      }
+
+      /// Assigns the given tuple value to this instance.
+      template<Reflection::IsTuple T> requires
+        ([]<std::size_t... I>(std::index_sequence<I...>) {
+          return (std::is_constructible_v<JSON, std::tuple_element_t<I, T>> && ...);
+        }(std::make_index_sequence<std::tuple_size_v<T>>{}))
+      JSON(const T &tuple) {
+        auto arr = JSONArray();
+        arr.reserve(std::tuple_size_v<T>);
+        std::apply(
+          [&](const auto &... elems) {
+            (arr.emplace_back(elems), ...);
+          }, tuple
+        );
+
+        type = array;
+        data = arr;
+      }
 
       bool operator==(const JSON &other) const;
       bool operator!=(const JSON &other) const;
@@ -65,30 +127,6 @@ namespace Engine {
 
       /// Load's this instance from the given istream
       friend std::istream &operator>>(std::istream &is, JSON &value);
-
-      /// Assigns the given null value to this instance.
-      JSON &operator=(nullptr_t value);
-
-      /// Assigns the given null value to this instance.
-      JSON &operator=(null_t value);
-
-      /// Assigns the given boolean value to this instance.
-      JSON &operator=(bool value);
-
-      /// Assigns the given integer value to this instance.
-      JSON &operator=(int value);
-
-      /// Assigns the given double value to this instance.
-      JSON &operator=(double value);
-
-      /// Assigns the given C string value to this instance.
-      JSON &operator=(const char *value);
-
-      /// Assigns the given C++ string value to this instance.
-      JSON &operator=(std::string value);
-
-      /// Assigns the given array or object to this instance.
-      JSON &operator=(const std::initializer_list<JSON> &values);
 
       /// @returns A reference to the JSON element at the specified index.
       /// @param index The position of the element to access within the array.
@@ -110,83 +148,53 @@ namespace Engine {
       /// @note If the current instance is not an object, it is converted into one.
       const JSON &operator[](const std::string &key) const;
 
-      template<typename T>
-      /// @returns A reference to the internal data stored in this JSON value
-      [[nodiscard]] T &Get() {
-        if (!typeMatches<T>())
-          throw std::logic_error(
-            static_cast<std::string>("Can not convert from: ") + typeToString(type) + " to : " + typeid(T).name()
-          );
+      /// @returns A reference to the stored null value
+      /// @throws std::logic_error if called on a non-null type
+      [[nodiscard]] null_t &GetNull();
 
-        if constexpr (std::is_same_v<T, bool>)
-          return std::get<bool>(data);
-        else if constexpr (std::is_same_v<T, double>)
-          return std::get<double>(data);
-        else if constexpr (std::is_same_v<T, std::string>)
-          return std::get<std::string>(data);
-        else if constexpr (std::is_same_v<T, JSONArray>)
-          return std::get<JSONArray>(data);
-        else if constexpr (std::is_same_v<T, JSONObject>)
-          return std::get<JSONObject>(data);
-        else
-          return std::get<null_t>(data);
-      }
+      /// @returns A reference to the stored boolean value
+      /// @throws std::logic_error if called on a non-boolean type
+      [[nodiscard]] bool &GetBool();
 
-      template<typename T>
-      /// @returns A const reference to the internal data stored in this JSON value
-      [[nodiscard]] const T &Get() const {
-        if (!typeMatches<T>())
-          throw std::logic_error(
-            static_cast<std::string>("Can not convert from: ") + typeToString(type) + " to : " + typeid(T).name()
-          );
+      /// @returns A reference to the stored number value
+      /// @throws std::logic_error if called on a non-number type
+      [[nodiscard]] double &GetNumber();
 
-        if constexpr (std::is_same_v<std::remove_cvref_t<T>, bool>)
-          return std::get<bool>(data);
-        else if constexpr (std::is_same_v<std::remove_cvref_t<T>, double>)
-          return std::get<double>(data);
-        else if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::string>)
-          return std::get<std::string>(data);
-        else if constexpr (std::is_same_v<std::remove_cvref_t<T>, JSONArray>)
-          return std::get<JSONArray>(data);
-        else if constexpr (std::is_same_v<std::remove_cvref_t<T>, JSONObject>)
-          return std::get<JSONObject>(data);
-        else
-          return std::get<null_t>(data);
-      }
+      /// @returns A reference to the stored string value
+      /// @throws std::logic_error if called on a non-string type
+      [[nodiscard]] std::string &GetString();
 
-      template<typename T>
-      /// @returns A pointer to the internal data stored in this JSON value
-      [[nodiscard]] T *TryGet() {
-        if (!typeMatches<T>())
-          return nullptr;
-        return &Get<T>();
-      }
+      /// @returns A reference to the stored array value
+      /// @throws std::logic_error if called on a non-array type
+      [[nodiscard]] JSONArray &GetArray();
 
-      template<typename T>
-      /// @returns A const pointer to the internal data stored in this JSON value
-      [[nodiscard]] const T *TryGet() const {
-        if (!typeMatches<T>())
-          return nullptr;
-        return &Get<T>();
-      }
+      /// @returns A reference to the stored object value
+      /// @throws std::logic_error if called on a non-object type
+      [[nodiscard]] JSONObject &GetObject();
 
-      template<typename T>
-      /// @returns A reference to the internal data stored in this JSON value or the given default value
-      [[nodiscard]] T &GetOr(const JSON &defaultValue) {
-        if (typeMatches<T>())
-          return Get<T>();
+      /// @returns A constant reference to the stored null value
+      /// @throws std::logic_error if called on a non-null type
+      [[nodiscard]] const null_t &GetNull() const;
 
-        return defaultValue.Get<T>();
-      }
+      /// @returns A constant reference to the stored boolean value
+      /// @throws std::logic_error if called on a non-boolean type
+      [[nodiscard]] const bool &GetBool() const;
 
-      template<typename T>
-      /// @returns A const reference to the internal data stored in this JSON value or the given default value
-      [[nodiscard]] const T &GetOr(const JSON &defaultValue) const {
-        if (typeMatches<T>())
-          return Get<T>();
+      /// @returns A constant reference to the stored number value
+      /// @throws std::logic_error if called on a non-number type
+      [[nodiscard]] const double &GetNumber() const;
 
-        return defaultValue.Get<T>();
-      }
+      /// @returns A constant reference to the stored string value
+      /// @throws std::logic_error if called on a non-string type
+      [[nodiscard]] const std::string &GetString() const;
+
+      /// @returns A constant reference to the stored array value
+      /// @throws std::logic_error if called on a non-array type
+      [[nodiscard]] const JSONArray &GetArray() const;
+
+      /// @returns A constant reference to the stored object value
+      /// @throws std::logic_error if called on a non-object type
+      [[nodiscard]] const JSONObject &GetObject() const;
 
       /// Appends a JSON value to this instance.
       /// @param value The JSON value to add.
@@ -213,9 +221,13 @@ namespace Engine {
 
       /// Resizes this instance to the given size.
       /// @param size The new size of this instance.
-      /// @throws std::out_of_range if index exceeds the current array size.
-      /// @throws std::logic_error if this JSON is not of type array.
+      /// @note If this JSON is not of type array, it will be implicitly converted to a JSON array.
       void Resize(size_t size);
+
+      /// Reserves the given number of elements in memory for this instance
+      /// @param size The number of elements to reserve of this instance.
+      /// @throws std::logic_error if this JSON if not of type array or object
+      void Reserve(size_t size);
 
       /// @return A reference to the first element of this instance.
       /// @throws std::logic_error if this JSON is not of type array.
@@ -314,6 +326,11 @@ namespace Engine {
       /// @throws std::logic_error if this JSON is not of type object.
       [[nodiscard]] bool Contains(const std::string &key) const;
 
+      /// @returns true if this instance contains the given key, false if not.
+      /// @param key The key to check the existence of.
+      /// @throws std::logic_error if this JSON is not of type object.
+      [[nodiscard]] bool Contains(const char *key) const;
+
       /// @returns The size of this instance.
       /// @throws std::logic_error if this JSON is not of type array or object.
       [[nodiscard]] size_t Size() const;
@@ -355,11 +372,25 @@ namespace Engine {
       /// @returns A new JSON object containing the given keys and values
       /// @param values The optional keys and values to add to this array
       [[nodiscard]] static JSON Object(const std::initializer_list<std::pair<std::string, JSON>> &values = {});
-    private:
-      enum JSONType {
-        Null = 0, Boolean, Number, String, array, object
-      };
 
+      inline static constexpr std::string_view TypeToString(const JSON &json) {
+        switch (json.type) {
+          case Null:
+            return "null";
+          case Boolean:
+            return "boolean";
+          case Number:
+            return "number";
+          case String:
+            return "string";
+          case array:
+            return "array";
+          case object:
+            return "object";
+        }
+        return "unknown";
+      }
+    private:
       JSONType type;
       std::variant<null_t, bool, double, std::string, JSONArray, JSONObject> data;
 
@@ -380,24 +411,6 @@ namespace Engine {
         if constexpr (std::is_same_v<std::remove_cvref_t<T>, null_t>)
           return type == Null;
         return false;
-      }
-
-      inline static constexpr const char *typeToString(const JSONType type) {
-        switch (type) {
-          case Null:
-            return "null";
-          case Boolean:
-            return "boolean";
-          case Number:
-            return "number";
-          case String:
-            return "string";
-          case array:
-            return "array";
-          case object:
-            return "object";
-        }
-        return "unknown";
       }
   };
 }

@@ -1,29 +1,48 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <unordered_set>
+#include <set>
 
-#include "include/Generator.hpp"
-#include "include/Parser.hpp"
+#include "Generator.hpp"
+#include "Parser.hpp"
+#include "../../include/Engine/Macros/PlatformDetection.hpp"
 
 #define ALL_IN_ONE_CPP "allInOne.cpp"
 #define ALL_IN_ONE_I "allInOne.i"
-#define PREPROCESS_CMD "clang++ -E -DHEADER_FORGE_ENABLE_ANNOTATIONS " ALL_IN_ONE_CPP " -o " ALL_IN_ONE_I
 #define LAST_PROCESSING_TIMES_TXT "./Engine/lastProcessingTimes.txt"
 
+#ifdef ENGINE_MACOS
+#define OS_INCLUDES "-I/opt/homebrew/include"
+#endif
+
+#define PREPROCESS_CMD_START "clang++ -std=c++20 -E -DHEADER_FORGE_ENABLE_ANNOTATIONS "
+#define PREPROCESS_CMD_END " " OS_INCLUDES " " ALL_IN_ONE_CPP " -o " ALL_IN_ONE_I
+
 namespace fs = std::filesystem;
+
+static std::string join(const std::vector<std::string> &args) {
+  std::string result;
+  bool first = true;
+  for (const auto &arg: args) {
+    if (!first)
+      result.push_back(' ');
+    result += arg;
+    first = false;
+  }
+  return result;
+}
 
 int main(const int argc, char *argv[]) {
   if (argc < 2) {
     std::cerr << "Error: at least one file or directory must be specified.\n";
-    std::cerr << "Usage: " << argv[0] << " <file|directory>...\n";
+    std::cerr << "Usage: " << argv[0] << " --parse <file|directory>... --compilerArgs <args>...\n";
     return -1;
   }
 
   if (!fs::exists("./Engine"))
     fs::create_directory("./Engine");
 
-  bool overrideProcessingCheck = !fs::exists(LAST_PROCESSING_TIMES_TXT);
+  bool overrideProcessingCheck = !fs::exists(LAST_PROCESSING_TIMES_TXT) || true;
   std::fstream lastProcessingTimes(LAST_PROCESSING_TIMES_TXT, std::ios::in);
   std::unordered_map<std::string, std::string> fileProcessingTimes;
 
@@ -36,28 +55,44 @@ int main(const int argc, char *argv[]) {
   }
 
   // Gather each file path recursively
-  std::unordered_set<std::string> paths;
-  for (size_t i = 1; i < argc; i++) {
-    if (fs::path p(argv[i]); fs::exists(p)) {
-      std::unordered_set<std::string> _paths;
-      if (fs::is_regular_file(p) && (p.extension() == ".hpp" || p.extension() == ".cpp"))
-        _paths.emplace(p.string());
-      else if (fs::is_directory(p)) {
-        for (const auto &entry: fs::recursive_directory_iterator(p)) {
-          if (fs::is_regular_file(entry) && (entry.path().extension() == ".hpp" || entry.path().extension() == ".cpp"))
-            _paths.insert(entry.path().string());
-        }
-      }
-      paths.insert(_paths.begin(), _paths.end());
-    } else {
-      std::cerr << "Path does not exist: " << p << "\n";
+  std::set<std::string> filesystemPaths;
+  std::vector<std::string> compilerArgs;
+  bool parsingPaths = false;
+
+  for (size_t i = 1; i < argc; ++i) {
+    std::string arg = argv[i];
+
+    if (arg == "--parse") {
+      parsingPaths = true;
+      continue;
     }
+    if (arg == "--compilerArgs") {
+      parsingPaths = false;
+      continue;
+    }
+
+    if (parsingPaths) {
+      if (fs::path p(arg); fs::exists(p)) {
+        if (fs::is_regular_file(p) && p.extension() == ".hpp") {
+          filesystemPaths.insert(p.string());
+        } else if (fs::is_directory(p)) {
+          for (const auto &entry: fs::recursive_directory_iterator(p)) {
+            if (fs::is_regular_file(entry) && entry.path().extension() == ".hpp") {
+              filesystemPaths.insert(entry.path().string());
+            }
+          }
+        }
+      } else {
+        std::cerr << "Path does not exist: " << p << "\n";
+      }
+    } else
+      compilerArgs.push_back(arg);
   }
 
   // Combine all files that need parsing in a single file
   bool hasData = false;
   std::ofstream allInOne(ALL_IN_ONE_CPP);
-  for (const auto &path: paths) {
+  for (const auto &path: filesystemPaths) {
     const std::filesystem::path filePath(path);
     auto ftime = std::filesystem::last_write_time(filePath);
     auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
@@ -96,7 +131,7 @@ int main(const int argc, char *argv[]) {
   }
 
   // Preprocess the file (faster than the clang tool doing it)
-  std::system(PREPROCESS_CMD);
+  std::system((PREPROCESS_CMD_START + join(compilerArgs) + PREPROCESS_CMD_END).c_str());
 
   // Parse the preprocessed file
   std::vector<Engine::Reflection::Record> records;

@@ -16,6 +16,7 @@ namespace Engine::Rendering {
   class Shader;
   class Texture;
 }
+
 namespace Engine2D::Rendering {
   class Sprite;
 }
@@ -88,7 +89,7 @@ namespace Engine {
        * @note Log's an error if no texture with the given name was found
        */
       static std::shared_ptr<Sprite> CreateSpriteFromTexture(
-        const std::string &textureName, const glm::vec<4, float01> &rect = glm::vec4(0, 0, 1, 1)
+        const std::string &textureName, const glm::vec<4, float> &rect = defaultRect
       );
 
       /**
@@ -99,8 +100,7 @@ namespace Engine {
        * @note Log's an error if no texture with the given name was found
        */
       static std::shared_ptr<Sprite> CreateSprite(
-        const std::string &spriteName, const std::string &textureName,
-        const glm::vec<4, float01> &rect = glm::vec4(0, 0, 1, 1)
+        const std::string &spriteName, const std::string &textureName, const glm::vec<4, float> &rect = defaultRect
       );
 
       /**
@@ -122,8 +122,8 @@ namespace Engine {
        * @return The loaded texture
        */
       static std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> LoadTexture2DAndSprite(
-        const std::string &filePath, const std::string &name,
-        const glm::vec<4, float01> &rect = glm::vec4(0, 0, 1, 1), bool blend = false
+        const std::string &filePath, const std::string &name, const glm::vec<4, float> &rect = defaultRect,
+        bool blend = false
       );
 
       /// Deletes all the loaded textures and shaders
@@ -135,6 +135,9 @@ namespace Engine {
       static std::map<std::string, std::shared_ptr<Texture>> textures;
       /// The sprites that have been loaded to memory by the Resource Manager
       static std::map<std::string, std::shared_ptr<Sprite>> sprites;
+      /// The default value for a rect (the whole image)
+      inline static glm::vec<4, float> defaultRect{0, 0, 1, 1};
+
       ResourceManager() = default;
   };
 }

@@ -31,7 +31,7 @@ namespace Engine2D::Rendering {
     0.0f, 0.0f, 0.0f, 1.0f, // Bottom-left
     1.0f, 0.0f, 1.0f, 1.0f, // Bottom-right
     0.0f, 1.0f, 0.0f, 0.0f, // Top-left
-    1.0f, 1.0f, 1.0f, 0.0f  // Top-right
+    1.0f, 1.0f, 1.0f, 0.0f // Top-right
   };
 
   std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::opaqueRenderers;
@@ -139,7 +139,6 @@ namespace Engine2D::Rendering {
     const auto color = renderer->color;
     const float invPPU = 1.0f / sprite->pixelsPerUnit;
     const auto rect = sprite->rect;
-    //const auto &transform = *renderer->Transform();
 
     // Position and scale
     *data++ = renderer->Transform()->GetWorldPosition().x;
@@ -148,19 +147,22 @@ namespace Engine2D::Rendering {
     *data++ = renderer->Transform()->GetWorldScale().y * invPPU;
 
     // Color
-    *data++ = color.x;
-    *data++ = color.y;
-    *data++ = color.z;
-    *data++ = color.w;
+    *data++ = std::clamp(color.x, 0.0f, 1.0f);
+    *data++ = std::clamp(color.y, 0.0f, 1.0f);
+    *data++ = std::clamp(color.z, 0.0f, 1.0f);
+    *data++ = std::clamp(color.w, 0.0f, 1.0f);
 
     // Rect
-    *data++ = rect.x;
-    *data++ = rect.y;
-    *data++ = rect.z;
-    *data++ = rect.w;
+    *data++ = std::clamp(rect.x, 0.0f, 1.0f);
+    *data++ = std::clamp(rect.y, 0.0f, 1.0f);
+    *data++ = std::clamp(rect.z, 0.0f, 1.0f);
+    *data++ = std::clamp(rect.w, 0.0f, 1.0f);
 
     // Pivot, rotation, render order, texture index and flip
-    *data++ = PackTwoFloats(renderer->sprite->pivot.x, renderer->sprite->pivot.y);
+    *data++ = PackTwoFloats(
+      std::clamp(renderer->sprite->pivot.x, -1.0f, 1.0f),
+      std::clamp(renderer->sprite->pivot.y, -1.0f, 1.0f)
+    );
     *data++ = renderer->Transform()->GetWorldRotation();
     *data++ = renderer->renderOrder << 16 | textureIdToIndexMap.at(renderer->sprite->texture->id);
     *data = PackTwoFloats(renderer->GetFlip().x ? -1.0f : 1.0, renderer->GetFlip().y ? -1.0f : 1.0);
@@ -189,7 +191,8 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::buildAndRenderStaticBatch(
-    std::vector<std::shared_ptr<SpriteRenderer>> &renderers, std::vector<float> &batchData, std::vector<Flush> &flushList,
+    std::vector<std::shared_ptr<SpriteRenderer>> &renderers, std::vector<float> &batchData,
+    std::vector<Flush> &flushList,
     const bool rebuild, const uint VBO, const uint framebuffer
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
@@ -320,7 +323,8 @@ namespace Engine2D::Rendering {
 
       // Check for change in shader or texture ID
       const uint32_t textureID = renderer->sprite->texture->id;
-      if (const uint32_t shaderID = renderer->shader->id; shaderID != currentShaderID || textureID != currentTextureID) {
+      if (const uint32_t shaderID = renderer->shader->id;
+        shaderID != currentShaderID || textureID != currentTextureID) {
         // Save the previous flush range if any
         if (count > 0) {
           flushList.emplace_back(currentShaderID, currentTextureID, start, count, !zSort << 5 | 0);
@@ -569,7 +573,9 @@ namespace Engine2D::Rendering {
 
       // Add all the renderers to their appropriate vectors
       staticOpaqueRenderers.insert(staticOpaqueRenderers.end(), renderersToAdd.begin(), static_opaque_end.begin());
-      staticTransparentRenderers.insert(staticTransparentRenderers.end(), static_opaque_end.begin(), static_end.begin());
+      staticTransparentRenderers.insert(
+        staticTransparentRenderers.end(), static_opaque_end.begin(), static_end.begin()
+      );
       opaqueRenderers.insert(opaqueRenderers.end(), static_end.begin(), opaque_end.begin());
       transparentRenderers.insert(transparentRenderers.end(), opaque_end.begin(), opaque_end.end());
 

@@ -12,6 +12,7 @@
 
 #include "Engine2D/Component2D.hpp"
 #include "Engine/Types/float01.hpp"
+#include "Collider2D.gen.hpp"
 
 namespace Engine2D {
   class Game2D;
@@ -29,6 +30,7 @@ namespace Engine2D::Physics {
    * This class is intended to be extended to implement specific collider shapes.
    */
   class Collider2D : public Component2D {
+  SERIALIZE_COLLIDER2D
     friend class Physics2D;
     friend class CollisionGrid;
     friend class Collisions;
@@ -100,6 +102,7 @@ namespace Engine2D::Physics {
 
   /** Collider for 2D physics representing a circle. */
   class CircleCollider2D final : public Collider2D {
+  SERIALIZE_CIRCLECOLLIDER2D
     public:
       /// The radius of this collider
       float radius;
@@ -111,6 +114,7 @@ namespace Engine2D::Physics {
 
   /** Collider for 2D physics representing a rectangle. */
   class BoxCollider2D final : public Collider2D {
+  SERIALIZE_BOXCOLLIDER2D
     public:
       /// The height of this collider
       float width;
@@ -124,6 +128,7 @@ namespace Engine2D::Physics {
 
   /** Collider for 2D physics representing a polygon. */
   class PolygonCollider2D final : public Collider2D {
+  SERIALIZE_POLYGONCOLLIDER2D
     public:
       using Collider2D::vertices;
       PolygonCollider2D();

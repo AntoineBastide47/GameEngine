@@ -9,6 +9,9 @@
 
 #include <memory>
 
+#include "Engine/Reflection/Reflectable.hpp"
+#include "Component2D.gen.hpp"
+
 namespace Engine2D {
   class Entity2D;
   class Transform2D;
@@ -18,12 +21,12 @@ namespace Engine2D {
    * If you need to create a component and want to link it to an Entity2D using Entity2D::AddComponent(), your component will
    * need to inherit from this class for it to work.
    */
-  class Component2D : public std::enable_shared_from_this<Component2D> {
-    friend class Entity2D;
-    friend class Game2D;
+  class Component2D : public std::enable_shared_from_this<Component2D>, public Engine::Reflection::Reflectable {
+    SERIALIZE_COMPONENT2D
+      friend class Entity2D;
+      friend class Game2D;
     public:
-      Component2D();
-      virtual ~Component2D() = default;
+      ~Component2D() override = default;
 
       /// Changes the active state of this component
       void SetActive(bool active);
@@ -35,11 +38,12 @@ namespace Engine2D {
       /// @returns The transform attached to the entity this component is attached to
       [[nodiscard]] std::shared_ptr<Transform2D> Transform() const;
     protected:
+      Component2D();
       virtual void forward() {}
       virtual void recall() {}
-    private:
       /// Whether this component is active in the scene
       bool active;
+    private:
       /// The entity this component is attached to
       std::shared_ptr<Entity2D> entity;
 

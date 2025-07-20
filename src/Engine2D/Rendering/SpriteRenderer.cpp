@@ -9,14 +9,15 @@
 #include "Engine2D/Rendering/Renderer2D.hpp"
 
 namespace Engine2D::Rendering {
-  SpriteRenderer::SpriteRenderer() : color({1, 1, 1, 1}), flip({0, 0}), dirty(false) {}
+  SpriteRenderer::SpriteRenderer()
+    : color({1, 1, 1, 1}), flip({0, 0}), dirty(false) {}
 
-  void SpriteRenderer::SetColor(const glm::vec<4, Engine::float01> &color) {
+  void SpriteRenderer::SetColor(const glm::vec<4, float> &color) {
     this->color = color;
     dirty = true;
   }
 
-  const glm::vec<4, Engine::float01> &SpriteRenderer::GetColor() const {
+  const glm::vec<4, float> &SpriteRenderer::GetColor() const {
     return this->color;
   }
 

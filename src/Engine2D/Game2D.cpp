@@ -18,11 +18,11 @@
 #if ENGINE_PROFILING
 #include "Engine/Profiling/Instrumentor.hpp"
 #endif
-#include <fstream>
-
 #include "Engine/Data/JSON.hpp"
 #include "Engine/Data/JsonParser.hpp"
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine/Reflection/Deserializer.hpp"
+#include "Engine/Reflection/Serializer.hpp"
 #include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Animation/AnimationSystem.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
@@ -30,8 +30,8 @@
 using Engine::ResourceManager;
 
 namespace Engine2D {
-  Game2D *Game2D::instance = nullptr;
-  const float Game2D::screenScaleFactor{0.1f};
+  Game2D::Game2D()
+    : Game2D(800, 600, "Unnamed Project") {}
 
   Game2D::Game2D(const int width, const int height, const char *title)
     : aspectRatio(glm::vec2(1)), aspectRatioInv(glm::vec2(1)), title(title), width(width), height(height),
@@ -92,11 +92,11 @@ namespace Engine2D {
   }
 
   std::shared_ptr<Entity2D> Game2D::AddEntity(
-    const std::string &name, bool isStatic, glm::vec2 position, float rotation, glm::vec2 scale,
+    const std::string &name, const bool isStatic, glm::vec2 position, float rotation, glm::vec2 scale,
     const std::shared_ptr<Entity2D> &parent
   ) {
     if (instance) {
-      auto entity = std::make_shared<Entity2D>(name, isStatic, position, rotation, scale, parent);
+      auto entity = std::shared_ptr<Entity2D>(new Entity2D(name, isStatic, position, rotation, scale, parent));
       instance->entitiesToAdd.push_back(entity);
       entity->initialize();
       return entity;
@@ -271,7 +271,10 @@ namespace Engine2D {
       limitFrameRate();
       oneSecondTimer += deltaTime;
       while (oneSecondTimer >= 1.0f) {
-        std::cout << "FPS: " << frameCounter << std::endl;
+        const std::string fpsString = std::to_string(frameCounter);
+        std::cout.write("FPS: ", 5);
+        std::cout.write(fpsString.c_str(), fpsString.length());
+        std::cout.put('\n');
         oneSecondTimer -= 1.0f;
         frameCounter = 0;
         physicsAccumulator = 0.0f;

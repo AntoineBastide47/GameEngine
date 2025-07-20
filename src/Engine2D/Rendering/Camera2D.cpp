@@ -16,6 +16,9 @@
 namespace Engine2D::Rendering {
   uint Camera2D::ENGINE_DATA_BINDING_PORT = 0;
 
+  Camera2D::Camera2D()
+    : Camera2D(-1, 1, -1, 1) {}
+
   Camera2D::Camera2D(
     const float left, const float right, const float bottom, const float top, const float near, const float far
   )

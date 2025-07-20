@@ -12,10 +12,12 @@
 
 #include "Engine2D/Component2D.hpp"
 #include "Engine2D/Animation/Animation2D.hpp"
+#include "Animator2D.gen.hpp"
 
 namespace Engine2D::Animation {
   class Animator2D : public Component2D {
-    friend class AnimationSystem;
+    SERIALIZE_ANIMATOR2D
+      friend class AnimationSystem;
     public:
       enum AnimationCondition {
         LESS_THAN, LESS_OR_EQUAL, GREATER_THAN, GREATER_OR_EQUAL, EQUAL, NOT_EQUAL, IF_TRUE, IF_FALSE, IF_TRIGGER
@@ -122,32 +124,56 @@ namespace Engine2D::Animation {
         BOOL, INT, FLOAT, TRIGGER
       };
 
-      struct Parameter {
-        ParameterType type;
-        union {
-          bool boolean;
-          int integer;
-          float floating;
-          bool trigger;
-        };
+      struct Parameter : Reflectable {
+        SERIALIZE_PARAMETER
+          ParameterType type;
 
-        Parameter(): type(BOOL), boolean(false) {}
-        explicit Parameter(const int v): type(INT), integer(v) {}
-        explicit Parameter(const float v): type(FLOAT), floating(v) {}
-        Parameter(const bool v, const ParameterType type): type(type), boolean(v) {}
+          union {
+            bool boolean;
+            int integer;
+            float floating;
+            bool trigger;
+          };
+
+          Parameter()
+            : type(BOOL), boolean(false) {}
+
+          explicit Parameter(const int v)
+            : type(INT), integer(v) {}
+
+          explicit Parameter(const float v)
+            : type(FLOAT), floating(v) {}
+
+          Parameter(const bool v, const ParameterType type)
+            : type(type), boolean(v) {}
       };
 
-      struct TransitionCondition {
-        std::string parameter;
-        AnimationCondition condition;
-        float threshold;
+      struct TransitionCondition : Reflectable {
+        SERIALIZE_TRANSITIONCONDITION
+          std::string parameter;
+          AnimationCondition condition;
+          float threshold;
+
+          TransitionCondition() = default;
+
+          TransitionCondition(const std::string &parameter, const AnimationCondition condition, const float threshold)
+            : parameter(parameter), condition(condition), threshold(threshold) {}
       };
 
-      struct AnimationTransition {
-        std::string to;
-        bool hasExitTime;
-        float exitTime;
-        std::vector<TransitionCondition> conditions;
+      struct AnimationTransition : Reflectable {
+        SERIALIZE_ANIMATIONTRANSITION
+          std::string to;
+          bool hasExitTime;
+          float exitTime;
+          std::vector<TransitionCondition> conditions;
+
+          AnimationTransition() = default;
+
+          AnimationTransition(
+            const std::string &to, const bool hasExitTime, const float exitTime,
+            const std::vector<TransitionCondition> &conditions
+          )
+            : to(to), hasExitTime(hasExitTime), exitTime(exitTime), conditions(conditions) {}
       };
 
       /// The animations that this animator can play

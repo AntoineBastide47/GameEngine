@@ -7,6 +7,7 @@
 #ifndef SERIALIZER_HPP
 #define SERIALIZER_HPP
 
+#include <fstream>
 #include <sstream>
 #include <string>
 
@@ -20,40 +21,45 @@ namespace Engine::Reflection {
        * Converts the given data to a JSON representation
        * @tparam T The type of the data
        * @param data The data to convert
+       * @note Throws a compile time error when trying to save an STL type that isn't supported, or a non STL type not marked as serializable
+       * @return The converted data
+       */
+      template<typename T> static Engine::JSON ToJson(const T &data) {
+        Engine::JSON json;
+        _e_saveImpl(data, JSON, json);
+        return json;
+      }
+
+      /**
+       * Converts the given data to a JSON representation
+       * @tparam T The type of the data
+       * @param data The data to convert
        * @param prettyPrint If the JSON string needs to be pretty printed, false by default
+       * @param indentChar The character used to indent the json string when pretty printed, set to whitespace by default
        * @note Throws a compile time error when trying to save an STL type that isn't supported, or a non STL type not marked as serializable
        * @return The converted data
        */
-      template<typename T> static std::string ToJson(const T &data, const bool prettyPrint = false) {
-        std::ostringstream os;
-        _e_saveImpl(data, JSON, prettyPrint, 0, &os);
-        return os.str();
+      template<typename T> static std::string ToJsonString(
+        const T &data, const bool prettyPrint = false, const char indentChar = ' '
+      ) {
+        return ToJson(data).Dump(prettyPrint - 1, indentChar);
       }
 
       /**
-       * Converts the given data to a text representation
+       * Converts the given data to a JSON representation and saves it to the given file
        * @tparam T The type of the data
        * @param data The data to convert
+       * @param filePath The file in which the converted data will be stored
+       * @param prettyPrint If the JSON string needs to be pretty printed, false by default
+       * @param indentChar The character used to indent the json string when pretty printed, set to whitespace by default
        * @note Throws a compile time error when trying to save an STL type that isn't supported, or a non STL type not marked as serializable
        * @return The converted data
        */
-      template<typename T> static std::string ToText(const T &data) {
-        std::ostringstream os;
-        _e_saveImpl(data, TEXT, false, 0, &os);
-        return os.str();
-      }
-
-      /**
-       * Converts the given data to a binary representation
-       * @tparam T The type of the data
-       * @param data The data to convert
-       * @note Throws a compile time error when trying to save an STL type that isn't supported, or a non STL type not marked as serializable
-       * @return The converted data
-       */
-      template<typename T> static std::string ToBinary(const T &data) {
-        std::ostringstream os;
-        _e_saveImpl(data, BINARY, false, 0, &os);
-        return os.str();
+      template<typename T> static void ToJsonToFile(
+        const T &data, const std::string &filePath, const bool prettyPrint = false, const char indentChar = ' '
+      ) {
+        std::ofstream file(filePath);
+        file << ToJson(data).Dump(prettyPrint - 1, indentChar);
       }
   };
 }

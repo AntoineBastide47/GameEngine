@@ -7,7 +7,6 @@
 #include "Engine2D/Rendering/Renderable2D.hpp"
 #include "Engine/ResourceManager.hpp"
 #include "Engine2D/Entity2D.hpp"
-#include "Engine2D/Rendering/Renderer2D.hpp"
 
 namespace Engine2D::Rendering {
   Renderable2D::Renderable2D()

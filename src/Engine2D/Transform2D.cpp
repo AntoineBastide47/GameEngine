@@ -15,6 +15,9 @@
 #include "Engine2D/Rendering/Camera2D.hpp"
 
 namespace Engine2D {
+  Transform2D::Transform2D()
+    : Transform2D({0, 0}, 0, {0, 0}, nullptr) {}
+
   Transform2D::Transform2D(
     const glm::vec2 position, const float rotation, const glm::vec2 scale, const std::shared_ptr<Entity2D> &parent
   )
@@ -164,7 +167,9 @@ namespace Engine2D {
     // Convert the transform properties from world space to local space
     auto localTransform = glm::inverse(this->parent->transform->GetWorldMatrix()) * GetWorldMatrix();
     position = glm::vec2(localTransform[3][0], -localTransform[3][1]);
-    rotation = scale.x == 0 ? 0 : glm::degrees(std::atan2(localTransform[1][0] / scale.x, localTransform[0][0] / scale.x));
+    rotation = scale.x == 0
+                 ? 0
+                 : glm::degrees(std::atan2(localTransform[1][0] / scale.x, localTransform[0][0] / scale.x));
     scale.x = glm::length(glm::vec2(localTransform[0][0], localTransform[1][0]));
     scale.y = glm::length(glm::vec2(localTransform[0][1], localTransform[1][1]));
   }
@@ -251,9 +256,9 @@ namespace Engine2D {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
     if (dirty) {
       projectionMatrix =
-        glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition, 0.0f)) *
-        glm::rotate(glm::mat4(1.0f), -glm::radians(worldRotation), glm::vec3(0.0f, 0.0f, 1.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(worldScale, 1.0f));
+          glm::translate(glm::mat4(1.0f), glm::vec3(worldPosition, 0.0f)) *
+          glm::rotate(glm::mat4(1.0f), -glm::radians(worldRotation), glm::vec3(0.0f, 0.0f, 1.0f)) *
+          glm::scale(glm::mat4(1.0f), glm::vec3(worldScale, 1.0f));
       dirty = false;
     }
     return projectionMatrix;

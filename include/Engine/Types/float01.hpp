@@ -7,8 +7,12 @@
 #ifndef FLOAT01_H
 #define FLOAT01_H
 
+#include "Engine/Reflection/Reflectable.hpp"
+#include "float01.gen.hpp"
+
 namespace Engine {
-  class float01 {
+  class float01 final : public Reflection::Reflectable {
+  SERIALIZE_FLOAT01
     public:
       /// Default constructor, sets the value to 0
       float01();
@@ -31,7 +35,7 @@ namespace Engine {
       /// Division assignment operator
       float01 &operator/=(float value);
     private:
-      float value;
+      ENGINE_SERIALIZE float value;
   };
 }
 

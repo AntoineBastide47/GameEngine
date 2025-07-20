@@ -14,11 +14,14 @@
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine/Input/InputContexts.hpp"
 #include "Engine2D/Entity2D.hpp"
+#include "Engine2D/Rendering/Camera2D.hpp"
+#include "Game2D.gen.hpp"
+
+using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
 namespace Engine2D::Animation {
   class AnimationSystem;
 }
-using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
 namespace Engine {
   class ResourceManager;
@@ -26,15 +29,12 @@ namespace Engine {
 }
 
 namespace Engine2D {
-  namespace Rendering {
-    class Camera2D;
-  }
-
   /** Game2D is the class that represents a game and manages each part of it. */
-  class Game2D {
-    friend class Entity2D;
-    friend class Engine::Settings;
-    friend class Engine::ResourceManager;
+  class Game2D : public Engine::Reflection::Reflectable {
+    SERIALIZE_GAME2D
+      friend class Entity2D;
+      friend class Engine::Settings;
+      friend class Engine::ResourceManager;
     public:
       /// @returns True if the Game2D instance has been initialized, False if not
       [[nodiscard]] static bool Initialized();
@@ -64,8 +64,9 @@ namespace Engine2D {
       static void Close(Engine::Input::KeyboardAndMouseContext context);
       /// Creates an entity of with the given name
       static std::shared_ptr<Entity2D> AddEntity(
-        const std::string& name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
-        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), const std::shared_ptr<Entity2D>& parent = nullptr
+        const std::string &name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f),
+        const std::shared_ptr<Entity2D> &parent = nullptr
       );
       /// @returns The entity with the given name if it was found, nullptr if not
       static std::shared_ptr<Entity2D> Find(const std::string &name);
@@ -75,6 +76,8 @@ namespace Engine2D {
        */
       void Run();
     protected:
+      Game2D();
+
       /**
        * Creates a game
        * @param width The width of the game window
@@ -82,14 +85,13 @@ namespace Engine2D {
        * @param title The title of the game window
        */
       Game2D(int width, int height, const char *title);
-      virtual ~Game2D() = default;
 
       /// Called during initialization, allowing derived classes to customize behavior.
       virtual void OnInitialize() {}
     private:
       /// Used to resize the coordinate space. If the initial window is 1920x1080 and factor is 0.1f, the coordinate space will
       /// be 192x108.
-      static const float screenScaleFactor;
+      static constexpr float screenScaleFactor = 0.1f;
       /// The current aspect ratio of the window
       glm::vec2 aspectRatio;
       /// The inverse of the current window's aspect ratio
@@ -105,7 +107,8 @@ namespace Engine2D {
       GLFWwindow *window;
 
       /// The current game instance, unique
-      static Game2D *instance;
+      inline static Game2D *instance = nullptr;
+      /// The main camera of the game
       std::shared_ptr<Rendering::Camera2D> cameraComponent;
       /// The resource loader for embedded resources
       ResourceLoader resourceLoader;

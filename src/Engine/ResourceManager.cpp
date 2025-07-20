@@ -175,7 +175,7 @@ namespace Engine {
   }
 
   std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> ResourceManager::LoadTexture2DAndSprite(
-    const std::string &filePath, const std::string &name, const glm::vec<4, float01> &rect,
+    const std::string &filePath, const std::string &name, const glm::vec<4, float> &rect,
     const bool blend
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
@@ -186,7 +186,7 @@ namespace Engine {
   }
 
   std::shared_ptr<Sprite> ResourceManager::CreateSpriteFromTexture(
-    const std::string &textureName, const glm::vec<4, float01> &rect
+    const std::string &textureName, const glm::vec<4, float> &rect
   ) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);
@@ -202,7 +202,7 @@ namespace Engine {
   }
 
   std::shared_ptr<Sprite> ResourceManager::CreateSprite(
-    const std::string &spriteName, const std::string &textureName, const glm::vec<4, float01> &rect
+    const std::string &spriteName, const std::string &textureName, const glm::vec<4, float> &rect
   ) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);

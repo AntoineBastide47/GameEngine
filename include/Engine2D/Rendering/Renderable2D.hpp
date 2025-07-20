@@ -9,22 +9,21 @@
 
 #include <memory>
 
+#include "Engine/Rendering/Shader.hpp"
 #include "Engine2D/Component2D.hpp"
-
-namespace Engine::Rendering {
-  class Shader;
-}
+#include "Engine2D/Rendering/Sprite.hpp"
+#include "Renderable2D.gen.hpp"
 
 namespace Engine2D::Rendering {
-  class Sprite;
   class Renderable2D : public Component2D {
-    friend class Renderer2D;
+    SERIALIZE_RENDERABLE2D
+      friend class Renderer2D;
     public:
       Renderable2D();
 
       /// Sets the shader that will be used for rendering
       /// @note Will not work outside OnInitialize if the entity is marked as static
-      void SetShader(const std::shared_ptr<Engine::Rendering::Shader>& shader);
+      void SetShader(const std::shared_ptr<Engine::Rendering::Shader> &shader);
       /// @returns the shader that will be used for rendering
       [[nodiscard]] std::shared_ptr<Engine::Rendering::Shader> GetShader() const;
       /// Sets the sprite that will be used for rendering

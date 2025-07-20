@@ -182,7 +182,7 @@ namespace Engine {
               if (stack.back()->IsObject()) {
                 if (!pendingKeyIsSet) {
                   if (candidateKey.empty())
-                    candidateKey = json.Get<std::string>();
+                    candidateKey = json.GetString();
                   else
                     THROW_JSON_ERROR("Missing a colon after a key");
                 } else
@@ -304,7 +304,7 @@ namespace Engine {
     if (stackBack->Contains(pendingKey))
       THROW_JSON_ERROR(static_cast<std::string>("Duplicate key '") + pendingKey + '\'' + " in object");
 
-    auto &map = stackBack->Get<JSON::JSONObject>();
+    auto &map = stackBack->GetObject();
     auto [it, _] = map.insert_or_assign(pendingKey, json);
 
     pendingKey.clear();

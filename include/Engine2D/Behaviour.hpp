@@ -9,15 +9,16 @@
 
 #include <memory>
 
-#include <Engine2D/Entity2D.hpp>
-#include <Engine2D/Transform2D.hpp>
 #include "Engine2D/Component2D.hpp"
+#include "Engine2D/Transform2D.hpp"
+#include "Behaviour.gen.hpp"
 
 namespace Engine2D {
   namespace Physics {
     class Collider2D;
   }
   class Behaviour : public Component2D {
+  SERIALIZE_BEHAVIOUR
     public:
       /// Called before the first update.
       virtual void OnInitialize() {}

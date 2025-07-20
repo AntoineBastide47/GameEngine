@@ -86,4 +86,5 @@ void LinkProject::Run(
     updateCMakeFile(targetDir, relativePath);
 
     fs::copy_file("./engine-cli", targetDir / "engine-cli", fs::copy_options::overwrite_existing);
+    fs::copy_file("./header-forge", targetDir / "header-forge", fs::copy_options::overwrite_existing);
 }

@@ -7,7 +7,9 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "Engine/RenderingHeaders.hpp"
+
+#include "Engine/Reflection/Reflectable.hpp"
+#include "Shader.gen.hpp"
 
 namespace Engine {
   class ResourceManager;
@@ -15,6 +17,7 @@ namespace Engine {
 
 namespace Engine2D {
   class ParticleSystem2D;
+
   namespace Rendering {
     class Renderer2D;
   }
@@ -22,7 +25,8 @@ namespace Engine2D {
 
 namespace Engine::Rendering {
   /// Represents an OpenGL shader program, managing shader compilation, linking, and uniform settings.
-  class Shader {
+  class Shader final : public Reflection::Reflectable {
+    SERIALIZE_SHADER
     friend class Engine2D::Rendering::Renderer2D;
     friend class Engine::ResourceManager;
     friend class Engine2D::ParticleSystem2D;

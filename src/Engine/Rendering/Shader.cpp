@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include "Engine/RenderingHeaders.hpp"
+
 #include "Engine/Rendering/Shader.hpp"
 #include "Engine/Log.hpp"
 #include "Engine/ResourceManager.hpp"
@@ -133,16 +135,16 @@ namespace Engine::Rendering {
       if (!success) {
         glGetShaderInfoLog(object, 1024, nullptr, infoLog);
         std::cerr << "| ERROR::SHADER: Compile-time error: Type: " << type << "\n"
-          << infoLog << "\n -- --------------------------------------------------- -- "
-          << std::endl;
+            << infoLog << "\n -- --------------------------------------------------- -- "
+            << std::endl;
       }
     } else {
       glGetProgramiv(object, GL_LINK_STATUS, &success);
       if (!success) {
         glGetProgramInfoLog(object, 1024, nullptr, infoLog);
         std::cerr << "| ERROR::Shader: Link-time error: Type: " << type << "\n"
-          << infoLog << "\n -- --------------------------------------------------- -- "
-          << std::endl;
+            << infoLog << "\n -- --------------------------------------------------- -- "
+            << std::endl;
       }
     }
   }

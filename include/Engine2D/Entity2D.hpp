@@ -7,15 +7,17 @@
 #ifndef ENTITY2D_H
 #define ENTITY2D_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine/Reflection/Reflectable.hpp"
+#include "Engine2D/Behaviour.hpp"
+#include "Engine2D/Component2D.hpp"
 #include "Engine2D/Transform2D.hpp"
+#include "Entity2D.gen.hpp"
 
 namespace Engine2D {
-  class Behaviour;
-
   namespace Physics {
     class Physics2D;
   }
@@ -25,30 +27,17 @@ namespace Engine2D {
   }
 
   /// Entity2D represents objects in the scene
-  class Entity2D final : public std::enable_shared_from_this<Entity2D> {
-    friend class Game2D;
-    friend class Transform2D;
-    friend class Physics::Physics2D;
-    friend class Rendering::Renderable2D;
+  class Entity2D final : public std::enable_shared_from_this<Entity2D>, public Engine::Reflection::Reflectable {
+    SERIALIZE_ENTITY2D
+      friend class Game2D;
+      friend class Transform2D;
+      friend class Physics::Physics2D;
+      friend class Rendering::Renderable2D;
     public:
       /// The name of the entity.
       std::string name;
       /// The transform representing the position, rotation, and scale of the entity in the game world.
       std::shared_ptr<Transform2D> transform;
-
-      /**
-       * Constructs an Entity2D with a given name.
-       * @param name The name of the entity.
-       * @param isStatic Whether this entity is static in the scene
-       * @param position The position of the entity
-       * @param rotation The rotation of the entity
-       * @param scale The scale of the entity
-       * @param parent The parent of this entity
-       */
-      explicit Entity2D(
-        std::string name, bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
-        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), std::shared_ptr<Entity2D> parent = nullptr
-      );
 
       /// Equality operator that checks if the current entity is the same as the given entity
       bool operator==(const Entity2D &entity) const;
@@ -56,7 +45,8 @@ namespace Engine2D {
       bool operator!=(const Entity2D &entity) const;
 
       /// Creates a component of the given type and adds it to the entity
-      template<typename T, typename... Args> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
+      template<typename T, typename... Args> requires
+        std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
       std::shared_ptr<T> AddComponent(Args &&... args) {
         ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
@@ -152,6 +142,23 @@ namespace Engine2D {
       [[nodiscard]] bool IsStatic() const;
       /// Removes this Entity2D and all it's attached components from the game
       void Destroy();
+    protected:
+      Entity2D();
+
+      /**
+       * Constructs an Entity2D with a given name.
+       * @param name The name of the entity.
+       * @param isStatic Whether this entity is static in the scene
+       * @param position The position of the entity
+       * @param rotation The rotation of the entity
+       * @param scale The scale of the entity
+       * @param parent The parent of this entity
+       */
+      explicit Entity2D(
+        std::string name, bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f),
+        const std::shared_ptr<Entity2D> &parent = nullptr
+      );
     private:
       /// If the current entity is active in the scene
       bool active;

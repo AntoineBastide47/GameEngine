@@ -42,3 +42,4 @@ include/*.a
 **/build
 **/engine-cli
 **/header-forge
+Engine/lastProcessingTimes.txt

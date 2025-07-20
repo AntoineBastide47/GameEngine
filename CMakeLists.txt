@@ -88,6 +88,9 @@ add_library(Engine2D STATIC
     include/Engine/Data/JSON.hpp
     src/Engine/Data/JsonParser.cpp
     include/Engine/Data/JsonParser.hpp
+    include/Engine/Reflection/Load.hpp
+    include/Engine/Reflection/Deserializer.hpp
+    include/Engine/Reflection/ReflectionFactory.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES
@@ -176,10 +179,10 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif ()
 endif ()
 
-add_custom_command(TARGET Engine2D POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E rename
-    $<TARGET_FILE:Engine2D>
-    ${CMAKE_CURRENT_BINARY_DIR}/../../include/$<TARGET_FILE_NAME:Engine2D>
+add_custom_command(
+    TARGET Engine2D POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rename $<TARGET_FILE:Engine2D> ${CMAKE_CURRENT_BINARY_DIR}/../../include/$<TARGET_FILE_NAME:Engine2D>
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # --------------------------

@@ -7,30 +7,30 @@
 #ifndef SAVE_HPP
 #define SAVE_HPP
 
-#include <sstream>
+#include <glm/glm.hpp>
 
 #include "Concepts.hpp"
-#include "../Macros/Utils.hpp"
+#include "Engine/Macros/Utils.hpp"
+#include "Engine/Data/JSON.hpp"
+
+namespace Engine::Reflection {
+  class ReflectionFactory;
+}
 
 #define _e_SERIALIZE_RECORD \
+  friend class Engine::Reflection::ReflectionFactory; \
   public: \
-    [[nodiscard]] inline std::string_view ClassNameQualified() const { return ENGINE_CLASS_NAME_FULLY_QUALIFIED; } \
-    [[nodiscard]] inline std::string_view ClassName() const { return ENGINE_CLASS_NAME; } \
-
+    [[nodiscard]] std::string_view ClassNameQualified() const override { return ENGINE_CLASS_NAME_FULLY_QUALIFIED; } \
+    [[nodiscard]] std::string_view ClassName() const override { return ENGINE_CLASS_NAME; }
 #define _e_SERIALIZE_STRING "serialize"
 #define _e_NON_SERIALIZABLE_STRING "non_serializable"
 
 namespace Engine::Reflection {
-  template<typename> static constexpr bool _e_f = false;
-
   template<typename T> static void _e_saveImpl(
-    const T &data, Format format, const bool prettyPrint, const int indent = 0, std::ostringstream *_os = nullptr
+    const T &data, const Format format, Engine::JSON &json
   ) {
-    std::ostringstream local;
-    std::ostringstream &os = _os ? *_os : local;
-
-    if constexpr (hasSaveFunction<T>::value)
-      _e_save(data, format, os, prettyPrint, indent);
+    if constexpr (HasSaveFunction<T, Format>)
+      _e_save(data, format, json);
     else
       static_assert(
         _e_f<T>, R"(
@@ -42,187 +42,184 @@ No save overloads were found for the requested type.
   }
 
   template<IsNumber T> static void _e_save(
-    const T &data, const Format format, std::ostringstream &os, const bool prettyPrint, const int indent
+    const T &data, const Format format, Engine::JSON &json
   ) {
-    if (format == JSON) {
-      applyIndent(os, prettyPrint, indent);
-      os << data;
-    }
+    if (format == JSON)
+      json = data;
   }
 
   template<IsString T> static void _e_save(
-    const T &data, const Format format, std::ostringstream &os, const bool prettyPrint, const int indent
+    const T &data, const Format format, Engine::JSON &json
   ) {
-    if (format == JSON) {
-      applyIndent(os, prettyPrint, indent);
-      os.put('"');
-      os << data;
-      os.put('"');
-    }
+    if (format == JSON)
+      json = data;
   }
 
   template<typename T> requires std::is_same_v<std::decay_t<T>, bool>
   static void _e_save(
-    const T &data, const Format format, std::ostringstream &os, const bool prettyPrint, const int indent
+    const T &data, const Format format, Engine::JSON &json
   ) {
-    if (format == JSON) {
-      applyIndent(os, prettyPrint, indent);
-      os.write(data ? "true" : "false", data ? 4 : 5);
-    }
+    if (format == JSON)
+      json = data;
   }
 
   template<IsContainer T> static void _e_save(
-    const T &data, const Format format, std::ostringstream &os, const bool prettyPrint, const int indent
+    const T &data, const Format format, Engine::JSON &json
   ) {
     if (format == JSON) {
-      os.put('[');
-      bool first = true;
-      for (const auto &elem: data) {
-        if (!first)
-          os.put(',');
-        if (prettyPrint)
-          os.put('\n');
-        _e_save(elem, format, os, prettyPrint, indent + 1);
-        first = false;
+      json = JSON::Array();
+      for (const auto &item: data) {
+        Engine::JSON value;
+        _e_saveImpl(item, format, value);
+        json.PushBack(value);
       }
-      if (data.begin() != data.end()) {
-        if (prettyPrint)
-          os.put('\n');
-        applyIndent(os, prettyPrint, indent);
-      }
-      os.put(']');
     }
-  }
-
-  template<typename T> static void serializeKey(const T &key, const Format format, std::ostringstream &os) {
-    if constexpr (IsString<T>)
-      os << key;
-    else
-      _e_save(key, format, os, false, 0);
   }
 
   template<IsMap T> static void _e_save(
-    const T &data, const Format format, std::ostringstream &os, const bool prettyPrint, const int indent
+    const T &data, const Format format, Engine::JSON &json
   ) {
     if (format == JSON) {
-      os.put('{');
-      bool first = true;
+      json = JSON::Object();
       for (const auto &[k, v]: data) {
-        if (!first)
-          os.put(',');
-        if (prettyPrint)
-          os.put('\n');
-        applyIndent(os, prettyPrint, indent + 1);
-
-        os.put('"');
-        serializeKey(k, format, os);
-        os.put('"');
-
-        os.put(':');
-        if (prettyPrint)
-          os.put(' ');
-        _e_save(v, format, os, prettyPrint, 0);
-        first = false;
+        Engine::JSON key;
+        _e_saveImpl(k, format, key);
+        _e_saveImpl(v, format, json[key.Dump()]);
       }
-      if (data.begin() != data.end()) {
-        if (prettyPrint)
-          os.put('\n');
-        applyIndent(os, prettyPrint, indent);
-      }
-      os.put('}');
     }
   }
 
-  template<typename U, typename V> static void _e_save(
-    const std::pair<U, V> &data, const Format format, std::ostringstream &os, const bool prettyPrint,
-    const int indent
+  template<typename T> requires IsPair<std::remove_cvref_t<T>>::value
+  static void _e_save(
+    const T &data, const Format format, Engine::JSON &json
   ) {
     if (format == JSON) {
-      os.put('[');
-      _e_save(data.first, format, os, prettyPrint, indent + 1);
-      os.put(',');
-      os.put(' ');
-      _e_save(data.second, format, os, prettyPrint, indent + 1);
-      applyIndent(os, prettyPrint, indent);
-      os.put(']');
+      json = JSON::Array({{}, {}});
+      _e_saveImpl(data.first, format, json[0]);
+      _e_saveImpl(data.second, format, json[1]);
     }
   }
 
   template<typename... Ts>
   static void _e_save(
-    const std::tuple<Ts...> &t, const Format format, std::ostringstream &os, const bool prettyPrint,
-    const int indent
+    const std::tuple<Ts...> &t, const Format format, Engine::JSON &json
   ) {
     if (format == JSON) {
-      os.put('[');
-      bool first = true;
+      json = JSON::Array();
       std::apply(
         [&](const auto &... elems) {
           (([&] {
-            if (!first)
-              os.put(',');
-            if (prettyPrint)
-              os.put('\n');
-            _e_save(elems, format, os, prettyPrint, indent + 2);
-            first = false;
+            Engine::JSON value;
+            _e_saveImpl(elems, format, value);
+            json.PushBack(value);
           }()), ...);
         }, t
       );
-      if (sizeof...(Ts) > 0) {
-        if (prettyPrint)
-          os.put('\n');
-        applyIndent(os, prettyPrint, indent + 1);
-      }
-      os.put(']');
     }
   }
 
-  template<IsTuple T> static void _e_save(const T &t, Format format, std::ostringstream &os, int indent) {
-    std::apply(
-      [&](const auto &... elems) {
-        _e_save(std::make_tuple(elems...), format, os, indent);
-      }, t
-    );
+  template<IsTuple T> static void _e_save(
+    const T &t, const Format format, Engine::JSON &json
+  ) {
+    if (format == JSON) {
+      json = JSON::Array();
+      std::apply(
+        [&](const auto &... elems) {
+          Engine::JSON value;
+          _e_saveImpl(std::make_tuple(elems...), format, value);
+          json.PushBack(value);
+        }, t
+      );
+    }
   }
 
   template<IsSmartPtr T> static void _e_save(
-    const T &data, const Format format, std::ostringstream &os, const bool prettyPrint, const int indent
+    const T &data, const Format format, Engine::JSON &json
   ) {
     if (data) {
-      if constexpr (IsSTL<std::remove_cv_t<typename std::pointer_traits<T>::element_type>>) {
-        _e_saveImpl(*data, format, prettyPrint, indent + 1, &os);
+      if constexpr (IsSTL<typename T::element_type>) {
+        _e_saveImpl(*data, format, json);
       } else {
-        applyIndent(os, prettyPrint, indent);
-        os.put('{');
-        applyIndent(os, prettyPrint, indent);
-        os.write(R"("type":)", 7);
-        if (prettyPrint)
-          os.put(' ');
-        _e_save(data->ClassNameQualified(), format, os, prettyPrint, 0);
-        os.put(',');
-        os.write(R"("data":)", 7);
-        if (prettyPrint)
-          os.put(' ');
-        data->_e_save(format, os, prettyPrint, indent + 1);
-        applyIndent(os, prettyPrint, indent);
-        os.put('}');
+        json = JSON::Object();
+        _e_saveImpl(data->ClassNameQualified(), format, json["_e_ptr_type"]);
+        data->_e_save(format, json["_e_ptr_data"]);
       }
     } else
-      os << "null";
+      json = {};
   }
 
   template<IsNotSTL T> static void _e_save(
-    const T &data, const Format format, std::ostringstream &os, const bool prettyPrint, const int indent
+    const T &data, const Format format, Engine::JSON &json
   ) {
     if constexpr (requires {
-      data._e_save(format, os, prettyPrint, indent + 1);
-    }) {
-      data._e_save(format, os, prettyPrint, indent + 1);
-    } else {
+      data._e_save(format, json);
+    })
+      data._e_save(format, json);
+    else
       static_assert(
         _e_f<T>,
         "Missing save function. Ensure the type uses it's SERIALIZE_* macro."
       );
+  }
+
+  template<typename T> requires std::is_enum_v<T>
+  static void _e_save(
+    const T &data, const Format format, Engine::JSON &json
+  ) {
+    _e_save(static_cast<std::underlying_type_t<T>>(data), format, json);
+  }
+
+  template<glm::length_t N, typename T, glm::qualifier Q> static void _e_save(
+    const glm::vec<N, T, Q> &data, const Format format, Engine::JSON &json
+  ) {
+    if constexpr (!HasSaveFunction<T, Format>)
+      static_assert(false, "The content of this glm::vec is not serializable");
+
+    if (format == JSON) {
+      json = JSON::Array();
+      for (glm::length_t i = 0; i < data.length(); ++i) {
+        Engine::JSON value;
+        _e_save(data[i], format, value);
+        json.PushBack(value);
+      }
+    }
+  }
+
+  template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
+  static void _e_save(
+    const glm::mat<C, R, T, Q> &data, const Format format, Engine::JSON &json
+  ) {
+    if constexpr (!HasSaveFunction<T, Format>)
+      static_assert(false, "The content of this glm::mat is not serializable");
+
+    if (format == JSON) {
+      json = JSON::Array();
+      for (glm::length_t col = 0; col < C; ++col) {
+        Engine::JSON colJson = JSON::Array();
+        for (glm::length_t row = 0; row < R; ++row) {
+          Engine::JSON value;
+          _e_save(data[col][row], format, value);
+          colJson.PushBack(value);
+        }
+        json.PushBack(colJson);
+      }
+    }
+  }
+
+  template<typename... Ts> static void _e_save(
+    const std::variant<Ts...> &v, const Format format, Engine::JSON &json
+  ) {
+    if (format == JSON) {
+      json = JSON::Object();
+      json["index"] = v.index();
+
+      Engine::JSON value;
+      std::visit(
+        [&](const auto &elem) {
+          _e_save(elem, format, value);
+        }, v
+      );
+      json["value"] = value;
     }
   }
 }

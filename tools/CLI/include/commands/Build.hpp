@@ -15,6 +15,9 @@ class Build final : public Command {
     void Run(
       const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands
     ) override;
+
+    static int GetCoreCount();
+    static bool HasNinja();
 };
 
 #endif //BUILD_HPP

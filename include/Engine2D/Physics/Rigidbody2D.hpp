@@ -11,6 +11,7 @@
 
 #include "Engine2D/Component2D.hpp"
 #include "Engine/Types/float01.hpp"
+#include "Rigidbody2D.gen.hpp"
 
 namespace Engine2D {
   class Game2D;
@@ -26,6 +27,7 @@ namespace Engine2D::Physics {
    * Circle and Rectangle.
    */
   class Rigidbody2D final : public Component2D {
+  SERIALIZE_RIGIDBODY2D
     friend class Engine2D::Game2D;
     friend class Physics2D;
     public:

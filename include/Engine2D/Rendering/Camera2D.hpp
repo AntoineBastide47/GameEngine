@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine2D/Component2D.hpp"
+#include "Camera2D.gen.hpp"
 
 namespace Engine2D {
   class Game2D;
@@ -20,14 +21,22 @@ namespace Engine {
 }
 
 namespace Engine2D::Rendering {
-  class Camera2D : public Component2D {
-    friend class Engine2D::Game2D;
-    friend class Engine::ResourceManager;
+  class Camera2D final : public Component2D {
+    SERIALIZE_CAMERA2D
+      friend class Engine2D::Game2D;
+      friend class Engine::ResourceManager;
     public:
-      struct ShakeWave {
-        float amplitude;
-        float frequency;
-        float phase;
+      struct ShakeWave : Reflectable {
+        SERIALIZE_SHAKEWAVE
+          float amplitude;
+          float frequency;
+          float phase;
+
+          ShakeWave()
+            : amplitude(1.0f), frequency(1.0f), phase(0.0f) {}
+
+          ShakeWave(const float amplitude, const float frequency, const float phase)
+            : amplitude(amplitude), frequency(frequency), phase(phase) {}
       };
 
       /// The entity the camera follows
@@ -46,6 +55,7 @@ namespace Engine2D::Rendering {
       /// Coefficients that control the shake of the camera on the Y axis
       std::vector<ShakeWave> shakeCoefficientsY;
 
+      Camera2D();
       Camera2D(float left, float right, float bottom, float top, float near = -1, float far = 1);
       ~Camera2D() override = default;
 

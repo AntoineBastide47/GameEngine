@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "Engine2D/Component2D.hpp"
+#include "Transform2D.gen.hpp"
 
 namespace Engine2D {
   /**
@@ -19,21 +20,10 @@ namespace Engine2D {
    * of entities in a 2D space. It provides operators for equality comparisons between transforms.
    */
   class Transform2D final : public Component2D {
-    friend class Game2D;
-    friend class Entity2D;
+    SERIALIZE_TRANSFORM2D
+      friend class Game2D;
+      friend class Entity2D;
     public:
-      /**
-       * @brief Parameterized constructor that initializes position, rotation, and scale to specified values.
-       * @param position Initial position of the transform, defaulted to (0, 0).
-       * @param rotation Initial rotation in degrees, defaulted to 0.
-       * @param scale Initial scale of the transform, defaulted to (1, 1).
-       * @param parent The parent of the Entity this component is attached to
-       */
-      explicit Transform2D(
-        glm::vec2 position = glm::vec2(0), float rotation = 0, glm::vec2 scale = glm::vec2(1),
-        const std::shared_ptr<Entity2D> &parent = nullptr
-      );
-
       /// Equality operator to compare two Transform2D objects.
       bool operator==(const Transform2D &other) const;
       /// Inequality operator to compare two Transform2D objects.
@@ -115,7 +105,9 @@ namespace Engine2D {
       /// @param positionIncrement The increment to add to the current local position
       /// @param rotationIncrement The increment to add to the current local rotation
       /// @param scaleIncrement The increment to add to the current local scale
-      void UpdatePositionRotationAndScale(glm::vec2 positionIncrement, float rotationIncrement, glm::vec2 scaleIncrement);
+      void UpdatePositionRotationAndScale(
+        glm::vec2 positionIncrement, float rotationIncrement, glm::vec2 scaleIncrement
+      );
 
       /// @returns A unit vector representing the forward direction of this entity.
       [[nodiscard]] glm::vec2 Forward() const;
@@ -192,6 +184,19 @@ namespace Engine2D {
       glm::vec2 worldScale;
       /// Transform matrix
       glm::mat4 projectionMatrix;
+
+      Transform2D();
+
+      /**
+       * @brief Parameterized constructor that initializes position, rotation, and scale to specified values.
+       * @param position Initial position of the transform, defaulted to (0, 0).
+       * @param rotation Initial rotation in degrees, defaulted to 0.
+       * @param scale Initial scale of the transform, defaulted to (1, 1).
+       * @param parent The parent of the Entity this component is attached to
+       */
+      Transform2D(
+        glm::vec2 position, float rotation, glm::vec2 scale, const std::shared_ptr<Entity2D> &parent = nullptr
+      );
 
       /// Callback function that updates fields of this transform only if any of its public properties are modified
       void onTransformChange();

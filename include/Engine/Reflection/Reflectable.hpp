@@ -10,7 +10,10 @@
 #include <string_view>
 
 #include "Concepts.hpp"
+#include "Load.hpp"
+#include "ReflectionFactory.hpp"
 #include "Save.hpp"
+#include "Engine/Data/JSON.hpp"
 
 // Since only the tool itself uses the annotations, only make the macros add them when the tool is run
 // This should prevent compilation errors on compilers that do not support custom annotation (ex: MSVC)
@@ -32,8 +35,10 @@ namespace Engine::Reflection {
       [[nodiscard]] virtual std::string_view ClassNameQualified() const = 0;
       /// @returns The name of the current class without its namespace and parent classes as a string
       [[nodiscard]] virtual std::string_view ClassName() const = 0;
-      /// @returns The serialized version of this variable in the given format
-      virtual void _e_save(Format format, std::ostringstream &os, bool prettyPrint, int indent) const = 0;
+      /// Serializes the current class instance
+      virtual void _e_save(Format format, Engine::JSON &json) const = 0;
+      /// Loads a class instance
+      virtual void _e_load(Format format, const Engine::JSON &json) = 0;
   };
 }
 

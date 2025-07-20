@@ -13,7 +13,7 @@ add_executable(${PROJECT_NAME}
     src/Generator.cpp
     include/Generator.hpp
 )
-target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_include_directories(${PROJECT_NAME} PUBLIC include ../../include ../../vendor/glm)
 
 # === LLVM & Clang ===
 find_package(LLVM REQUIRED CONFIG)

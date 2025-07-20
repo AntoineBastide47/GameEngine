@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine2D/Rendering/Renderable2D.hpp"
+#include "ParticleSystem2D.gen.hpp"
 
 namespace Engine::Rendering {
   class Shader;
@@ -23,11 +24,13 @@ namespace Engine2D {
     class Sprite;
     class Renderer2D;
   }
+
   class ParticleSystem2D final : public Rendering::Renderable2D {
-    friend class Game2D;
-    friend class Entity2D;
-    friend class ParticleSystemRegistry2D;
-    friend class Rendering::Renderer2D;
+    SERIALIZE_PARTICLESYSTEM2D
+      friend class Game2D;
+      friend class Entity2D;
+      friend class ParticleSystemRegistry2D;
+      friend class Rendering::Renderer2D;
     public:
       enum BlendMode {
         Alpha, Additive, Multiply, PremultipliedAlpha, Subtractive, SoftAdditive, Opaque
@@ -93,34 +96,8 @@ namespace Engine2D {
       void recall() override;
     private:
       /// Represents a single particle and it's state
-      struct ParticleSystemData {
-        alignas(64) std::vector<glm::vec2> positions;
-        alignas(64) std::vector<float> rotations;
-        alignas(64) std::vector<float> lifeTimes;
-        alignas(64) std::vector<glm::vec2> scales;
-        alignas(64) std::vector<glm::vec4> colors;
-        alignas(64) std::vector<glm::vec2> startVelocities;
-        alignas(64) std::vector<glm::vec2> endVelocities;
-        alignas(64) std::vector<uint8_t> renderable;
-
-        // Reserve
-        explicit ParticleSystemData(const size_t N) {
-          positions.resize(N);
-          rotations.resize(N);
-          lifeTimes.resize(N);
-          scales.resize(N);
-          colors.resize(N);
-          startVelocities.resize(N);
-          endVelocities.resize(N);
-          renderable.resize(N);
-        }
-
-        inline size_t size() const {
-          return lifeTimes.size();
-        }
-      };
-
-      struct Particle {
+      struct Particle : Reflectable {
+        SERIALIZE_PARTICLE
         glm::vec2 position;
         glm::vec2 scale;
         glm::vec2 startVelocity;
