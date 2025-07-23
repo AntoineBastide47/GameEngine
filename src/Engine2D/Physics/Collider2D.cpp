@@ -16,14 +16,14 @@
 namespace Engine2D::Physics {
   Collider2D::Collider2D()
     : bounciness(1), offset(glm::vec2(0)), autoCompute(true), position(glm::vec2(0)), isTrigger(false), type(None),
-      initialized(false), lastModelMatrix() {}
+      initialized(false), lastModelMatrix(), rigidbody() {}
 
   void Collider2D::forward() {
-    Physics2D::addCollider(std::dynamic_pointer_cast<Collider2D>(shared_from_this()));
+    Physics2D::addCollider(this);
   }
 
   void Collider2D::recall() {
-    Physics2D::removeCollider(std::dynamic_pointer_cast<Collider2D>(shared_from_this()));
+    Physics2D::removeCollider(this);
   }
 
   std::vector<glm::vec2> Collider2D::ContactPoints() const {
@@ -53,7 +53,7 @@ namespace Engine2D::Physics {
 
   CircleCollider2D::CircleCollider2D()
     : radius(0) {
-    this->type = Circle;
+    type = Circle;
   }
 
   void CircleCollider2D::computeAABB() {
@@ -67,7 +67,7 @@ namespace Engine2D::Physics {
 
   BoxCollider2D::BoxCollider2D()
     : width(0), height(0) {
-    this->type = Rectangle;
+    type = Rectangle;
   }
 
   void BoxCollider2D::computeAABB() {
@@ -101,7 +101,7 @@ namespace Engine2D::Physics {
   }
 
   PolygonCollider2D::PolygonCollider2D() {
-    this->type = Polygon;
+    type = Polygon;
   }
 
   void PolygonCollider2D::computeAABB() {

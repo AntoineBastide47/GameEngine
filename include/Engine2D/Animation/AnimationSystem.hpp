@@ -15,14 +15,15 @@ namespace Engine2D {
 
 namespace Engine2D::Animation {
   class Animator2D;
+
   class AnimationSystem {
     friend class Animator2D;
     friend class Engine2D::Game2D;
 
-    static std::vector<std::shared_ptr<Animator2D>> animators;
+    inline static std::vector<Animator2D *> animators;
 
-    static void addAnimator(const std::shared_ptr<Animator2D> &animator);
-    static void removeAnimator(const std::shared_ptr<Animator2D> &animator);
+    static void addAnimator(Animator2D *animator);
+    static void removeAnimator(Animator2D *animator);
     static void update();
   };
 }

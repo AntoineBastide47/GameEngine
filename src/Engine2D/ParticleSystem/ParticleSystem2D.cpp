@@ -4,20 +4,19 @@
 // Date: 14/01/2025
 //
 
-#define STRIDE (16)
-#define STRIDE_SIZE (STRIDE * sizeof(float))
-
+#include <random>
 #include <vector>
 
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine/ResourceManager.hpp"
-#include "Engine/Macros/Assert.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
+
+#define STRIDE (16)
+#define STRIDE_SIZE (STRIDE * sizeof(float))
 
 namespace Engine2D {
   ParticleSystem2D::ParticleSystem2D()
@@ -25,8 +24,8 @@ namespace Engine2D {
       startPosition(glm::vec2(0)), startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)), startAngularVelocity(0),
       endAngularVelocity(), startScale(glm::vec2(1)), endScale(glm::vec2(0)), startColor(glm::vec4(1)),
       endColor(glm::vec4(1)), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), blendMode(Alpha),
-      duration(1), particleLifetime(1), inverseLifetime(1), particles(0), head(0), maxParticles(0), emissionAcc(0),
-      durationAcc(0), quadVAO(0), quadVBO(0), instanceVBO(0), capacity(0), simulationFinished(false) {}
+      duration(1), particleLifetime(1), inverseLifetime(1), particles(0), head(0), maxParticles(0), aliveCount(0),
+      emissionAcc(0), durationAcc(0), quadVAO(0), quadVBO(0), instanceVBO(0), capacity(0), simulationFinished(false) {}
 
   void ParticleSystem2D::SetDuration(const float duration) {
     this->duration = duration;
@@ -64,11 +63,11 @@ namespace Engine2D {
   }
 
   void ParticleSystem2D::forward() {
-    ParticleSystemRegistry2D::addParticleSystem(std::dynamic_pointer_cast<ParticleSystem2D>(shared_from_this()));
+    ParticleSystemRegistry2D::addParticleSystem(this);
   }
 
   void ParticleSystem2D::recall() {
-    ParticleSystemRegistry2D::removeParticleSystem(std::dynamic_pointer_cast<ParticleSystem2D>(shared_from_this()));
+    ParticleSystemRegistry2D::removeParticleSystem(this);
   }
 
   void ParticleSystem2D::updateAndRender(const uint textureIndex, float *data) {
@@ -104,11 +103,12 @@ namespace Engine2D {
     }
 
     // Precompute reused data
-    const auto cam = Game2D::MainCamera();
+    const auto &cam = *Game2D::MainCamera();
     const float dt = deltaTime * simulationSpeed;
     const glm::vec2 scaleDelta = startScale - endScale;
     const float angularVelDelta = endAngularVelocity - startAngularVelocity;
     const glm::vec4 colorDelta = endColor - startColor;
+    aliveCount = 0;
 
     int j = 0;
     for (size_t i = 0; i < capacity; ++i) {
@@ -129,9 +129,10 @@ namespace Engine2D {
       particle.rotation += dt * (startAngularVelocity + angularVelDelta * t);
       particle.scale = endScale + scaleDelta * t;
 
-      if (particle.lifeTime <= 0.0f && !cam->IsInViewport(particle.position, particle.scale))
+      if (particle.lifeTime <= 0.0f && !cam.IsInViewport(particle.position, particle.scale))
         continue;
 
+      aliveCount++;
       glm::vec2 pos;
       if (simulateInWorldSpace)
         pos = particle.position;
@@ -149,10 +150,10 @@ namespace Engine2D {
       data[idx + 3] = particle.scale.y * inversePPU;
 
       // Color
-      data[idx + 4] = startColor.r + colorDelta.r * tOpp;;
-      data[idx + 5] = startColor.g + colorDelta.g * tOpp;;
-      data[idx + 6] = startColor.b + colorDelta.b * tOpp;;
-      data[idx + 7] = startColor.a + colorDelta.a * tOpp;;
+      data[idx + 4] = startColor.r + colorDelta.r * tOpp;
+      data[idx + 5] = startColor.g + colorDelta.g * tOpp;
+      data[idx + 6] = startColor.b + colorDelta.b * tOpp;
+      data[idx + 7] = startColor.a + colorDelta.a * tOpp;
 
       // Rect
       data[idx + 8] = sprite->rect.x;

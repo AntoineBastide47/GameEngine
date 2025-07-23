@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.8.6)
+project(GameEngine VERSION 0.9.1)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -162,20 +162,15 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-        set(SANITIZER_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
-        set(ASAN_OPTIONS_FLAGS "-fsanitize-recover=address -fsanitize=undefined -fsanitize-address-use-after-scope")
-        set(DEBUG_FLAGS "-g")
+        set(SANITIZER_FLAGS "-fsanitize=address,undefined")
+        set(DEBUG_FLAGS -g -fno-omit-frame-pointer -fsanitize-address-use-after-scope)
 
+        # Apply compile and link flags properly
+        target_compile_options(Engine2D PRIVATE ${SANITIZER_FLAGS} ${DEBUG_FLAGS})
+        target_link_options(Engine2D PRIVATE ${SANITIZER_FLAGS} ${DEBUG_FLAGS})
+
+        # ASAN runtime options as a macro
         add_compile_definitions(ASAN_OPTIONS="verbosity=1:halt_on_error=1:detect_leaks=1:symbolize=1")
-
-        # Apply flags to all targets
-        set(ALL_SANITIZER_FLAGS "${SANITIZER_FLAGS} ${ASAN_OPTIONS_FLAGS} ${DEBUG_FLAGS}")
-
-        # Function to apply sanitizer flags to all targets
-        function(enable_sanitizers target)
-            target_compile_options(${target} PRIVATE ${ALL_SANITIZER_FLAGS})
-            target_link_options(${target} PRIVATE ${ALL_SANITIZER_FLAGS})
-        endfunction()
     endif ()
 endif ()
 
@@ -192,5 +187,5 @@ add_custom_command(
 target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
-    MULTI_THREAD=1 # Set this to 0 if you have mutex errors when modifying the engine
+    MULTI_THREAD=1 # Set this to 0 if you have mutex errors or race conditions when modifying the engine
 )

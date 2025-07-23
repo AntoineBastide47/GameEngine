@@ -19,10 +19,11 @@ namespace Engine2D {
     : Transform2D({0, 0}, 0, {0, 0}, nullptr) {}
 
   Transform2D::Transform2D(
-    const glm::vec2 position, const float rotation, const glm::vec2 scale, const std::shared_ptr<Entity2D> &parent
+    const glm::vec2 position, const float rotation, const glm::vec2 scale, Entity2D *entity, Entity2D *parent
   )
-    : parent(parent), initialized(false), dirty(true), visible(true), projectionMatrix(glm::mat4(1.0f)) {
-    SetPositionRotationAndScale(position, rotation, scale);
+    : position(position), rotation(rotation), scale(scale), parent(parent), dirty(true), visible(true), worldPosition(),
+      worldRotation(0), worldScale(), projectionMatrix(glm::mat4(1.0f)) {
+    setEntity(entity);
   }
 
   bool Transform2D::operator==(const Transform2D &other) const {
@@ -33,19 +34,19 @@ namespace Engine2D {
     return !(*this == transform);
   }
 
-  std::vector<std::shared_ptr<Entity2D>>::iterator Transform2D::begin() {
+  std::vector<Entity2D *>::iterator Transform2D::begin() {
     return childList.begin();
   }
 
-  std::vector<std::shared_ptr<Entity2D>>::iterator Transform2D::end() {
+  std::vector<Entity2D *>::iterator Transform2D::end() {
     return childList.end();
   }
 
-  std::vector<std::shared_ptr<Entity2D>>::const_iterator Transform2D::begin() const {
+  std::vector<Entity2D *>::const_iterator Transform2D::begin() const {
     return childList.cbegin();
   }
 
-  std::vector<std::shared_ptr<Entity2D>>::const_iterator Transform2D::end() const {
+  std::vector<Entity2D *>::const_iterator Transform2D::end() const {
     return childList.cend();
   }
 
@@ -88,7 +89,7 @@ namespace Engine2D {
   void Transform2D::SetPositionRotationAndScale(
     const glm::vec2 newPosition, const float newRotation, const glm::vec2 newScale
   ) {
-    if (!initialized || !Entity()->isStatic) {
+    if (!Entity()->isStatic) {
       position = newPosition;
       rotation = fmod(newRotation, 360.0f);
       scale = newScale;
@@ -123,7 +124,7 @@ namespace Engine2D {
   void Transform2D::UpdatePositionRotationAndScale(
     const glm::vec2 positionIncrement, const float rotationIncrement, const glm::vec2 scaleIncrement
   ) {
-    if (!initialized || !Entity()->isStatic) {
+    if (!Entity()->isStatic) {
       position += positionIncrement;
       rotation = fmod(rotation + rotationIncrement, 360.0f);
       scale += scaleIncrement;
@@ -139,8 +140,8 @@ namespace Engine2D {
     return glm::normalize(glm::rotate(glm::vec2(0, 1), glm::radians(rotation)));
   }
 
-  void Transform2D::SetParent(const std::shared_ptr<Entity2D> &parent) {
-    if (initialized && Entity()->isStatic)
+  void Transform2D::SetParent(Entity2D *parent) {
+    if (Entity()->isStatic)
       return;
 
     if (this->parent == parent)
@@ -174,12 +175,12 @@ namespace Engine2D {
     scale.y = glm::length(glm::vec2(localTransform[0][1], localTransform[1][1]));
   }
 
-  std::shared_ptr<Entity2D> Transform2D::GetParent() const {
+  Entity2D *Transform2D::GetParent() const {
     return parent;
   }
 
-  bool Transform2D::IsChildOf(const std::shared_ptr<Entity2D> &entity) const {
-    Transform2D *current = parent ? parent->transform.get() : nullptr;
+  bool Transform2D::IsChildOf(const Entity2D *entity) const {
+    const Transform2D *current = parent ? parent->transform.get() : nullptr;
 
     while (current) {
       if (current->Entity() && current->Entity() == entity)
@@ -189,7 +190,7 @@ namespace Engine2D {
     return false;
   }
 
-  bool Transform2D::IsParentOf(const std::shared_ptr<Entity2D> &entity) const {
+  bool Transform2D::IsParentOf(const Entity2D *entity) const {
     for (const auto &child: childList)
       if (child == entity)
         return true;
@@ -221,16 +222,16 @@ namespace Engine2D {
     childList.clear();
   }
 
-  std::shared_ptr<Entity2D> Transform2D::Find(const std::string &name) const {
+  Entity2D *Transform2D::Find(const std::string &name) const {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
-    for (auto child: childList)
+    for (const auto child: childList)
       if (child && child->name == name)
         return child;
     return nullptr;
   }
 
-  std::shared_ptr<Entity2D> Transform2D::GetChild(const int index) const {
+  Entity2D *Transform2D::GetChild(const int index) const {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
     if (index < 0 || index >= childList.size())
@@ -238,12 +239,12 @@ namespace Engine2D {
     return childList.at(index);
   }
 
-  void Transform2D::MakeFirstChild(const std::shared_ptr<Entity2D> &child) {
+  void Transform2D::MakeFirstChild(Entity2D *child) {
     removeChild(child);
     childList.insert(childList.begin(), child);
   }
 
-  void Transform2D::MakeLastChild(const std::shared_ptr<Entity2D> &child) {
+  void Transform2D::MakeLastChild(Entity2D *child) {
     removeChild(child);
     childList.push_back(child);
   }
@@ -299,14 +300,15 @@ namespace Engine2D {
         child->transform->onTransformChange();
   }
 
-  void Transform2D::onParentHierarchyChange() {
+  void Transform2D::onParentHierarchyChange() const {
     // Check if the entity has a parent
     if (!parent) {
       Entity()->parentsActive = true;
       return;
     }
+
     // If it is active, make sure all it's parents are also active
-    Transform2D *current = parent->transform.get();
+    const Transform2D *current = parent->transform.get();
     while (current && current->Entity()) {
       if (!current->Entity()->active) {
         Entity()->parentsActive = false;
@@ -317,15 +319,13 @@ namespace Engine2D {
     Entity()->parentsActive = true;
   }
 
-  void Transform2D::addChild(const std::shared_ptr<Entity2D> &child) {
+  void Transform2D::addChild(Entity2D *child) {
     if (child)
       childList.push_back(child);
   }
 
-  void Transform2D::removeChild(const std::shared_ptr<Entity2D> &child) {
-    if (!child)
-      return;
-    if (const auto it = std::ranges::find(childList, child); it != childList.end())
-      childList.erase(it);
+  void Transform2D::removeChild(Entity2D *child) {
+    if (child)
+      std::erase(childList, child);
   }
 }

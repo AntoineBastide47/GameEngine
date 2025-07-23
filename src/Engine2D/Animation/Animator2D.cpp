@@ -247,11 +247,11 @@ namespace Engine2D::Animation {
   }
 
   void Animator2D::forward() {
-    AnimationSystem::addAnimator(std::dynamic_pointer_cast<Animator2D>(shared_from_this()));
+    AnimationSystem::addAnimator(this);
   }
 
   void Animator2D::recall() {
-    AnimationSystem::removeAnimator(std::dynamic_pointer_cast<Animator2D>(shared_from_this()));
+    AnimationSystem::removeAnimator(this);
   }
 
   void Animator2D::update() {

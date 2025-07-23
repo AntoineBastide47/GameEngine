@@ -23,29 +23,29 @@ namespace Engine2D {
     friend class Rendering::Renderer2D;
 
     /// All the particle systems in the game
-    static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystems;
+    inline static std::vector<ParticleSystem2D*> particleSystems;
 
     /// The particle systems that are pending to be added but do not have a sprite or a texture
-    static std::vector<std::shared_ptr<ParticleSystem2D>> invalidParticleSystems;
+    inline static std::vector<ParticleSystem2D*> invalidParticleSystems;
     /// The particle systems pending to be added
-    static std::vector<std::shared_ptr<ParticleSystem2D>> particleSystemsToAdd;
+    inline static std::vector<ParticleSystem2D*> particleSystemsToAdd;
     /// The particle systems pending to be removed
-    static std::unordered_set<std::shared_ptr<ParticleSystem2D>> particleSystemsToRemove;
+    inline static std::unordered_set<ParticleSystem2D*> particleSystemsToRemove;
 
     /// Whether we need to recompute the subranges
-    static bool repartition;
+    inline static bool repartition = false;
     /// Whether a particle system has changed sprites or render order
-    static bool dirty;
+    inline static bool dirty = false;
     /// The separation between transparent and opaque
-    static std::ranges::borrowed_subrange_t<std::vector<std::shared_ptr<ParticleSystem2D>> &> subrange;
+    inline static std::ranges::borrowed_subrange_t<std::vector<ParticleSystem2D*> &> subrange;
 
     /// Creates the appropriate subrange needed based on the given data and renders it
     static void prerender();
 
     /// Adds the given particle system so that it can be renderer
-    static void addParticleSystem(const std::shared_ptr<ParticleSystem2D> &particleSystem);
+    static void addParticleSystem(ParticleSystem2D *particleSystem);
     /// Removes the given particle system so that it can no longer be renderer
-    static void removeParticleSystem(const std::shared_ptr<ParticleSystem2D> &particleSystem);
+    static void removeParticleSystem(ParticleSystem2D *particleSystem);
   };
 } // Engine2D
 

@@ -21,10 +21,11 @@ namespace Engine2D {
    * If you need to create a component and want to link it to an Entity2D using Entity2D::AddComponent(), your component will
    * need to inherit from this class for it to work.
    */
-  class Component2D : public std::enable_shared_from_this<Component2D>, public Engine::Reflection::Reflectable {
+  class Component2D : public Engine::Reflection::Reflectable {
     SERIALIZE_COMPONENT2D
       friend class Entity2D;
       friend class Game2D;
+      friend class Transform2D;
     public:
       ~Component2D() override = default;
 
@@ -34,21 +35,24 @@ namespace Engine2D {
       [[nodiscard]] bool IsActive() const;
 
       /// @returns The entity this component is attached to
-      [[nodiscard]] std::shared_ptr<Entity2D> &Entity();
+      [[nodiscard]] Entity2D *Entity() const;
       /// @returns The transform attached to the entity this component is attached to
-      [[nodiscard]] std::shared_ptr<Transform2D> Transform() const;
+      [[nodiscard]] Transform2D *Transform() const;
     protected:
       Component2D();
+      /// Internal call to forward this component to the system that handles it
       virtual void forward() {}
+      /// Internal call to recall this component to the system that handles it
       virtual void recall() {}
       /// Whether this component is active in the scene
+      /// @warning Do not use directly, use the getter and setter instead as the component being active entails more that just this flag being true
       bool active;
     private:
       /// The entity this component is attached to
-      std::shared_ptr<Entity2D> entity;
+      Entity2D *entity;
 
       /// Sets the parent entity this component is attached to
-      void setEntity(const std::shared_ptr<Entity2D> &entity);
+      void setEntity(Entity2D *entity);
   };
 }
 

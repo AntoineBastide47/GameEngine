@@ -23,8 +23,7 @@ namespace Engine2D::Physics {
      * @return True if they collide, false if not
      */
     [[nodiscard]] static bool collide(
-      const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, glm::vec<2, double> *normal,
-      double *depth
+      const Collider2D *col1, const Collider2D *col2, glm::vec<2, double> *normal, double *depth
     );
     /**
      * Computes the number of contact points between two rigidbodies when they collide
@@ -35,13 +34,14 @@ namespace Engine2D::Physics {
      * @param contactCount The number of contact points, either 1 or 2, calculated in the function's body
      */
     static void findContactPoints(
-      const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2,
-      glm::vec2 *contactPoint1, glm::vec2 *contactPoint2, uint8_t *contactCount
+      const Collider2D *col1, const Collider2D *col2, glm::vec2 *contactPoint1, glm::vec2 *contactPoint2,
+      uint8_t *contactCount
     );
 
     /// True if the given circle bodies collide, False if not
     static bool circlesIntersect(
-      glm::vec2 centerA, glm::vec2 scaleA, glm::vec2 centerB, glm::vec2 scaleB, glm::vec<2, double> *normal, double *depth
+      glm::vec2 centerA, glm::vec2 scaleA, glm::vec2 centerB, glm::vec2 scaleB, glm::vec<2, double> *normal,
+      double *depth
     );
     /// True if the given polygon bodies collide, False if not
     static bool polygonsIntersect(

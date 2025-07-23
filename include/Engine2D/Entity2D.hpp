@@ -7,6 +7,7 @@
 #ifndef ENTITY2D_H
 #define ENTITY2D_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -27,7 +28,7 @@ namespace Engine2D {
   }
 
   /// Entity2D represents objects in the scene
-  class Entity2D final : public std::enable_shared_from_this<Entity2D>, public Engine::Reflection::Reflectable {
+  class Entity2D final : public Engine::Reflection::Reflectable {
     SERIALIZE_ENTITY2D
       friend class Game2D;
       friend class Transform2D;
@@ -36,31 +37,32 @@ namespace Engine2D {
     public:
       /// The name of the entity.
       std::string name;
-      /// The transform representing the position, rotation, and scale of the entity in the game world.
-      std::shared_ptr<Transform2D> transform;
 
       /// Equality operator that checks if the current entity is the same as the given entity
       bool operator==(const Entity2D &entity) const;
       /// Inequality operator that checks if the current entity is the same as the given entity
       bool operator!=(const Entity2D &entity) const;
 
+      /// @returns The pointer to this entity's transform component
+      Transform2D *Transform() const;
+
       /// Creates a component of the given type and adds it to the entity
       template<typename T, typename... Args> requires
         std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
-      std::shared_ptr<T> AddComponent(Args &&... args) {
+      T *AddComponent(Args &&... args) {
         ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
-        auto component = std::make_shared<T>(std::forward<Args>(args)...);
-        component->setEntity(shared_from_this());
-        components.emplace_back(component);
+        auto component = std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+        component->setEntity(this);
+        T *ptr = component.get();
+        components.emplace_back(std::move(component));
         if constexpr (std::is_base_of_v<Behaviour, T>) {
-          if (auto behaviour = std::dynamic_pointer_cast<Behaviour>(component)) {
-            behaviours.emplace_back(behaviour);
-            behaviour->OnInitialize();
-          }
+          auto behaviour = static_cast<Behaviour *>(ptr);
+          behaviour->OnInitialize();
+          behaviours.emplace_back(behaviour);
         } else
-          component->forward();
-        return component;
+          ptr->forward();
+        return ptr;
       }
 
       /**
@@ -69,17 +71,13 @@ namespace Engine2D {
        * @return The first component that matches the given type found on the current entity, nullptr if none were found
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] std::shared_ptr<T> GetComponent() const {
+      [[nodiscard]] T *GetComponent() const {
         ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
         if constexpr (std::is_same_v<T, Transform2D>)
-          return transform;
-        else if constexpr (std::is_base_of_v<Behaviour, T>)
-          for (auto component: behaviours)
-            if (auto casted = std::dynamic_pointer_cast<T>(component))
-              return casted;
-        for (auto component: components)
-          if (auto casted = std::dynamic_pointer_cast<T>(component))
+          return transform.get();
+        for (auto &component: components)
+          if (auto casted = dynamic_cast<T *>(component.get()))
             return casted;
         return nullptr;
       }
@@ -98,16 +96,25 @@ namespace Engine2D {
 
       /// Removes the given component to the current entity
       template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
-      void RemoveComponent(const std::shared_ptr<T> &component) {
+      void RemoveComponent(const T *component) {
         ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
-        if (auto behaviour = std::dynamic_pointer_cast<Behaviour>(component)) {
+        if constexpr (std::is_base_of_v<Behaviour, T>) {
+          const auto behaviour = static_cast<Behaviour *>(component);
           behaviour->OnDestroy();
-          std::erase(behaviours, behaviour);
-        } else {
+          std::erase_if(
+            behaviours, [component](const std::unique_ptr<Component2D> &comp) {
+              return comp.get() == component;
+            }
+          );
+        } else
           component->recall();
-          std::erase(components, component);
-        }
+
+        std::erase_if(
+          components, [component](const std::unique_ptr<Component2D> &comp) {
+            return comp.get() == component;
+          }
+        );
       }
 
       /**
@@ -116,20 +123,14 @@ namespace Engine2D {
        * @return The components that match the given type found on the current entity, nullptr if none were found
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] std::vector<std::shared_ptr<T>> GetComponents() const {
+      [[nodiscard]] std::vector<T *> GetComponents() const {
         ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
         if constexpr (std::is_same_v<T, Transform2D>)
-          return {transform};
+          return {transform.get()};
         std::vector<std::shared_ptr<T>> res;
-        if constexpr (std::is_base_of_v<Behaviour, T>) {
-          for (auto component: behaviours)
-            if (auto casted = std::dynamic_pointer_cast<T>(component))
-              res.push_back(casted);
-          return res;
-        }
-        for (auto component: components)
-          if (auto casted = std::dynamic_pointer_cast<T>(component))
+        for (auto &component: components)
+          if (auto casted = dynamic_cast<T *>(component.get()))
             res.push_back(casted);
         return res;
       }
@@ -157,7 +158,7 @@ namespace Engine2D {
       explicit Entity2D(
         std::string name, bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
         float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f),
-        const std::shared_ptr<Entity2D> &parent = nullptr
+        Entity2D *parent = nullptr
       );
     private:
       /// If the current entity is active in the scene
@@ -166,15 +167,24 @@ namespace Engine2D {
       bool parentsActive;
       /// Whether this entity is static
       bool isStatic;
+      /// Whether this entity is now destroyed and no longer active
+      bool destroyed;
+      /// How many frames ago was this entity destroyed
+      int framesSinceDestroyed;
+
+      /// The transform representing the position, rotation, and scale of the entity in the game world.
+      std::unique_ptr<Transform2D> transform;
       /// The list of built-in components linked to this entity
-      std::vector<std::shared_ptr<Component2D>> components;
+      std::vector<std::unique_ptr<Component2D>> components;
       /// The list of user defined components linked to this entity
-      std::vector<std::shared_ptr<Behaviour>> behaviours;
+      std::vector<Behaviour *> behaviours;
 
       /// Initializes the entity, setting its parent to the main parent if none is set.
-      void initialize();
+      void initialize() const;
       /// Cleans up resources when the game ends
       void destroy();
+      /// Free's up all the memory used by this entity
+      void free();
   };
 }
 

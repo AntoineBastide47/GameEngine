@@ -40,7 +40,7 @@ namespace Engine2D::Rendering {
       };
 
       /// The entity the camera follows
-      std::shared_ptr<Entity2D> followTarget;
+      Entity2D *followTarget;
       /// The offset position of the camera
       glm::vec2 positionOffset;
       /// The offset rotation of the camera

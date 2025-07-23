@@ -10,16 +10,9 @@
 #include <map>
 #include <glm/glm.hpp>
 
-#include "Engine/Types/float01.hpp"
-
-namespace Engine::Rendering {
-  class Shader;
-  class Texture;
-}
-
-namespace Engine2D::Rendering {
-  class Sprite;
-}
+#include "Engine/Rendering/Shader.hpp"
+#include "Engine/Rendering/Texture.hpp"
+#include "Engine2D/Rendering/Sprite.hpp"
 
 using Engine::Rendering::Shader;
 using Engine::Rendering::Texture;
@@ -38,21 +31,21 @@ namespace Engine {
        * - the files can't be read or are empty
        * @return The loaded shader
        */
-      static std::shared_ptr<Shader> LoadShader(const std::string &name, const std::string &filePath);
+      static Shader *LoadShader(const std::string &name, const std::string &filePath);
 
       /**
        * Finds and returns the shader with the given name
        * @param name The name of the shader
        * @note Calling this method will log an error if the shader with the given name does not exist
        */
-      static std::shared_ptr<Shader> GetShader(const std::string &name);
+      static Shader *GetShader(const std::string &name);
 
       /**
        * Finds and returns the shader with the given od
        * @param id The id of the shader
        * @note Calling this method will log an error if the shader with the given name does not exist
        */
-      static std::shared_ptr<Shader> GetShaderById(uint id);
+      static Shader *GetShaderById(uint id);
 
       /**
        * Loads a texture to memory
@@ -64,7 +57,7 @@ namespace Engine {
        * - the file can't be read or is empty
        * @return The loaded texture
        */
-      static std::shared_ptr<Texture> LoadTexture2D(
+      static Texture *LoadTexture2D(
         const std::string &filePath, const std::string &name, bool blend = false
       );
 
@@ -73,14 +66,14 @@ namespace Engine {
        * @param name The name of the texture
        * @note Calling this method will log an error if the texture with the given name does not exist
        */
-      static std::shared_ptr<Texture> GetTexture2D(const std::string &name);
+      static Texture *GetTexture2D(const std::string &name);
 
       /**
        * Finds and returns the texture with the given name
        * @param id The id of the texture
        * @note Calling this method will log an error if the texture with the given name does not exist
        */
-      static std::shared_ptr<Texture> GetTexture2DById(uint id);
+      static Texture *GetTexture2DById(uint id);
 
       /**
        * Creates a sprite using the texture with the given name
@@ -88,7 +81,7 @@ namespace Engine {
        * @param rect The normalized area of the texture to use to represent the sprite in the given format: (u, v, width, height)
        * @note Log's an error if no texture with the given name was found
        */
-      static std::shared_ptr<Sprite> CreateSpriteFromTexture(
+      static Sprite *CreateSpriteFromTexture(
         const std::string &textureName, const glm::vec<4, float> &rect = defaultRect
       );
 
@@ -99,7 +92,7 @@ namespace Engine {
        * @param rect The normalized area of the texture to use to represent the sprite in the given format: (u, v, width, height)
        * @note Log's an error if no texture with the given name was found
        */
-      static std::shared_ptr<Sprite> CreateSprite(
+      static Sprite *CreateSprite(
         const std::string &spriteName, const std::string &textureName, const glm::vec<4, float> &rect = defaultRect
       );
 
@@ -108,7 +101,7 @@ namespace Engine {
        * @param name The name of the sprite
        * @note Log's an error if no texture with the given name was found
        */
-      static std::shared_ptr<Sprite> GetSprite(const std::string &name);
+      static Sprite *GetSprite(const std::string &name);
 
       /**
        * Loads a texture to memory
@@ -121,7 +114,7 @@ namespace Engine {
        * - the file can't be read or is empty
        * @return The loaded texture
        */
-      static std::pair<std::shared_ptr<Texture>, std::shared_ptr<Sprite>> LoadTexture2DAndSprite(
+      static std::pair<Texture *, Sprite *> LoadTexture2DAndSprite(
         const std::string &filePath, const std::string &name, const glm::vec<4, float> &rect = defaultRect,
         bool blend = false
       );
@@ -130,11 +123,11 @@ namespace Engine {
       static void Clear();
     private:
       /// The shaders that have been loaded to memory by the Resource Manager
-      static std::map<std::string, std::shared_ptr<Shader>> shaders;
+      inline static std::map<std::string, std::unique_ptr<Shader>> shaders;
       /// The textures that have been loaded to memory by the Resource Manager
-      static std::map<std::string, std::shared_ptr<Texture>> textures;
+      inline static std::map<std::string, std::unique_ptr<Texture>> textures;
       /// The sprites that have been loaded to memory by the Resource Manager
-      static std::map<std::string, std::shared_ptr<Sprite>> sprites;
+      inline static std::map<std::string, std::unique_ptr<Sprite>> sprites;
       /// The default value for a rect (the whole image)
       inline static glm::vec<4, float> defaultRect{0, 0, 1, 1};
 

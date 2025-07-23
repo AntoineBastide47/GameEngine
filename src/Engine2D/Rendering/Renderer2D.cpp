@@ -1,9 +1,10 @@
 //
-// SpriteRenderer.cpp
-// Author: Antoine Bastide (modified for batching)
-// Date: 10/11/2024 (modified 02/03/2025)
+// Renderer2D.cpp
+// Author: Antoine Bastide
+// Date: 10/11/2024
 //
 
+#include <numeric>
 #include <vector>
 
 #include "Engine2D/Rendering/Renderer2D.hpp"
@@ -12,7 +13,6 @@
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine/Rendering/Shader.hpp"
-#include "Engine/Rendering/ShaderPreProcessor.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 #include "Engine/Rendering/Texture.hpp"
@@ -26,46 +26,6 @@
 #define MAX_INSTANCE_COUNT 10000
 
 namespace Engine2D::Rendering {
-  const float Renderer2D::vertices[] = {
-    // pos      // tex
-    0.0f, 0.0f, 0.0f, 1.0f, // Bottom-left
-    1.0f, 0.0f, 1.0f, 1.0f, // Bottom-right
-    0.0f, 1.0f, 0.0f, 0.0f, // Top-left
-    1.0f, 1.0f, 1.0f, 0.0f // Top-right
-  };
-
-  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::opaqueRenderers;
-  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::transparentRenderers;
-  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::staticOpaqueRenderers;
-  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::staticTransparentRenderers;
-
-  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::invalidRenderers;
-  std::vector<std::shared_ptr<SpriteRenderer>> Renderer2D::renderersToAdd;
-  std::unordered_set<std::shared_ptr<SpriteRenderer>> Renderer2D::renderersToRemove;
-
-  uint Renderer2D::quadVAO{};
-  uint Renderer2D::vertexVBO{};
-  uint Renderer2D::batchVBO{};
-  uint Renderer2D::staticOpaqueBatchVBO{};
-  uint Renderer2D::staticTransparentBatchVBO{};
-  uint Renderer2D::lastBoundTexture{};
-
-  uint Renderer2D::instanceCount;
-  uint Renderer2D::lastShaderID;
-  size_t Renderer2D::lastOpaqueStaticCount;
-  size_t Renderer2D::lastTransparentStaticCount;
-
-  std::vector<float> Renderer2D::staticOpaqueBatchData;
-  std::vector<float> Renderer2D::staticTransparentBatchData;
-  std::vector<Flush> Renderer2D::staticOpaqueFlushList;
-  std::vector<Flush> Renderer2D::staticTransparentFlushList;
-  std::vector<Flush> Renderer2D::opaqueFlushList;
-  std::vector<Flush> Renderer2D::transparentFlushList;
-
-  int Renderer2D::MAX_TEXTURES{0};
-  std::unordered_map<uint, uint> Renderer2D::textureIdToIndexMap;
-  bool Renderer2D::zSort{false};
-
   Renderer2D::~Renderer2D() {
     if (quadVAO > 0) {
       glDeleteVertexArrays(1, &quadVAO);
@@ -87,34 +47,18 @@ namespace Engine2D::Rendering {
       glDeleteBuffers(1, &staticTransparentBatchVBO);
       staticTransparentBatchVBO = 0;
     }
-
-    renderersToAdd.clear();
-    renderersToRemove.clear();
-
-    opaqueRenderers.clear();
-    opaqueFlushList.clear();
-    transparentRenderers.clear();
-    transparentFlushList.clear();
-
-    staticOpaqueRenderers.clear();
-    staticOpaqueBatchData.clear();
-    staticTransparentBatchData.clear();
-
-    staticTransparentRenderers.clear();
-    staticOpaqueFlushList.clear();
-    staticTransparentFlushList.clear();
   }
 
   float Renderer2D::PackTwoFloats(const float a, const float b) {
     return glm::uintBitsToFloat(static_cast<uint>(a * 65535.0) << 16 | static_cast<uint>(b * 65535.0));
   }
 
-  bool Renderer2D::cannotBeRendered(const std::shared_ptr<Renderable2D> &r) {
-    return !r->IsActive() || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader || !r->sprite
-           || !r->sprite->texture;
+  bool Renderer2D::cannotBeRendered(const Renderable2D *r) {
+    return !r->IsActive() || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader ||
+           !r->sprite || !r->sprite->texture;
   }
 
-  bool Renderer2D::sortRenderers(const std::shared_ptr<Renderable2D> &a, const std::shared_ptr<Renderable2D> &b) {
+  bool Renderer2D::sortRenderers(const Renderable2D *a, const Renderable2D *b) {
     if (const bool aValid = cannotBeRendered(a); aValid != cannotBeRendered(b))
       return !aValid;
 
@@ -126,25 +70,25 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::extractRendererData(
-    const std::shared_ptr<SpriteRenderer> &renderer, float *data
+    const SpriteRenderer *renderer, float *data
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
-    if (const auto entity = renderer->Entity();
-      !renderer->Entity()->IsActive() || !renderer->IsActive() || !renderer->Transform()->GetIsVisible())
+    const SpriteRenderer &r = *renderer;
+    if (!r.Entity()->IsActive() || !r.IsActive() || !r.Transform()->GetIsVisible())
       return;
 
     // Get the model matrix and other data
-    const auto sprite = renderer->sprite;
-    const auto color = renderer->color;
+    const auto sprite = r.sprite;
+    const auto color = r.color;
     const float invPPU = 1.0f / sprite->pixelsPerUnit;
     const auto rect = sprite->rect;
 
     // Position and scale
-    *data++ = renderer->Transform()->GetWorldPosition().x;
-    *data++ = renderer->Transform()->GetWorldPosition().y;
-    *data++ = renderer->Transform()->GetWorldScale().x * invPPU;
-    *data++ = renderer->Transform()->GetWorldScale().y * invPPU;
+    *data++ = r.Transform()->GetWorldPosition().x;
+    *data++ = r.Transform()->GetWorldPosition().y;
+    *data++ = r.Transform()->GetWorldScale().x * invPPU;
+    *data++ = r.Transform()->GetWorldScale().y * invPPU;
 
     // Color
     *data++ = std::clamp(color.x, 0.0f, 1.0f);
@@ -160,12 +104,12 @@ namespace Engine2D::Rendering {
 
     // Pivot, rotation, render order, texture index and flip
     *data++ = PackTwoFloats(
-      std::clamp(renderer->sprite->pivot.x, -1.0f, 1.0f),
-      std::clamp(renderer->sprite->pivot.y, -1.0f, 1.0f)
+      std::clamp(r.sprite->pivot.x, -1.0f, 1.0f),
+      std::clamp(r.sprite->pivot.y, -1.0f, 1.0f)
     );
-    *data++ = renderer->Transform()->GetWorldRotation();
-    *data++ = renderer->renderOrder << 16 | textureIdToIndexMap.at(renderer->sprite->texture->id);
-    *data = PackTwoFloats(renderer->GetFlip().x ? -1.0f : 1.0, renderer->GetFlip().y ? -1.0f : 1.0);
+    *data++ = r.Transform()->GetWorldRotation();
+    *data++ = r.renderOrder << 16 | textureIdToIndexMap.at(r.sprite->texture->id);
+    *data = PackTwoFloats(r.GetFlip().x ? -1.0f : 1.0, r.GetFlip().y ? -1.0f : 1.0);
   }
 
   void Renderer2D::mapTextureIdToIndex(const uint &textureId) {
@@ -191,7 +135,7 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::buildAndRenderStaticBatch(
-    std::vector<std::shared_ptr<SpriteRenderer>> &renderers, std::vector<float> &batchData,
+    std::vector<SpriteRenderer *> &renderers, std::vector<float> &batchData,
     std::vector<Flush> &flushList,
     const bool rebuild, const uint VBO, const uint framebuffer
   ) {
@@ -252,7 +196,7 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::updateBatch(
-    const std::vector<std::shared_ptr<SpriteRenderer>> &renderers, std::vector<float> &staticBatchData
+    const std::vector<SpriteRenderer *> &renderers, std::vector<float> &staticBatchData
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
@@ -268,7 +212,7 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::buildAndRenderBatch(
-    std::vector<std::shared_ptr<Renderable2D>> &renderers, std::vector<Flush> &flushList, const uint particleCount,
+    std::vector<Renderable2D *> &renderers, std::vector<Flush> &flushList, const uint particleCount,
     const uint framebuffer
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
@@ -298,7 +242,7 @@ namespace Engine2D::Rendering {
       return;
 
     for (const auto &renderer: validRange) {
-      if (const auto particleSystem = std::dynamic_pointer_cast<ParticleSystem2D>(renderer); particleSystem) {
+      if (const auto particleSystem = dynamic_cast<ParticleSystem2D *>(renderer); particleSystem) {
         // Send the previous sprites to the flush list
         flushList.emplace_back(currentShaderID, currentTextureID, start, count, !zSort << 5 | 0);
         start += count;
@@ -337,7 +281,7 @@ namespace Engine2D::Rendering {
         mapTextureIdToIndex(textureID);
       }
 
-      extractRendererData(std::static_pointer_cast<SpriteRenderer>(renderer), &gpuPtr[index * STRIDE]);
+      extractRendererData(static_cast<SpriteRenderer *>(renderer), &gpuPtr[index * STRIDE]);
       count++;
       index++;
     }
@@ -527,6 +471,29 @@ namespace Engine2D::Rendering {
     lastOpaqueStaticCount = staticOpaqueRenderers.size();
     lastTransparentStaticCount = staticTransparentRenderers.size();
 
+    if (!renderersToRemove.empty()) {
+      std::erase_if(
+        staticTransparentRenderers, [&](const auto &r) {
+          return renderersToRemove.contains(r);
+        }
+      );
+      std::erase_if(
+        staticOpaqueRenderers, [&](const auto &r) {
+          return renderersToRemove.contains(r);
+        }
+      );
+      std::erase_if(
+        transparentRenderers, [&](const auto &r) {
+          return renderersToRemove.contains(r);
+        }
+      );
+      std::erase_if(
+        opaqueRenderers, [&](const auto &r) {
+          return renderersToRemove.contains(r);
+        }
+      );
+    }
+
     // Check if the invalid renderers are now valid
     if (!invalidRenderers.empty()) {
       // Sort out the invalid renderers
@@ -578,31 +545,10 @@ namespace Engine2D::Rendering {
       );
       opaqueRenderers.insert(opaqueRenderers.end(), static_end.begin(), opaque_end.begin());
       transparentRenderers.insert(transparentRenderers.end(), opaque_end.begin(), opaque_end.end());
-
-      renderersToAdd.clear();
     }
 
-    // Remove all pending renderers
-    if (!renderersToRemove.empty()) {
-      std::erase_if(
-        staticOpaqueRenderers, [&](const auto &r) {
-          return renderersToRemove.contains(r);
-        }
-      );
-      std::erase_if(
-        transparentRenderers, [&](const auto &r) {
-          return renderersToRemove.contains(r);
-        }
-      );
-      std::erase_if(
-        opaqueRenderers, [&](const auto &r) {
-          return renderersToRemove.contains(r);
-        }
-      );
-
-      renderersToRemove.clear();
-    }
-
+    renderersToRemove.clear();
+    renderersToAdd.clear();
     ParticleSystemRegistry2D::prerender();
   }
 
@@ -621,7 +567,7 @@ namespace Engine2D::Rendering {
     );
 
     // Prepare the non-static opaque sprites
-    std::vector<std::shared_ptr<Renderable2D>> renderables;
+    std::vector<Renderable2D *> renderables;
     renderables.reserve(opaqueRenderers.size() + ParticleSystemRegistry2D::subrange.size());
     renderables.insert(renderables.end(), opaqueRenderers.begin(), opaqueRenderers.end());
     renderables.insert(
@@ -631,7 +577,7 @@ namespace Engine2D::Rendering {
     const uint particleCount = std::transform_reduce(
       ParticleSystemRegistry2D::subrange.begin(), ParticleSystemRegistry2D::subrange.end(),
       0u, std::plus<>(), [](const auto &ps) {
-        return ps->maxParticles;
+        return ps->aliveCount;
       }
     );
 
@@ -650,7 +596,7 @@ namespace Engine2D::Rendering {
     );
 
     // Prepare the non-static transparent sprites
-    std::vector<std::shared_ptr<Renderable2D>> renderables;
+    std::vector<Renderable2D *> renderables;
     renderables.reserve(
       transparentRenderers.size() +
       ParticleSystemRegistry2D::particleSystems.size() - ParticleSystemRegistry2D::subrange.size()
@@ -663,7 +609,7 @@ namespace Engine2D::Rendering {
     const uint particleCount = std::transform_reduce(
       ParticleSystemRegistry2D::particleSystems.begin(), ParticleSystemRegistry2D::subrange.begin(),
       0u, std::plus<>(), [](const auto &ps) {
-        return ps->maxParticles;
+        return ps->aliveCount;
       }
     );
 
@@ -672,18 +618,19 @@ namespace Engine2D::Rendering {
 
   void Renderer2D::render(const uint framebuffer) {
     updateAndSplitRenderList();
-
     glBindVertexArray(quadVAO);
     opaquePass(framebuffer);
     transparentPass(framebuffer);
     glBindVertexArray(0);
   }
 
-  void Renderer2D::addRenderer(const std::shared_ptr<SpriteRenderer> &renderer) {
-    renderersToAdd.emplace_back(renderer);
+  void Renderer2D::addRenderer(SpriteRenderer *renderer) {
+    if (renderer)
+      renderersToAdd.push_back(renderer);
   }
 
-  void Renderer2D::removeRenderer(const std::shared_ptr<SpriteRenderer> &renderer) {
-    renderersToRemove.insert(renderer);
+  void Renderer2D::removeRenderer(SpriteRenderer *renderer) {
+    if (renderer)
+      renderersToRemove.insert(renderer);
   }
 }

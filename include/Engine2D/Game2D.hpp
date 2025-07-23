@@ -51,7 +51,7 @@ namespace Engine2D {
       /// @returns The fixed time span between the physics updates
       [[nodiscard]] static float FixedDeltaTime();
       /// @returns A reference to the main camera of the game
-      [[nodiscard]] static std::shared_ptr<Rendering::Camera2D> MainCamera();
+      [[nodiscard]] static Rendering::Camera2D *MainCamera();
 
       /**
        * Set's the given resource loader of the game to load embedded resources
@@ -63,13 +63,12 @@ namespace Engine2D {
       /// Closes/Quits the game
       static void Close(Engine::Input::KeyboardAndMouseContext context);
       /// Creates an entity of with the given name
-      static std::shared_ptr<Entity2D> AddEntity(
+      static Entity2D *AddEntity(
         const std::string &name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
-        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f),
-        const std::shared_ptr<Entity2D> &parent = nullptr
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), Entity2D *parent = nullptr
       );
       /// @returns The entity with the given name if it was found, nullptr if not
-      static std::shared_ptr<Entity2D> Find(const std::string &name);
+      static Entity2D *Find(const std::string &name);
       /**
        * Start's and Run's the current game
        * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
@@ -85,6 +84,8 @@ namespace Engine2D {
        * @param title The title of the game window
        */
       Game2D(int width, int height, const char *title);
+
+      ~Game2D();
 
       /// Called during initialization, allowing derived classes to customize behavior.
       virtual void OnInitialize() {}
@@ -108,17 +109,21 @@ namespace Engine2D {
 
       /// The current game instance, unique
       inline static Game2D *instance = nullptr;
-      /// The main camera of the game
-      std::shared_ptr<Rendering::Camera2D> cameraComponent;
       /// The resource loader for embedded resources
       ResourceLoader resourceLoader;
+      /// The main camera of the game
+      Rendering::Camera2D *cameraComponent;
 
       /// All the entities currently in the game
-      std::vector<std::shared_ptr<Entity2D>> entities;
+      std::vector<std::unique_ptr<Entity2D>> entities;
       /// Entities scheduled to be added to the game
-      std::vector<std::shared_ptr<Entity2D>> entitiesToAdd;
+      std::vector<std::unique_ptr<Entity2D>> entitiesToAdd;
       /// Entities scheduled to be removed from the game
-      std::unordered_set<std::shared_ptr<Entity2D>> entitiesToRemove;
+      std::unordered_set<Entity2D *> entitiesToRemove;
+      #if MULTI_THREAD
+      /// Entities that should be removed from memory
+      std::unordered_set<Entity2D *> entitiesToDestroy;
+      #endif
 
       /// The time during two frames
       float deltaTime;
@@ -149,8 +154,6 @@ namespace Engine2D {
       /// The thread responsible for rendering the game
       std::thread renderThread;
 
-      std::shared_ptr<Entity2D> mainCamera;
-
       /// The update loop called on the main thread
       void updateLoop();
 
@@ -164,7 +167,7 @@ namespace Engine2D {
       /// Processes all the inputs to the game
       static void processInput();
       /// Update the game
-      void update() const;
+      void update();
       /// Simulates a step of the physics simulation
       void fixedUpdate();
       /// Animates all entities
@@ -184,7 +187,7 @@ namespace Engine2D {
       /// Removes all the entity scheduled for removal
       void removeEntities();
       /// Removes an entity from the game
-      static void removeEntity(const std::shared_ptr<Entity2D> &entity);
+      static void removeEntity(Entity2D *entity);
 
       // OpenGL callbacks
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);

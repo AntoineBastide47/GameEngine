@@ -7,7 +7,6 @@
 #ifndef PARTICLE_SYSTEM2D_H
 #define PARTICLE_SYSTEM2D_H
 
-#include <random>
 #include <glm/glm.hpp>
 
 #include "Engine2D/Rendering/Renderable2D.hpp"
@@ -119,6 +118,8 @@ namespace Engine2D {
       size_t head;
       /// The maximum number of particles that can be rendered
       size_t maxParticles;
+      /// The number of alive particles
+      size_t aliveCount;
 
       /// Emission accumulator timer
       float emissionAcc;

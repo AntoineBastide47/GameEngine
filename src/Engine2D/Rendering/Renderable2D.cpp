@@ -12,19 +12,19 @@ namespace Engine2D::Rendering {
   Renderable2D::Renderable2D()
     : shader(Engine::ResourceManager::GetShader("sprite")), sprite(nullptr), renderOrder(0) {}
 
-  void Renderable2D::SetShader(const std::shared_ptr<Shader> &shader) {
+  void Renderable2D::SetShader(Shader *shader) {
     this->shader = shader;
   }
 
-  std::shared_ptr<Shader> Renderable2D::GetShader() const {
+  Shader *Renderable2D::GetShader() const {
     return shader;
   }
 
-  void Renderable2D::SetSprite(const std::shared_ptr<Sprite> &sprite) {
+  void Renderable2D::SetSprite(Sprite *sprite) {
     this->sprite = sprite;
   }
 
-  std::shared_ptr<Sprite> Renderable2D::GetSprite() const {
+  Sprite *Renderable2D::GetSprite() const {
     return sprite;
   }
 

@@ -83,7 +83,7 @@ namespace Engine2D::Physics {
       static constexpr float RECTANGLE_COLLISION_FACTOR = 1.0f / 12.0f;
 
       /// Calculates the inertia of this body using the given collider
-      void computeInertia(const std::shared_ptr<Collider2D> &collider);
+      void computeInertia(const Collider2D *collider);
 
       void step();
   };

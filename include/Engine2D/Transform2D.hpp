@@ -29,10 +29,10 @@ namespace Engine2D {
       /// Inequality operator to compare two Transform2D objects.
       bool operator!=(const Transform2D &transform) const;
 
-      std::vector<std::shared_ptr<Entity2D>>::iterator begin();
-      std::vector<std::shared_ptr<Entity2D>>::iterator end();
-      [[nodiscard]] std::vector<std::shared_ptr<Entity2D>>::const_iterator begin() const;
-      [[nodiscard]] std::vector<std::shared_ptr<Entity2D>>::const_iterator end() const;
+      std::vector<Entity2D *>::iterator begin();
+      std::vector<Entity2D *>::iterator end();
+      [[nodiscard]] std::vector<Entity2D *>::const_iterator begin() const;
+      [[nodiscard]] std::vector<Entity2D *>::const_iterator end() const;
 
       /// @returns The local position of this transform
       [[nodiscard]] glm::vec2 GetPosition() const;
@@ -118,13 +118,13 @@ namespace Engine2D {
        * Sets the parent entity of this entity for hierarchical organization.
        * @param parent A pointer to the new parent Entity2D, or nullptr to remove the parent.
        */
-      void SetParent(const std::shared_ptr<Entity2D> &parent);
+      void SetParent(Entity2D *parent);
       /// @returns The parent of the Entity2D this transform is attached to
-      [[nodiscard]] std::shared_ptr<Entity2D> GetParent() const;
+      [[nodiscard]] Entity2D *GetParent() const;
       /// @returns True if the given entity is a parent of the Entity2D this transform is attached to
-      [[nodiscard]] bool IsChildOf(const std::shared_ptr<Entity2D> &entity) const;
+      [[nodiscard]] bool IsChildOf(const Entity2D *entity) const;
       /// @returns True if the given entity is a child of the Entity2D this transform is attached to
-      [[nodiscard]] bool IsParentOf(const std::shared_ptr<Entity2D> &entity) const;
+      [[nodiscard]] bool IsParentOf(const Entity2D *entity) const;
 
       /// @returns False if the transform of this entity is not entirely in the viewport of the screen, True if not
       [[nodiscard]] bool GetIsVisible() const;
@@ -145,16 +145,16 @@ namespace Engine2D {
       /// Sets the parent of all the children of the Entity2D this transform is attached to the current scene's root
       void RemoveAllChildren();
       /// @returns The child with the given name if it was found, nullptr if not
-      [[nodiscard]] std::shared_ptr<Entity2D> Find(const std::string &name) const;
+      [[nodiscard]] Entity2D *Find(const std::string &name) const;
       /**
        * @returns The child at the given index
        * @note Log's an error if index is out of bounds
        */
-      [[nodiscard]] std::shared_ptr<Entity2D> GetChild(int index) const;
+      [[nodiscard]] Entity2D *GetChild(int index) const;
       /// Puts the given child at the start of the list of children attached to the Entity2D this component is attached to
-      void MakeFirstChild(const std::shared_ptr<Entity2D> &child);
+      void MakeFirstChild(Entity2D *child);
       /// Puts the given child at the end of list of children attached to the Entity2D this component is attached to
-      void MakeLastChild(const std::shared_ptr<Entity2D> &child);
+      void MakeLastChild(Entity2D *child);
     private:
       using Component2D::Transform; // Disallow unnecessary overhead to access this component
 
@@ -166,12 +166,10 @@ namespace Engine2D {
       glm::vec2 scale;
 
       /// The parent Entity2D of the entity that this transform is attached to
-      std::shared_ptr<Entity2D> parent;
+      Entity2D *parent;
       /// The list of all the children of this entity
-      std::vector<std::shared_ptr<Entity2D>> childList;
+      std::vector<Entity2D *> childList;
 
-      /// Whether the Entity and it's Transform2D were initialized
-      bool initialized;
       /// If the transform matrix needs to be recomputed
       bool dirty;
       /// If this entity is on screen
@@ -192,21 +190,22 @@ namespace Engine2D {
        * @param position Initial position of the transform, defaulted to (0, 0).
        * @param rotation Initial rotation in degrees, defaulted to 0.
        * @param scale Initial scale of the transform, defaulted to (1, 1).
+       * @param entity The entity this component is attached to
        * @param parent The parent of the Entity this component is attached to
        */
       Transform2D(
-        glm::vec2 position, float rotation, glm::vec2 scale, const std::shared_ptr<Entity2D> &parent = nullptr
+        glm::vec2 position, float rotation, glm::vec2 scale, Entity2D *entity, Entity2D *parent = nullptr
       );
 
       /// Callback function that updates fields of this transform only if any of its public properties are modified
       void onTransformChange();
       /// Callback function that updates the active state of the entity when it's parent list changes
-      void onParentHierarchyChange();
+      void onParentHierarchyChange() const;
 
       /// Adds the given child to the child list of the current entity's transform
-      void addChild(const std::shared_ptr<Entity2D> &child);
+      void addChild(Entity2D *child);
       /// Removes the given child to the child list of the current entity's transform
-      void removeChild(const std::shared_ptr<Entity2D> &child);
+      void removeChild(Entity2D *child);
   };
 } // namespace Engine2D
 

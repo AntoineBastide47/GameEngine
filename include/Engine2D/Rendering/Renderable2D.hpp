@@ -23,22 +23,22 @@ namespace Engine2D::Rendering {
 
       /// Sets the shader that will be used for rendering
       /// @note Will not work outside OnInitialize if the entity is marked as static
-      void SetShader(const std::shared_ptr<Engine::Rendering::Shader> &shader);
+      void SetShader(Engine::Rendering::Shader *shader);
       /// @returns the shader that will be used for rendering
-      [[nodiscard]] std::shared_ptr<Engine::Rendering::Shader> GetShader() const;
+      [[nodiscard]] Engine::Rendering::Shader *GetShader() const;
       /// Sets the sprite that will be used for rendering
       /// @note Will not work outside OnInitialize if the entity is marked as static
-      void SetSprite(const std::shared_ptr<Sprite> &sprite);
+      void SetSprite(Sprite *sprite);
       /// @returns the shader that will be used for rendering
-      [[nodiscard]] std::shared_ptr<Sprite> GetSprite() const;
+      [[nodiscard]] Sprite *GetSprite() const;
       /// Sets the render order that will be used for rendering
       /// @note Will not work outside OnInitialize if the entity is marked as static
       void SetRenderOrder(int16_t renderOrder);
       /// @returns the shader that will be used for rendering
       [[nodiscard]] int16_t GetRenderOrder() const;
     protected:
-      std::shared_ptr<Engine::Rendering::Shader> shader;
-      std::shared_ptr<Sprite> sprite;
+      Engine::Rendering::Shader *shader;
+      Sprite *sprite;
       int16_t renderOrder;
   };
 }

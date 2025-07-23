@@ -9,14 +9,15 @@
 #include "Engine2D/Physics/Collider2D.hpp"
 
 namespace Engine2D::Physics {
-  CollisionGrid::CollisionGrid(): bottomLeft(), topRight(), cellSize(), gridSize() {}
+  CollisionGrid::CollisionGrid()
+    : bottomLeft(), topRight(), cellSize(), gridSize() {}
 
   CollisionGrid::CollisionGrid(const glm::vec<2, size_t> gridSize) {
     this->bottomLeft = glm::vec2(Game2D::ViewportWidth() * -0.5f, Game2D::ViewportHeight() * -0.5f);
     this->topRight = -bottomLeft;
     this->gridSize = gridSize;
     this->cellSize = glm::vec2(Game2D::ViewportWidth() / gridSize.x, Game2D::ViewportHeight() / gridSize.y);
-    grid.resize(gridSize.x, std::vector<std::vector<std::shared_ptr<Collider2D>>>(gridSize.y));
+    grid.resize(gridSize.x, std::vector<std::vector<Collider2D *>>(gridSize.y));
   }
 
   void CollisionGrid::setGridSize(const glm::vec<2, size_t> gridSize) {
@@ -26,10 +27,10 @@ namespace Engine2D::Physics {
     for (auto &col: grid)
       for (auto &cell: col)
         cell.clear();
-    grid.resize(gridSize.x, std::vector<std::vector<std::shared_ptr<Collider2D>>>(gridSize.y));
+    grid.resize(gridSize.x, std::vector<std::vector<Collider2D *>>(gridSize.y));
   }
 
-  void CollisionGrid::update(const std::vector<std::shared_ptr<Collider2D>> &colliders) {
+  void CollisionGrid::update(const std::vector<Collider2D *> &colliders) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
     // Clear the cells

@@ -15,8 +15,7 @@
 
 namespace Engine2D::Physics {
   bool Collisions::collide(
-    const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, glm::vec<2, double> *normal,
-    double *depth
+    const Collider2D *col1, const Collider2D *col2, glm::vec<2, double> *normal, double *depth
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
@@ -42,8 +41,8 @@ namespace Engine2D::Physics {
   }
 
   void Collisions::findContactPoints(
-    const std::shared_ptr<Collider2D> &col1, const std::shared_ptr<Collider2D> &col2, glm::vec2 *contactPoint1,
-    glm::vec2 *contactPoint2, uint8_t *contactCount
+    const Collider2D *col1, const Collider2D *col2, glm::vec2 *contactPoint1, glm::vec2 *contactPoint2,
+    uint8_t *contactCount
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
@@ -177,7 +176,9 @@ namespace Engine2D::Physics {
     return true;
   }
 
-  void Collisions::projectVertices(const std::vector<glm::vec2> &vertices, const glm::vec2 axis, double *min, double *max) {
+  void Collisions::projectVertices(
+    const std::vector<glm::vec2> &vertices, const glm::vec2 axis, double *min, double *max
+  ) {
     *min = std::numeric_limits<double>::max();
     *max = std::numeric_limits<double>::lowest();
 

@@ -8,14 +8,15 @@
 #include "Engine2D/Entity2D.hpp"
 
 namespace Engine2D {
-  Component2D::Component2D() : active(true), entity(nullptr) {}
+  Component2D::Component2D()
+    : active(true), entity(nullptr) {}
 
-  std::shared_ptr<Entity2D> &Component2D::Entity() {
+  Entity2D *Component2D::Entity() const {
     return entity;
   }
 
-  std::shared_ptr<Transform2D> Component2D::Transform() const {
-    return entity ? entity->transform : nullptr;
+  Transform2D *Component2D::Transform() const {
+    return entity ? entity->Transform() : nullptr;
   }
 
   void Component2D::SetActive(const bool active) {
@@ -26,7 +27,7 @@ namespace Engine2D {
     return entity->IsActive() && active;
   }
 
-  void Component2D::setEntity(const std::shared_ptr<Entity2D> &entity) {
+  void Component2D::setEntity(Entity2D *entity) {
     if (!entity)
       return;
     this->entity = entity;

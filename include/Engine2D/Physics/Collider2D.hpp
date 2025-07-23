@@ -30,17 +30,18 @@ namespace Engine2D::Physics {
    * This class is intended to be extended to implement specific collider shapes.
    */
   class Collider2D : public Component2D {
-  SERIALIZE_COLLIDER2D
-    friend class Physics2D;
-    friend class CollisionGrid;
-    friend class Collisions;
-    friend class Rigidbody2D;
-    friend class Engine2D::Game2D;
-    friend class Engine2D::Entity2D;
+    SERIALIZE_COLLIDER2D
+      friend class Physics2D;
+      friend class CollisionGrid;
+      friend class Collisions;
+      friend class Rigidbody2D;
+      friend class Engine2D::Game2D;
+      friend class Engine2D::Entity2D;
     public:
       enum Type {
         None = -1, Circle = 0, Rectangle = 1, Polygon = 2,
       };
+
       /// Coefficient of bounciness  of the rigid body.
       Engine::float01 bounciness;
       /// The positional offset of the collider in regard to the position of the entity it is attached to
@@ -61,8 +62,10 @@ namespace Engine2D::Physics {
         glm::vec2 min;
         glm::vec2 max;
 
-        AABB() : min(glm::vec2(0)), max(glm::vec2(0)) {}
+        AABB()
+          : min(glm::vec2(0)), max(glm::vec2(0)) {}
       };
+
       /// The type of this collider
       Type type;
       /// The vertices that make up the initial collider.
@@ -76,7 +79,7 @@ namespace Engine2D::Physics {
       /// The model matrix of the rigidbody last time it changed
       glm::mat4 lastModelMatrix;
       /// The rigidbody attached to the entity this collider is attached to
-      std::shared_ptr<Rigidbody2D> rigidbody;
+      Rigidbody2D *rigidbody;
 
       Collider2D();
 
@@ -102,7 +105,7 @@ namespace Engine2D::Physics {
 
   /** Collider for 2D physics representing a circle. */
   class CircleCollider2D final : public Collider2D {
-  SERIALIZE_CIRCLECOLLIDER2D
+    SERIALIZE_CIRCLECOLLIDER2D
     public:
       /// The radius of this collider
       float radius;
@@ -114,7 +117,7 @@ namespace Engine2D::Physics {
 
   /** Collider for 2D physics representing a rectangle. */
   class BoxCollider2D final : public Collider2D {
-  SERIALIZE_BOXCOLLIDER2D
+    SERIALIZE_BOXCOLLIDER2D
     public:
       /// The height of this collider
       float width;
@@ -128,7 +131,7 @@ namespace Engine2D::Physics {
 
   /** Collider for 2D physics representing a polygon. */
   class PolygonCollider2D final : public Collider2D {
-  SERIALIZE_POLYGONCOLLIDER2D
+    SERIALIZE_POLYGONCOLLIDER2D
     public:
       using Collider2D::vertices;
       PolygonCollider2D();

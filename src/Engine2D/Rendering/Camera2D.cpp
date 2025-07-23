@@ -22,9 +22,9 @@ namespace Engine2D::Rendering {
   Camera2D::Camera2D(
     const float left, const float right, const float bottom, const float top, const float near, const float far
   )
-    : positionOffset(0), rotationOffset(0), damping(1), projection(glm::ortho(left, right, bottom, top, near, far)),
-      view(1.0f), shaking(false), initialized(false), shakeElapsed(0), shakeDuration(0), ubo(0), m00(0), m01(0), m03(0),
-      m10(0), m11(0), m13(0) {
+    : followTarget(), positionOffset(0), rotationOffset(0), damping(1),
+      projection(glm::ortho(left, right, bottom, top, near, far)), view(1.0f), shaking(false), initialized(false),
+      shakeElapsed(0), shakeDuration(0), ubo(0), m00(0), m01(0), m03(0), m10(0), m11(0), m13(0) {
     viewProjection = projection * view;
   }
 
@@ -97,13 +97,13 @@ namespace Engine2D::Rendering {
 
     /// Update the camera's transform
     if (followTarget) {
-      const glm::vec2 target = followTarget->transform->GetWorldPosition() + positionOffset;
+      const glm::vec2 target = followTarget->Transform()->GetWorldPosition() + positionOffset;
       Transform()->SetPosition(
         glm::smoothDamp(
           Transform()->GetWorldPosition(), target, velocity, std::clamp(damping, 1e-6f, 1.0f), Game2D::DeltaTime()
         )
       );
-      Transform()->SetRotation(rotationOffset + followTarget->transform->GetWorldRotation());
+      Transform()->SetRotation(rotationOffset + followTarget->Transform()->GetWorldRotation());
     }
 
     // Compute the view so that we can apply the camera shake to it

@@ -31,10 +31,10 @@ namespace Engine2D::Rendering {
   }
 
   void SpriteRenderer::forward() {
-    Renderer2D::addRenderer(std::dynamic_pointer_cast<SpriteRenderer>(shared_from_this()));
+    Renderer2D::addRenderer(this);
   }
 
   void SpriteRenderer::recall() {
-    Renderer2D::removeRenderer(std::dynamic_pointer_cast<SpriteRenderer>(shared_from_this()));
+    Renderer2D::removeRenderer(this);
   }
 }

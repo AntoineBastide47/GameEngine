@@ -25,7 +25,7 @@ namespace Engine2D::Rendering {
       Sprite() = default;
 
       /// The texture used for rendering this sprite.
-      std::shared_ptr<Texture> texture;
+      Texture *texture;
 
       /**
        * The subregion of the texture to use.

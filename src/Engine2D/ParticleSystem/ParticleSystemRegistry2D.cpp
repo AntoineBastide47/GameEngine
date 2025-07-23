@@ -7,17 +7,8 @@
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
 #include "Engine/Macros/Profiling.hpp"
-#include "Engine2D/Rendering/Sprite.hpp"
 
 namespace Engine2D {
-  std::vector<std::shared_ptr<ParticleSystem2D>> ParticleSystemRegistry2D::particleSystems;
-  std::vector<std::shared_ptr<ParticleSystem2D>> ParticleSystemRegistry2D::invalidParticleSystems;
-  std::vector<std::shared_ptr<ParticleSystem2D>> ParticleSystemRegistry2D::particleSystemsToAdd;
-  std::unordered_set<std::shared_ptr<ParticleSystem2D>> ParticleSystemRegistry2D::particleSystemsToRemove;
-  bool ParticleSystemRegistry2D::repartition;
-  bool ParticleSystemRegistry2D::dirty;
-  std::ranges::borrowed_subrange_t<std::vector<std::shared_ptr<ParticleSystem2D>> &> ParticleSystemRegistry2D::subrange;
-
   void ParticleSystemRegistry2D::prerender() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
@@ -81,11 +72,13 @@ namespace Engine2D {
     dirty = false;
   }
 
-  void ParticleSystemRegistry2D::addParticleSystem(const std::shared_ptr<ParticleSystem2D> &particleSystem) {
-    particleSystemsToAdd.emplace_back(particleSystem);
+  void ParticleSystemRegistry2D::addParticleSystem(ParticleSystem2D *particleSystem) {
+    if (particleSystem)
+      particleSystemsToAdd.emplace_back(particleSystem);
   }
 
-  void ParticleSystemRegistry2D::removeParticleSystem(const std::shared_ptr<ParticleSystem2D> &particleSystem) {
-    particleSystemsToRemove.insert(particleSystem);
+  void ParticleSystemRegistry2D::removeParticleSystem(ParticleSystem2D *particleSystem) {
+    if (particleSystem)
+      particleSystemsToRemove.insert(particleSystem);
   }
 } // Engine2D

@@ -17,8 +17,9 @@ namespace Engine2D {
   namespace Physics {
     class Collider2D;
   }
+
   class Behaviour : public Component2D {
-  SERIALIZE_BEHAVIOUR
+    SERIALIZE_BEHAVIOUR
     public:
       /// Called before the first update.
       virtual void OnInitialize() {}
@@ -30,18 +31,21 @@ namespace Engine2D {
       virtual void OnDestroy() {}
 
       /// Called when this entity first collides with a given entity, required the entity to have a Collider2D component
-      virtual void OnCollisionEnter2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      virtual void OnCollisionEnter2D(const Physics::Collider2D *collider) {}
       /// Called while this entity collides with a given entity, required the entity to have a Collider2D component
-      virtual void OnCollisionStay2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      virtual void OnCollisionStay2D(const Physics::Collider2D *collider) {}
       /// Called when this entity stops collides with a given entity, required the entity to have a Collider2D component
-      virtual void OnCollisionExit2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      virtual void OnCollisionExit2D(const Physics::Collider2D *collider) {}
 
       /// Called when this entity is first triggered by a given entity, required the entity to have a Collider2D component
-      virtual void OnTriggerEnter2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      virtual void OnTriggerEnter2D(const Physics::Collider2D *collider) {}
       /// Called when this entity is first triggered by a given entity, required the entity to have a Collider2D component
-      virtual void OnTriggerStay2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      virtual void OnTriggerStay2D(const Physics::Collider2D *collider) {}
       /// Called when this entity is stops triggered by a given entity, required the entity to have a Collider2D component
-      virtual void OnTriggerExit2D(const std::shared_ptr<Physics::Collider2D> &collider) {}
+      virtual void OnTriggerExit2D(const Physics::Collider2D *collider) {}
+    private:
+      using Component2D::forward;
+      using Component2D::recall;
   };
 } // Engine2D
 
