@@ -151,6 +151,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
     $<$<CONFIG:Debug>:GAME_DEBUG=1>
+    MULTI_THREAD=0
 )
 
 ########################################################################################################################

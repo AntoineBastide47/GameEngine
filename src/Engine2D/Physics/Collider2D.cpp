@@ -15,7 +15,7 @@
 
 namespace Engine2D::Physics {
   Collider2D::Collider2D()
-    : bounciness(1), offset(glm::vec2(0)), autoCompute(true), position(glm::vec2(0)), isTrigger(false), type(None),
+    : elasticity(1), offset(glm::vec2(0)), autoCompute(true), position(glm::vec2(0)), isTrigger(false), type(None),
       initialized(false), lastModelMatrix(), rigidbody() {}
 
   void Collider2D::forward() {

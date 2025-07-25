@@ -72,7 +72,7 @@ namespace Engine2D::Physics {
     /// The list of pairs of rigidbodies that had a contact during this frame
     inline static std::vector<ContactPair> contactPairs;
     /// The list of pairs of rigidbodies that collided last simulation
-    inline static std::vector<ContactPair> previousCollisionPairs;
+    inline static std::unordered_set<ContactPair> previousCollisionPairs;
 
     ~Physics2D();
 

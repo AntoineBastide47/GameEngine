@@ -9,6 +9,7 @@
 #include "Engine/Settings.hpp"
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Types/Vector2.hpp"
+#include "glm/gtx/norm.hpp"
 
 namespace Engine2D::Physics {
   Rigidbody2D::Rigidbody2D()
@@ -27,7 +28,7 @@ namespace Engine2D::Physics {
   }
 
   float Rigidbody2D::GetMass() const {
-    return this->mass;
+    return mass;
   }
 
   void Rigidbody2D::NoFriction() {
@@ -44,17 +45,24 @@ namespace Engine2D::Physics {
     if (!IsActive() || isKinematic)
       return;
 
-    // Apply half the velocity before and half after to make the movement more accurate on lower frame rates
-    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
-    const auto gravityMod = glm::vec2(affectedByGravity);
-    this->linearVelocity += (gravityMod * Engine::Settings::Physics::GetGravity() + force) * massInv * fixedDeltaTime *
-        0.5f;
-    this->Transform()->UpdatePositionAndRotation(
-      this->linearVelocity * fixedDeltaTime, this->angularVelocity * fixedDeltaTime * angularDamping
-    );
-    this->linearVelocity += (gravityMod * Engine::Settings::Physics::GetGravity() + force) * massInv * fixedDeltaTime *
-        0.5f;
-    this->force = glm::vec2(0);
+    // Apply gravity
+    const float dt = Engine::Settings::Physics::GetFixedDeltaTime();
+    linearVelocity += (glm::vec2(affectedByGravity) * Engine::Settings::Physics::GetGravity() + force) * massInv * dt;
+
+    // Clamp velocities
+    constexpr float maxVel = 120.0f;
+    constexpr float maxVelSqr = maxVel * maxVel;
+    if (const float linearVelSqr = glm::length2(linearVelocity); linearVelSqr > maxVelSqr)
+      linearVelocity *= maxVelSqr / linearVelSqr;
+
+    if (constexpr float maxAngularVelocity = 90.0f; std::abs(angularVelocity) > maxAngularVelocity)
+      angularVelocity = (angularVelocity > 0 ? 1 : -1) * maxAngularVelocity;
+
+    if (constexpr float minVel = 0.02f; glm::length(linearVelocity) < minVel && glm::length(force) > 0.0f)
+      linearVelocity = glm::normalize(force) * minVel;
+
+    Transform()->UpdatePositionAndRotation(linearVelocity * dt, angularVelocity * dt * angularDamping);
+    force = {};
   }
 
   void Rigidbody2D::AddForce(const glm::vec2 &force) {
@@ -69,12 +77,10 @@ namespace Engine2D::Physics {
       case Collider2D::Circle:
         inertia =
             0.5f * mass * Transform()->GetWorldHalfScale().x * Transform()->GetWorldHalfScale().x;
-        inertiaInv = 1.0f / inertia;
         break;
       case Collider2D::Rectangle:
         inertia =
             RECTANGLE_COLLISION_FACTOR * mass * glm::dot(Transform()->GetWorldScale(), Transform()->GetWorldScale());
-        inertiaInv = 1.0f / inertia;
         break;
       case Collider2D::Polygon: {
         float area = 0.0f;
@@ -82,19 +88,19 @@ namespace Engine2D::Physics {
         for (int i = 0; i < collider->transformedVertices.size() - 1; ++i) {
           const float cross = glm::cross_2(collider->transformedVertices[i], collider->transformedVertices[i + 1]);
           area += cross;
-          inertia += cross * (collider->transformedVertices[i].x * collider->transformedVertices[i].x + collider->
-                              transformedVertices[i].x * collider->transformedVertices[i + 1].x + collider->
-                              transformedVertices[i + 1].x * collider->transformedVertices[i + 1].x + collider->
-                              transformedVertices[i].y * collider->transformedVertices[i].y + collider->
-                              transformedVertices[
-                                i].y * collider->transformedVertices[i + 1].y + collider->transformedVertices[i + 1].y *
-                              collider->transformedVertices[i + 1].y);
+          inertia += cross *
+          (collider->transformedVertices[i].x * collider->transformedVertices[i].x +
+           collider->transformedVertices[i].x * collider->transformedVertices[i + 1].x +
+           collider->transformedVertices[i + 1].x * collider->transformedVertices[i + 1].x +
+           collider->transformedVertices[i].y * collider->transformedVertices[i].y +
+           collider->transformedVertices[i].y * collider->transformedVertices[i + 1].y +
+           collider->transformedVertices[i + 1].y * collider->transformedVertices[i + 1].y);
         }
         area = std::abs(area) * 0.5f;
         inertia = RECTANGLE_COLLISION_FACTOR * inertia / (area > 0 ? area : 1);
-        inertiaInv = inertia > 0 ? 1.0f / inertia : 0;
         break;
       }
     }
+    inertiaInv = inertia > 0 ? 1.0f / inertia : 0;
   }
 }

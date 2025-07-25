@@ -11,7 +11,7 @@ namespace Engine::Reflection {
   void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \
     if (format == Engine::Reflection::Format::JSON) { \
       json = Engine::JSON::Object();\
-      Engine::Reflection::_e_saveImpl(bounciness, format, json["bounciness"]);\
+      Engine::Reflection::_e_saveImpl(elasticity, format, json["elasticity"]);\
       Engine::Reflection::_e_saveImpl(offset, format, json["offset"]);\
       Engine::Reflection::_e_saveImpl(autoCompute, format, json["autoCompute"]);\
       Engine::Reflection::_e_saveImpl(position, format, json["position"]);\
@@ -20,7 +20,7 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(bounciness, format, json["bounciness"]);\
+      Engine::Reflection::_e_loadImpl(elasticity, format, json["elasticity"]);\
       Engine::Reflection::_e_loadImpl(offset, format, json["offset"]);\
       Engine::Reflection::_e_loadImpl(autoCompute, format, json["autoCompute"]);\
       Engine::Reflection::_e_loadImpl(position, format, json["position"]);\
@@ -37,7 +37,7 @@ namespace Engine::Reflection {
   void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \
     if (format == Engine::Reflection::Format::JSON) { \
       json = Engine::JSON::Object();\
-      Engine::Reflection::_e_saveImpl(bounciness, format, json["bounciness"]);\
+      Engine::Reflection::_e_saveImpl(elasticity, format, json["elasticity"]);\
       Engine::Reflection::_e_saveImpl(offset, format, json["offset"]);\
       Engine::Reflection::_e_saveImpl(autoCompute, format, json["autoCompute"]);\
       Engine::Reflection::_e_saveImpl(position, format, json["position"]);\
@@ -47,7 +47,7 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(bounciness, format, json["bounciness"]);\
+      Engine::Reflection::_e_loadImpl(elasticity, format, json["elasticity"]);\
       Engine::Reflection::_e_loadImpl(offset, format, json["offset"]);\
       Engine::Reflection::_e_loadImpl(autoCompute, format, json["autoCompute"]);\
       Engine::Reflection::_e_loadImpl(position, format, json["position"]);\
@@ -65,7 +65,7 @@ namespace Engine::Reflection {
   void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \
     if (format == Engine::Reflection::Format::JSON) { \
       json = Engine::JSON::Object();\
-      Engine::Reflection::_e_saveImpl(bounciness, format, json["bounciness"]);\
+      Engine::Reflection::_e_saveImpl(elasticity, format, json["elasticity"]);\
       Engine::Reflection::_e_saveImpl(offset, format, json["offset"]);\
       Engine::Reflection::_e_saveImpl(autoCompute, format, json["autoCompute"]);\
       Engine::Reflection::_e_saveImpl(position, format, json["position"]);\
@@ -76,7 +76,7 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(bounciness, format, json["bounciness"]);\
+      Engine::Reflection::_e_loadImpl(elasticity, format, json["elasticity"]);\
       Engine::Reflection::_e_loadImpl(offset, format, json["offset"]);\
       Engine::Reflection::_e_loadImpl(autoCompute, format, json["autoCompute"]);\
       Engine::Reflection::_e_loadImpl(position, format, json["position"]);\
@@ -95,7 +95,7 @@ namespace Engine::Reflection {
   void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \
     if (format == Engine::Reflection::Format::JSON) { \
       json = Engine::JSON::Object();\
-      Engine::Reflection::_e_saveImpl(bounciness, format, json["bounciness"]);\
+      Engine::Reflection::_e_saveImpl(elasticity, format, json["elasticity"]);\
       Engine::Reflection::_e_saveImpl(offset, format, json["offset"]);\
       Engine::Reflection::_e_saveImpl(autoCompute, format, json["autoCompute"]);\
       Engine::Reflection::_e_saveImpl(position, format, json["position"]);\
@@ -104,7 +104,7 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(bounciness, format, json["bounciness"]);\
+      Engine::Reflection::_e_loadImpl(elasticity, format, json["elasticity"]);\
       Engine::Reflection::_e_loadImpl(offset, format, json["offset"]);\
       Engine::Reflection::_e_loadImpl(autoCompute, format, json["autoCompute"]);\
       Engine::Reflection::_e_loadImpl(position, format, json["position"]);\

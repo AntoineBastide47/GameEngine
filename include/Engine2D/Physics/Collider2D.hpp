@@ -43,7 +43,7 @@ namespace Engine2D::Physics {
       };
 
       /// Coefficient of bounciness  of the rigid body.
-      Engine::float01 bounciness;
+      Engine::float01 elasticity;
       /// The positional offset of the collider in regard to the position of the entity it is attached to
       glm::vec2 offset;
       /// If true, the colliders bounds is computed using the transform of the entity it is attached to (works in most cases).

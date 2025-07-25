@@ -120,14 +120,14 @@ namespace Engine2D {
       exit(EXIT_FAILURE);
     }
 
-    this->initialize();
-
     // Set the render variables
     oneSecondTimer = 0.0f;
     lastTime = std::chrono::steady_clock::now();
     targetFrameRate = Engine::Settings::Graphics::GetTargetFrameRate();
     targetRenderRate = targetFrameRate == 0 ? 0.0f : 1.0f / targetFrameRate;
     frameCounter = 0;
+
+    initialize();
 
     #if MULTI_THREAD
     // IMPORTANT:
@@ -146,7 +146,7 @@ namespace Engine2D {
     renderThread.join();
     #endif
 
-    this->quit();
+    quit();
 
     #ifdef ENGINE_PROFILING
     Engine::Profiling::Instrumentor::get().endSession();
@@ -224,7 +224,7 @@ namespace Engine2D {
     const auto mainCam = AddEntity("Camera");
     if (!mainCam) {
       std::cerr << "ERROR: Failed to create main camera" << std::endl;
-      this->quit();
+      quit();
       exit(EXIT_FAILURE);
     }
     cameraComponent = mainCam->AddComponent<Rendering::Camera2D>(
@@ -242,7 +242,7 @@ namespace Engine2D {
     while (!glfwWindowShouldClose(window)) {
       // Calculate the current deltaTime
       const auto currentFrameTime = std::chrono::high_resolution_clock::now();
-      this->deltaTime = std::chrono::duration<float>(currentFrameTime - lastTime).count() * timeScale;
+      deltaTime = std::chrono::duration<float>(currentFrameTime - lastTime).count() * timeScale;
       lastTime = currentFrameTime;
       glfwPollEvents();
 
@@ -345,7 +345,7 @@ namespace Engine2D {
     for (const auto &entity: entities) {
       if (entity->IsActive()) {
         for (const auto &behaviour: entity->behaviours)
-          if (behaviour && behaviour->IsActive())
+          if (behaviour->IsActive())
             behaviour->OnUpdate();
       }
       #if MULTI_THREAD
@@ -364,13 +364,13 @@ namespace Engine2D {
     physicsAccumulator += deltaTime;
     const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
     while (physicsAccumulator >= fixedDeltaTime) {
-      Physics2D::step();
-      physicsAccumulator -= fixedDeltaTime;
       for (const auto &entity: entities)
         if (entity->IsActive())
           for (const auto &behaviour: entity->behaviours)
-            if (behaviour && behaviour->IsActive())
+            if (behaviour->IsActive())
               behaviour->OnFixedUpdate();
+      Physics2D::step();
+      physicsAccumulator -= fixedDeltaTime;
     }
   }
 
@@ -409,19 +409,13 @@ namespace Engine2D {
       // sleep coarse then spin-wait
       if (const auto sleepTime = nextFrameTime - now - microseconds(200); sleepTime > microseconds(0))
         std::this_thread::sleep_for(sleepTime);
-      while (steady_clock::now() < nextFrameTime) {}
-    } else {
+      while (steady_clock::now() < nextFrameTime);
+    } else
       nextFrameTime = now;
-    }
   }
 
   void Game2D::quit() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
-
-    #if MULTI_THREAD
-    if (renderThread.joinable())
-      renderThread.join();
-    #endif
 
     // Remove all the entities from the game
     entitiesToAdd.clear();

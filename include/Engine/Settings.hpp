@@ -32,9 +32,9 @@ namespace Engine {
           /// @returns True if the user can resize the window, false if not
           [[nodiscard]] static bool GetAllowResize();
         private:
-          static glm::vec<2, size_t> resolution;
-          static std::string title;
-          static bool allowResize;
+          inline static auto resolution = glm::vec<2, size_t>(800, 600);
+          inline static std::string title = "Game Window";
+          inline static bool allowResize = true;
 
           Window() = default;
       };
@@ -58,9 +58,9 @@ namespace Engine {
           /// @returns How many frames wil be rendered per second, if 0 the engine will render as many as possible
           [[nodiscard]] static unsigned int GetTargetFrameRate();
         private:
-          static bool vsyncEnabled;
-          static bool maintainAspectRatio;
-          static unsigned int targetFrameRate;
+          inline static bool vsyncEnabled = false;
+          inline static bool maintainAspectRatio = true;
+          inline static unsigned int targetFrameRate = 0;
 
           Graphics() = default;
       };
@@ -69,12 +69,8 @@ namespace Engine {
       class Physics {
         friend class Settings;
         public:
-          /// Changes the rate at which the physics simulations are run, clamped between 0.02f and 0.33f (50 or 60 times a second).
+          /// Changes the rate at which the physics simulations are run, clamped between 0.02f and 0.016...7f (50 or 60 times a second).
           static void SetFixedDeltaTime(float newValue);
-          /// Changes whether the physics engine should globally enable or disable friction.
-          /// If false, friction will never affect rigidbodies.
-          /// If true, friction will be applied to rigidbodies using there static and dynamic coefficients.
-          static void SetFrictionEnabled(bool newState);
           /// Changes if the physics engine should use spacial partitioning to resolve collisions or not.
           /// It does not always lead to a performance boost, consider using it if you have a lot of dynamic colliders on screen.
           static void SetUseScreenPartitioning(bool newState);
@@ -87,8 +83,6 @@ namespace Engine {
 
           /// @returns The rate at which the physics simulations are run
           [[nodiscard]] static float GetFixedDeltaTime();
-          /// @returns True if friction is globally enabled, false if not
-          [[nodiscard]] static float GetFrictionEnabled();
           /// @returns True if the physics engine is currently using screen partitioning, false if not
           [[nodiscard]] static bool GetUseScreenPartitioning();
           /// @return The size of the screen partitioning used by the physics engine
@@ -96,11 +90,10 @@ namespace Engine {
           /// @returns The value of gravity used by the physics engine
           [[nodiscard]] static glm::vec2 GetGravity();
         private:
-          static float fixedDeltaTime;
-          static bool frictionEnabled;
-          static bool useScreenPartitioning;
-          static glm::vec<2, size_t> partitionSize;
-          static glm::vec2 gravity;
+          inline static float fixedDeltaTime = 1.0f / 60.0f;
+          inline static bool useScreenPartitioning = false;
+          inline static auto partitionSize = glm::vec<2, size_t>(4, 4);
+          inline static auto gravity = glm::vec2(0.0f, -9.81f);
 
           Physics() = default;
       };
@@ -131,11 +124,11 @@ namespace Engine {
           /// @returns The value of the trigger threshold of the gamepad
           [[nodiscard]] static float GetGamepadTriggerThreshold();
         private:
-          static bool allowMouseInput;
-          static bool allowKeyboardInput;
-          static bool allowGamepadInput;
-          static float gamepadStickThreshold;
-          static float gamepadTriggerThreshold;
+          inline static bool allowMouseInput = true;
+          inline static bool allowKeyboardInput = true;
+          inline static bool allowGamepadInput = true;
+          inline static float gamepadStickThreshold = 0.15f;
+          inline static float gamepadTriggerThreshold = -1.0f;
 
           Input() = default;
       };

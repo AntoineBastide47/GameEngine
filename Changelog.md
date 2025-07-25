@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2025-07-25
+### Changed
+- **[Engine2D/Physics/Physics2D]**:
+  - clamped linear and angular velocity to prevent infinite movement nad/or rotation speed
+  - fixed multi body collision increasing speed
+  - fixed friction incorrectly increasing/decreasing speed
+### Removed
+- **[Engine2D/Settings]**: removed the friction enabled setting, friction is now per object 
+
 ## [0.9.1] - 2025-07-23
 ### Changed
 Game2D.hpp and Entity2D.hpp now hold unique pointers for entities and components, while all the systems hold raw pointers

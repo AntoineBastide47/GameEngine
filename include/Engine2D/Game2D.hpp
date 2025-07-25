@@ -108,7 +108,7 @@ namespace Engine2D {
       GLFWwindow *window;
 
       /// The current game instance, unique
-      inline static Game2D *instance = nullptr;
+      inline static Game2D *instance;
       /// The resource loader for embedded resources
       ResourceLoader resourceLoader;
       /// The main camera of the game
