@@ -3,9 +3,9 @@
 #pragma once
 
 namespace Engine::Reflection {
-  #define SERIALIZE_GAME2D _e_SERIALIZE_RECORD \
+  #define SERIALIZE_SCENE _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
-    Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Game2D>("Engine2D::Game2D");\
+    Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Scene>("Engine2D::Scene");\
     return true;\
   }();\
   void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \

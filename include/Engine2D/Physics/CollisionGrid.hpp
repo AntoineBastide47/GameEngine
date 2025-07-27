@@ -12,9 +12,7 @@
 
 namespace Engine2D::Physics {
   class Collider2D;
-}
 
-namespace Engine2D::Physics {
   class CollisionGrid {
     friend class Physics2D;
 

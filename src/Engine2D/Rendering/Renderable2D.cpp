@@ -10,7 +10,10 @@
 
 namespace Engine2D::Rendering {
   Renderable2D::Renderable2D()
-    : shader(Engine::ResourceManager::GetShader("sprite")), sprite(nullptr), renderOrder(0) {}
+    : Renderable2D(None) {}
+
+  Renderable2D::Renderable2D(const RenderableType type)
+    : shader(Engine::ResourceManager::GetShader("sprite")), sprite(nullptr), renderOrder(0), renderType(type) {}
 
   void Renderable2D::SetShader(Shader *shader) {
     this->shader = shader;

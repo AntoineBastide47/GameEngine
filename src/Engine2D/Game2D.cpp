@@ -13,18 +13,14 @@
 #include "Engine/Input/Gamepad.hpp"
 #include "Engine/Input/Keyboard.hpp"
 #include "Engine/Input/Mouse.hpp"
-#include "Engine2D/Physics/Physics2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
 #if ENGINE_PROFILING
 #include "Engine/Profiling/Instrumentor.hpp"
 #endif
-#include "Engine/Data/JSON.hpp"
-#include "Engine/Data/JsonParser.hpp"
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine/Reflection/Serializer.hpp"
 #include "Engine2D/Behaviour.hpp"
-#include "Engine2D/Animation/AnimationSystem.hpp"
-#include "Engine2D/Rendering/Camera2D.hpp"
+#include "Engine2D/SceneManager.hpp"
 
 using Engine::ResourceManager;
 
@@ -75,39 +71,12 @@ namespace Engine2D {
     return Engine::Settings::Physics::GetFixedDeltaTime();
   }
 
-  Rendering::Camera2D *Game2D::MainCamera() {
-    return instance->cameraComponent;
-  }
-
   void Game2D::SetGameResourceLoader(ResourceLoader resourceLoader) {
     this->resourceLoader = std::move(resourceLoader);
   }
 
-  void Game2D::Close(const Engine::Input::KeyboardAndMouseContext context) {
-    if (context.released)
-      glfwSetWindowShouldClose(instance->window, true);
-  }
-
-  Entity2D *Game2D::AddEntity(
-    const std::string &name, const bool isStatic, const glm::vec2 position, const float rotation, const glm::vec2 scale,
-    Entity2D *parent
-  ) {
-    if (instance) {
-      const auto entity = new Entity2D(name, isStatic, position, rotation, scale, parent);
-      instance->entitiesToAdd.emplace_back(entity);
-      return entity;
-    }
-    return nullptr;
-  }
-
-  Entity2D *Game2D::Find(const std::string &name) {
-    for (const auto &entity: instance->entitiesToAdd)
-      if (entity->name == name)
-        return entity.get();
-    for (const auto &entity: instance->entities)
-      if (entity->name == name)
-        return entity.get();
-    return nullptr;
+  void Game2D::Quit() {
+    glfwSetWindowShouldClose(instance->window, true);
   }
 
   void Game2D::Run() {
@@ -221,17 +190,8 @@ namespace Engine2D {
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &Rendering::Renderer2D::MAX_TEXTURES);
     ResourceManager::LoadShader("sprite", "Engine/Shaders/sprite.glsl");
 
-    const auto mainCam = AddEntity("Camera");
-    if (!mainCam) {
-      std::cerr << "ERROR: Failed to create main camera" << std::endl;
-      quit();
-      exit(EXIT_FAILURE);
-    }
-    cameraComponent = mainCam->AddComponent<Rendering::Camera2D>(
-      -static_cast<float>(width / 2) * screenScaleFactor, static_cast<float>(width / 2) * screenScaleFactor,
-      -static_cast<float>(height / 2) * screenScaleFactor, static_cast<float>(height / 2) * screenScaleFactor,
-      -32768.0f, 32768.0f // int16_t range
-    );
+    SceneManager::CreateScene("default");
+    SceneManager::SetActiveScene("default");
 
     OnInitialize();
   }
@@ -246,13 +206,12 @@ namespace Engine2D {
       lastTime = currentFrameTime;
       glfwPollEvents();
 
-      addEntities();
-      removeEntities();
+      SceneManager::currentScene->syncEntities();
 
       processInput();
-      update();
-      fixedUpdate();
-      animate();
+      SceneManager::currentScene->update();
+      SceneManager::currentScene->fixedUpdate();
+      SceneManager::currentScene->animate();
 
       #if MULTI_THREAD
       // Handoff engine data to the render thread
@@ -268,7 +227,7 @@ namespace Engine2D {
       }
       cv.notify_one();
       #else
-      render();
+      SceneManager::currentScene->render();
       #endif
 
       // FPS calculation
@@ -319,7 +278,7 @@ namespace Engine2D {
           }
         );
         // Now the engine data is exclusively ours; render the frame.
-        render();
+        SceneManager::currentScene->render();
         updateFinished = false;
         renderFinished = true;
       }
@@ -337,61 +296,6 @@ namespace Engine2D {
       Engine::Input::Keyboard::processInput();
     if (Engine::Settings::Input::GetAllowGamepadInput())
       Engine::Input::Gamepad::processInput();
-  }
-
-  void Game2D::update() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
-
-    for (const auto &entity: entities) {
-      if (entity->IsActive()) {
-        for (const auto &behaviour: entity->behaviours)
-          if (behaviour->IsActive())
-            behaviour->OnUpdate();
-      }
-      #if MULTI_THREAD
-      else if (entity->destroyed) {
-        ++entity->framesSinceDestroyed;
-        if (entity->framesSinceDestroyed > 1)
-          entitiesToDestroy.insert(entity.get());
-      }
-      #endif
-    }
-  }
-
-  void Game2D::fixedUpdate() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
-
-    physicsAccumulator += deltaTime;
-    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
-    while (physicsAccumulator >= fixedDeltaTime) {
-      for (const auto &entity: entities)
-        if (entity->IsActive())
-          for (const auto &behaviour: entity->behaviours)
-            if (behaviour->IsActive())
-              behaviour->OnFixedUpdate();
-      Physics2D::step();
-      physicsAccumulator -= fixedDeltaTime;
-    }
-  }
-
-  void Game2D::animate() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
-
-    Animation::AnimationSystem::update();
-  }
-
-  void Game2D::render() const {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
-
-    // Make sure there is something to render
-    if (!entities.empty()) {
-      MainCamera()->updateCamera();
-      Rendering::Renderer2D::render();
-
-      // Prepare the next frame
-      glfwSwapBuffers(window);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
   }
 
   void Game2D::limitFrameRate() const {
@@ -417,16 +321,8 @@ namespace Engine2D {
   void Game2D::quit() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
-    // Remove all the entities from the game
-    entitiesToAdd.clear();
-    removeEntities();
-    for (const auto &entity: entities) {
-      entity->destroy();
-      entity->free();
-    }
-    entities.clear();
-
     // Deallocate all the game resources
+    SceneManager::currentScene->destroy();
     ResourceManager::Clear();
 
     // Destroy the window and terminate all OpenGL processes
@@ -443,45 +339,6 @@ namespace Engine2D {
     if (resourceLoader)
       return resourceLoader(path);
     throw std::runtime_error("ERROR::GAME2D: Resource loader not set.");
-  }
-
-  void Game2D::addEntities() {
-    for (auto &entity: entitiesToAdd) {
-      entity->initialize();
-      entities.emplace_back(std::move(entity));
-    }
-    entitiesToAdd.clear();
-  }
-
-  void Game2D::removeEntities() {
-    #if MULTI_THREAD
-    for (auto entity: entitiesToDestroy) {
-      entity->free();
-      std::erase_if(
-        entities, [entity](const std::unique_ptr<Entity2D> &ent) {
-          return ent.get() == entity;
-        }
-      );
-    }
-    entitiesToDestroy.clear();
-    #endif
-    for (auto entity: entitiesToRemove) {
-      entity->destroy();
-      #if !MULTI_THREAD
-      entity->free();
-      std::erase_if(
-        entities, [entity](const std::unique_ptr<Entity2D> &ent) {
-          return ent.get() == entity;
-        }
-      );
-      #endif
-    }
-    entitiesToRemove.clear();
-  }
-
-  void Game2D::removeEntity(Entity2D *entity) {
-    if (entity && instance && !instance->entities.empty())
-      instance->entitiesToRemove.insert(entity);
   }
 
   void Game2D::framebuffer_size_callback(GLFWwindow *window, const int, const int) {

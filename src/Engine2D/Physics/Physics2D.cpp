@@ -19,9 +19,14 @@
 #include "Engine/Settings.hpp"
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Behaviour.hpp"
+#include "Engine2D/Physics/CollisionGrid.hpp"
+#include "Engine2D/Physics/CollisionManifold.hpp"
 #include "Engine2D/Types/Vector2.hpp"
 
 namespace Engine2D::Physics {
+  Physics2D::Physics2D()
+    : initialized(false), collisionGridNeedsResizing(false) {}
+
   Physics2D::~Physics2D() {
     colliders.clear();
     collidersToAdd.clear();
@@ -159,8 +164,8 @@ namespace Engine2D::Physics {
         // Parent-child relationship check, making sure that both have a rigidbody
         const auto rb1 = col1->rigidbody;
         const auto rb2 = col2->rigidbody;
-        const bool col1ChildCol2 = col1->Entity()->transform->IsChildOf(col2->Entity()) && !(rb1 && rb2);
-        const bool col2ChildCol1 = col2->Entity()->transform->IsChildOf(col1->Entity()) && !(rb1 && rb2);
+        const bool col1ChildCol2 = col1->Entity()->Transform()->IsChildOf(col2->Entity()) && !(rb1 && rb2);
+        const bool col2ChildCol1 = col2->Entity()->Transform()->IsChildOf(col1->Entity()) && !(rb1 && rb2);
         if ((!rb1 && !rb2) || col1ChildCol2 || col2ChildCol1)
           continue;
 
@@ -198,12 +203,11 @@ namespace Engine2D::Physics {
       glm::vec<2, double> normal;
       double depth = std::numeric_limits<double>::max();
       if (Collisions::collide(col1, col2, &normal, &depth)) {
-        separateBodies(col1, col2, rb1, rb2, normal * depth);
+        if (!col1->isTrigger && !col2->isTrigger)
+          separateBodies(col1, col2, rb1, rb2, normal * depth);
 
-        // Notify the entities of the collisions
         ContactPair collisionPair{col1, col2, rb1, rb2};
-        const CollisionEventType collisionType =
-            std::ranges::find(previousCollisionPairs, collisionPair) != previousCollisionPairs.end() ? Stay : Enter;
+        const CollisionEventType collisionType = previousCollisionPairs.contains(collisionPair) ? Stay : Enter;
 
         // Find contact points
         glm::vec2 contactPoint1, contactPoint2;
@@ -211,14 +215,13 @@ namespace Engine2D::Physics {
         Collisions::findContactPoints(col1, col2, &contactPoint1, &contactPoint2, &contactCount);
 
         // Resolve the collision by inverting the normal to make it point outwards
-        Engine::Physics::CollisionManifold contact{
+        CollisionManifold contact{
           col1, col2, rb1, rb2, -normal, contactPoint1, contactPoint2, contactCount
         };
         col1->contactPoints = contact.contactPoints;
         col2->contactPoints = contact.contactPoints;
 
-        // Make sure to only apply a single impulse
-        if (collisionType == Enter)
+        if (collisionType == Enter && !col1->isTrigger && !col2->isTrigger)
           resolveCollision(contact);
 
         notifyCollisions(col1, col2, collisionType);
@@ -226,10 +229,9 @@ namespace Engine2D::Physics {
 
         collisionPairs.insert(collisionPair);
       }
-
-      // Delete the previous collision pairs and replace them by the new ones
-      previousCollisionPairs = std::move(collisionPairs);
     }
+    // Delete the previous collision pairs and replace them by the new ones
+    previousCollisionPairs = std::move(collisionPairs);
   }
 
   void Physics2D::separateBodies(
@@ -254,7 +256,7 @@ namespace Engine2D::Physics {
     }
   }
 
-  void Physics2D::resolveCollision(const Engine::Physics::CollisionManifold &contact) {
+  void Physics2D::resolveCollision(const CollisionManifold &contact) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
     float elasticity = std::max(contact.col1->elasticity, contact.col2->elasticity);
@@ -334,11 +336,17 @@ namespace Engine2D::Physics {
         }
       }
 
-      float sf = (contact.rb1 ? contact.rb1->staticFriction : 0) + (contact.rb2 ? contact.rb2->staticFriction : 0);
-      float df = (contact.rb1 ? contact.rb1->dynamicFriction : 0) + (contact.rb2 ? contact.rb2->dynamicFriction : 0);
+      float sf = 0;
+      float df = 0;
       if (contact.rb1 && contact.rb2) {
-        sf *= 0.5f;
-        df *= 0.5f;
+        sf = std::sqrt(contact.rb1->staticFriction * contact.rb2->staticFriction);
+        df = std::sqrt(contact.rb1->dynamicFriction * contact.rb2->dynamicFriction);
+      } else if (contact.rb1) {
+        sf = contact.rb1->staticFriction;
+        df = contact.rb1->dynamicFriction;
+      } else if (contact.rb2) {
+        sf = contact.rb2->staticFriction;
+        df = contact.rb2->dynamicFriction;
       }
 
       for (int i = 0; i < N; i++) {

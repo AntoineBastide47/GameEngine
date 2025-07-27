@@ -16,6 +16,7 @@
 #include "Engine2D/Game2D.hpp"
 #include "Engine/Log.hpp"
 #include "Engine/Macros/Assert.hpp"
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine/Rendering/ShaderPreProcessor.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"

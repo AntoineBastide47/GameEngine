@@ -12,7 +12,7 @@
 #include "Engine/Settings.hpp"
 
 namespace Engine::Profiling {
-  class Timer {
+  class Timer final {
     public:
       /// Starts a new RAII timer with the given name and profiling level
       Timer(const char *name, Settings::Profiling::ProfilingLevel level);

@@ -6,24 +6,21 @@
 
 #ifndef TEXTURE_H
 #define TEXTURE_H
+
 #include <string>
 
 namespace Engine {
   class ResourceManager;
 }
-namespace Engine2D {
-  class ParticleSystem2D;
-  namespace Rendering {
-    class Renderer2D;
-  }
+namespace Engine2D::Rendering {
+  class Renderer2D;
 }
 
 namespace Engine::Rendering {
   /// A class representing a 2D texture in OpenGL, handling creation, configuration, and binding of textures.
   class Texture {
-    friend class Engine2D::Rendering::Renderer2D;
     friend class Engine::ResourceManager;
-    friend class Engine2D::ParticleSystem2D;
+    friend class Engine2D::Rendering::Renderer2D;
     public:
       explicit Texture(const std::string &path);
 

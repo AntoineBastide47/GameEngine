@@ -5,10 +5,14 @@
 //
 
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
-#include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
+#include "Engine2D/Rendering/Sprite.hpp"
 
 namespace Engine2D {
+  ParticleSystemRegistry2D::ParticleSystemRegistry2D()
+    : repartition(false), dirty(false) {}
+
   void ParticleSystemRegistry2D::prerender() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 

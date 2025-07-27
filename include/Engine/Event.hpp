@@ -8,7 +8,6 @@
 #define EVENT_H
 
 #include <functional>
-#include <ostream>
 
 namespace Engine {
   /**

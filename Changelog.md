@@ -3,7 +3,22 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.1] - 2025-07-25
+## [0.9.3] - 2025-07-27
+### Added
+- **[[Scene]](include/Engine2D/Scene.hpp)**: object that contains all the entities and everything needed to update, render, animate, ... them for the game to work
+- **[[SceneManager]](include/Engine2D/SceneManager.hpp)**: static class used to create, load, switch and unload scenes
+### Changes
+- Made all the core systems (physics, animation, renderer) non-static and scene bound
+- **[[Physics2D]](include/Engine2D/Physics/Physics2D.hpp)**: friction uses geometric mean for static and dynamic coefficients
+### Fixed
+- **[[HeaderForge]](tools/HeaderForge)**:
+  - the SERIALIZE_* macro not being included or being added in enum definitions
+  - the clang error logged in the terminal: "error: invalid argument '-std=c++20' not allowed with 'C'"
+- **[[Collisions]](include/Engine2D/Physics/Collisions.hpp)**:
+  - circle-circle collisions now work as expected
+  - polygon-polygon collisions now work as expected
+
+## [0.9.2] - 2025-07-25
 ### Changed
 - **[Engine2D/Physics/Physics2D]**:
   - clamped linear and angular velocity to prevent infinite movement nad/or rotation speed

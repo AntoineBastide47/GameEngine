@@ -14,11 +14,12 @@
 #include "Rigidbody2D.gen.hpp"
 
 namespace Engine2D {
-  class Game2D;
+  class Entity2D;
 }
 
 namespace Engine2D::Physics {
   class Collider2D;
+
   /**
    * Represents a 2D rigid body in the physics engine.
    *
@@ -27,9 +28,9 @@ namespace Engine2D::Physics {
    * Circle and Rectangle.
    */
   class Rigidbody2D final : public Component2D {
-  SERIALIZE_RIGIDBODY2D
-    friend class Engine2D::Game2D;
-    friend class Physics2D;
+    SERIALIZE_RIGIDBODY2D
+      friend class Physics2D;
+      friend class Engine2D::Entity2D;
     public:
       /// Flag indicating whether the body is affected by forces.
       bool isKinematic;
@@ -48,9 +49,6 @@ namespace Engine2D::Physics {
       /// The coefficient of the frictional force which is created between any two surfaces when they are in a moving
       /// position.
       float dynamicFriction;
-
-      /// Default constructor.
-      Rigidbody2D();
 
       /// Sets the mass of this rigidbody
       void SetMass(float mass);
@@ -82,9 +80,11 @@ namespace Engine2D::Physics {
 
       static constexpr float RECTANGLE_COLLISION_FACTOR = 1.0f / 12.0f;
 
+      Rigidbody2D();
+
       /// Calculates the inertia of this body using the given collider
       void computeInertia(const Collider2D *collider);
-
+      /// Runs a physics step on this rigidbody
       void step();
   };
 }

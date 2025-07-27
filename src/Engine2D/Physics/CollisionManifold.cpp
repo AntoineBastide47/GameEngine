@@ -6,7 +6,7 @@
 
 #include "Engine2D/Physics/CollisionManifold.hpp"
 
-namespace Engine::Physics {
+namespace Engine2D::Physics {
   CollisionManifold::CollisionManifold(
     Collider2D *col1, Collider2D *col2, Rigidbody2D *rb1, Rigidbody2D *rb2, const glm::vec2 normal,
     const glm::vec2 contactPoint1, const glm::vec2 contactPoint2, const uint8_t contactCount

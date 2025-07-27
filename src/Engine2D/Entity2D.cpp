@@ -8,6 +8,7 @@
 
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
+#include "Engine2D/SceneManager.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 
 namespace Engine2D {
@@ -19,7 +20,7 @@ namespace Engine2D {
     Entity2D *parent
   )
     : name(std::move(name)), active(true), parentsActive(true), isStatic(isStatic), destroyed(false),
-      framesSinceDestroyed(0),
+      timeToLive(0.1f),
       transform(std::unique_ptr<Transform2D>(new Transform2D(position, rotation, scale, this, parent))) {}
 
   bool Entity2D::operator==(const Entity2D &entity) const {
@@ -32,6 +33,25 @@ namespace Engine2D {
 
   Transform2D *Entity2D::Transform() const {
     return transform.get();
+  }
+
+  Entity2D *Entity2D::Instantiate(
+    const std::string &name, const bool isStatic, const glm::vec2 position, const float rotation, const glm::vec2 scale,
+    Entity2D *parent
+  ) {
+    const auto entity = new Entity2D(name, isStatic, position, rotation, scale, parent);
+    SceneManager::ActiveScene()->entitiesToAdd.push_back(std::unique_ptr<Entity2D>(entity));
+    return entity;
+  }
+
+  Entity2D *Entity2D::Find(const std::string &name) {
+    for (const auto &entity: SceneManager::ActiveScene()->entitiesToAdd)
+      if (entity->name == name)
+        return entity.get();
+    for (const auto &entity: SceneManager::ActiveScene()->entities)
+      if (entity->name == name)
+        return entity.get();
+    return nullptr;
   }
 
   void Entity2D::SetActive(const bool active) {
@@ -57,7 +77,7 @@ namespace Engine2D {
   }
 
   void Entity2D::Destroy() {
-    Game2D::instance->removeEntity(this);
+    SceneManager::ActiveScene()->removeEntity(this);
   }
 
   void Entity2D::initialize() const {

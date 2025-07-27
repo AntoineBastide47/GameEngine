@@ -7,6 +7,8 @@
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine/Settings.hpp"
 #include "Engine2D/Game2D.hpp"
+#include "Engine2D/Scene.hpp"
+#include "Engine2D/SceneManager.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
 
 namespace Engine {
@@ -92,7 +94,7 @@ namespace Engine {
 
   void Settings::Physics::SetPartitionSize(const glm::vec<2, size_t> newValue) {
     partitionSize = newValue;
-    Physics2D::collisionGridNeedsResizing = true;
+    Engine2D::SceneManager::ActiveScene()->physicsSystem.collisionGridNeedsResizing = true;
   }
 
   void Settings::Physics::SetGravity(const glm::vec2 newValue) {

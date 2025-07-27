@@ -7,13 +7,8 @@
 #ifndef REFLECTION_FACTORY_HPP
 #define REFLECTION_FACTORY_HPP
 
-#include <functional>
-#include <memory>
-#include <string>
-#include <unordered_map>
-
 namespace Engine::Reflection {
-  class ReflectionFactory {
+  class ReflectionFactory final {
     inline static std::unordered_map<std::string, std::string> engineNameToTypeIdName;
     inline static std::unordered_map<std::string, std::function<void*()>> typeIdNameToFactory;
     public:

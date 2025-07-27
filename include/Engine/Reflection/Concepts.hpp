@@ -7,20 +7,12 @@
 #ifndef CONCEPTS_HPP
 #define CONCEPTS_HPP
 
-#include <iterator>
-#include <memory>
-#include <sstream>
-#include <string_view>
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
 namespace Engine {
   class JSON;
 }
 
 namespace Engine::Reflection {
-  class Reflectable;
+  struct Reflectable;
 
   template<typename T> concept IsString =
       std::is_same_v<std::remove_cvref_t<T>, std::string> ||
@@ -33,7 +25,7 @@ namespace Engine::Reflection {
       !std::is_same_v<std::remove_cvref_t<T>, bool> &&
       !IsString<T>;
 
-  template<typename T> struct IsPair : std::false_type {};
+  template<typename> struct IsPair : std::false_type {};
 
   template<typename A, typename B> struct IsPair<std::pair<A, B>> : std::true_type {};
 
@@ -73,14 +65,6 @@ namespace Engine::Reflection {
   enum Format {
     JSON, TEXT, BINARY
   };
-
-  /// How many spaces to use for JSON pretty printing, set to 2 by default
-  static inline unsigned int JsonIndentSize = 2;
-
-  static inline void applyIndent(std::ostringstream &os, const bool prettyPrint, const int indent) {
-    if (prettyPrint)
-      os.write(std::string(indent * JsonIndentSize, ' ').c_str(), indent * JsonIndentSize);
-  }
 
   template<typename> static constexpr bool _e_f = false;
 

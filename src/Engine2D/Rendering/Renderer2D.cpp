@@ -17,6 +17,8 @@
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 #include "Engine/Rendering/Texture.hpp"
 #include "Engine2D/Game2D.hpp"
+#include "Engine2D/Scene.hpp"
+#include "Engine2D/SceneManager.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 
 #define STRIDE (16)
@@ -58,7 +60,7 @@ namespace Engine2D::Rendering {
            !r->sprite || !r->sprite->texture;
   }
 
-  bool Renderer2D::sortRenderers(const Renderable2D *a, const Renderable2D *b) {
+  bool Renderer2D::sortRenderers(const Renderable2D *a, const Renderable2D *b) const {
     if (const bool aValid = cannotBeRendered(a); aValid != cannotBeRendered(b))
       return !aValid;
 
@@ -69,9 +71,7 @@ namespace Engine2D::Rendering {
     return a->sprite->texture->id < b->sprite->texture->id;
   }
 
-  void Renderer2D::extractRendererData(
-    const SpriteRenderer *renderer, float *data
-  ) {
+  void Renderer2D::extractRendererData(const SpriteRenderer *renderer, float *data) const {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
     const SpriteRenderer &r = *renderer;
@@ -142,7 +142,11 @@ namespace Engine2D::Rendering {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     if (rebuild) {
-      std::ranges::sort(renderers, sortRenderers);
+      std::ranges::sort(
+        renderers, [this](const Renderable2D *a, const Renderable2D *b) {
+          return sortRenderers(a, b);
+        }
+      );
 
       // Only extract data for valid sprite renderers
       const auto it = std::ranges::find_if(renderers, cannotBeRendered);
@@ -154,7 +158,7 @@ namespace Engine2D::Rendering {
       batchData.reserve(validRange.size() * STRIDE);
       batchData.resize(validRange.size() * STRIDE);
 
-      for (auto &renderer: validRange) {
+      for (const auto &renderer: validRange) {
         // Check for change in shader or texture ID
         const uint32_t shaderID = renderer->shader->id;
         if (const uint32_t textureID = renderer->sprite->texture->id;
@@ -197,7 +201,7 @@ namespace Engine2D::Rendering {
 
   void Renderer2D::updateBatch(
     const std::vector<SpriteRenderer *> &renderers, std::vector<float> &staticBatchData
-  ) {
+  ) const {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
     for (size_t i = 0; i < renderers.size(); i++) {
@@ -217,7 +221,11 @@ namespace Engine2D::Rendering {
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
-    std::ranges::sort(renderers, sortRenderers);
+    std::ranges::sort(
+      renderers, [this](const Renderable2D *a, const Renderable2D *b) {
+        return sortRenderers(a, b);
+      }
+    );
 
     flushList.clear();
 
@@ -242,12 +250,13 @@ namespace Engine2D::Rendering {
       return;
 
     for (const auto &renderer: validRange) {
-      if (const auto particleSystem = dynamic_cast<ParticleSystem2D *>(renderer); particleSystem) {
+      if (renderer->renderType == Renderable2D::ParticleSystem) {
         // Send the previous sprites to the flush list
         flushList.emplace_back(currentShaderID, currentTextureID, start, count, !zSort << 5 | 0);
         start += count;
         count = 0;
 
+        const auto particleSystem = dynamic_cast<ParticleSystem2D *>(renderer);
         mapTextureIdToIndex(particleSystem->sprite->texture->id);
         particleSystem->updateAndRender(
           textureIdToIndexMap.at(particleSystem->sprite->texture->id), &gpuPtr[index * STRIDE]
@@ -359,6 +368,10 @@ namespace Engine2D::Rendering {
         case ParticleSystem2D::BlendMode::Opaque:
           srcFactor = GL_ONE;
           dstFactor = GL_ZERO;
+          break;
+        default:
+          srcFactor = GL_SRC_ALPHA;
+          dstFactor = GL_ONE_MINUS_SRC_ALPHA;
           break;
       }
     }
@@ -549,13 +562,14 @@ namespace Engine2D::Rendering {
 
     renderersToRemove.clear();
     renderersToAdd.clear();
-    ParticleSystemRegistry2D::prerender();
+    SceneManager::ActiveScene()->particleSystemRegistry.prerender();
   }
 
   void Renderer2D::opaquePass(const uint framebuffer) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
-    if (opaqueRenderers.empty() && staticOpaqueRenderers.empty() && ParticleSystemRegistry2D::subrange.empty())
+    const auto particleSystemRegistry = SceneManager::ActiveScene()->particleSystemRegistry;
+    if (opaqueRenderers.empty() && staticOpaqueRenderers.empty() && particleSystemRegistry.subrange.empty())
       return;
 
     zSort = false;
@@ -568,15 +582,15 @@ namespace Engine2D::Rendering {
 
     // Prepare the non-static opaque sprites
     std::vector<Renderable2D *> renderables;
-    renderables.reserve(opaqueRenderers.size() + ParticleSystemRegistry2D::subrange.size());
+    renderables.reserve(opaqueRenderers.size() + particleSystemRegistry.subrange.size());
     renderables.insert(renderables.end(), opaqueRenderers.begin(), opaqueRenderers.end());
     renderables.insert(
-      renderables.end(), ParticleSystemRegistry2D::subrange.begin(), ParticleSystemRegistry2D::subrange.end()
+      renderables.end(), particleSystemRegistry.subrange.begin(), particleSystemRegistry.subrange.end()
     );
 
     const uint particleCount = std::transform_reduce(
-      ParticleSystemRegistry2D::subrange.begin(), ParticleSystemRegistry2D::subrange.end(),
-      0u, std::plus<>(), [](const auto &ps) {
+      particleSystemRegistry.subrange.begin(), particleSystemRegistry.subrange.end(), 0u, std::plus<>(),
+      [](const auto &ps) {
         return ps->aliveCount;
       }
     );
@@ -587,6 +601,11 @@ namespace Engine2D::Rendering {
   void Renderer2D::transparentPass(const uint framebuffer) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
+    auto particleSystemRegistry = SceneManager::ActiveScene()->particleSystemRegistry;
+    if (opaqueRenderers.empty() && staticOpaqueRenderers.empty() &&
+        particleSystemRegistry.particleSystems.begin() == particleSystemRegistry.subrange.begin())
+      return;
+
     zSort = true;
 
     // Render the static transparent sprites
@@ -595,20 +614,22 @@ namespace Engine2D::Rendering {
       staticTransparentRenderers.size() != lastOpaqueStaticCount, staticTransparentBatchVBO, framebuffer
     );
 
+    const auto transparentEnd = particleSystemRegistry.subrange.size() == 0
+                                  ? particleSystemRegistry.particleSystems.end()
+                                  : particleSystemRegistry.subrange.begin();
+
     // Prepare the non-static transparent sprites
     std::vector<Renderable2D *> renderables;
     renderables.reserve(
-      transparentRenderers.size() +
-      ParticleSystemRegistry2D::particleSystems.size() - ParticleSystemRegistry2D::subrange.size()
+      transparentRenderers.size() + particleSystemRegistry.particleSystems.size() -
+      particleSystemRegistry.subrange.size()
     );
     renderables.insert(renderables.end(), transparentRenderers.begin(), transparentRenderers.end());
-    renderables.insert(
-      renderables.end(), ParticleSystemRegistry2D::particleSystems.begin(), ParticleSystemRegistry2D::subrange.begin()
-    );
+    renderables.insert(renderables.end(), particleSystemRegistry.particleSystems.begin(), transparentEnd);
 
     const uint particleCount = std::transform_reduce(
-      ParticleSystemRegistry2D::particleSystems.begin(), ParticleSystemRegistry2D::subrange.begin(),
-      0u, std::plus<>(), [](const auto &ps) {
+      particleSystemRegistry.particleSystems.begin(), transparentEnd, 0u, std::plus<>(),
+      [](const auto &ps) {
         return ps->aliveCount;
       }
     );

@@ -7,32 +7,19 @@
 #ifndef COLLISIONS_H
 #define COLLISIONS_H
 
-#include "Engine2D/Physics/Collider2D.hpp"
+#include <glm/vec2.hpp>
 
 namespace Engine2D::Physics {
+  class Collider2D;
+
   class Collisions {
     friend class Physics2D;
-    friend class CollisionGrid;
 
-    /**
-     * Checks if the given rigidbodies collide
-     * @param col1 The first rigidbody
-     * @param col2 The second rigidbody
-     * @param normal The normal of the collision, calculated in the function's body
-     * @param depth The depth of the collision, calculated in the function's body
-     * @return True if they collide, false if not
-     */
+    /// Checks if the given rigidbodies collide
     [[nodiscard]] static bool collide(
       const Collider2D *col1, const Collider2D *col2, glm::vec<2, double> *normal, double *depth
     );
-    /**
-     * Computes the number of contact points between two rigidbodies when they collide
-     * @param col1 The first rigidbody
-     * @param col2 The second rigidbody
-     * @param contactPoint1 The first contact point, calculated in the function's body
-     * @param contactPoint2 The first contact point, calculated in the function's body
-     * @param contactCount The number of contact points, either 1 or 2, calculated in the function's body
-     */
+    /// Computes the number of contact points between two rigidbodies when they collide
     static void findContactPoints(
       const Collider2D *col1, const Collider2D *col2, glm::vec2 *contactPoint1, glm::vec2 *contactPoint2,
       uint8_t *contactCount

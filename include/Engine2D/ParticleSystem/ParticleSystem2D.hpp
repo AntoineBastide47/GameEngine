@@ -26,10 +26,9 @@ namespace Engine2D {
 
   class ParticleSystem2D final : public Rendering::Renderable2D {
     SERIALIZE_PARTICLESYSTEM2D
-      friend class Game2D;
       friend class Entity2D;
-      friend class ParticleSystemRegistry2D;
       friend class Rendering::Renderer2D;
+      friend class ParticleSystemRegistry2D;
     public:
       enum BlendMode {
         Alpha, Additive, Multiply, PremultipliedAlpha, Subtractive, SoftAdditive, Opaque
@@ -75,8 +74,6 @@ namespace Engine2D {
       /// How particles are blended on screen during rendering
       BlendMode blendMode;
 
-      ParticleSystem2D();
-
       /// Sets how long the particle system simulation will last
       void SetDuration(float duration);
       /// @returns How long the simulation of particles lasts
@@ -91,18 +88,19 @@ namespace Engine2D {
       /// @returns how long each particle lives for
       [[nodiscard]] float GetParticleLifetime() const;
     protected:
+      ParticleSystem2D();
       void forward() override;
       void recall() override;
     private:
       /// Represents a single particle and it's state
       struct Particle : Reflectable {
         SERIALIZE_PARTICLE
-        glm::vec2 position;
-        glm::vec2 scale;
-        glm::vec2 startVelocity;
-        glm::vec2 endVelocity;
-        float rotation;
-        float lifeTime;
+          glm::vec2 position;
+          glm::vec2 scale;
+          glm::vec2 startVelocity;
+          glm::vec2 endVelocity;
+          float rotation;
+          float lifeTime;
       };
 
       /// How long the particle system will be simulated

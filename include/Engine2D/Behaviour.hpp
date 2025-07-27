@@ -11,13 +11,10 @@
 
 #include "Engine2D/Component2D.hpp"
 #include "Engine2D/Transform2D.hpp"
+#include "Physics/Collider2D.hpp"
 #include "Behaviour.gen.hpp"
 
 namespace Engine2D {
-  namespace Physics {
-    class Collider2D;
-  }
-
   class Behaviour : public Component2D {
     SERIALIZE_BEHAVIOUR
     public:
@@ -46,6 +43,7 @@ namespace Engine2D {
     private:
       using Component2D::forward;
       using Component2D::recall;
+      using Component2D::active;
   };
 } // Engine2D
 

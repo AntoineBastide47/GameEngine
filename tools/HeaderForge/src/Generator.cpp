@@ -6,13 +6,11 @@
 
 #include <fstream>
 #include <ranges>
+#include <regex>
 #include <set>
 #include <sstream>
 
 #include "Generator.hpp"
-
-#include <regex>
-
 #include "Parser.hpp"
 
 namespace Engine::Reflection {
@@ -181,9 +179,9 @@ namespace Engine::Reflection {
       std::string upperName = name;
       std::ranges::transform(upperName, upperName.begin(), ::toupper);
 
-      const std::regex declaration("(class|struct)\\s+" + name);
+      const std::regex declaration("^\\s*(class|struct)\\s+" + name + "\\b");
       for (size_t i = 0; i < lines.size(); ++i) {
-        if (std::regex_match(lines[i], declaration)) {
+        if (std::regex_search(lines[i], declaration)) {
           // Find opening brace {
           size_t braceLine = i;
           while (braceLine < lines.size() && lines[braceLine].find('{') == std::string::npos)

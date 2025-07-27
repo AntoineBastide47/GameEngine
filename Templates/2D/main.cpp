@@ -1,6 +1,5 @@
 #include <cmrc/cmrc.hpp>
 #include <Engine2D/Game2D.hpp>
-#include <string>
 
 #include "{{PROJECT_NAME}}.hpp"
 

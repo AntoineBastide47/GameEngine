@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.9.2)
+project(GameEngine VERSION 0.9.3)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -55,7 +55,6 @@ add_library(Engine2D STATIC
     include/Engine2D/ParticleSystem/ParticleSystem2D.hpp
     src/Engine2D/ParticleSystem/ParticleSystemRegistry2D.cpp
     include/Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp
-    src/Engine2D/Behaviour.cpp
     include/Engine2D/Behaviour.hpp
     include/Engine/Macros/Utils.hpp
     include/Engine/Macros/PlatformDetection.hpp
@@ -91,6 +90,10 @@ add_library(Engine2D STATIC
     include/Engine/Reflection/Load.hpp
     include/Engine/Reflection/Deserializer.hpp
     include/Engine/Reflection/ReflectionFactory.hpp
+    src/Engine2D/Scene.cpp
+    include/Engine2D/Scene.hpp
+    src/Engine2D/SceneManager.cpp
+    include/Engine2D/SceneManager.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES

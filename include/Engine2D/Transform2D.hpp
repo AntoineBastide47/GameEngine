@@ -7,8 +7,8 @@
 #ifndef TRANSFORM2D_H
 #define TRANSFORM2D_H
 
-#include <glm/glm.hpp>
 #include <vector>
+#include <glm/glm.hpp>
 
 #include "Engine2D/Component2D.hpp"
 #include "Transform2D.gen.hpp"
@@ -21,7 +21,6 @@ namespace Engine2D {
    */
   class Transform2D final : public Component2D {
     SERIALIZE_TRANSFORM2D
-      friend class Game2D;
       friend class Entity2D;
     public:
       /// Equality operator to compare two Transform2D objects.

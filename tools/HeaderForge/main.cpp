@@ -8,7 +8,7 @@
 #include "../../include/Engine/Macros/PlatformDetection.hpp"
 
 #define ALL_IN_ONE_CPP "allInOne.cpp"
-#define ALL_IN_ONE_I "allInOne.i"
+#define ALL_IN_ONE_I "allInOne.ii"
 #define LAST_PROCESSING_TIMES_TXT "./Engine/lastProcessingTimes.txt"
 
 #ifdef ENGINE_MACOS
@@ -42,7 +42,7 @@ int main(const int argc, char *argv[]) {
   if (!fs::exists("./Engine"))
     fs::create_directory("./Engine");
 
-  bool overrideProcessingCheck = !fs::exists(LAST_PROCESSING_TIMES_TXT) || true;
+  bool overrideProcessingCheck = !fs::exists(LAST_PROCESSING_TIMES_TXT);
   std::fstream lastProcessingTimes(LAST_PROCESSING_TIMES_TXT, std::ios::in);
   std::unordered_map<std::string, std::string> fileProcessingTimes;
 

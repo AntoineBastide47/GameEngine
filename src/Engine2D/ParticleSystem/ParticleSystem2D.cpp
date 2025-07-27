@@ -7,9 +7,12 @@
 #include <random>
 #include <vector>
 
-#include "Engine/RenderingHeaders.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
+#include "Engine/RenderingHeaders.hpp"
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Game2D.hpp"
+#include "Engine2D/SceneManager.hpp"
+#include "Engine2D/Transform2D.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
@@ -20,12 +23,13 @@
 
 namespace Engine2D {
   ParticleSystem2D::ParticleSystem2D()
-    : loop(false), restart(false), useGlobalVelocities(false), simulateInWorldSpace(true), startDelay(0),
-      startPosition(glm::vec2(0)), startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)), startAngularVelocity(0),
-      endAngularVelocity(), startScale(glm::vec2(1)), endScale(glm::vec2(0)), startColor(glm::vec4(1)),
-      endColor(glm::vec4(1)), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1), blendMode(Alpha),
-      duration(1), particleLifetime(1), inverseLifetime(1), particles(0), head(0), maxParticles(0), aliveCount(0),
-      emissionAcc(0), durationAcc(0), quadVAO(0), quadVBO(0), instanceVBO(0), capacity(0), simulationFinished(false) {}
+    : Renderable2D(ParticleSystem), loop(false), restart(false), useGlobalVelocities(false), simulateInWorldSpace(true),
+      startDelay(0), startPosition(glm::vec2(0)), startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)),
+      startAngularVelocity(0), endAngularVelocity(), startScale(glm::vec2(1)), endScale(glm::vec2(0)),
+      startColor(glm::vec4(1)), endColor(glm::vec4(1)), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1),
+      blendMode(Alpha), duration(1), particleLifetime(1), inverseLifetime(1), particles(0), head(0), maxParticles(0),
+      aliveCount(0), emissionAcc(0), durationAcc(0), quadVAO(0), quadVBO(0), instanceVBO(0), capacity(0),
+      simulationFinished(false) {}
 
   void ParticleSystem2D::SetDuration(const float duration) {
     this->duration = duration;
@@ -63,18 +67,19 @@ namespace Engine2D {
   }
 
   void ParticleSystem2D::forward() {
-    ParticleSystemRegistry2D::addParticleSystem(this);
+    SceneManager::ActiveScene()->particleSystemRegistry.addParticleSystem(this);
   }
 
   void ParticleSystem2D::recall() {
-    ParticleSystemRegistry2D::removeParticleSystem(this);
+    SceneManager::ActiveScene()->particleSystemRegistry.removeParticleSystem(this);
   }
 
   void ParticleSystem2D::updateAndRender(const uint textureIndex, float *data) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     // Make sure we can update and render the particles
-    if (const bool canUpdateAndRender = Game2D::Initialized() && Game2D::MainCamera(); !canUpdateAndRender) {
+    if (const bool canUpdateAndRender = Game2D::Initialized() && SceneManager::ActiveScene()->MainCamera(); !
+      canUpdateAndRender) {
       simulationFinished = false;
       return;
     }
@@ -103,7 +108,7 @@ namespace Engine2D {
     }
 
     // Precompute reused data
-    const auto &cam = *Game2D::MainCamera();
+    const auto &cam = *Scene::MainCamera();
     const float dt = deltaTime * simulationSpeed;
     const glm::vec2 scaleDelta = startScale - endScale;
     const float angularVelDelta = endAngularVelocity - startAngularVelocity;

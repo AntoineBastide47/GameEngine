@@ -13,7 +13,8 @@
 #include "Camera2D.gen.hpp"
 
 namespace Engine2D {
-  class Game2D;
+  class Scene;
+  class Entity2D;
 }
 
 namespace Engine {
@@ -23,7 +24,8 @@ namespace Engine {
 namespace Engine2D::Rendering {
   class Camera2D final : public Component2D {
     SERIALIZE_CAMERA2D
-      friend class Engine2D::Game2D;
+      friend class Engine2D::Scene;
+      friend class Engine2D::Entity2D;
       friend class Engine::ResourceManager;
     public:
       struct ShakeWave : Reflectable {
@@ -54,10 +56,6 @@ namespace Engine2D::Rendering {
       std::vector<ShakeWave> shakeCoefficientsX;
       /// Coefficients that control the shake of the camera on the Y axis
       std::vector<ShakeWave> shakeCoefficientsY;
-
-      Camera2D();
-      Camera2D(float left, float right, float bottom, float top, float near = -1, float far = 1);
-      ~Camera2D() override = default;
 
       /// Starts the camera shake effect
       void Shake(float duration);
@@ -94,6 +92,9 @@ namespace Engine2D::Rendering {
       float m10, m11, m13;
 
       static uint ENGINE_DATA_BINDING_PORT;
+
+      Camera2D();
+      Camera2D(float left, float right, float bottom, float top, float near = -1, float far = 1);
 
       void initialize();
       void updateCamera();

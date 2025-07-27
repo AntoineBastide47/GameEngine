@@ -4,8 +4,8 @@
 // Date9/11/2024
 //
 
-#ifndef INPUTCONTEXTS_H
-#define INPUTCONTEXTS_H
+#ifndef INPUT_CONTEXTS_H
+#define INPUT_CONTEXTS_H
 
 namespace Engine::Input {
   /// The MouseContext struct provides a snapshot of the state of mouse buttons: pressed, help and release states.
@@ -17,13 +17,14 @@ namespace Engine::Input {
     /// Set to true when a mouse button is released after being pressed.
     bool released;
   };
+
   /**
    * The KeyboardContext struct provides a snapshot of the state of primary keyboard keys
    * (pressed, help and release states) and common modifier keys (shift, control, alt, super, etc.).
    * This struct can be used to manage keyboard input and determine which keys or modifiers
    * are active, as well as the state of lock keys like caps lock and num lock.
    */
-  struct KeyboardAndMouseContext : KeyAndButtonContext {
+  struct KeyboardAndMouseContext final : KeyAndButtonContext {
     /// Set to true if the left shift key is currently held down.
     bool leftShiftPressed;
     /// Set to true if the right shift key is currently held down.
@@ -53,8 +54,9 @@ namespace Engine::Input {
     /// Set to true if Num Lock is currently held down.
     bool numLockPressed;
   };
+
   /// The MouseScroll struct provides a snapshot of the state of the mouse scroll: up and down.
-  struct MouseScroll {
+  struct MouseScroll final {
     /// Set to true when scrolling upwards.
     bool up;
     /// Set to true when scrolling downwards.
@@ -62,4 +64,4 @@ namespace Engine::Input {
   };
 }
 
-#endif //INPUTCONTEXTS_H
+#endif //INPUT_CONTEXTS_H

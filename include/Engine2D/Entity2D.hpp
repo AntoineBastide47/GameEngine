@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 
-#include "Engine/Macros/Profiling.hpp"
 #include "Engine/Reflection/Reflectable.hpp"
 #include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Component2D.hpp"
@@ -30,10 +29,9 @@ namespace Engine2D {
   /// Entity2D represents objects in the scene
   class Entity2D final : public Engine::Reflection::Reflectable {
     SERIALIZE_ENTITY2D
-      friend class Game2D;
+      friend class Scene;
       friend class Transform2D;
       friend class Physics::Physics2D;
-      friend class Rendering::Renderable2D;
     public:
       /// The name of the entity.
       std::string name;
@@ -46,12 +44,19 @@ namespace Engine2D {
       /// @returns The pointer to this entity's transform component
       Transform2D *Transform() const;
 
+      /// Creates an entity of with the given name
+      static Entity2D *Instantiate(
+        const std::string &name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), Entity2D *parent = nullptr
+      );
+      /// @returns The entity with the given name if it was found, nullptr if not
+      static Entity2D *Find(const std::string &name);
+
       /// Creates a component of the given type and adds it to the entity
       template<typename T, typename... Args> requires
-        std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
+        std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>) &&
+        (!std::is_same_v<T, Physics::Collider2D>) && (!std::is_same_v<T, Rendering::Renderable2D>)
       T *AddComponent(Args &&... args) {
-        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
-
         auto component = std::unique_ptr<T>(new T(std::forward<Args>(args)...));
         component->setEntity(this);
         T *ptr = component.get();
@@ -72,13 +77,39 @@ namespace Engine2D {
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
       [[nodiscard]] T *GetComponent() const {
-        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
-
         if constexpr (std::is_same_v<T, Transform2D>)
           return transform.get();
         for (auto &component: components)
           if (auto casted = dynamic_cast<T *>(component.get()))
             return casted;
+        return nullptr;
+      }
+
+      /**
+       * Try's to find a component of the given type in the current entity's children recursively
+       * @tparam T The type of the component to find, must inherit from Component2D
+       * @return The first component that matches the given type found in the current entity's children, nullptr if none were found
+       */
+      template<typename T> requires std::is_base_of_v<Component2D, T>
+      [[nodiscard]] T *GetComponentInChildren() const {
+        if (T *local = GetComponent<T>(); local)
+          return local;
+
+        std::function<T*(const Entity2D *)> recurse = [&](const Entity2D *entity) -> T * {
+          if (T *c = entity->GetComponent<T>())
+            return c;
+
+          for (const auto &child: *entity->transform)
+            if (T *c = recurse(child))
+              return c;
+
+          return nullptr;
+        };
+
+        for (const auto &child: *transform)
+          if (T *c = recurse(child))
+            return c;
+
         return nullptr;
       }
 
@@ -89,16 +120,12 @@ namespace Engine2D {
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
       [[nodiscard]] bool HasComponent() const {
-        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
-
         return GetComponent<T>() != nullptr;
       }
 
       /// Removes the given component to the current entity
       template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
       void RemoveComponent(const T *component) {
-        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
-
         if constexpr (std::is_base_of_v<Behaviour, T>) {
           const auto behaviour = static_cast<Behaviour *>(component);
           behaviour->OnDestroy();
@@ -120,18 +147,39 @@ namespace Engine2D {
       /**
        * Try's to find multiple components of the given type on the current entity
        * @tparam T The type of the component to find, must inherit from Component2D
-       * @return The components that match the given type found on the current entity, nullptr if none were found
+       * @return The list of  components that match the given type found on the current entity
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
       [[nodiscard]] std::vector<T *> GetComponents() const {
-        ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
-
         if constexpr (std::is_same_v<T, Transform2D>)
           return {transform.get()};
-        std::vector<std::shared_ptr<T>> res;
+        std::vector<T *> res;
         for (auto &component: components)
           if (auto casted = dynamic_cast<T *>(component.get()))
             res.push_back(casted);
+        return res;
+      }
+
+      /**
+       * Try's to find multiple components of the given type in the current entity's children recursively
+       * @tparam T The type of the component to find, must inherit from Component2D
+       * @return The list of components that match the given type found in the current entity's children
+       */
+      template<typename T> requires std::is_base_of_v<Component2D, T>
+      [[nodiscard]] std::vector<T *> GetComponentsInChildren() const {
+        std::vector<T *> res;
+
+        std::function<void(const Entity2D *)> recurse = [&](const Entity2D *entity) {
+          auto components = entity->GetComponents<T>();
+          res.insert(res.end(), components.begin(), components.end());
+
+          for (const auto &child: *entity->transform)
+            recurse(child);
+        };
+
+        for (const auto &child: *transform)
+          recurse(child);
+
         return res;
       }
 
@@ -169,8 +217,8 @@ namespace Engine2D {
       bool isStatic;
       /// Whether this entity is now destroyed and no longer active
       bool destroyed;
-      /// How many frames ago was this entity destroyed
-      int framesSinceDestroyed;
+      /// How long an entity stays alive after being flagged to be destroyed
+      float timeToLive;
 
       /// The transform representing the position, rotation, and scale of the entity in the game world.
       std::unique_ptr<Transform2D> transform;

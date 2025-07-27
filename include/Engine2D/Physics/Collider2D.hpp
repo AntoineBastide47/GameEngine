@@ -14,8 +14,8 @@
 #include "Engine/Types/float01.hpp"
 #include "Collider2D.gen.hpp"
 
+
 namespace Engine2D {
-  class Game2D;
   class Entity2D;
 }
 
@@ -32,10 +32,9 @@ namespace Engine2D::Physics {
   class Collider2D : public Component2D {
     SERIALIZE_COLLIDER2D
       friend class Physics2D;
-      friend class CollisionGrid;
       friend class Collisions;
       friend class Rigidbody2D;
-      friend class Engine2D::Game2D;
+      friend class CollisionGrid;
       friend class Engine2D::Entity2D;
     public:
       enum Type {
@@ -106,11 +105,12 @@ namespace Engine2D::Physics {
   /** Collider for 2D physics representing a circle. */
   class CircleCollider2D final : public Collider2D {
     SERIALIZE_CIRCLECOLLIDER2D
+      friend class Engine2D::Entity2D;
     public:
       /// The radius of this collider
       float radius;
-      CircleCollider2D();
     protected:
+      CircleCollider2D();
       void computeAABB() override;
       glm::vec2 getScale() const override;
   };
@@ -118,13 +118,14 @@ namespace Engine2D::Physics {
   /** Collider for 2D physics representing a rectangle. */
   class BoxCollider2D final : public Collider2D {
     SERIALIZE_BOXCOLLIDER2D
+      friend class Engine2D::Entity2D;
     public:
       /// The height of this collider
       float width;
       /// The width of this collider
       float height;
-      BoxCollider2D();
     protected:
+      BoxCollider2D();
       void computeAABB() override;
       glm::vec2 getScale() const override;
   };
@@ -132,10 +133,11 @@ namespace Engine2D::Physics {
   /** Collider for 2D physics representing a polygon. */
   class PolygonCollider2D final : public Collider2D {
     SERIALIZE_POLYGONCOLLIDER2D
+      friend class Engine2D::Entity2D;
     public:
       using Collider2D::vertices;
-      PolygonCollider2D();
     protected:
+      PolygonCollider2D();
       void computeAABB() override;
   };
 }

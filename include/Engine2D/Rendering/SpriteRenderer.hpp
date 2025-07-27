@@ -29,8 +29,6 @@ namespace Engine2D::Rendering {
       friend class Renderer2D;
       friend class Engine2D::Entity2D;
     public:
-      SpriteRenderer();
-
       /// Sets the color of the sprite
       void SetColor(const glm::vec<4, float> &color);
       /// @returns the color of the sprite
@@ -46,6 +44,8 @@ namespace Engine2D::Rendering {
       glm::vec<2, bool> flip;
       /// Whether the sprite renderer was updated
       bool dirty;
+
+      SpriteRenderer();
 
       void forward() override;
       void recall() override;

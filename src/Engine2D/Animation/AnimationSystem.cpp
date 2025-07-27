@@ -5,7 +5,6 @@
 //
 
 #include "Engine2D/Animation/AnimationSystem.hpp"
-
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Animation/Animator2D.hpp"
 
@@ -20,7 +19,7 @@ namespace Engine2D::Animation {
       std::erase(animators, animator);
   }
 
-  void AnimationSystem::update() {
+  void AnimationSystem::update() const {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
     for (const auto &animator: animators)
       animator->update();

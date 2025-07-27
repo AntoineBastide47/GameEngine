@@ -7,8 +7,11 @@
 #include "Engine2D/Animation/Animator2D.hpp"
 #include "Engine/ResourceManager.hpp"
 #include "Engine/Macros/Assert.hpp"
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
+#include "Engine2D/Scene.hpp"
+#include "Engine2D/SceneManager.hpp"
 #include "Engine2D/Animation/AnimationSystem.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
@@ -130,21 +133,27 @@ namespace Engine2D::Animation {
     const std::string &from, const std::string &to, const std::string &parameter, const AnimationCondition condition,
     const float threshold, bool hasExitTime, const float exitTime
   ) {
-    ENGINE_ASSERT(animations.contains(from), "Cannot create a transition to target non existent " + from + " animation.");
+    ENGINE_ASSERT(
+      animations.contains(from), "Cannot create a transition to target non existent " + from + " animation."
+    );
     ENGINE_ASSERT(animations.contains(to), "Cannot create a transition to target non existent " + to + " animation.");
     ENGINE_ASSERT(
-      parameters.contains(parameter), "Cannot create a transition that target's non existent " + parameter + " parameter"
+      parameters.contains(parameter),
+      "Cannot create a transition that target's non existent " + parameter + " parameter"
     );
 
     const Parameter &param = parameters[parameter];
     bool invalidCondition = false;
     switch (param.type) {
-      case BOOL: invalidCondition = condition != IF_TRUE && condition != IF_FALSE;
+      case BOOL:
+        invalidCondition = condition != IF_TRUE && condition != IF_FALSE;
         break;
       case INT:
-      case FLOAT: invalidCondition = condition > NOT_EQUAL;
+      case FLOAT:
+        invalidCondition = condition > NOT_EQUAL;
         break;
-      case TRIGGER: invalidCondition = condition != IF_TRIGGER;
+      case TRIGGER:
+        invalidCondition = condition != IF_TRIGGER;
         break;
     }
 
@@ -165,30 +174,39 @@ namespace Engine2D::Animation {
   }
 
   void Animator2D::RemoveAnimationTransition(const std::string &from, const int index) {
-    ENGINE_ASSERT(animations.contains(from), "Cannot create a transition to target non existent " + from + " animation.");
+    ENGINE_ASSERT(
+      animations.contains(from), "Cannot create a transition to target non existent " + from + " animation."
+    );
     ENGINE_ASSERT(0 <= index && index < transitions[from].size(), "Invalid transition index: " + std::to_string(index));
 
     transitions[from].erase(transitions[from].begin() + index);
   }
 
   void Animator2D::AddAnimationTransitionCondition(
-    const std::string &from, const int index, const std::string &parameter, AnimationCondition condition, float threshold
+    const std::string &from, const int index, const std::string &parameter, AnimationCondition condition,
+    float threshold
   ) {
-    ENGINE_ASSERT(animations.contains(from), "Cannot create a transition to target non existent " + from + " animation.");
+    ENGINE_ASSERT(
+      animations.contains(from), "Cannot create a transition to target non existent " + from + " animation."
+    );
     ENGINE_ASSERT(0 <= index && index < transitions[from].size(), "Invalid transition index: " + std::to_string(index));
     ENGINE_ASSERT(
-      parameters.contains(parameter), "Cannot create a transition that target's non existent " + parameter + " parameter"
+      parameters.contains(parameter),
+      "Cannot create a transition that target's non existent " + parameter + " parameter"
     );
 
     const Parameter &param = parameters[parameter];
     bool invalidCondition = false;
     switch (param.type) {
-      case BOOL: invalidCondition = condition != IF_TRUE && condition != IF_FALSE;
+      case BOOL:
+        invalidCondition = condition != IF_TRUE && condition != IF_FALSE;
         break;
       case INT:
-      case FLOAT: invalidCondition = condition > NOT_EQUAL;
+      case FLOAT:
+        invalidCondition = condition > NOT_EQUAL;
         break;
-      case TRIGGER: invalidCondition = condition != IF_TRIGGER;
+      case TRIGGER:
+        invalidCondition = condition != IF_TRIGGER;
         break;
     }
 
@@ -218,10 +236,13 @@ namespace Engine2D::Animation {
   void Animator2D::RemoveAnimationTransitionCondition(
     const std::string &from, const int index, const std::string &parameter
   ) {
-    ENGINE_ASSERT(animations.contains(from), "Cannot create a transition to target non existent " + from + " animation.");
+    ENGINE_ASSERT(
+      animations.contains(from), "Cannot create a transition to target non existent " + from + " animation."
+    );
     ENGINE_ASSERT(0 <= index && index < transitions[from].size(), "Invalid transition index: " + std::to_string(index));
     ENGINE_ASSERT(
-      parameters.contains(parameter), "Cannot create a transition that target's non existent " + parameter + " parameter"
+      parameters.contains(parameter),
+      "Cannot create a transition that target's non existent " + parameter + " parameter"
     );
 
     std::erase_if(
@@ -233,25 +254,35 @@ namespace Engine2D::Animation {
 
   std::string Animator2D::AnimationConditionToString(const AnimationCondition condition) {
     switch (condition) {
-      case LESS_THAN: return "LESS_THAN";
-      case LESS_OR_EQUAL: return "LESS_OR_EQUAL";
-      case GREATER_THAN: return "GREATER_THAN";
-      case GREATER_OR_EQUAL: return "GREATER_OR_EQUAL";
-      case EQUAL: return "EQUAL";
-      case NOT_EQUAL: return "NOT_EQUAL";
-      case IF_TRUE: return "IF_TRUE";
-      case IF_FALSE: return "IF_FALSE";
-      case IF_TRIGGER: return "IF_TRIGGER";
-      default: return "UNKNOWN";
+      case LESS_THAN:
+        return "LESS_THAN";
+      case LESS_OR_EQUAL:
+        return "LESS_OR_EQUAL";
+      case GREATER_THAN:
+        return "GREATER_THAN";
+      case GREATER_OR_EQUAL:
+        return "GREATER_OR_EQUAL";
+      case EQUAL:
+        return "EQUAL";
+      case NOT_EQUAL:
+        return "NOT_EQUAL";
+      case IF_TRUE:
+        return "IF_TRUE";
+      case IF_FALSE:
+        return "IF_FALSE";
+      case IF_TRIGGER:
+        return "IF_TRIGGER";
+      default:
+        return "UNKNOWN";
     }
   }
 
   void Animator2D::forward() {
-    AnimationSystem::addAnimator(this);
+    SceneManager::ActiveScene()->animationSystem.addAnimator(this);
   }
 
   void Animator2D::recall() {
-    AnimationSystem::removeAnimator(this);
+    SceneManager::ActiveScene()->animationSystem.removeAnimator(this);
   }
 
   void Animator2D::update() {
@@ -383,11 +414,16 @@ namespace Engine2D::Animation {
 
   std::string Animator2D::parameterTypeToString(const ParameterType type) {
     switch (type) {
-      case BOOL: return "BOOL";
-      case INT: return "INT";
-      case FLOAT: return "FLOAT";
-      case TRIGGER: return "TRIGGER";
-      default: return "UNKNOWN";
+      case BOOL:
+        return "BOOL";
+      case INT:
+        return "INT";
+      case FLOAT:
+        return "FLOAT";
+      case TRIGGER:
+        return "TRIGGER";
+      default:
+        return "UNKNOWN";
     }
   }
 }

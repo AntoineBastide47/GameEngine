@@ -9,7 +9,6 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Types/float01.hpp"
 #include "Sprite.gen.hpp"
 
 namespace Engine::Rendering {

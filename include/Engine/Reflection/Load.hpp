@@ -9,9 +9,9 @@
 
 #include <glm/glm.hpp>
 
-#include "Concepts.hpp"
-#include "ReflectionFactory.hpp"
 #include "Engine/Data/JSON.hpp"
+#include "Engine/Reflection/Concepts.hpp"
+#include "Engine/Reflection/ReflectionFactory.hpp"
 
 namespace Engine::Reflection {
   template<typename T> static void _e_loadImpl(

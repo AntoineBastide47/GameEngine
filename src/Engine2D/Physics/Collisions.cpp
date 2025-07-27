@@ -76,56 +76,57 @@ namespace Engine2D::Physics {
     if (distance >= combinedRadius)
       return false;
 
-    *normal = glm::normalize(centerB - centerA);
+    if (std::fabs(distance) < 1e-6f)
+      *normal = {1, 0};
+    else
+      *normal = -glm::normalize(centerB - centerA);
+
     *depth = combinedRadius - distance;
     return true;
   }
 
   bool Collisions::polygonsIntersect(
-    const std::vector<glm::vec2> &verticesA, const glm::vec2 positionA, const std::vector<glm::vec2> &verticesB,
-    const glm::vec2 positionB, glm::vec<2, double> *normal, double *depth
+    const std::vector<glm::vec2> &verticesA, const glm::vec2 positionA,
+    const std::vector<glm::vec2> &verticesB, const glm::vec2 positionB,
+    glm::vec<2, double> *normal, double *depth
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
+    const size_t countA = verticesA.size();
+    const size_t countB = verticesB.size();
+    if (countA == 0 || countB == 0)
+      return false;
+
+    *depth = std::numeric_limits<double>::max();
     double minA, maxA, minB, maxB, axisDepth;
     glm::vec2 pointA, pointB, axis;
 
-    for (int i = 0; i < verticesA.size(); ++i) {
-      pointA = verticesA[i];
-      pointB = verticesA[(i + 1) % verticesA.size()];
-      axis = glm::normalize(glm::perpendicular(pointB - pointA));
+    auto testAxes = [&](const std::vector<glm::vec2> &poly) -> bool {
+      for (size_t i = 0; i < poly.size(); ++i) {
+        pointA = poly[i];
+        pointB = poly[(i + 1) % poly.size()];
+        axis = glm::normalize(glm::perpendicular(pointB - pointA));
 
-      projectVertices(verticesA, axis, &minA, &maxA);
-      projectVertices(verticesB, axis, &minB, &maxB);
+        projectVertices(verticesA, axis, &minA, &maxA);
+        projectVertices(verticesB, axis, &minB, &maxB);
 
-      if (minA >= maxB || minB >= maxA)
-        return false;
+        if (minA >= maxB || minB >= maxA)
+          return false;
 
-      if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
-        *depth = axisDepth;
-        *normal = axis;
+        axisDepth = std::min(maxB - minA, maxA - minB);
+        if (axisDepth < *depth) {
+          *depth = axisDepth;
+          *normal = axis;
+        }
       }
-    }
+      return true;
+    };
 
-    for (int i = 0; i < verticesB.size(); ++i) {
-      pointA = verticesB[i];
-      pointB = verticesB[(i + 1) % verticesB.size()];
-      axis = glm::normalize(glm::perpendicular(pointB - pointA));
+    if (!testAxes(verticesA) || !testAxes(verticesB))
+      return false;
 
-      projectVertices(verticesA, axis, &minA, &maxA);
-      projectVertices(verticesB, axis, &minB, &maxB);
-
-      if (minA >= maxB || minB >= maxA)
-        return false;
-
-      if (axisDepth = std::min(maxB - minA, maxA - minB); axisDepth < *depth) {
-        *depth = axisDepth;
-        *normal = axis;
-      }
-    }
-
-    if (const glm::vec<2, double> direction = positionB - positionA; glm::dot(*normal, direction) < 0.0f)
-      *normal *= -1.0f;
+    if (glm::dot(*normal, glm::vec<2, double>(positionB - positionA)) >= 0.0)
+      *normal = -*normal;
 
     return true;
   }
@@ -242,53 +243,90 @@ namespace Engine2D::Physics {
     }
   }
 
-  void Collisions::findPolygonsContactPoint(
-    const std::vector<glm::vec2> &verticesA, const std::vector<glm::vec2> &verticesB, glm::vec2 *contactPoint1,
-    glm::vec2 *contactPoint2, uint8_t *contactCount
+  inline void segmentSegmentClosestPoints(
+    const glm::vec<2, double> &p1, const glm::vec<2, double> &q1, const glm::vec<2, double> &p2,
+    const glm::vec<2, double> &q2, double *dist2, glm::vec<2, double> *c1, glm::vec<2, double> *c2
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    const glm::vec<2, double> d1 = q1 - p1;
+    const glm::vec<2, double> d2 = q2 - p2;
+    const glm::vec<2, double> r = p1 - p2;
 
-    double minDistanceSquared = std::numeric_limits<double>::max();
+    const double a = glm::dot(d1, d1);
+    const double e = glm::dot(d2, d2);
+    const double f = glm::dot(d2, r);
 
-    for (size_t i = 0; i < verticesA.size(); ++i) {
-      const glm::vec2 p = verticesA[i];
-      for (size_t j = 0; j < verticesB.size(); ++j) {
-        const glm::vec2 va = verticesB[j];
-        const glm::vec2 vb = verticesB[(j + 1) % verticesB.size()];
+    double s, t;
 
-        double distanceSquared;
-        glm::vec2 contact;
-        pointSegmentDistance(p, va, vb, &distanceSquared, &contact);
-
-        if (distanceSquared == minDistanceSquared && glm::approx_equals(contact, *contactPoint1)) {
-          *contactCount = 2;
-          *contactPoint2 = contact;
-        } else if (distanceSquared < minDistanceSquared) {
-          minDistanceSquared = distanceSquared;
-          *contactCount = 1;
-          *contactPoint1 = contact;
+    if (a <= 1e-12 && e <= 1e-12) {
+      s = t = 0.0;
+    } else if (a <= 1e-12) {
+      s = 0.0;
+      t = glm::clamp(f / e, 0.0, 1.0);
+    } else {
+      const double c = glm::dot(d1, r);
+      if (e <= 1e-12) {
+        t = 0.0;
+        s = glm::clamp(-c / a, 0.0, 1.0);
+      } else {
+        const double b = glm::dot(d1, d2);
+        const double denom = a * e - b * b;
+        s = denom == 0.0 ? 0.0 : glm::clamp((b * f - c * e) / denom, 0.0, 1.0);
+        t = (b * s + f) / e;
+        if (t < 0.0) {
+          t = 0.0;
+          s = glm::clamp(-c / a, 0.0, 1.0);
+        } else if (t > 1.0) {
+          t = 1.0;
+          s = glm::clamp((b - c) / a, 0.0, 1.0);
         }
       }
     }
 
-    for (size_t i = 0; i < verticesB.size(); ++i) {
-      const glm::vec2 p = verticesB[i];
-      for (size_t j = 0; j < verticesA.size(); ++j) {
-        const glm::vec2 va = verticesA[j];
-        const glm::vec2 vb = verticesA[(j + 1) % verticesA.size()];
+    *c1 = p1 + d1 * s;
+    *c2 = p2 + d2 * t;
+    *dist2 = glm::dot(*c1 - *c2, *c1 - *c2);
+  }
 
-        double distanceSquared;
-        glm::vec2 contact;
-        pointSegmentDistance(p, va, vb, &distanceSquared, &contact);
+  void Collisions::findPolygonsContactPoint(
+    const std::vector<glm::vec2> &verticesA,
+    const std::vector<glm::vec2> &verticesB,
+    glm::vec2 *contactPoint1, glm::vec2 *contactPoint2,
+    uint8_t *contactCount
+  ) {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
-        if (distanceSquared == minDistanceSquared && glm::approx_equals(contact, *contactPoint1)) {
-          *contactCount = 2;
-          *contactPoint2 = contact;
-        } else if (distanceSquared < minDistanceSquared) {
-          minDistanceSquared = distanceSquared;
-          *contactCount = 1;
-          *contactPoint1 = contact;
-        }
+    constexpr double EPS = 1e-9;
+    double minDist2 = std::numeric_limits<double>::max();
+    *contactCount = 0;
+
+    auto consider = [&](const double d2, const glm::vec2 &p) {
+      if (d2 < minDist2 - EPS) {
+        minDist2 = d2;
+        *contactCount = 1;
+        *contactPoint1 = p;
+      } else if (std::abs(d2 - minDist2) <= EPS &&
+                 glm::distance2(p, *contactPoint1) > EPS &&
+                 *contactCount == 1) {
+        *contactCount = 2;
+        *contactPoint2 = p;
+      }
+    };
+
+    const size_t nA = verticesA.size();
+    const size_t nB = verticesB.size();
+
+    for (size_t i = 0; i < nA; ++i) {
+      const glm::vec2 a0 = verticesA[i];
+      const glm::vec2 a1 = verticesA[(i + 1) % nA];
+
+      for (size_t j = 0; j < nB; ++j) {
+        const glm::vec2 b0 = verticesB[j];
+        const glm::vec2 b1 = verticesB[(j + 1) % nB];
+
+        double d2;
+        glm::vec<2, double> cA, cB;
+        segmentSegmentClosestPoints(a0, a1, b0, b1, &d2, &cA, &cB);
+        consider(d2, 0.5 * (cA + cB));
       }
     }
   }

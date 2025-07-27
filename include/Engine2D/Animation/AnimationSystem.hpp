@@ -6,11 +6,11 @@
 
 #ifndef ANIMATION_SYSTEM_HPP
 #define ANIMATION_SYSTEM_HPP
+
 #include <vector>
 
 namespace Engine2D {
-  class Game2D;
-  class Entity2D;
+  class Scene;
 }
 
 namespace Engine2D::Animation {
@@ -18,13 +18,13 @@ namespace Engine2D::Animation {
 
   class AnimationSystem {
     friend class Animator2D;
-    friend class Engine2D::Game2D;
+    friend class Engine2D::Scene;
 
-    inline static std::vector<Animator2D *> animators;
+    std::vector<Animator2D *> animators;
 
-    static void addAnimator(Animator2D *animator);
-    static void removeAnimator(Animator2D *animator);
-    static void update();
+    void addAnimator(Animator2D *animator);
+    void removeAnimator(Animator2D *animator);
+    void update() const;
   };
 }
 

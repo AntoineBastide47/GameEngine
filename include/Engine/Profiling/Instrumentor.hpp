@@ -17,14 +17,14 @@ namespace Engine2D {
 }
 
 namespace Engine::Profiling {
-  struct ProfileResult {
+  struct ProfileResult final {
     std::string name;
     long long start, end;
     uint32_t threadID;
     Settings::Profiling::ProfilingLevel level;
   };
 
-  class Instrumentor {
+  class Instrumentor final {
     friend class Timer;
     friend class Engine2D::Game2D;
 

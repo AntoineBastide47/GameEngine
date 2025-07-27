@@ -24,7 +24,6 @@ namespace Engine2D {
   class Component2D : public Engine::Reflection::Reflectable {
     SERIALIZE_COMPONENT2D
       friend class Entity2D;
-      friend class Game2D;
       friend class Transform2D;
     public:
       ~Component2D() override = default;

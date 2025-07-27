@@ -8,14 +8,9 @@
 #define GAME2D_H
 
 #include <thread>
-#include <unordered_set>
 #include <cmrc/cmrc.hpp>
 
 #include "Engine/RenderingHeaders.hpp"
-#include "Engine/Input/InputContexts.hpp"
-#include "Engine2D/Entity2D.hpp"
-#include "Engine2D/Rendering/Camera2D.hpp"
-#include "Game2D.gen.hpp"
 
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
@@ -30,11 +25,11 @@ namespace Engine {
 
 namespace Engine2D {
   /** Game2D is the class that represents a game and manages each part of it. */
-  class Game2D : public Engine::Reflection::Reflectable {
-    SERIALIZE_GAME2D
-      friend class Entity2D;
-      friend class Engine::Settings;
-      friend class Engine::ResourceManager;
+  class Game2D {
+    friend class Scene;
+    friend class Entity2D;
+    friend class Engine::Settings;
+    friend class Engine::ResourceManager;
     public:
       /// @returns True if the Game2D instance has been initialized, False if not
       [[nodiscard]] static bool Initialized();
@@ -50,8 +45,6 @@ namespace Engine2D {
       [[nodiscard]] static float DeltaTime();
       /// @returns The fixed time span between the physics updates
       [[nodiscard]] static float FixedDeltaTime();
-      /// @returns A reference to the main camera of the game
-      [[nodiscard]] static Rendering::Camera2D *MainCamera();
 
       /**
        * Set's the given resource loader of the game to load embedded resources
@@ -60,15 +53,8 @@ namespace Engine2D {
        */
       void SetGameResourceLoader(ResourceLoader resourceLoader);
 
-      /// Closes/Quits the game
-      static void Close(Engine::Input::KeyboardAndMouseContext context);
-      /// Creates an entity of with the given name
-      static Entity2D *AddEntity(
-        const std::string &name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
-        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), Entity2D *parent = nullptr
-      );
-      /// @returns The entity with the given name if it was found, nullptr if not
-      static Entity2D *Find(const std::string &name);
+      /// Quits the game
+      static void Quit();
       /**
        * Start's and Run's the current game
        * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
@@ -111,19 +97,6 @@ namespace Engine2D {
       inline static Game2D *instance;
       /// The resource loader for embedded resources
       ResourceLoader resourceLoader;
-      /// The main camera of the game
-      Rendering::Camera2D *cameraComponent;
-
-      /// All the entities currently in the game
-      std::vector<std::unique_ptr<Entity2D>> entities;
-      /// Entities scheduled to be added to the game
-      std::vector<std::unique_ptr<Entity2D>> entitiesToAdd;
-      /// Entities scheduled to be removed from the game
-      std::unordered_set<Entity2D *> entitiesToRemove;
-      #if MULTI_THREAD
-      /// Entities that should be removed from memory
-      std::unordered_set<Entity2D *> entitiesToDestroy;
-      #endif
 
       /// The time during two frames
       float deltaTime;
@@ -166,14 +139,6 @@ namespace Engine2D {
       void initialize();
       /// Processes all the inputs to the game
       static void processInput();
-      /// Update the game
-      void update();
-      /// Simulates a step of the physics simulation
-      void fixedUpdate();
-      /// Animates all entities
-      static void animate();
-      /// Renders the game
-      void render() const;
       /// Limits the frame rate of the game if needed
       void limitFrameRate() const;
       /// Quits the game
@@ -181,13 +146,6 @@ namespace Engine2D {
 
       /// Loads the given resource from the embedded resources
       [[nodiscard]] cmrc::file loadResource(const std::string &path) const;
-
-      /// Adds all the entity scheduled for adding
-      void addEntities();
-      /// Removes all the entity scheduled for removal
-      void removeEntities();
-      /// Removes an entity from the game
-      static void removeEntity(Entity2D *entity);
 
       // OpenGL callbacks
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);

@@ -5,6 +5,7 @@
 //
 
 #include "Engine2D/Physics/CollisionGrid.hpp"
+#include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine2D/Physics/Collider2D.hpp"
 

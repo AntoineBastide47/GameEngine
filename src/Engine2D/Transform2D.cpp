@@ -7,11 +7,12 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
 
+#include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Transform2D.hpp"
-#include "Engine2D/Game2D.hpp"
 #include "Engine/Log.hpp"
 #include "Engine/Macros/Profiling.hpp"
-#include "Engine2D/Physics/Collider2D.hpp"
+#include "Engine2D/Game2D.hpp"
+#include "Engine2D/SceneManager.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 
 namespace Engine2D {
@@ -291,8 +292,8 @@ namespace Engine2D {
 
     // Determine if the sprite is currently visible to the camera
     dirty = true;
-    visible = Game2D::Initialized() && Game2D::MainCamera() &&
-              Game2D::MainCamera()->IsInViewport(worldPosition, worldScale);
+    visible = Game2D::Initialized() && Scene::MainCamera() &&
+              Scene::MainCamera()->IsInViewport(worldPosition, worldScale);
 
     // Update the children of this transform as they depend on the transform of their parent
     for (const auto child: childList)

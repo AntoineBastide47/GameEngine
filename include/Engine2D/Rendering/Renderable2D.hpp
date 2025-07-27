@@ -9,17 +9,23 @@
 
 #include <memory>
 
-#include "Engine/Rendering/Shader.hpp"
 #include "Engine2D/Component2D.hpp"
-#include "Engine2D/Rendering/Sprite.hpp"
 #include "Renderable2D.gen.hpp"
 
+namespace Engine::Rendering {
+  class Shader;
+}
+
 namespace Engine2D::Rendering {
+  class Sprite;
+
   class Renderable2D : public Component2D {
     SERIALIZE_RENDERABLE2D
       friend class Renderer2D;
     public:
-      Renderable2D();
+      enum RenderableType {
+        None, SpriteRenderer, ParticleSystem
+      };
 
       /// Sets the shader that will be used for rendering
       /// @note Will not work outside OnInitialize if the entity is marked as static
@@ -40,6 +46,10 @@ namespace Engine2D::Rendering {
       Engine::Rendering::Shader *shader;
       Sprite *sprite;
       int16_t renderOrder;
+      RenderableType renderType;
+
+      Renderable2D();
+      explicit Renderable2D(RenderableType type);
   };
 }
 

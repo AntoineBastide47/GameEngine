@@ -6,6 +6,7 @@
 
 void {{PROJECT_NAME}}::OnInitialize() {
   Engine::Input::Keyboard::ESCAPE += [this](const Engine::Input::KeyboardAndMouseContext ctx) {
-    Close(ctx);
+    if (ctx.pressed)
+      Quit();
   };
 }
