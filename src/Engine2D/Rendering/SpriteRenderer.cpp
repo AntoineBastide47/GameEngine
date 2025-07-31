@@ -5,14 +5,12 @@
 //
 
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
-#include "Engine/ResourceManager.hpp"
-#include "Engine2D/Scene.hpp"
-#include "Engine2D/SceneManager.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 
 namespace Engine2D::Rendering {
   SpriteRenderer::SpriteRenderer()
-    : Renderable2D(RenderableType::SpriteRenderer), color({1, 1, 1, 1}), flip({0, 0}), dirty(false) {}
+    : Renderable2D(RenderableType::SpriteRenderer), color({1, 1, 1, 1}), flip({0, 0}), dirty(true) {}
 
   void SpriteRenderer::SetColor(const glm::vec<4, float> &color) {
     this->color = color;
@@ -33,10 +31,10 @@ namespace Engine2D::Rendering {
   }
 
   void SpriteRenderer::forward() {
-    SceneManager::ActiveScene()->renderingSystem.addRenderer(this);
+    Entity()->Scene()->renderingSystem.addRenderer(this);
   }
 
   void SpriteRenderer::recall() {
-    SceneManager::ActiveScene()->renderingSystem.removeRenderer(this);
+    Entity()->Scene()->renderingSystem.removeRenderer(this);
   }
 }

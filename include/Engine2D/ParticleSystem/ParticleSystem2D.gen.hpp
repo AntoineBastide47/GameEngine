@@ -11,6 +11,9 @@ namespace Engine::Reflection {
   void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \
     if (format == Engine::Reflection::Format::JSON) { \
       json = Engine::JSON::Object();\
+      Engine::Reflection::_e_saveImpl(active, format, json["active"]);\
+      Engine::Reflection::_e_saveImpl(renderOrder, format, json["renderOrder"]);\
+      Engine::Reflection::_e_saveImpl(renderType, format, json["renderType"]);\
       Engine::Reflection::_e_saveImpl(loop, format, json["loop"]);\
       Engine::Reflection::_e_saveImpl(restart, format, json["restart"]);\
       Engine::Reflection::_e_saveImpl(useGlobalVelocities, format, json["useGlobalVelocities"]);\
@@ -29,10 +32,17 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_saveImpl(emissionRate, format, json["emissionRate"]);\
       Engine::Reflection::_e_saveImpl(maxStartPositionOffset, format, json["maxStartPositionOffset"]);\
       Engine::Reflection::_e_saveImpl(blendMode, format, json["blendMode"]);\
+      Engine::Reflection::_e_saveImpl(duration, format, json["duration"]);\
+      Engine::Reflection::_e_saveImpl(particleLifetime, format, json["particleLifetime"]);\
+      Engine::Reflection::_e_saveImpl(maxParticles, format, json["maxParticles"]);\
+      Engine::Reflection::_e_saveImpl(simulationFinished, format, json["simulationFinished"]);\
     }\
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
+      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
+      Engine::Reflection::_e_loadImpl(renderOrder, format, json["renderOrder"]);\
+      Engine::Reflection::_e_loadImpl(renderType, format, json["renderType"]);\
       Engine::Reflection::_e_loadImpl(loop, format, json["loop"]);\
       Engine::Reflection::_e_loadImpl(restart, format, json["restart"]);\
       Engine::Reflection::_e_loadImpl(useGlobalVelocities, format, json["useGlobalVelocities"]);\
@@ -51,34 +61,11 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(emissionRate, format, json["emissionRate"]);\
       Engine::Reflection::_e_loadImpl(maxStartPositionOffset, format, json["maxStartPositionOffset"]);\
       Engine::Reflection::_e_loadImpl(blendMode, format, json["blendMode"]);\
+      Engine::Reflection::_e_loadImpl(duration, format, json["duration"]);\
+      Engine::Reflection::_e_loadImpl(particleLifetime, format, json["particleLifetime"]);\
+      Engine::Reflection::_e_loadImpl(maxParticles, format, json["maxParticles"]);\
+      Engine::Reflection::_e_loadImpl(simulationFinished, format, json["simulationFinished"]);\
     }\
   }\
   private: 
-
-  #define SERIALIZE_PARTICLE _e_SERIALIZE_RECORD \
-  static inline const bool _reg = [] {\
-    Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::ParticleSystem2D::Particle>("Engine2D::ParticleSystem2D::Particle");\
-    return true;\
-  }();\
-  void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \
-    if (format == Engine::Reflection::Format::JSON) { \
-      json = Engine::JSON::Object();\
-      Engine::Reflection::_e_saveImpl(position, format, json["position"]);\
-      Engine::Reflection::_e_saveImpl(scale, format, json["scale"]);\
-      Engine::Reflection::_e_saveImpl(startVelocity, format, json["startVelocity"]);\
-      Engine::Reflection::_e_saveImpl(endVelocity, format, json["endVelocity"]);\
-      Engine::Reflection::_e_saveImpl(rotation, format, json["rotation"]);\
-      Engine::Reflection::_e_saveImpl(lifeTime, format, json["lifeTime"]);\
-    }\
-  }\
-  void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
-    if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(position, format, json["position"]);\
-      Engine::Reflection::_e_loadImpl(scale, format, json["scale"]);\
-      Engine::Reflection::_e_loadImpl(startVelocity, format, json["startVelocity"]);\
-      Engine::Reflection::_e_loadImpl(endVelocity, format, json["endVelocity"]);\
-      Engine::Reflection::_e_loadImpl(rotation, format, json["rotation"]);\
-      Engine::Reflection::_e_loadImpl(lifeTime, format, json["lifeTime"]);\
-    }\
-  }
 } // namespace Engine::Reflection

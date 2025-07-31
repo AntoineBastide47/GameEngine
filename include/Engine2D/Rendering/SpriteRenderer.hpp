@@ -30,18 +30,18 @@ namespace Engine2D::Rendering {
       friend class Engine2D::Entity2D;
     public:
       /// Sets the color of the sprite
-      void SetColor(const glm::vec<4, float> &color);
+      void SetColor(const glm::vec4 &color);
       /// @returns the color of the sprite
-      const glm::vec<4, float> &GetColor() const;
+      const glm::vec4 &GetColor() const;
       /// Sets on which axis to flip the sprite
       void SetFlip(const glm::vec<2, bool> &flip);
       /// @returns on which axis the sprite is flipped
       const glm::vec<2, bool> &GetFlip() const;
     private:
       /// The color of the sprite
-      glm::vec<4, float> color;
+      ENGINE_SERIALIZE glm::vec4 color;
       /// If the sprite should be flipped on a given axis
-      glm::vec<2, bool> flip;
+      ENGINE_SERIALIZE glm::vec<2, bool> flip;
       /// Whether the sprite renderer was updated
       bool dirty;
 

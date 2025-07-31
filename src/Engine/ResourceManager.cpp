@@ -10,17 +10,18 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "Engine2D/Rendering/stb_image.hpp"
 
-#include "Engine/Rendering/Shader.hpp"
-#include "Engine/Rendering/Texture.hpp"
 #include "Engine/ResourceManager.hpp"
-#include "Engine2D/Game2D.hpp"
 #include "Engine/Log.hpp"
 #include "Engine/Macros/Assert.hpp"
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine/Rendering/Shader.hpp"
 #include "Engine/Rendering/ShaderPreProcessor.hpp"
+#include "Engine/Rendering/Texture.hpp"
+#include "Engine2D/Game2D.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 
 using Engine2D::Game2D;
 
@@ -70,6 +71,8 @@ namespace Engine {
       glUniform1iv(texturesLoc, Engine2D::Rendering::Renderer2D::MAX_TEXTURES, locations);
     }
 
+    shader->name = name;
+    shader->path = filePath;
     shaders.emplace(name, std::move(shader));
     return shaders.at(name).get();
   }
@@ -89,9 +92,7 @@ namespace Engine {
     return Log::Error("Unknown shader with id: " + std::to_string(id));
   }
 
-  Texture *ResourceManager::LoadTexture2D(
-    const std::string &filePath, const std::string &name, const bool blend
-  ) {
+  Texture *ResourceManager::LoadTexture2D(const std::string &name, const std::string &filePath, const bool blend) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     if (filePath.empty())
@@ -148,6 +149,9 @@ namespace Engine {
     auto texture = std::make_unique<Texture>(filePath);
     texture->generate(width, height, data, internalFormat, dataFormat, transparent, blend);
     stbi_image_free(data);
+
+    texture->name = name;
+    texture->path = filePath;
     textures.emplace(name, std::move(texture));
     return textures.at(name).get();
   }
@@ -174,19 +178,16 @@ namespace Engine {
   }
 
   std::pair<Texture *, Sprite *> ResourceManager::LoadTexture2DAndSprite(
-    const std::string &filePath, const std::string &name, const glm::vec<4, float> &rect,
-    const bool blend
+    const std::string &name, const std::string &filePath, const glm::vec4 &rect, const bool blend
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
-    auto texture = LoadTexture2D(filePath, name, blend);
+    auto texture = LoadTexture2D(name, filePath, blend);
     auto sprite = CreateSpriteFromTexture(name, rect);
     return {texture, sprite};
   }
 
-  Sprite *ResourceManager::CreateSpriteFromTexture(
-    const std::string &textureName, const glm::vec<4, float> &rect
-  ) {
+  Sprite *ResourceManager::CreateSpriteFromTexture(const std::string &textureName, const glm::vec4 &rect) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);
 
@@ -195,12 +196,14 @@ namespace Engine {
     sprite->texture = texture;
     sprite->transparent = texture->transparent;
     sprite->rect = rect;
+
+    sprite->name = textureName;
     sprites.emplace(textureName, std::move(sprite));
     return sprites.at(textureName).get();
   }
 
   Sprite *ResourceManager::CreateSprite(
-    const std::string &spriteName, const std::string &textureName, const glm::vec<4, float> &rect
+    const std::string &spriteName, const std::string &textureName, const glm::vec4 &rect
   ) {
     if (!textures.contains(textureName))
       return Log::Error("Texture not found: " + textureName);
@@ -212,16 +215,45 @@ namespace Engine {
     sprite->texture = texture;
     sprite->rect = rect;
     sprite->transparent = texture->transparent;
+
+    sprite->name = spriteName;
     sprites.emplace(spriteName, std::move(sprite));
     return sprites.at(spriteName).get();
   }
 
+  const std::string &ResourceManager::GetShaderName(const Shader *shader) {
+    for (const auto &[k, v]: shaders)
+      if (v.get() == shader)
+        return k;
+    return EmptyString();
+  }
+
+  const std::string &ResourceManager::GetTexture2DName(const Texture *texture) {
+    for (const auto &[k, v]: textures)
+      if (v.get() == texture)
+        return k;
+    return EmptyString();
+  }
+
+  const std::string &ResourceManager::GetSpriteName(const Sprite *sprite) {
+    for (const auto &[k, v]: sprites)
+      if (v.get() == sprite)
+        return k;
+    return EmptyString();
+  }
+
   void ResourceManager::Clear() {
-    for (const auto &shader: shaders | std::views::values)
-      shader->clear();
-    shaders.clear();
+    //for (const auto &shader: shaders | std::views::values)
+    //  shader->clear();
+    //shaders.clear();
     for (const auto &texture: textures | std::views::values)
       texture->clear();
     textures.clear();
+    sprites.clear();
+  }
+
+  const std::string &ResourceManager::EmptyString() {
+    static const std::string empty;
+    return empty;
   }
 }

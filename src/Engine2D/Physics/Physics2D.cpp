@@ -12,6 +12,7 @@
 #include <iterator>
 #include <numeric>
 
+#include "Engine2D/SceneManagement/Scene.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Physics/Collisions.hpp"
@@ -37,13 +38,15 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::addCollider(Collider2D *collider) {
-    if (collider)
-      colliders.emplace_back(collider);
+    if (!collider)
+      return;
+    colliders.emplace_back(collider);
   }
 
   void Physics2D::removeCollider(Collider2D *collider) {
-    if (collider)
-      std::erase(colliders, collider);
+    if (!collider)
+      return;
+    std::erase(colliders, collider);
   }
 
   void Physics2D::step() {

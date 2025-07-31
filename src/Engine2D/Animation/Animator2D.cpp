@@ -10,11 +10,10 @@
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/Scene.hpp"
-#include "Engine2D/SceneManager.hpp"
 #include "Engine2D/Animation/AnimationSystem.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 
 namespace Engine2D::Animation {
   void Animator2D::AddAnimation(const std::string &name, const Animation2D &animation) {
@@ -277,12 +276,20 @@ namespace Engine2D::Animation {
     }
   }
 
+  void Animator2D::OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) {
+    if (!defaultAnimation && !defaultAnimationName.empty() && animations.contains(defaultAnimationName))
+      defaultAnimation = &animations.at(defaultAnimationName);
+
+    if (!currentAnimation && !currentAnimationName.empty() && animations.contains(currentAnimationName))
+      currentAnimation = &animations.at(currentAnimationName);
+  }
+
   void Animator2D::forward() {
-    SceneManager::ActiveScene()->animationSystem.addAnimator(this);
+    Entity()->Scene()->animationSystem.addAnimator(this);
   }
 
   void Animator2D::recall() {
-    SceneManager::ActiveScene()->animationSystem.removeAnimator(this);
+    Entity()->Scene()->animationSystem.removeAnimator(this);
   }
 
   void Animator2D::update() {
@@ -314,7 +321,7 @@ namespace Engine2D::Animation {
       // Set the current frame of the animation
       const int frameCount = animation.FrameCount();
       const float totalDuration = frameCount * animation.frameDuration;
-      const int frame = std::floor(std::fmod(animation.elapsedTime, totalDuration) * animation.inverseFrameDuration);
+      const int frame = std::floor(std::fmod(animation.elapsedTime, totalDuration) * animation.frameDurationInv);
       if (animation.reverse)
         animation.currentFrame = frameCount - 1 - frame;
       else

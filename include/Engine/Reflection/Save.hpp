@@ -26,9 +26,7 @@ namespace Engine::Reflection {
 #define _e_NON_SERIALIZABLE_STRING "non_serializable"
 
 namespace Engine::Reflection {
-  template<typename T> static void _e_saveImpl(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
+  template<typename T> static void _e_saveImpl(const T &data, const Format format, Engine::JSON &json) {
     if constexpr (HasSaveFunction<T, Format>)
       _e_save(data, format, json);
     else
@@ -41,46 +39,39 @@ No save overloads were found for the requested type.
       );
   }
 
-  template<IsNumber T> static void _e_save(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
+  template<IsNumber T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (format == JSON)
       json = data;
   }
 
-  template<IsString T> static void _e_save(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
+  template<IsString T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (format == JSON)
       json = data;
   }
 
   template<typename T> requires std::is_same_v<std::decay_t<T>, bool>
-  static void _e_save(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
+  static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (format == JSON)
       json = data;
   }
 
-  template<IsContainer T> static void _e_save(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
+  template<IsContainer T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (format == JSON) {
-      json = JSON::Array();
+      json.ReserveAndResize(data.size());
+
+      size_t i = 0;
       for (const auto &item: data) {
         Engine::JSON value;
         _e_saveImpl(item, format, value);
-        json.PushBack(value);
+        json.At(i++) = value;
       }
     }
   }
 
-  template<IsMap T> static void _e_save(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
+  template<IsMap T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (format == JSON) {
-      json = JSON::Object();
+      json.Reserve(data.size());
+
       for (const auto &[k, v]: data) {
         Engine::JSON key;
         _e_saveImpl(k, format, key);
@@ -89,73 +80,52 @@ No save overloads were found for the requested type.
     }
   }
 
-  template<typename T> requires IsPair<std::remove_cvref_t<T>>::value
-  static void _e_save(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
+  template<IsPair T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (format == JSON) {
-      json = JSON::Array({{}, {}});
-      _e_saveImpl(data.first, format, json[0]);
-      _e_saveImpl(data.second, format, json[1]);
+      json.ReserveAndResize(2);
+      _e_saveImpl(data.first, format, json.At(0));
+      _e_saveImpl(data.second, format, json.At(1));
     }
   }
 
-  template<typename... Ts>
-  static void _e_save(
-    const std::tuple<Ts...> &t, const Format format, Engine::JSON &json
-  ) {
+  template<typename... Ts> static void _e_save(const std::tuple<Ts...> &t, const Format format, Engine::JSON &json) {
     if (format == JSON) {
-      json = JSON::Array();
+      json.ReserveAndResize(std::tuple_size_v<std::tuple<Ts...>>);
+
+      size_t i = 0;
       std::apply(
-        [&](const auto &... elems) {
+        [&](const Ts &... elems) {
           (([&] {
             Engine::JSON value;
             _e_saveImpl(elems, format, value);
-            json.PushBack(value);
+            json.At(i++) = std::move(value);
           }()), ...);
         }, t
       );
     }
   }
 
-  template<IsTuple T> static void _e_save(
-    const T &t, const Format format, Engine::JSON &json
-  ) {
-    if (format == JSON) {
-      json = JSON::Array();
-      std::apply(
-        [&](const auto &... elems) {
-          Engine::JSON value;
-          _e_saveImpl(std::make_tuple(elems...), format, value);
-          json.PushBack(value);
-        }, t
-      );
-    }
-  }
-
-  template<IsSmartPtr T> static void _e_save(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
+  template<IsSmartPtr T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (data) {
       if constexpr (IsSTL<typename T::element_type>) {
         _e_saveImpl(*data, format, json);
       } else {
         json = JSON::Object();
-        _e_saveImpl(data->ClassNameQualified(), format, json["_e_ptr_type"]);
-        data->_e_save(format, json["_e_ptr_data"]);
+        _e_saveImpl(data->ClassNameQualified(), format, json["type"]);
+        data->_e_save(format, json["data"]);
+        data->OnSerialize(format, json["data"]);
       }
     } else
       json = {};
   }
 
-  template<IsNotSTL T> static void _e_save(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
+  template<IsNotSTL T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if constexpr (requires {
       data._e_save(format, json);
-    })
+    }) {
       data._e_save(format, json);
-    else
+      data.OnSerialize(format, json);
+    } else
       static_assert(
         _e_f<T>,
         "Missing save function. Ensure the type uses it's SERIALIZE_* macro."
@@ -163,52 +133,49 @@ No save overloads were found for the requested type.
   }
 
   template<typename T> requires std::is_enum_v<T>
-  static void _e_save(
-    const T &data, const Format format, Engine::JSON &json
-  ) {
-    _e_save(static_cast<std::underlying_type_t<T>>(data), format, json);
+  static void _e_save(const T &data, const Format format, Engine::JSON &json) {
+    _e_saveImpl(static_cast<std::underlying_type_t<T>>(data), format, json);
   }
 
-  template<glm::length_t N, typename T, glm::qualifier Q> static void _e_save(
-    const glm::vec<N, T, Q> &data, const Format format, Engine::JSON &json
-  ) {
+  template<glm::length_t N, typename T, glm::qualifier Q>
+  static void _e_save(const glm::vec<N, T, Q> &data, const Format format, Engine::JSON &json) {
     if constexpr (!HasSaveFunction<T, Format>)
       static_assert(false, "The content of this glm::vec is not serializable");
 
     if (format == JSON) {
-      json = JSON::Array();
-      for (glm::length_t i = 0; i < data.length(); ++i) {
+      json.ReserveAndResize(N);
+
+      for (glm::length_t i = 0; i < N; ++i) {
         Engine::JSON value;
-        _e_save(data[i], format, value);
-        json.PushBack(value);
+        _e_saveImpl(data[i], format, value);
+        json.At(i) = value;
       }
     }
   }
 
   template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
-  static void _e_save(
-    const glm::mat<C, R, T, Q> &data, const Format format, Engine::JSON &json
-  ) {
+  static void _e_save(const glm::mat<C, R, T, Q> &data, const Format format, Engine::JSON &json) {
     if constexpr (!HasSaveFunction<T, Format>)
       static_assert(false, "The content of this glm::mat is not serializable");
 
     if (format == JSON) {
-      json = JSON::Array();
+      json.ReserveAndResize(C);
+
       for (glm::length_t col = 0; col < C; ++col) {
         Engine::JSON colJson = JSON::Array();
+        colJson.ReserveAndResize(R);
+
         for (glm::length_t row = 0; row < R; ++row) {
           Engine::JSON value;
-          _e_save(data[col][row], format, value);
-          colJson.PushBack(value);
+          _e_saveImpl(data[col][row], format, value);
+          colJson.At(row) = value;
         }
-        json.PushBack(colJson);
+        json.At(col) = colJson;
       }
     }
   }
 
-  template<typename... Ts> static void _e_save(
-    const std::variant<Ts...> &v, const Format format, Engine::JSON &json
-  ) {
+  template<typename... Ts> static void _e_save(const std::variant<Ts...> &v, const Format format, Engine::JSON &json) {
     if (format == JSON) {
       json = JSON::Object();
       json["index"] = v.index();
@@ -216,7 +183,7 @@ No save overloads were found for the requested type.
       Engine::JSON value;
       std::visit(
         [&](const auto &elem) {
-          _e_save(elem, format, value);
+          _e_saveImpl(elem, format, value);
         }, v
       );
       json["value"] = value;

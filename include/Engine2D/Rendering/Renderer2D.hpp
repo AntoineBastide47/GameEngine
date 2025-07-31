@@ -24,6 +24,7 @@ namespace Engine2D {
   class Scene;
   class Game2D;
   class Entity2D;
+  class SceneManager;
   class ParticleSystem2D;
 }
 
@@ -40,6 +41,7 @@ namespace Engine2D::Rendering {
     friend class SpriteRenderer;
     friend class Engine2D::Scene;
     friend class Engine2D::Game2D;
+    friend class Engine2D::SceneManager;
     friend class Engine2D::ParticleSystem2D;
     friend class Engine::ResourceManager;
     friend class Engine::Rendering::ShaderPreProcessor;
@@ -105,6 +107,8 @@ namespace Engine2D::Rendering {
       std::vector<Flush> opaqueFlushList;
       /// Tells the renderer how to use the static batch data for transparent sprites
       std::vector<Flush> transparentFlushList;
+      /// The scene this renderer is a part of
+      Scene *scene;
 
       /// The maximum number of texture that can be active at once on the GPU
       inline static int MAX_TEXTURES = 0;

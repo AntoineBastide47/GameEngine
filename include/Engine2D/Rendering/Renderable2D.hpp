@@ -45,11 +45,14 @@ namespace Engine2D::Rendering {
     protected:
       Engine::Rendering::Shader *shader;
       Sprite *sprite;
-      int16_t renderOrder;
-      RenderableType renderType;
+      ENGINE_SERIALIZE int16_t renderOrder;
+      ENGINE_SERIALIZE RenderableType renderType;
 
       Renderable2D();
       explicit Renderable2D(RenderableType type);
+
+      void OnSerialize(Engine::Reflection::Format format, Engine::JSON &json) const override;
+      void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
   };
 }
 

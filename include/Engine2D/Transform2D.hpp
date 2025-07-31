@@ -21,6 +21,7 @@ namespace Engine2D {
    */
   class Transform2D final : public Component2D {
     SERIALIZE_TRANSFORM2D
+      friend class Scene;
       friend class Entity2D;
     public:
       /// Equality operator to compare two Transform2D objects.
@@ -152,33 +153,37 @@ namespace Engine2D {
       [[nodiscard]] Entity2D *GetChild(int index) const;
       /// Puts the given child at the start of the list of children attached to the Entity2D this component is attached to
       void MakeFirstChild(Entity2D *child);
+      /// Puts the given child at the nth position of the list of children attached to the Entity2D this component is attached to
+      void MakeNthChild(Entity2D *child, size_t n);
       /// Puts the given child at the end of list of children attached to the Entity2D this component is attached to
       void MakeLastChild(Entity2D *child);
+
+      void OnSerialize(Engine::Reflection::Format format, Engine::JSON &json) const override;
     private:
       using Component2D::Transform; // Disallow unnecessary overhead to access this component
 
       /// Position of the transform in 2D space.
       glm::vec2 position;
+      /// Position of the transform in 2D space.
+      ENGINE_SERIALIZE glm::vec2 worldPosition;
       /// Rotation of the transform in degrees.
       float rotation;
+      /// Rotation of the transform in degrees.
+      ENGINE_SERIALIZE float worldRotation;
       /// Scale of the transform in 2D space.
       glm::vec2 scale;
+      /// Scale of the transform in 2D space.
+      ENGINE_SERIALIZE glm::vec2 worldScale;
 
       /// The parent Entity2D of the entity that this transform is attached to
       Entity2D *parent;
       /// The list of all the children of this entity
-      std::vector<Entity2D *> childList;
+      std::vector<Entity2D *> children;
 
       /// If the transform matrix needs to be recomputed
       bool dirty;
       /// If this entity is on screen
       bool visible;
-      /// Position of the transform in 2D space.
-      glm::vec2 worldPosition;
-      /// Rotation of the transform in degrees.
-      float worldRotation;
-      /// Scale of the transform in 2D space.
-      glm::vec2 worldScale;
       /// Transform matrix
       glm::mat4 projectionMatrix;
 
@@ -192,9 +197,7 @@ namespace Engine2D {
        * @param entity The entity this component is attached to
        * @param parent The parent of the Entity this component is attached to
        */
-      Transform2D(
-        glm::vec2 position, float rotation, glm::vec2 scale, Entity2D *entity, Entity2D *parent = nullptr
-      );
+      Transform2D(glm::vec2 position, float rotation, glm::vec2 scale, Entity2D *entity, Entity2D *parent = nullptr);
 
       /// Callback function that updates fields of this transform only if any of its public properties are modified
       void onTransformChange();

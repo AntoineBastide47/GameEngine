@@ -4,8 +4,6 @@
 // Date: 31/03/2025
 //
 
-#include <sys/sysctl.h>
-
 #include "commands/BuildProject.hpp"
 #include "commands/Build.hpp"
 

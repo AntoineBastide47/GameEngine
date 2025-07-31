@@ -17,8 +17,7 @@
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 #include "Engine/Rendering/Texture.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/Scene.hpp"
-#include "Engine2D/SceneManager.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 
 #define STRIDE (16)
@@ -56,7 +55,7 @@ namespace Engine2D::Rendering {
   }
 
   bool Renderer2D::cannotBeRendered(const Renderable2D *r) {
-    return !r->IsActive() || !r->Entity()->IsActive() || !r->Transform()->GetIsVisible() || !r->shader ||
+    return !r->Entity()->IsActive() || !r->IsActive() || !r->Transform()->GetIsVisible() || !r->shader ||
            !r->sprite || !r->sprite->texture;
   }
 
@@ -512,7 +511,7 @@ namespace Engine2D::Rendering {
       // Sort out the invalid renderers
       auto valid_partition = std::ranges::stable_partition(
         invalidRenderers, [](const auto &renderer) {
-          return renderer->sprite && renderer->sprite->texture;
+          return renderer && renderer->sprite && renderer->sprite->texture;
         }
       );
       renderersToAdd.insert(renderersToAdd.end(), invalidRenderers.begin(), valid_partition.begin());
@@ -591,7 +590,7 @@ namespace Engine2D::Rendering {
     const uint particleCount = std::transform_reduce(
       particleSystemRegistry.subrange.begin(), particleSystemRegistry.subrange.end(), 0u, std::plus<>(),
       [](const auto &ps) {
-        return ps->aliveCount;
+        return ps->capacity;
       }
     );
 
@@ -630,7 +629,7 @@ namespace Engine2D::Rendering {
     const uint particleCount = std::transform_reduce(
       particleSystemRegistry.particleSystems.begin(), transparentEnd, 0u, std::plus<>(),
       [](const auto &ps) {
-        return ps->aliveCount;
+        return ps->capacity;
       }
     );
 
@@ -646,12 +645,16 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::addRenderer(SpriteRenderer *renderer) {
-    if (renderer)
-      renderersToAdd.push_back(renderer);
+    if (!renderer)
+      return;
+    scene->resources.renderables.push_back(renderer);
+    renderersToAdd.push_back(renderer);
   }
 
   void Renderer2D::removeRenderer(SpriteRenderer *renderer) {
-    if (renderer)
-      renderersToRemove.insert(renderer);
+    if (!renderer)
+      return;
+    std::erase(scene->resources.renderables, renderer);
+    renderersToRemove.insert(renderer);
   }
 }

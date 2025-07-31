@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.9.3)
+project(GameEngine VERSION 0.9.4)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -90,10 +90,12 @@ add_library(Engine2D STATIC
     include/Engine/Reflection/Load.hpp
     include/Engine/Reflection/Deserializer.hpp
     include/Engine/Reflection/ReflectionFactory.hpp
-    src/Engine2D/Scene.cpp
-    include/Engine2D/Scene.hpp
-    src/Engine2D/SceneManager.cpp
-    include/Engine2D/SceneManager.hpp
+    src/Engine2D/SceneManagement/Scene.cpp
+    include/Engine2D/SceneManagement/Scene.hpp
+    src/Engine2D/SceneManagement/SceneManager.cpp
+    include/Engine2D/SceneManagement/SceneManager.hpp
+    src/Engine2D/SceneManagement/SceneResources.cpp
+    include/Engine2D/SceneManagement/SceneResources.hpp
 )
 
 set_target_properties(Engine2D PROPERTIES
@@ -190,5 +192,5 @@ add_custom_command(
 target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
-    MULTI_THREAD=1 # Set this to 0 if you have mutex errors or race conditions when modifying the engine
+    MULTI_THREAD=0 # Set this to 0 if you have mutex errors or race conditions when modifying the engine
 )

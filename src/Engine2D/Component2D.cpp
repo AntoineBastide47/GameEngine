@@ -27,9 +27,13 @@ namespace Engine2D {
     return entity->IsActive() && active;
   }
 
-  void Component2D::setEntity(Entity2D *entity) {
-    if (!entity)
-      return;
-    this->entity = entity;
+  std::ostream &operator<<(std::ostream &os, const Component2D &component) {
+    os.write(component.ClassNameQualified().data(), component.ClassNameQualified().size());
+    os.put(' ');
+    os.put('(');
+    os.write(component.Entity()->name.c_str(), component.Entity()->name.size());
+    os.put(')');
+    os.put('\n');
+    return os;
   }
 }

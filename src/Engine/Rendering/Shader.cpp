@@ -15,7 +15,7 @@
 
 namespace Engine::Rendering {
   Shader &Shader::use() {
-    glUseProgram(this->id);
+    glUseProgram(id);
     return *this;
   }
 
@@ -45,13 +45,13 @@ namespace Engine::Rendering {
     }
 
     // Build the shader and link it
-    this->id = glCreateProgram();
-    glAttachShader(this->id, sVertex);
-    glAttachShader(this->id, sFragment);
+    id = glCreateProgram();
+    glAttachShader(id, sVertex);
+    glAttachShader(id, sFragment);
     if (geometrySource)
-      glAttachShader(this->id, gShader);
-    glLinkProgram(this->id);
-    checkCompileErrors(this->id, "PROGRAM");
+      glAttachShader(id, gShader);
+    glLinkProgram(id);
+    checkCompileErrors(id, "PROGRAM");
 
     // Delete the pieces of the shader that won't be used anymore
     glDeleteShader(sVertex);
@@ -61,7 +61,15 @@ namespace Engine::Rendering {
   }
 
   uint Shader::Id() const {
-    return this->id;
+    return id;
+  }
+
+  const std::string &Shader::Name() const {
+    return name;
+  }
+
+  const std::string &Shader::Path() const {
+    return path;
   }
 
   void Shader::SetFloat(const char *name, const float value, const bool useShader) {

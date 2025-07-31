@@ -9,17 +9,19 @@
 
 #include <glm/glm.hpp>
 
-#include "Sprite.gen.hpp"
-
 namespace Engine::Rendering {
   class Texture;
+}
+
+namespace Engine {
+  class ResourceManager;
 }
 
 using Engine::Rendering::Texture;
 
 namespace Engine2D::Rendering {
-  class Sprite : public Engine::Reflection::Reflectable {
-    SERIALIZE_SPRITE
+  class Sprite final {
+    friend class Engine::ResourceManager;
     public:
       Sprite() = default;
 
@@ -31,13 +33,13 @@ namespace Engine2D::Rendering {
        * Format: (u, v, width, height), in normalized UV space [0.0, 1.0].
        * Use (0, 0, 1, 1) to use the full texture.
        */
-      glm::vec<4, float> rect{0, 0, 1, 1};
+      glm::vec4 rect{0, 0, 1, 1};
 
       /**
        * Pivot point of the sprite, in normalized local space.
        * (0, 0) = bottom-left, (0.5, 0.5) = center, (1, 1) = top-right.
        */
-      glm::vec<2, float> pivot{0.5f, 0.5f};
+      glm::vec2 pivot{0.5f, 0.5f};
 
       /**
        * Pixels per world unit.
@@ -48,6 +50,14 @@ namespace Engine2D::Rendering {
 
       /// Set to true if the sprite's texture contains transparent pixels, false if not
       bool transparent{false};
+
+      /// @returns the name of this sprite
+      const std::string &Name() const {
+        return name;
+      }
+    private:
+      /// The name of this sprite
+      std::string name;
   };
 }
 

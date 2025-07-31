@@ -12,7 +12,7 @@
 #include "Engine/Log.hpp"
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/SceneManager.hpp"
+#include "../../include/Engine2D/SceneManagement/SceneManager.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 
 namespace Engine2D {
@@ -24,11 +24,21 @@ namespace Engine2D {
   )
     : position(position), rotation(rotation), scale(scale), parent(parent), dirty(true), visible(true), worldPosition(),
       worldRotation(0), worldScale(), projectionMatrix(glm::mat4(1.0f)) {
-    setEntity(entity);
+    this->entity = entity;
+  }
+
+  inline int index_of_ptr(const std::vector<std::unique_ptr<Entity2D>> &vec, const Entity2D *ptr) {
+    if (!ptr)
+      return -1;
+
+    for (int i = 0; i < vec.size(); ++i)
+      if (vec[i].get() == ptr)
+        return i;
+    return -1;
   }
 
   bool Transform2D::operator==(const Transform2D &other) const {
-    return parent == other.parent && position == other.position && rotation == other.rotation && scale == other.scale;
+    return parent == other.parent && children == other.children;
   }
 
   bool Transform2D::operator!=(const Transform2D &transform) const {
@@ -36,19 +46,19 @@ namespace Engine2D {
   }
 
   std::vector<Entity2D *>::iterator Transform2D::begin() {
-    return childList.begin();
+    return children.begin();
   }
 
   std::vector<Entity2D *>::iterator Transform2D::end() {
-    return childList.end();
+    return children.end();
   }
 
   std::vector<Entity2D *>::const_iterator Transform2D::begin() const {
-    return childList.cbegin();
+    return children.cbegin();
   }
 
   std::vector<Entity2D *>::const_iterator Transform2D::end() const {
-    return childList.cend();
+    return children.cend();
   }
 
   glm::vec2 Transform2D::GetPosition() const {
@@ -167,8 +177,8 @@ namespace Engine2D {
     this->parent->transform->addChild(Entity());
 
     // Convert the transform properties from world space to local space
-    auto localTransform = glm::inverse(this->parent->transform->GetWorldMatrix()) * GetWorldMatrix();
-    position = glm::vec2(localTransform[3][0], -localTransform[3][1]);
+    const auto localTransform = glm::inverse(this->parent->transform->GetWorldMatrix()) * GetWorldMatrix();
+    position = glm::vec2(localTransform[3][0], localTransform[3][1]);
     rotation = scale.x == 0
                  ? 0
                  : glm::degrees(std::atan2(localTransform[1][0] / scale.x, localTransform[0][0] / scale.x));
@@ -181,18 +191,18 @@ namespace Engine2D {
   }
 
   bool Transform2D::IsChildOf(const Entity2D *entity) const {
-    const Transform2D *current = parent ? parent->transform.get() : nullptr;
+    const Transform2D *current = parent ? parent->Transform() : nullptr;
 
     while (current) {
       if (current->Entity() && current->Entity() == entity)
         return true;
-      current = current->parent ? current->parent->transform.get() : nullptr;
+      current = current->parent ? current->parent->Transform() : nullptr;
     }
     return false;
   }
 
   bool Transform2D::IsParentOf(const Entity2D *entity) const {
-    for (const auto &child: childList)
+    for (const auto &child: children)
       if (child == entity)
         return true;
     return false;
@@ -217,16 +227,16 @@ namespace Engine2D {
   void Transform2D::RemoveAllChildren() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
 
-    for (const auto child: childList)
+    for (const auto child: children)
       if (child)
         child->transform->SetParent(nullptr);
-    childList.clear();
+    children.clear();
   }
 
   Entity2D *Transform2D::Find(const std::string &name) const {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
-    for (const auto child: childList)
+    for (const auto child: children)
       if (child && child->name == name)
         return child;
     return nullptr;
@@ -235,19 +245,40 @@ namespace Engine2D {
   Entity2D *Transform2D::GetChild(const int index) const {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
-    if (index < 0 || index >= childList.size())
+    if (index < 0 || index >= children.size())
       return Engine::Log::Error("Transform2D::GetChild: index out of bounds");
-    return childList.at(index);
+    return children.at(index);
   }
 
   void Transform2D::MakeFirstChild(Entity2D *child) {
-    removeChild(child);
-    childList.insert(childList.begin(), child);
+    if (!child)
+      return;
+    std::erase(children, child);
+    children.insert(children.begin(), child);
+  }
+
+  void Transform2D::MakeNthChild(Entity2D *child, size_t n) {
+    if (!child)
+      return;
+
+    std::erase(children, child);
+    if (n > children.size())
+      n = children.size();
+    children.insert(children.begin() + n, child);
   }
 
   void Transform2D::MakeLastChild(Entity2D *child) {
-    removeChild(child);
-    childList.push_back(child);
+    if (!child)
+      return;
+
+    std::erase(children, child);
+    children.push_back(child);
+  }
+
+  void Transform2D::OnSerialize(const Engine::Reflection::Format format, Engine::JSON &json) const {
+    if (format == Engine::Reflection::Format::JSON) {
+      json["parent"] = index_of_ptr(SceneManager::ActiveScene()->entities, parent);
+    }
   }
 
   bool Transform2D::GetIsVisible() const {
@@ -279,12 +310,12 @@ namespace Engine2D {
     worldRotation = rotation;
     worldScale = scale;
 
-    const Transform2D *current = parent ? parent->transform.get() : nullptr;
+    const Transform2D *current = parent ? parent->Transform() : nullptr;
     while (current) {
       worldPosition = glm::rotate(worldPosition * current->scale, glm::radians(-current->rotation)) + current->position;
       worldRotation += current->rotation;
       worldScale = worldScale * current->scale;
-      current = current->parent ? current->parent->transform.get() : nullptr;
+      current = current->parent ? current->parent->Transform() : nullptr;
     }
 
     if (oldWorldPosition == worldPosition && oldWorldRotation == worldRotation && oldWorldScale == worldScale)
@@ -292,11 +323,11 @@ namespace Engine2D {
 
     // Determine if the sprite is currently visible to the camera
     dirty = true;
-    visible = Game2D::Initialized() && Scene::MainCamera() &&
-              Scene::MainCamera()->IsInViewport(worldPosition, worldScale);
+    visible = Game2D::Initialized() && SceneManager::ActiveScene() && SceneManager::ActiveScene()->MainCamera() &&
+              SceneManager::ActiveScene()->MainCamera()->IsInViewport(worldPosition, worldScale);
 
     // Update the children of this transform as they depend on the transform of their parent
-    for (const auto child: childList)
+    for (const auto child: children)
       if (child)
         child->transform->onTransformChange();
   }
@@ -309,24 +340,26 @@ namespace Engine2D {
     }
 
     // If it is active, make sure all it's parents are also active
-    const Transform2D *current = parent->transform.get();
+    const Transform2D *current = parent ? parent->Transform() : nullptr;
     while (current && current->Entity()) {
       if (!current->Entity()->active) {
         Entity()->parentsActive = false;
         return;
       }
-      current = current->parent ? current->parent->transform.get() : nullptr;
+      current = current->parent ? current->parent->Transform() : nullptr;
     }
     Entity()->parentsActive = true;
   }
 
   void Transform2D::addChild(Entity2D *child) {
-    if (child)
-      childList.push_back(child);
+    if (!child)
+      return;
+    children.push_back(child);
   }
 
   void Transform2D::removeChild(Entity2D *child) {
-    if (child)
-      std::erase(childList, child);
+    if (!child)
+      return;
+    std::erase(children, child);
   }
 }

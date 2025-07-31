@@ -12,32 +12,33 @@
 namespace Engine {
   class ResourceManager;
 }
+
 namespace Engine2D::Rendering {
   class Renderer2D;
 }
 
 namespace Engine::Rendering {
   /// A class representing a 2D texture in OpenGL, handling creation, configuration, and binding of textures.
-  class Texture {
+  class Texture final {
     friend class Engine::ResourceManager;
     friend class Engine2D::Rendering::Renderer2D;
     public:
       explicit Texture(const std::string &path);
 
       /// @returns the width of this texture
-      inline int GetWidth() const {
-        return width;
-      }
+      int Width() const;
 
       /// @returns the height of this texture
-      inline int GetHeight() const {
-        return height;
-      }
+      int Height() const;
 
       /// @returns the id of this texture
-      inline unsigned int GetId() const {
-        return id;
-      }
+      unsigned int Id() const;
+
+      /// @returns The name of this texture
+      const std::string &Name() const;
+
+      /// @returns The path of the file that stores this texture
+      const std::string &Path() const;
     private:
       /// The OpenGL id of this texture
       unsigned int id;
@@ -45,7 +46,9 @@ namespace Engine::Rendering {
       int width;
       /// The height of this texture in pixels.
       int height;
-      /// Where the texture file is stored on disc
+      /// The name of this shader
+      std::string name;
+      /// The path of the file this shader is stored in
       std::string path;
       /// Whether this texture has transparent pixels or not
       bool transparent;
@@ -60,7 +63,10 @@ namespace Engine::Rendering {
        * @param transparent
        * @param blended Whether to blend the pixels or not
        */
-      void generate(int width, int height, const unsigned char *data, int internalFormat, int dataFormat, bool transparent, bool blended = false);
+      void generate(
+        int width, int height, const unsigned char *data, int internalFormat, int dataFormat, bool transparent,
+        bool blended = false
+      );
       /// Makes this texture active so that subsequent rendering operations use it.
       void bind(int offset = 0) const;
       /// Unloads the texture data and prepares the object for reuse.

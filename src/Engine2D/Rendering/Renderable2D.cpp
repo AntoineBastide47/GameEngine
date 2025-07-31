@@ -15,6 +15,20 @@ namespace Engine2D::Rendering {
   Renderable2D::Renderable2D(const RenderableType type)
     : shader(Engine::ResourceManager::GetShader("sprite")), sprite(nullptr), renderOrder(0), renderType(type) {}
 
+  void Renderable2D::OnSerialize(const Engine::Reflection::Format format, Engine::JSON &json) const {
+    if (format == Engine::Reflection::Format::JSON) {
+      json["shader"] = Engine::ResourceManager::GetShaderName(shader);
+      json["sprite"] = Engine::ResourceManager::GetSpriteName(sprite);
+    }
+  }
+
+  void Renderable2D::OnDeserialize(const Engine::Reflection::Format format, const Engine::JSON &json) {
+    if (format == Engine::Reflection::Format::JSON) {
+      shader = Engine::ResourceManager::GetShader(json.At("shader").GetString());
+      sprite = Engine::ResourceManager::GetSprite(json.At("sprite").GetString());
+    }
+  }
+
   void Renderable2D::SetShader(Shader *shader) {
     this->shader = shader;
   }

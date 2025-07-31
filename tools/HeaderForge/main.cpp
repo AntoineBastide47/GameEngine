@@ -73,18 +73,15 @@ int main(const int argc, char *argv[]) {
 
     if (parsingPaths) {
       if (fs::path p(arg); fs::exists(p)) {
-        if (fs::is_regular_file(p) && p.extension() == ".hpp") {
+        if (fs::is_regular_file(p) && p.string().ends_with(".hpp") && !p.string().ends_with(".gen.hpp"))
           filesystemPaths.insert(p.string());
-        } else if (fs::is_directory(p)) {
-          for (const auto &entry: fs::recursive_directory_iterator(p)) {
-            if (fs::is_regular_file(entry) && entry.path().extension() == ".hpp") {
+        else if (fs::is_directory(p))
+          for (const auto &entry: fs::recursive_directory_iterator(p))
+            if (fs::is_regular_file(entry) && entry.path().string().ends_with(".hpp") &&
+                !entry.path().string().ends_with(".gen.hpp"))
               filesystemPaths.insert(entry.path().string());
-            }
-          }
-        }
-      } else {
+      } else
         std::cerr << "Path does not exist: " << p << "\n";
-      }
     } else
       compilerArgs.push_back(arg);
   }

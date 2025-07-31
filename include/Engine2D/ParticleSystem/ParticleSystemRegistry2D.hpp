@@ -11,11 +11,12 @@
 #include <vector>
 
 namespace Engine2D {
+  class Scene;
+  class ParticleSystem2D;
+
   namespace Rendering {
     class Renderer2D;
   }
-
-  class ParticleSystem2D;
 
   class ParticleSystemRegistry2D {
     friend class Scene;
@@ -31,6 +32,8 @@ namespace Engine2D {
     std::vector<ParticleSystem2D *> particleSystemsToAdd;
     /// The particle systems pending to be removed
     std::unordered_set<ParticleSystem2D *> particleSystemsToRemove;
+    /// The scene this registry is a part of
+    Scene *scene;
 
     /// Whether we need to recompute the subranges
     bool repartition;

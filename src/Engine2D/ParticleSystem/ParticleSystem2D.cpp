@@ -11,7 +11,7 @@
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/SceneManager.hpp"
+#include "../../../include/Engine2D/SceneManagement/SceneManager.hpp"
 #include "Engine2D/Transform2D.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
@@ -27,17 +27,17 @@ namespace Engine2D {
       startDelay(0), startPosition(glm::vec2(0)), startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)),
       startAngularVelocity(0), endAngularVelocity(), startScale(glm::vec2(1)), endScale(glm::vec2(0)),
       startColor(glm::vec4(1)), endColor(glm::vec4(1)), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1),
-      blendMode(Alpha), duration(1), particleLifetime(1), inverseLifetime(1), particles(0), head(0), maxParticles(0),
-      aliveCount(0), emissionAcc(0), durationAcc(0), quadVAO(0), quadVBO(0), instanceVBO(0), capacity(0),
-      simulationFinished(false) {}
+      blendMode(Alpha), duration(1), particleLifetime(1), inverseLifetime(1), particles(0), head(0), capacity(0),
+      maxParticles(0), simulationFinished(false), emissionAcc(0), durationAcc(0), quadVAO(0), quadVBO(0),
+      instanceVBO(0) {}
 
   void ParticleSystem2D::SetDuration(const float duration) {
     this->duration = duration;
-    this->durationAcc = 0;
+    durationAcc = 0;
   }
 
   float ParticleSystem2D::GetDuration() const {
-    return this->duration;
+    return duration;
   }
 
   // Prevent reallocation if the particle system has already been used.
@@ -54,24 +54,30 @@ namespace Engine2D {
   }
 
   uint32_t ParticleSystem2D::GetMaxParticles() const {
-    return this->maxParticles;
+    return maxParticles;
   }
 
   void ParticleSystem2D::SetParticleLifetime(const float lifetime) {
-    this->particleLifetime = lifetime;
+    particleLifetime = lifetime;
     inverseLifetime = 1.0f / lifetime;
   }
 
   float ParticleSystem2D::GetParticleLifetime() const {
-    return this->particleLifetime;
+    return particleLifetime;
+  }
+
+  void ParticleSystem2D::OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) {
+    Renderable2D::OnDeserialize(format, json);
+    SetMaxParticles(maxParticles);
+    SetParticleLifetime(particleLifetime);
   }
 
   void ParticleSystem2D::forward() {
-    SceneManager::ActiveScene()->particleSystemRegistry.addParticleSystem(this);
+    Entity()->Scene()->particleSystemRegistry.addParticleSystem(this);
   }
 
   void ParticleSystem2D::recall() {
-    SceneManager::ActiveScene()->particleSystemRegistry.removeParticleSystem(this);
+    Entity()->Scene()->particleSystemRegistry.removeParticleSystem(this);
   }
 
   void ParticleSystem2D::updateAndRender(const uint textureIndex, float *data) {
@@ -104,16 +110,15 @@ namespace Engine2D {
 
       // Add new particles.
       for (size_t i = 0; i < newParticles; ++i)
-        this->respawnParticle();
+        respawnParticle();
     }
 
     // Precompute reused data
-    const auto &cam = *Scene::MainCamera();
+    const auto &cam = *SceneManager::ActiveScene()->MainCamera();
     const float dt = deltaTime * simulationSpeed;
     const glm::vec2 scaleDelta = startScale - endScale;
     const float angularVelDelta = endAngularVelocity - startAngularVelocity;
     const glm::vec4 colorDelta = endColor - startColor;
-    aliveCount = 0;
 
     int j = 0;
     for (size_t i = 0; i < capacity; ++i) {
@@ -122,37 +127,36 @@ namespace Engine2D {
         index -= maxParticles;
       if (index < 0)
         index += maxParticles;
-      Particle &particle = particles[index];
-      particle.lifeTime -= dt;
+      auto &[position, scale, startVelocity, endVelocity, rotation, lifeTime] = particles[index];
+      lifeTime -= dt;
 
-      const float t = particle.lifeTime * inverseLifetime;
-      const glm::vec2 startVel = useGlobalVelocities ? startVelocity : particle.startVelocity;
-      const glm::vec2 endVel = useGlobalVelocities ? endVelocity : particle.endVelocity;
+      const float t = lifeTime * inverseLifetime;
+      const glm::vec2 startVel = useGlobalVelocities ? startVelocity : startVelocity;
+      const glm::vec2 endVel = useGlobalVelocities ? endVelocity : endVelocity;
 
       // Update the "transform" properties of the current particle
-      particle.position += dt * (startVel + (endVel - startVel) * t);
-      particle.rotation += dt * (startAngularVelocity + angularVelDelta * t);
-      particle.scale = endScale + scaleDelta * t;
+      position += dt * (startVel + (endVel - startVel) * t);
+      rotation += dt * (startAngularVelocity + angularVelDelta * t);
+      scale = endScale + scaleDelta * t;
 
-      if (particle.lifeTime <= 0.0f && !cam.IsInViewport(particle.position, particle.scale))
+      if (lifeTime <= 0.0f && !cam.IsInViewport(position, scale))
         continue;
 
-      aliveCount++;
       glm::vec2 pos;
       if (simulateInWorldSpace)
-        pos = particle.position;
+        pos = position;
       else
-        pos = glm::vec2(Transform()->GetWorldMatrix() * glm::vec4(particle.position, 0, 1));
+        pos = glm::vec2(Transform()->GetWorldMatrix() * glm::vec4(position, 0, 1));
 
       const int idx = j * STRIDE;
       const float inversePPU = 1.0f / sprite->pixelsPerUnit;
-      const float tOpp = 1.0f - particle.lifeTime * inverseLifetime;
+      const float tOpp = 1.0f - lifeTime * inverseLifetime;
 
       // Position and scale
       data[idx + 0] = pos.x;
       data[idx + 1] = pos.y;
-      data[idx + 2] = particle.scale.x * inversePPU;
-      data[idx + 3] = particle.scale.y * inversePPU;
+      data[idx + 2] = scale.x * inversePPU;
+      data[idx + 3] = scale.y * inversePPU;
 
       // Color
       data[idx + 4] = startColor.r + colorDelta.r * tOpp;
@@ -168,7 +172,7 @@ namespace Engine2D {
 
       // Pivot, rotation and renderOrder
       data[idx + 12] = Rendering::Renderer2D::PackTwoFloats(sprite->pivot.x, sprite->pivot.y);
-      data[idx + 13] = particle.rotation;
+      data[idx + 13] = rotation;
       data[idx + 14] = renderOrder;
       data[idx + 15] = textureIndex;
 

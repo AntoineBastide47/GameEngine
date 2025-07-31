@@ -9,7 +9,28 @@
 #include "Engine/Macros/Profiling.hpp"
 
 namespace Engine::Rendering {
-  Texture::Texture(const std::string &path) : id(0), width(0), height(0), path(path) {}
+  Texture::Texture(const std::string &path)
+    : id(0), width(0), height(0), path(path), transparent(false) {}
+
+  int Texture::Width() const {
+    return width;
+  }
+
+  int Texture::Height() const {
+    return height;
+  }
+
+  unsigned int Texture::Id() const {
+    return id;
+  }
+
+  const std::string &Texture::Name() const {
+    return name;
+  }
+
+  const std::string &Texture::Path() const {
+    return path;
+  }
 
   void Texture::generate(
     const int width, const int height, const unsigned char *data, const int internalFormat, const int dataFormat,

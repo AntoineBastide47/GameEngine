@@ -72,6 +72,7 @@ namespace Engine {
       JSON(const T &values) {
         auto arr = JSONArray();
         arr.reserve(std::distance(std::begin(values), std::end(values)));
+        arr.resize(std::distance(std::begin(values), std::end(values)));
         for (const auto &v: values)
           arr.emplace_back(v);
 
@@ -97,15 +98,13 @@ namespace Engine {
       }
 
       /// Assigns the given tuple value to this instance.
-      template<Reflection::IsTuple T> requires
-        ([]<std::size_t... I>(std::index_sequence<I...>) {
-          return (std::is_constructible_v<JSON, std::tuple_element_t<I, T>> && ...);
-        }(std::make_index_sequence<std::tuple_size_v<T>>{}))
-      JSON(const T &tuple) {
+      template<typename... Ts> requires ((std::is_constructible_v<JSON, Ts> && ...))
+      JSON(const std::tuple<Ts...> &tuple) {
         auto arr = JSONArray();
-        arr.reserve(std::tuple_size_v<T>);
+        arr.reserve(sizeof...(Ts));
+        arr.resize(sizeof...(Ts));
         std::apply(
-          [&](const auto &... elems) {
+          [&](const Ts &... elems) {
             (arr.emplace_back(elems), ...);
           }, tuple
         );
@@ -228,6 +227,11 @@ namespace Engine {
       /// @param size The number of elements to reserve of this instance.
       /// @throws std::logic_error if this JSON if not of type array or object
       void Reserve(size_t size);
+
+      /// Reserves and resizes this instance to the given size.
+      /// @param size The new size and number of elements of this instance.
+      /// @note If this JSON is not of type array, it will be implicitly converted to a JSON array.
+      void ReserveAndResize(size_t size);
 
       /// @return A reference to the first element of this instance.
       /// @throws std::logic_error if this JSON is not of type array.
@@ -361,9 +365,9 @@ namespace Engine {
       [[nodiscard]] bool IsObject() const;
 
       /// @returns A stringified representation of this instance
-      /// @param indentSize Number of characters per indentation level; set to -1 for a compact form
+      /// @param prettyPrint Whether to pretty print the json or not
       /// @param indentChar Character used for indentation
-      [[nodiscard]] std::string Dump(int indentSize = -1, char indentChar = ' ') const;
+      [[nodiscard]] std::string Dump(bool prettyPrint = false, char indentChar = ' ') const;
 
       /// @returns A new JSON array containing the given values
       /// @param values The optional values to add to this array
@@ -412,6 +416,8 @@ namespace Engine {
           return type == Null;
         return false;
       }
+
+      std::string dump(int indentSize = -1, char indentChar = ' ') const;
   };
 }
 

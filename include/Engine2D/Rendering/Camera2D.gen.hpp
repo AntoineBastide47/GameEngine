@@ -11,20 +11,26 @@ namespace Engine::Reflection {
   void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \
     if (format == Engine::Reflection::Format::JSON) { \
       json = Engine::JSON::Object();\
+      Engine::Reflection::_e_saveImpl(active, format, json["active"]);\
       Engine::Reflection::_e_saveImpl(positionOffset, format, json["positionOffset"]);\
       Engine::Reflection::_e_saveImpl(rotationOffset, format, json["rotationOffset"]);\
       Engine::Reflection::_e_saveImpl(damping, format, json["damping"]);\
       Engine::Reflection::_e_saveImpl(shakeCoefficientsX, format, json["shakeCoefficientsX"]);\
       Engine::Reflection::_e_saveImpl(shakeCoefficientsY, format, json["shakeCoefficientsY"]);\
+      Engine::Reflection::_e_saveImpl(projection, format, json["projection"]);\
+      Engine::Reflection::_e_saveImpl(shakeDuration, format, json["shakeDuration"]);\
     }\
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
+      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
       Engine::Reflection::_e_loadImpl(positionOffset, format, json["positionOffset"]);\
       Engine::Reflection::_e_loadImpl(rotationOffset, format, json["rotationOffset"]);\
       Engine::Reflection::_e_loadImpl(damping, format, json["damping"]);\
       Engine::Reflection::_e_loadImpl(shakeCoefficientsX, format, json["shakeCoefficientsX"]);\
       Engine::Reflection::_e_loadImpl(shakeCoefficientsY, format, json["shakeCoefficientsY"]);\
+      Engine::Reflection::_e_loadImpl(projection, format, json["projection"]);\
+      Engine::Reflection::_e_loadImpl(shakeDuration, format, json["shakeDuration"]);\
     }\
   }\
   private: 

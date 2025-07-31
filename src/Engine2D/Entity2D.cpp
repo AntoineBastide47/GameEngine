@@ -8,7 +8,7 @@
 
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/SceneManager.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 
 namespace Engine2D {
@@ -21,7 +21,8 @@ namespace Engine2D {
   )
     : name(std::move(name)), active(true), parentsActive(true), isStatic(isStatic), destroyed(false),
       timeToLive(0.1f),
-      transform(std::unique_ptr<Transform2D>(new Transform2D(position, rotation, scale, this, parent))) {}
+      transform(std::unique_ptr<Transform2D>(new Transform2D(position, rotation, scale, this, parent))),
+      scene(nullptr) {}
 
   bool Entity2D::operator==(const Entity2D &entity) const {
     return name == entity.name && transform == entity.transform;
@@ -40,32 +41,14 @@ namespace Engine2D {
     Entity2D *parent
   ) {
     const auto entity = new Entity2D(name, isStatic, position, rotation, scale, parent);
-    SceneManager::ActiveScene()->entitiesToAdd.push_back(std::unique_ptr<Entity2D>(entity));
+    SceneManager::ActiveScene()->addEntity(std::unique_ptr<Entity2D>(entity));
     return entity;
-  }
-
-  Entity2D *Entity2D::Find(const std::string &name) {
-    for (const auto &entity: SceneManager::ActiveScene()->entitiesToAdd)
-      if (entity->name == name)
-        return entity.get();
-    for (const auto &entity: SceneManager::ActiveScene()->entities)
-      if (entity->name == name)
-        return entity.get();
-    return nullptr;
   }
 
   void Entity2D::SetActive(const bool active) {
     this->active = active;
     for (const auto child: *transform)
       child->transform->onParentHierarchyChange();
-
-    // All change the state of the renderer
-    if (const auto renderer = GetComponent<Rendering::SpriteRenderer>(); renderer) {
-      if (!active)
-        renderer->recall();
-      else
-        renderer->forward();
-    }
   }
 
   bool Entity2D::IsActive() const {
@@ -77,7 +60,12 @@ namespace Engine2D {
   }
 
   void Entity2D::Destroy() {
-    SceneManager::ActiveScene()->removeEntity(this);
+    if (SceneManager::ActiveScene())
+      SceneManager::ActiveScene()->removeEntity(this);
+  }
+
+  Scene *Entity2D::Scene() const {
+    return scene;
   }
 
   void Entity2D::initialize() const {
@@ -88,14 +76,19 @@ namespace Engine2D {
   }
 
   void Entity2D::destroy() {
-    for (auto it = components.begin(); it != components.end(); ++it)
+    for (auto &remove: inputCallbackRemovers)
+      remove();
+    for (auto it = allComponents.begin(); it != allComponents.end(); ++it)
       (*it)->recall();
-    transform->RemoveAllChildren();
     SetActive(false);
     destroyed = true;
+
+    for (const auto child: *transform)
+      child->Destroy();
   }
 
   void Entity2D::free() {
+    allComponents.clear();
     components.clear();
     behaviours.clear();
   }

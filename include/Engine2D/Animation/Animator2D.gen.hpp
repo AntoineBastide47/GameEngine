@@ -11,10 +11,23 @@ namespace Engine::Reflection {
   void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \
     if (format == Engine::Reflection::Format::JSON) { \
       json = Engine::JSON::Object();\
+      Engine::Reflection::_e_saveImpl(active, format, json["active"]);\
+      Engine::Reflection::_e_saveImpl(animations, format, json["animations"]);\
+      Engine::Reflection::_e_saveImpl(parameters, format, json["parameters"]);\
+      Engine::Reflection::_e_saveImpl(transitions, format, json["transitions"]);\
+      Engine::Reflection::_e_saveImpl(currentAnimationName, format, json["currentAnimationName"]);\
+      Engine::Reflection::_e_saveImpl(defaultAnimationName, format, json["defaultAnimationName"]);\
     }\
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
-    if (format == Engine::Reflection::Format::JSON) {}\
+    if (format == Engine::Reflection::Format::JSON) { \
+      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
+      Engine::Reflection::_e_loadImpl(animations, format, json["animations"]);\
+      Engine::Reflection::_e_loadImpl(parameters, format, json["parameters"]);\
+      Engine::Reflection::_e_loadImpl(transitions, format, json["transitions"]);\
+      Engine::Reflection::_e_loadImpl(currentAnimationName, format, json["currentAnimationName"]);\
+      Engine::Reflection::_e_loadImpl(defaultAnimationName, format, json["defaultAnimationName"]);\
+    }\
   }\
   private: 
 

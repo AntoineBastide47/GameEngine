@@ -9,10 +9,8 @@
 
 #include <string_view>
 
-// Most of these headers are unused here, but they are needed in the generated classes
-#include "Engine/Reflection/Load.hpp"
-#include "Engine/Reflection/ReflectionFactory.hpp"
 #include "Engine/Reflection/Save.hpp"
+#include "Engine/Reflection/Load.hpp"
 
 // Since only the tool itself uses the annotations, only make the macros add them when the tool is run
 // This should prevent compilation errors on compilers that do not support custom annotation (ex: MSVC)
@@ -37,6 +35,14 @@ namespace Engine::Reflection {
     virtual void _e_save(Format format, Engine::JSON &json) const = 0;
     /// Loads a class instance
     virtual void _e_load(Format format, const Engine::JSON &json) = 0;
+    /// Called when this class instance is serialized/saved
+    /// @param format The format in which to save the data
+    /// @param json The json representation of this class instance
+    virtual void OnSerialize(Format format, Engine::JSON &json) const {}
+    /// Called when this class instance is deserialized/loaded
+    /// @param format The format in which to load the data
+    /// @param json The json representation of this class instance
+    virtual void OnDeserialize(Format format, const Engine::JSON &json) {}
   };
 }
 

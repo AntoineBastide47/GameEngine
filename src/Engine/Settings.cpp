@@ -4,12 +4,11 @@
 // Date: 16/12/2024
 //
 
-#include "Engine/RenderingHeaders.hpp"
 #include "Engine/Settings.hpp"
+#include "Engine/RenderingHeaders.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/Scene.hpp"
-#include "Engine2D/SceneManager.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 
 namespace Engine {
   void Settings::Window::SetScreenResolution(const glm::vec<2, size_t> newValue) {

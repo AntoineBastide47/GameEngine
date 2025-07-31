@@ -4,10 +4,10 @@
 // Date: 05.07.2025
 //
 
+#include <cmath>
 #include <sstream>
 
 #include "Engine/Data/JSON.hpp"
-
 #include "Engine/Log.hpp"
 #include "Engine/Data/JsonParser.hpp"
 
@@ -128,6 +128,7 @@ namespace Engine {
   double &JSON::GetNumber() {
     if (type == Number)
       return std::get<double>(data);
+
     throw std::logic_error("JSON::GetNumber called on a non-number type");
   }
 
@@ -227,6 +228,15 @@ namespace Engine {
       std::get<JSONObject>(data).reserve(size);
     else
       throw std::logic_error("JSON::Reserve called on non-array and non-object type");
+  }
+
+  void JSON::ReserveAndResize(const size_t size) {
+    if (type != array) {
+      type = array;
+      data = JSONArray{};
+    }
+    std::get<JSONArray>(data).reserve(size);
+    std::get<JSONArray>(data).resize(size);
   }
 
   JSON &JSON::Front() {
@@ -420,88 +430,8 @@ namespace Engine {
     return type == object;
   }
 
-  std::string JSON::Dump(const int indentSize, const char indentChar) const {
-    std::ostringstream oss;
-    const bool prettyPrint = indentSize > -1;
-    const int newIndent = prettyPrint ? indentSize + 1 : -1;
-    const int endCharIndent = indentSize > 0 ? indentSize : 0;
-
-    switch (type) {
-      case Null:
-        oss.write("null", 4);
-        break;
-      case Boolean: {
-        const auto &value = GetBool();
-        oss.write(value ? "true" : "false", value ? 4 : 5);
-        break;
-      }
-      case Number: {
-        const auto value = GetNumber();
-        oss << value << (static_cast<int>(value) == value ? ".0" : "");
-        break;
-      }
-      case String: {
-        const auto &value = GetString();
-        oss.put('"');
-        oss.write(value.c_str(), value.size());
-        oss.put('"');
-        break;
-      }
-      case array: {
-        std::string dump;
-        oss.put('[');
-        for (const auto &item: std::get<JSONArray>(data)) {
-          if (prettyPrint) {
-            oss.put('\n');
-            oss.write(std::string(newIndent * 2, indentChar).c_str(), newIndent * 2);
-          }
-          dump = item.Dump(newIndent, indentChar);
-          oss.write(dump.c_str(), dump.size());
-          oss.put(',');
-          if (prettyPrint)
-            oss.put(' ');
-        }
-        if (!std::get<JSONArray>(data).empty()) {
-          oss.seekp(prettyPrint ? -2 : -1, std::ios_base::end);
-          if (prettyPrint)
-            oss.put('\n');
-        }
-        if (prettyPrint)
-          oss.write(std::string(endCharIndent * 2, indentChar).c_str(), endCharIndent * 2);
-        oss.put(']');
-        break;
-      }
-      case object: {
-        std::string dump;
-        oss.put('{');
-        for (const auto &[key, value]: std::get<JSONObject>(data)) {
-          if (prettyPrint) {
-            oss.put('\n');
-            oss.write(std::string(newIndent * 2, indentChar).c_str(), newIndent * 2);
-          }
-          oss.put('"');
-          oss.write(key.c_str(), key.size());
-          oss.put('"');
-          oss.put(':');
-          if (prettyPrint)
-            oss.put(' ');
-          dump = value.Dump(newIndent, indentChar);
-          oss.write(dump.c_str(), dump.size());
-          oss.put(',');
-        }
-        if (!std::get<JSONObject>(data).empty()) {
-          oss.seekp(-1, std::ios_base::end);
-          if (prettyPrint)
-            oss.put('\n');
-        }
-        if (prettyPrint)
-          oss.write(std::string(endCharIndent * 2, indentChar).c_str(), endCharIndent * 2);
-        oss.put('}');
-        break;
-      }
-    }
-
-    return oss.str();
+  std::string JSON::Dump(const bool prettyPrint, const char indentChar) const {
+    return dump(prettyPrint - 1, indentChar);
   }
 
   JSON JSON::Array(const std::initializer_list<JSON> &values) {
@@ -520,5 +450,92 @@ namespace Engine {
 
   bool JSON::isComplexType() const {
     return type == object || type == array;
+  }
+
+  std::string JSON::dump(const int indentSize, const char indentChar) const {
+    std::ostringstream oss;
+    const bool prettyPrint = indentSize > -1;
+    const int newIndent = prettyPrint ? indentSize + 1 : -1;
+    const int endCharIndent = indentSize > 0 ? indentSize : 0;
+
+    switch (type) {
+      case Null:
+        oss.write("null", 4);
+        break;
+      case Boolean: {
+        const auto &value = GetBool();
+        oss.write(value ? "true" : "false", value ? 4 : 5);
+        break;
+      }
+      case Number: {
+        const auto value = GetNumber();
+        if (std::isnan(value))
+          oss.write("NaN", 3);
+        else if (std::isinf(value))
+          oss.write("Inf", 3);
+        else
+          oss << value << (static_cast<int>(value) == value ? ".0" : "");
+        break;
+      }
+      case String: {
+        const auto &value = GetString();
+        oss.put('"');
+        oss.write(value.c_str(), value.size());
+        oss.put('"');
+        break;
+      }
+      case array: {
+        std::string dump;
+        oss.put('[');
+        for (const auto &item: std::get<JSONArray>(data)) {
+          if (prettyPrint) {
+            oss.put('\n');
+            oss.write(std::string(newIndent * 2, indentChar).c_str(), newIndent * 2);
+          }
+          dump = item.dump(newIndent, indentChar);
+          oss.write(dump.c_str(), dump.size());
+          oss.put(',');
+        }
+        if (!std::get<JSONArray>(data).empty()) {
+          oss.seekp(-1, std::ios_base::end);
+          if (prettyPrint) {
+            oss.put('\n');
+            oss.write(std::string(endCharIndent * 2, indentChar).c_str(), endCharIndent * 2);
+          }
+        }
+        oss.put(']');
+        break;
+      }
+      case object: {
+        std::string dump;
+        oss.put('{');
+        for (const auto &[key, value]: std::get<JSONObject>(data)) {
+          if (prettyPrint) {
+            oss.put('\n');
+            oss.write(std::string(newIndent * 2, indentChar).c_str(), newIndent * 2);
+          }
+          oss.put('"');
+          oss.write(key.c_str(), key.size());
+          oss.put('"');
+          oss.put(':');
+          if (prettyPrint)
+            oss.put(' ');
+          dump = value.dump(newIndent, indentChar);
+          oss.write(dump.c_str(), dump.size());
+          oss.put(',');
+        }
+        if (!std::get<JSONObject>(data).empty()) {
+          oss.seekp(-1, std::ios_base::end);
+          if (prettyPrint) {
+            oss.put('\n');
+            oss.write(std::string(endCharIndent * 2, indentChar).c_str(), endCharIndent * 2);
+          }
+        }
+        oss.put('}');
+        break;
+      }
+    }
+
+    return oss.str();
   }
 }

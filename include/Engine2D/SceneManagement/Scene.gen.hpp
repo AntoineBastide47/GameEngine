@@ -11,10 +11,15 @@ namespace Engine::Reflection {
   void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \
     if (format == Engine::Reflection::Format::JSON) { \
       json = Engine::JSON::Object();\
+      Engine::Reflection::_e_saveImpl(resources, format, json["resources"]);\
+      Engine::Reflection::_e_saveImpl(entities, format, json["entities"]);\
     }\
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
-    if (format == Engine::Reflection::Format::JSON) {}\
+    if (format == Engine::Reflection::Format::JSON) { \
+      Engine::Reflection::_e_loadImpl(resources, format, json["resources"]);\
+      Engine::Reflection::_e_loadImpl(entities, format, json["entities"]);\
+    }\
   }\
   private: 
 } // namespace Engine::Reflection

@@ -4,11 +4,10 @@
 // Date: 27/03/2025
 //
 
-#include <sys/sysctl.h>
 #include <string>
+#include <sys/sysctl.h>
 
 #include "commands/Build.hpp"
-#include "commands/Dependencies.hpp"
 
 Build::Build()
   : Command(
@@ -26,9 +25,6 @@ void Build::Run(
         << CLI_EXECUTE_COMMAND(COMMAND_HELP) << " for more information." << RESET;
     return;
   }
-
-  // Update the dependencies
-  commands[COMMAND_DEPENDENCIES]->Run(args, commands);
 
   // Remove previously built library
   const std::regex versionedPattern(R"(.*-[0-9]+\.[0-9]+\.[0-9]+(d|dp)?(\.a|\.lib|\.so|\.dll)?)");

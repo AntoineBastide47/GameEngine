@@ -10,10 +10,9 @@
 #include "Engine2D/Physics/Collider2D.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "Engine2D/Scene.hpp"
-#include "Engine2D/SceneManager.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
 #include "Engine2D/Physics/Rigidbody2D.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 
 namespace Engine2D::Physics {
   Collider2D::Collider2D()
@@ -21,11 +20,11 @@ namespace Engine2D::Physics {
       initialized(false), lastModelMatrix(), rigidbody() {}
 
   void Collider2D::forward() {
-    SceneManager::ActiveScene()->physicsSystem.addCollider(this);
+    Entity()->Scene()->physicsSystem.addCollider(this);
   }
 
   void Collider2D::recall() {
-    SceneManager::ActiveScene()->physicsSystem.removeCollider(this);
+    Entity()->Scene()->physicsSystem.removeCollider(this);
   }
 
   std::vector<glm::vec2> Collider2D::ContactPoints() const {

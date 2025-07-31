@@ -8,7 +8,6 @@
 #define SHADER_H
 
 #include "Engine/Reflection/Reflectable.hpp"
-#include "Shader.gen.hpp"
 
 namespace Engine {
   class ResourceManager;
@@ -20,14 +19,18 @@ namespace Engine2D::Rendering {
 
 namespace Engine::Rendering {
   /// Represents an OpenGL shader program, managing shader compilation, linking, and uniform settings.
-  class Shader final : public Reflection::Reflectable {
-    SERIALIZE_SHADER
-      friend class Engine::ResourceManager;
-      friend class Engine2D::Rendering::Renderer2D;
+  class Shader final {
+    friend class Engine::ResourceManager;
+    friend class Engine2D::Rendering::Renderer2D;
     public:
       Shader() = default;
 
       uint Id() const;
+
+      /// @returns The name of this shader
+      const std::string &Name() const;
+      /// @returns The path of the file that stores this shader
+      const std::string &Path() const;
 
       /**
        * Sets a float uniform in the shader program.
@@ -109,6 +112,10 @@ namespace Engine::Rendering {
     private:
       /// Used to reference and manage this shader program within OpenGL.
       uint id;
+      /// The name of this shader
+      std::string name;
+      /// The path of the file this shader is stored in
+      std::string path;
 
       /**
        * Sets the current shader as active and returns a reference to this Shader object, enabling method chaining.

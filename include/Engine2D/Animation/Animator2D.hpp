@@ -119,6 +119,8 @@ namespace Engine2D::Animation {
 
       /// @returns The given animation condition converted to a string representation
       static std::string AnimationConditionToString(AnimationCondition condition);
+
+      void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
     private:
       enum ParameterType {
         BOOL, INT, FLOAT, TRIGGER
@@ -177,19 +179,19 @@ namespace Engine2D::Animation {
       };
 
       /// The animations that this animator can play
-      std::unordered_map<std::string, Animation2D> animations;
+      ENGINE_SERIALIZE std::unordered_map<std::string, Animation2D> animations;
       /// All the user defined animator parameters
-      std::unordered_map<std::string, Parameter> parameters;
+      ENGINE_SERIALIZE std::unordered_map<std::string, Parameter> parameters;
       /// All the user defined animator transitions
-      std::unordered_map<std::string, std::vector<AnimationTransition>> transitions;
+      ENGINE_SERIALIZE std::unordered_map<std::string, std::vector<AnimationTransition>> transitions;
       /// The animation currently played by the animator
       Animation2D *currentAnimation;
       /// The name of the animation currently played by the animator
-      std::string currentAnimationName;
+      ENGINE_SERIALIZE std::string currentAnimationName;
       /// The animation played by default by the animator
       Animation2D *defaultAnimation;
       /// The name of the animation currently played by the animator
-      std::string defaultAnimationName;
+      ENGINE_SERIALIZE std::string defaultAnimationName;
 
       void forward() override;
       void recall() override;

@@ -14,7 +14,6 @@
 #include "Engine/Types/float01.hpp"
 #include "Collider2D.gen.hpp"
 
-
 namespace Engine2D {
   class Entity2D;
 }
@@ -57,18 +56,19 @@ namespace Engine2D::Physics {
       [[nodiscard]] std::vector<glm::vec2> ContactPoints() const;
       Type GetType() const;
     protected:
-      struct AABB {
-        glm::vec2 min;
-        glm::vec2 max;
+      struct AABB final : Reflectable {
+        SERIALIZE_AABB
+          glm::vec2 min;
+          glm::vec2 max;
 
-        AABB()
-          : min(glm::vec2(0)), max(glm::vec2(0)) {}
+          AABB()
+            : min(glm::vec2(0)), max(glm::vec2(0)) {}
       };
 
       /// The type of this collider
-      Type type;
+      ENGINE_SERIALIZE Type type;
       /// The vertices that make up the initial collider.
-      std::vector<glm::vec2> vertices;
+      ENGINE_SERIALIZE std::vector<glm::vec2> vertices;
       /// The vertices that make up the initial collider transformed to match its current position, rotation and scale.
       std::vector<glm::vec2> transformedVertices;
       /// Weather or not this collider has been initialized or not
@@ -79,6 +79,8 @@ namespace Engine2D::Physics {
       glm::mat4 lastModelMatrix;
       /// The rigidbody attached to the entity this collider is attached to
       Rigidbody2D *rigidbody;
+      /// The points at which this rigidbody collided with another rigidbody
+      std::vector<glm::vec2> contactPoints;
 
       Collider2D();
 
@@ -96,8 +98,6 @@ namespace Engine2D::Physics {
         return {};
       }
     private:
-      /// The points at which this rigidbody collided with another rigidbody
-      std::vector<glm::vec2> contactPoints;
       /// @return A std::array containing the min and max points of the AABB.
       [[nodiscard]] AABB getAABB();
   };

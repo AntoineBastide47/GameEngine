@@ -59,7 +59,7 @@ namespace Engine {
       void trigger(Args... args) {
         callbacks.erase(
           std::remove_if(
-            callbacks.begin(), callbacks.end(), [&](const std::shared_ptr<Callback> &cb) {
+            callbacks.begin(), callbacks.end(), [&](const CallbackHandle &cb) {
               if (cb) {
                 (*cb)(args...);
                 return false;
@@ -72,7 +72,7 @@ namespace Engine {
       }
     private:
       /// The list of all callbacks registered to this event
-      std::vector<std::shared_ptr<Callback>> callbacks;
+      std::vector<CallbackHandle> callbacks;
   };
 }
 

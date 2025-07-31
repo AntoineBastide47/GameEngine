@@ -41,6 +41,10 @@ namespace Engine2D::Physics {
     dynamicFriction = 0.4f;
   }
 
+  void Rigidbody2D::OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) {
+    SetMass(mass);
+  }
+
   void Rigidbody2D::step() {
     if (!IsActive() || isKinematic)
       return;

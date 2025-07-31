@@ -262,7 +262,7 @@ namespace Engine {
           const JSON val = c == 't' ? true : c == 'f' ? false : JSON{};
 
           if (p + lit.size() > bufferEnd)
-            break;
+            return static_cast<int>(p - buffer);
 
           for (size_t i = 0; i < lit.size(); ++i)
             if (p[i] != lit[i])

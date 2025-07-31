@@ -13,10 +13,12 @@
 #include "Engine/Reflection/Concepts.hpp"
 #include "Engine/Reflection/ReflectionFactory.hpp"
 
+namespace Engine2D {
+  class Component2D;
+}
+
 namespace Engine::Reflection {
-  template<typename T> static void _e_loadImpl(
-    T &result, const Format format, const Engine::JSON &json
-  ) {
+  template<typename T> static void _e_loadImpl(T &result, const Format format, const Engine::JSON &json) {
     if constexpr (HasLoadFunction<T, Format>)
       _e_load(result, format, json);
     else
@@ -64,6 +66,9 @@ No save overloads were found for the requested type.
       if constexpr (requires { result.clear(); })
         result.clear();
 
+      if constexpr (requires { result.reserve(array.size()); })
+        result.reserve(array.size());
+
       if constexpr (requires { result.insert(result.end(), typename T::value_type{}); }) {
         for (const auto &e: array) {
           typename T::value_type value;
@@ -99,10 +104,13 @@ No save overloads were found for the requested type.
         if (array.size() != T().size()) {
           throw std::runtime_error("JSON array size mismatch for std::array");
         }
+
+        if constexpr (requires { result.resize(array.size()); })
+          result.resize(array.size());
+
         std::size_t i = 0;
-        for (const auto &e: array) {
+        for (const auto &e: array)
           _e_loadImpl(result[i++], format, e);
-        }
       } else {
         static_assert(false, "Container type not supported for recursive insertion");
       }
@@ -115,6 +123,8 @@ No save overloads were found for the requested type.
 
       if constexpr (requires { result.clear(); })
         result.clear();
+      if constexpr (requires { result.resize(obj.size()); })
+        result.reserve(obj.size());
 
       for (const auto &[k, v]: obj) {
         typename T::key_type key;
@@ -131,12 +141,11 @@ No save overloads were found for the requested type.
     }
   }
 
-  template<typename T> requires IsPair<std::remove_cvref_t<T>>::value
-  static void _e_load(T &result, const Format format, const Engine::JSON &json) {
+  template<IsPair T> static void _e_load(T &result, const Format format, const Engine::JSON &json) {
     if (format == JSON) {
       const auto &arr = json.GetArray();
-      _e_loadImpl(result.first, format, arr.front());
-      _e_loadImpl(result.second, format, arr.back());
+      _e_loadImpl(result.first, format, arr.at(0));
+      _e_loadImpl(result.second, format, arr.at(1));
     }
   }
 
@@ -156,23 +165,37 @@ No save overloads were found for the requested type.
         _e_loadImpl(*result, format, json);
       } else {
         if constexpr (IsSharedPtr<T>)
-          result = ReflectionFactory::CreateShared<typename T::element_type>(json["_e_ptr_type"].GetString());
+          result = ReflectionFactory::CreateShared<typename T::element_type>(json["type"].GetString());
         else
-          result = ReflectionFactory::CreateUnique<typename T::element_type>(json["_e_ptr_type"].GetString());
+          result = ReflectionFactory::CreateUnique<typename T::element_type>(json["type"].GetString());
 
-        result->_e_load(format, json["_e_ptr_data"]);
+        result->_e_load(format, json["data"]);
+
+        if constexpr (!std::is_base_of_v<Engine2D::Component2D, typename T::element_type>)
+          result->OnDeserialize(format, json["data"]);
       }
     }
   }
 
   template<IsNotSTL T> static void _e_load(T &result, const Format format, const Engine::JSON &json) {
-    if constexpr (requires { result._e_load(format, json); })
+    if constexpr (requires { result._e_load(format, json); }) {
       result._e_load(format, json);
-    else
-      static_assert(
-        _e_f<T>,
-        "Missing load function. Ensure the type uses it's SERIALIZE_* macro."
+      result.OnDeserialize(format, json);
+    } else
+      static_assert(_e_f<T>, "Missing load function. Ensure the type uses it's SERIALIZE_* macro.");
+  }
+
+  template<typename... Ts> static void _e_load(std::tuple<Ts...> &t, const Format format, const Engine::JSON &json) {
+    if (format == JSON) {
+      std::size_t i = 0;
+      std::apply(
+        [&](Ts &... elems) {
+          (([&] {
+            _e_loadImpl(elems, format, json.At(i++));
+          }()), ...);
+        }, t
       );
+    }
   }
 
   template<glm::length_t N, typename T, glm::qualifier Q>
@@ -182,14 +205,12 @@ No save overloads were found for the requested type.
         throw std::runtime_error("Invalid JSON array size for glm::vec");
 
       for (glm::length_t i = 0; i < N; ++i)
-        result[i] = static_cast<T>(json[i].GetNumber());
+        _e_loadImpl(result[i], format, json[i]);
     }
   }
 
   template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
-  static void _e_load(
-    glm::mat<C, R, T, Q> &result, const Format format, const Engine::JSON &json
-  ) {
+  static void _e_load(glm::mat<C, R, T, Q> &result, const Format format, const Engine::JSON &json) {
     if (format == JSON) {
       if (!json.IsArray() || json.Size() != C)
         throw std::runtime_error("Invalid JSON array size for glm::mat columns");
@@ -199,33 +220,28 @@ No save overloads were found for the requested type.
         if (!colJson.IsArray() || colJson.Size() != R)
           throw std::runtime_error("Invalid JSON array size for glm::mat column elements");
 
-        for (glm::length_t row = 0; row < R; ++row) {
-          result[col][row] = static_cast<T>(colJson[row].GetNumber());
-        }
+        for (glm::length_t row = 0; row < R; ++row)
+          _e_loadImpl(result[col][row], format, colJson[row]);
       }
     }
   }
 
-  template<typename... Ts> static void _e_load(
-    std::variant<Ts...> &v, const Format format, const Engine::JSON &json
-  ) {
+  template<typename... Ts> static void _e_load(std::variant<Ts...> &v, const Format format, const Engine::JSON &json) {
     if (format == JSON) {
       if (!json.IsObject() || !json.Contains("index") || !json.Contains("value"))
         throw std::runtime_error("Invalid JSON for variant");
 
-      size_t index = static_cast<size_t>(json["index"].GetNumber());
+      const size_t idx = static_cast<size_t>(json["index"].GetNumber());
       const auto &valueJson = json["value"];
 
       auto loader = [&]<typename T0>([[maybe_unused]] T0 typeTag) {
         using T = typename T0::type;
         T temp;
-        _e_load(temp, format, valueJson);
+        _e_loadImpl(temp, format, valueJson);
         v = std::move(temp);
       };
 
-      ((index == std::variant<Ts...>::template index_of<Ts>()
-          ? (loader(std::type_identity<Ts>{}), true)
-          : false) || ...);
+      ((idx == std::variant<Ts...>::template index_of<Ts>() ? (loader(std::type_identity<Ts>{}), true) : false) || ...);
     }
   }
 }

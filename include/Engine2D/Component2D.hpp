@@ -23,6 +23,7 @@ namespace Engine2D {
    */
   class Component2D : public Engine::Reflection::Reflectable {
     SERIALIZE_COMPONENT2D
+      friend class Scene;
       friend class Entity2D;
       friend class Transform2D;
     public:
@@ -37,6 +38,8 @@ namespace Engine2D {
       [[nodiscard]] Entity2D *Entity() const;
       /// @returns The transform attached to the entity this component is attached to
       [[nodiscard]] Transform2D *Transform() const;
+
+      friend std::ostream &operator<<(std::ostream &os, const Component2D &component);
     protected:
       Component2D();
       /// Internal call to forward this component to the system that handles it
@@ -45,13 +48,10 @@ namespace Engine2D {
       virtual void recall() {}
       /// Whether this component is active in the scene
       /// @warning Do not use directly, use the getter and setter instead as the component being active entails more that just this flag being true
-      bool active;
+      ENGINE_SERIALIZE bool active;
     private:
       /// The entity this component is attached to
       Entity2D *entity;
-
-      /// Sets the parent entity this component is attached to
-      void setEntity(Entity2D *entity);
   };
 }
 

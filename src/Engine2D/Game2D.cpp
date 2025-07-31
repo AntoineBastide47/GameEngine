@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <random>
+#include <ranges>
 
 #include "Engine2D/Game2D.hpp"
 #include "Engine/ResourceManager.hpp"
@@ -19,8 +20,7 @@
 #endif
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine/Reflection/Serializer.hpp"
-#include "Engine2D/Behaviour.hpp"
-#include "Engine2D/SceneManager.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 
 using Engine::ResourceManager;
 
@@ -128,7 +128,7 @@ namespace Engine2D {
     // Initialize and Configure GLFW
     if (!glfwInit()) {
       std::cerr << "ERROR: GLFW could not initialize" << std::endl;
-      this->quit();
+      quit();
       exit(EXIT_FAILURE);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -145,7 +145,7 @@ namespace Engine2D {
     window = glfwCreateWindow(width, height, title, nullptr, nullptr);
     if (!window) {
       std::cerr << "ERROR: Failed to create window" << std::endl;
-      this->quit();
+      quit();
       exit(EXIT_FAILURE);
     }
     glViewport(0, 0, width, height);
@@ -178,7 +178,7 @@ namespace Engine2D {
     glewExperimental = GL_TRUE;
     if (const GLenum err = glewInit(); err != GLEW_OK) {
       std::cerr << "ERROR: Failed to initialize GLEW: " << err << std::endl;
-      this->quit();
+      quit();
       exit(EXIT_FAILURE);
     }
 
@@ -186,12 +186,13 @@ namespace Engine2D {
     Engine::Input::Keyboard::initialize(window);
     Engine::Input::Mouse::initialize(window);
 
+    // Create the default scene
+    SceneManager::CreateScene("default");
+    SceneManager::SetActiveScene("default");
+
     // Set up the shader preprocessor and load the engine shaders
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &Rendering::Renderer2D::MAX_TEXTURES);
     ResourceManager::LoadShader("sprite", "Engine/Shaders/sprite.glsl");
-
-    SceneManager::CreateScene("default");
-    SceneManager::SetActiveScene("default");
 
     OnInitialize();
   }
@@ -206,12 +207,16 @@ namespace Engine2D {
       lastTime = currentFrameTime;
       glfwPollEvents();
 
-      SceneManager::currentScene->syncEntities();
-
       processInput();
-      SceneManager::currentScene->update();
-      SceneManager::currentScene->fixedUpdate();
-      SceneManager::currentScene->animate();
+      if (const auto scene = SceneManager::ActiveScene(); scene) {
+        scene->syncEntities();
+        scene->update();
+        scene->fixedUpdate();
+        scene->animate();
+        #if !MULTI_THREAD
+        scene->render();
+        #endif
+      }
 
       #if MULTI_THREAD
       // Handoff engine data to the render thread
@@ -226,8 +231,6 @@ namespace Engine2D {
         renderFinished = false;
       }
       cv.notify_one();
-      #else
-      SceneManager::currentScene->render();
       #endif
 
       // FPS calculation
@@ -278,7 +281,7 @@ namespace Engine2D {
           }
         );
         // Now the engine data is exclusively ours; render the frame.
-        SceneManager::currentScene->render();
+        SceneManager::activeScene->render();
         updateFinished = false;
         renderFinished = true;
       }
@@ -322,7 +325,8 @@ namespace Engine2D {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
     // Deallocate all the game resources
-    SceneManager::currentScene->destroy();
+    for (const auto &scene: SceneManager::scenes | std::views::values)
+      scene->destroy();
     ResourceManager::Clear();
 
     // Destroy the window and terminate all OpenGL processes

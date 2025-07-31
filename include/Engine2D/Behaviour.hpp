@@ -7,8 +7,6 @@
 #ifndef BEHAVIOUR_H
 #define BEHAVIOUR_H
 
-#include <memory>
-
 #include "Engine2D/Component2D.hpp"
 #include "Engine2D/Transform2D.hpp"
 #include "Physics/Collider2D.hpp"
@@ -20,6 +18,8 @@ namespace Engine2D {
     public:
       /// Called before the first update.
       virtual void OnInitialize() {}
+      /// Called before the first update and after deserialization to bind input correctly.
+      virtual void OnBindInput() {}
       /// Called once per frame.
       virtual void OnUpdate() {}
       /// Called once per physics update.
@@ -43,7 +43,6 @@ namespace Engine2D {
     private:
       using Component2D::forward;
       using Component2D::recall;
-      using Component2D::active;
   };
 } // Engine2D
 

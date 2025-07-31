@@ -87,26 +87,27 @@ namespace Engine2D {
       void SetParticleLifetime(float lifetime);
       /// @returns how long each particle lives for
       [[nodiscard]] float GetParticleLifetime() const;
+
+      void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
     protected:
       ParticleSystem2D();
       void forward() override;
       void recall() override;
     private:
       /// Represents a single particle and it's state
-      struct Particle : Reflectable {
-        SERIALIZE_PARTICLE
-          glm::vec2 position;
-          glm::vec2 scale;
-          glm::vec2 startVelocity;
-          glm::vec2 endVelocity;
-          float rotation;
-          float lifeTime;
+      struct Particle {
+        glm::vec2 position;
+        glm::vec2 scale;
+        glm::vec2 startVelocity;
+        glm::vec2 endVelocity;
+        float rotation;
+        float lifeTime;
       };
 
       /// How long the particle system will be simulated
-      float duration;
+      ENGINE_SERIALIZE float duration;
       /// How long particles will be visible on screen
-      float particleLifetime;
+      ENGINE_SERIALIZE float particleLifetime;
       /// The inverse of how long particles will be visible on screen
       float inverseLifetime;
 
@@ -114,10 +115,12 @@ namespace Engine2D {
       std::vector<Particle> particles;
       /// The index of the first alive particle
       size_t head;
+      /// How many particles are currently alive
+      size_t capacity;
       /// The maximum number of particles that can be rendered
-      size_t maxParticles;
-      /// The number of alive particles
-      size_t aliveCount;
+      ENGINE_SERIALIZE size_t maxParticles;
+      /// Whether the simulation is done or not
+      ENGINE_SERIALIZE bool simulationFinished;
 
       /// Emission accumulator timer
       float emissionAcc;
@@ -130,15 +133,9 @@ namespace Engine2D {
       uint quadVBO;
       /// The VBO used to send particle data
       uint instanceVBO;
-      /// How many particles are currently alive
-      uint capacity;
-
-      /// Whether the simulation is done or not
-      bool simulationFinished;
 
       /// Renders the particle system
       void updateAndRender(uint textureIndex, float *data);
-
       /// Updates the dead particle at the given index and brings it back to life
       void respawnParticle();
   };

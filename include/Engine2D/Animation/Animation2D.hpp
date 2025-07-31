@@ -9,9 +9,13 @@
 
 #include <string>
 
+#include "Engine/Reflection/Reflectable.hpp"
+#include "Animation2D.gen.hpp"
+
 namespace Engine2D::Animation {
-  class Animation2D {
-    friend class Animator2D;
+  class Animation2D final : public Engine::Reflection::Reflectable {
+    SERIALIZE_ANIMATION2D
+      friend class Animator2D;
     public:
       /// The number of sprites in a vertical animation
       int frameCountX;
@@ -27,6 +31,9 @@ namespace Engine2D::Animation {
       bool loop;
       /// Whether to play the animation in reverse
       bool reverse;
+
+      /// @warning Do not use, use the static factory methods Create* instead
+      Animation2D();
 
       /**
        * Creates a vertical animation from a vertical strip image
@@ -66,27 +73,31 @@ namespace Engine2D::Animation {
       void SetSpeed(float speed);
       /// @returns The speed of the animation
       [[nodiscard]] float GetSpeed() const;
+
+      void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
     private:
+      /// The name of the sprite used by this animation
+      ENGINE_SERIALIZE std::string spriteName;
       /// True if vertical, False if horizontal
-      bool vertical;
+      ENGINE_SERIALIZE bool vertical;
       /// Whether the animation is playing or paused
-      bool paused;
+      ENGINE_SERIALIZE bool paused;
       /// Whether the animation has finished playing
-      bool completed;
+      ENGINE_SERIALIZE bool completed;
       /// The duration of each frame
-      float frameDuration;
+      ENGINE_SERIALIZE float frameDuration;
       /// 1.0f / frameDuration
-      float inverseFrameDuration;
+      float frameDurationInv;
       /// The speed of the animation
-      float speed;
+      ENGINE_SERIALIZE float speed;
       /// 1.0f / speed
-      float inverseSpeed;
+      float speedInv;
       /// How long the animation has been running for
       float elapsedTime;
-      std::string spriteName;
 
       Animation2D(
-        const std::string &spriteName, int frameCountX, int frameCountY, int frameOffsetX, int frameOffsetY, float frameRate,
+        const std::string &spriteName, int frameCountX, int frameCountY, int frameOffsetX, int frameOffsetY,
+        float frameRate,
         bool vertical, bool loop, bool reverse
       );
 

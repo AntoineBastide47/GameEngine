@@ -7,6 +7,8 @@
 #ifndef PHYSICS2D_H
 #define PHYSICS2D_H
 
+#include <unordered_set>
+
 #include "Engine2D/Physics/CollisionGrid.hpp"
 #include "Engine2D/Physics/CollisionManifold.hpp"
 
@@ -46,8 +48,8 @@ struct std::hash<Engine2D::Physics::ContactPair> {
 namespace Engine2D::Physics {
   class Physics2D {
     friend class Collider2D;
-    friend class Engine::Settings;
     friend class Engine2D::Scene;
+    friend class Engine::Settings;
 
     enum CollisionEventType {
       Stay, Enter, Exit

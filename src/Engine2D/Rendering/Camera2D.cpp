@@ -8,14 +8,14 @@
 
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine/Reflection/Deserializer.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine2D/Transform2D.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 #include "Engine2D/Types/Vector2.hpp"
 
 namespace Engine2D::Rendering {
-  uint Camera2D::ENGINE_DATA_BINDING_PORT = 0;
-
   Camera2D::Camera2D()
     : Camera2D(-1, 1, -1, 1) {}
 
@@ -23,8 +23,8 @@ namespace Engine2D::Rendering {
     const float left, const float right, const float bottom, const float top, const float near, const float far
   )
     : followTarget(), positionOffset(0), rotationOffset(0), damping(1),
-      projection(glm::ortho(left, right, bottom, top, near, far)), view(1.0f), shaking(false), initialized(false),
-      shakeElapsed(0), shakeDuration(0), ubo(0), m00(0), m01(0), m03(0), m10(0), m11(0), m13(0) {
+      projection(glm::ortho(left, right, bottom, top, near, far)), view(1.0f), initialized(false), shakeDuration(0),
+      shaking(false), shakeElapsed(0), ubo(0), followTargetIndex(-1), m00(0), m01(0), m03(0), m10(0), m11(0), m13(0) {
     viewProjection = projection * view;
   }
 
@@ -72,6 +72,26 @@ namespace Engine2D::Rendering {
 
   const glm::mat4 &Camera2D::GetViewProjectionMatrix() const {
     return this->viewProjection;
+  }
+
+  inline int index_of_ptr(const std::vector<std::unique_ptr<Entity2D>> &vec, const Entity2D *ptr) {
+    if (!ptr)
+      return -1;
+
+    for (int i = 0; i < vec.size(); ++i)
+      if (vec[i].get() == ptr)
+        return i;
+    return -1;
+  }
+
+  void Camera2D::OnSerialize(const Engine::Reflection::Format format, Engine::JSON &json) const {
+    if (format == Engine::Reflection::Format::JSON)
+      json["followTarget"] = index_of_ptr(SceneManager::ActiveScene()->entities, followTarget);
+  }
+
+  void Camera2D::OnDeserialize(const Engine::Reflection::Format format, const Engine::JSON &json) {
+    if (format == Engine::Reflection::Format::JSON)
+      followTargetIndex = static_cast<int>(json["followTarget"].GetNumber());
   }
 
   void Camera2D::initialize() {

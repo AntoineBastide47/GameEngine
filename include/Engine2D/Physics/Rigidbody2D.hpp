@@ -66,13 +66,15 @@ namespace Engine2D::Physics {
       ///  - static: 0.6f
       ///  - dynamic: 0.4f
       void DefaultFriction();
+
+      void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
     private:
       /// Mass of the rigidbody
-      float mass;
+      ENGINE_SERIALIZE float mass;
       /// Inverse of the mass (cached to only use the division when mass changes)
       float massInv;
       /// Inertia of the rigidbody
-      float inertia;
+      ENGINE_SERIALIZE float inertia;
       /// Inverse of the inertia (cached to only use the division when inertia changes)
       float inertiaInv;
       /// Accumulated force applied to the rigidbody.

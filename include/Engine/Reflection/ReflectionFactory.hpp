@@ -33,7 +33,7 @@ namespace Engine::Reflection {
         return std::shared_ptr<T>(typedPtr);
       }
 
-      template<typename T> static std::shared_ptr<T> CreateUnique(const std::string &type) {
+      template<typename T> static std::unique_ptr<T> CreateUnique(const std::string &type) {
         if (!engineNameToTypeIdName.contains(type))
           throw std::runtime_error("Unknown type name: " + type);
 

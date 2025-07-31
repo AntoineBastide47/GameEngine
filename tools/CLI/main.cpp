@@ -45,8 +45,7 @@ int main(const int argc, const char *argv[]) {
   #endif
 
   bool useEngineCommands = false;
-  std::ifstream cmake("CMakeLists.txt");
-  if (cmake) {
+  if (std::ifstream cmake("CMakeLists.txt"); cmake) {
     std::string line;
     while (std::getline(cmake, line)) {
       if (line.find("add_library(Engine2D STATIC") != std::string::npos) {

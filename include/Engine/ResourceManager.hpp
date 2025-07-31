@@ -18,9 +18,14 @@ using Engine::Rendering::Shader;
 using Engine::Rendering::Texture;
 using Engine2D::Rendering::Sprite;
 
+namespace Engine2D {
+  class SceneResources;
+}
+
 namespace Engine {
   /** ResourceManager is a static class that keeps track of all the shaders and textures that have been loaded to the game. */
   class ResourceManager {
+    friend class Engine2D::SceneResources;
     public:
       /**
        * Loads a shader to memory with the given OpenGL source shader files
@@ -57,9 +62,7 @@ namespace Engine {
        * - the file can't be read or is empty
        * @return The loaded texture
        */
-      static Texture *LoadTexture2D(
-        const std::string &filePath, const std::string &name, bool blend = false
-      );
+      static Texture *LoadTexture2D(const std::string &name, const std::string &filePath, bool blend = false);
 
       /**
        * Finds and returns the texture with the given name
@@ -81,9 +84,7 @@ namespace Engine {
        * @param rect The normalized area of the texture to use to represent the sprite in the given format: (u, v, width, height)
        * @note Log's an error if no texture with the given name was found
        */
-      static Sprite *CreateSpriteFromTexture(
-        const std::string &textureName, const glm::vec<4, float> &rect = defaultRect
-      );
+      static Sprite *CreateSpriteFromTexture(const std::string &textureName, const glm::vec4 &rect = defaultRect);
 
       /**
        * Creates a sprite using the texture with the given name
@@ -93,7 +94,7 @@ namespace Engine {
        * @note Log's an error if no texture with the given name was found
        */
       static Sprite *CreateSprite(
-        const std::string &spriteName, const std::string &textureName, const glm::vec<4, float> &rect = defaultRect
+        const std::string &spriteName, const std::string &textureName, const glm::vec4 &rect = defaultRect
       );
 
       /**
@@ -115,9 +116,15 @@ namespace Engine {
        * @return The loaded texture
        */
       static std::pair<Texture *, Sprite *> LoadTexture2DAndSprite(
-        const std::string &filePath, const std::string &name, const glm::vec<4, float> &rect = defaultRect,
-        bool blend = false
+        const std::string &name, const std::string &filePath, const glm::vec4 &rect = defaultRect, bool blend = false
       );
+
+      /// @returns The name of the given shader or "" if it isn't found
+      static const std::string &GetShaderName(const Shader *shader);
+      /// @returns The name of the given texture 2D or "" if it isn't found
+      static const std::string &GetTexture2DName(const Texture *texture);
+      /// @returns The name of the given sprite or "" if it isn't found
+      static const std::string &GetSpriteName(const Sprite *sprite);
 
       /// Deletes all the loaded textures and shaders
       static void Clear();
@@ -129,9 +136,11 @@ namespace Engine {
       /// The sprites that have been loaded to memory by the Resource Manager
       inline static std::map<std::string, std::unique_ptr<Sprite>> sprites;
       /// The default value for a rect (the whole image)
-      inline static glm::vec<4, float> defaultRect{0, 0, 1, 1};
+      inline static glm::vec4 defaultRect{0, 0, 1, 1};
 
       ResourceManager() = default;
+
+      static const std::string &EmptyString();
   };
 }
 

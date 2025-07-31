@@ -10,10 +10,9 @@
 #include <fstream>
 #include <string_view>
 
-#include "Concepts.hpp"
-#include "Load.hpp"
-#include "../Data/Json.hpp"
-#include "../Data/JsonParser.hpp"
+#include "Engine/Reflection/Concepts.hpp"
+#include "Engine/Reflection/Load.hpp"
+#include "Engine/Data/JsonParser.hpp"
 
 namespace Engine::Reflection {
   class Deserializer final {

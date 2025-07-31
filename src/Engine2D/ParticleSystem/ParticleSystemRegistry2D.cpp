@@ -6,12 +6,13 @@
 
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 #include "Engine/Macros/Profiling.hpp"
-#include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
+#include "Engine2D/ParticleSystem/ParticleSystem2D.hpp"
+#include "Engine2D/SceneManagement/Scene.hpp"
 
 namespace Engine2D {
   ParticleSystemRegistry2D::ParticleSystemRegistry2D()
-    : repartition(false), dirty(false) {}
+    : scene(nullptr), repartition(false), dirty(false) {}
 
   void ParticleSystemRegistry2D::prerender() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
@@ -77,12 +78,16 @@ namespace Engine2D {
   }
 
   void ParticleSystemRegistry2D::addParticleSystem(ParticleSystem2D *particleSystem) {
-    if (particleSystem)
-      particleSystemsToAdd.emplace_back(particleSystem);
+    if (!particleSystem)
+      return;
+    scene->resources.renderables.push_back(particleSystem);
+    particleSystemsToAdd.emplace_back(particleSystem);
   }
 
   void ParticleSystemRegistry2D::removeParticleSystem(ParticleSystem2D *particleSystem) {
-    if (particleSystem)
-      particleSystemsToRemove.insert(particleSystem);
+    if (!particleSystem)
+      return;
+    std::erase(scene->resources.renderables, particleSystem);
+    particleSystemsToRemove.insert(particleSystem);
   }
 } // Engine2D

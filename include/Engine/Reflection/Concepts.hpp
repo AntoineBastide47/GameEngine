@@ -25,9 +25,13 @@ namespace Engine::Reflection {
       !std::is_same_v<std::remove_cvref_t<T>, bool> &&
       !IsString<T>;
 
-  template<typename> struct IsPair : std::false_type {};
-
-  template<typename A, typename B> struct IsPair<std::pair<A, B>> : std::true_type {};
+  template<typename T> concept IsPair =
+      requires {
+        typename std::remove_cvref_t<T>;
+      } && std::is_same_v<
+        std::remove_cvref_t<T>,
+        std::pair<typename std::remove_cvref_t<T>::first_type, typename std::remove_cvref_t<T>::second_type>
+      >;
 
   template<typename T> concept IsMap =
       requires {
@@ -36,7 +40,7 @@ namespace Engine::Reflection {
         typename T::mapped_type;
         std::begin(std::declval<T &>());
         std::end(std::declval<T &>());
-      } && IsPair<std::remove_cvref_t<typename T::value_type>>::value;
+      } && IsPair<std::remove_cvref_t<typename T::value_type>>;
 
   template<typename T> concept IsContainer =
       requires {
@@ -44,8 +48,6 @@ namespace Engine::Reflection {
         std::begin(std::declval<T &>());
         std::end(std::declval<T &>());
       } && !IsMap<T> && !IsString<T>;
-
-  template<typename T> concept IsTuple = requires { typename std::tuple_size<std::remove_cvref_t<T>>::type; };
 
   template<typename T> concept IsSharedPtr = requires(T ptr) {
     typename T::element_type;

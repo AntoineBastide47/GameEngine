@@ -70,28 +70,33 @@ namespace Engine2D::Rendering {
       const glm::mat4 &GetViewMatrix() const;
       /// @returns The combined view-projection matrix used to transform world coordinates into clip space.
       const glm::mat4 &GetViewProjectionMatrix() const;
+
+      void OnSerialize(Engine::Reflection::Format format, Engine::JSON &json) const override;
+      void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
     private:
       /// The orthographic projection matrix that defines the camera's visible region in world space.
-      const glm::mat4 projection;
+      ENGINE_SERIALIZE glm::mat4 projection;
       /// The view matrix representing the inverse of the camera's world transformation (position, rotation, scale).
       glm::mat4 view;
       /// The combined view-projection matrix used to transform world coordinates into clip space.
       glm::mat4 viewProjection;
-      /// If the camera is currently shaking
-      bool shaking;
       /// Whether the camera is initialized or not
       bool initialized;
+      /// How long the camera should shake for
+      ENGINE_SERIALIZE float shakeDuration;
+      /// If the camera is currently shaking
+      bool shaking;
       /// How long the camera has been shaking for
       float shakeElapsed;
-      /// How long the camera should shake for
-      float shakeDuration;
       /// UBO used to send data to all shaders
       uint ubo;
+      /// The index of the entity in the entities vector the camera is following
+      int followTargetIndex;
 
       float m00, m01, m03;
       float m10, m11, m13;
 
-      static uint ENGINE_DATA_BINDING_PORT;
+      inline static uint ENGINE_DATA_BINDING_PORT = 0;
 
       Camera2D();
       Camera2D(float left, float right, float bottom, float top, float near = -1, float far = 1);
