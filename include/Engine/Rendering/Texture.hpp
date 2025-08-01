@@ -13,17 +13,24 @@ namespace Engine {
   class ResourceManager;
 }
 
-namespace Engine2D::Rendering {
-  class Renderer2D;
+namespace Engine2D {
+  class Game2D;
+  class SceneResources;
+
+  namespace Rendering {
+    class Renderer2D;
+  }
 }
 
 namespace Engine::Rendering {
   /// A class representing a 2D texture in OpenGL, handling creation, configuration, and binding of textures.
   class Texture final {
+    friend class Engine2D::Game2D;
     friend class Engine::ResourceManager;
+    friend class Engine2D::SceneResources;
     friend class Engine2D::Rendering::Renderer2D;
     public:
-      explicit Texture(const std::string &path);
+      Texture();
 
       /// @returns the width of this texture
       int Width() const;
@@ -39,6 +46,9 @@ namespace Engine::Rendering {
 
       /// @returns The path of the file that stores this texture
       const std::string &Path() const;
+
+      /// @returns Whether this texture is transparent or not
+      bool Transparent() const;
     private:
       /// The OpenGL id of this texture
       unsigned int id;

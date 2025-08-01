@@ -32,6 +32,8 @@ add_executable(${PROJECT_NAME}
     include/Utils.hpp
     src/commands/BuildTools.cpp
     include/commands/BuildTools.hpp
+    src/commands/BuildSdk.cpp
+    include/commands/BuildSdk.hpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME engine-cli)

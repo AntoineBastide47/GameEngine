@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2025-08-01
+### Added
+- **[[Shader](include/Engine/Rendering/Shader.hpp), [Texture](include/Engine/Rendering/Texture.hpp)]**: both store their file path for serialization and deserialization
+- **[[CLI/BuildSDK](tools/CLI/include/commands/BuildSdk.hpp)]**: builds an SDK folder with all the required files and folders for releases
+### Fixed
+- **[[SceneManager](include/Engine2D/SceneManagement/SceneManager.hpp)]**: scene loading in multi threaded mode now works by offsetting the creation of gpu shader and textures to the render thread
+
 ## [0.10.0] - 2025-07-31
 ### Added
 - **[[Reflectable](include/Engine/Reflection/Reflectable.hpp)]**: OnSerialize and OnDeserialize callbacks are used to perform custom logic during serialization and deserialization, allowing types to handle state beyond automatic member reflection

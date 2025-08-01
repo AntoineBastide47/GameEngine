@@ -8,7 +8,7 @@
 #include "commands/Build.hpp"
 
 BuildProject::BuildProject()
-  : Command("builds the project's executable in debug or release mode", "{debug|profile|release}", 1, "debug") {}
+  : Command("build's the project's executable in debug or release mode", "{debug|profile|release}", 1, "debug") {}
 
 void BuildProject::Run(
   const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands

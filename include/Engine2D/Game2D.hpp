@@ -19,8 +19,8 @@ namespace Engine2D::Animation {
 }
 
 namespace Engine {
-  class ResourceManager;
   class Settings;
+  class ResourceManager;
 }
 
 namespace Engine2D {
@@ -28,6 +28,7 @@ namespace Engine2D {
   class Game2D {
     friend class Scene;
     friend class Entity2D;
+    friend class SceneManager;
     friend class Engine::Settings;
     friend class Engine::ResourceManager;
     public:
@@ -116,6 +117,7 @@ namespace Engine2D {
       /// Timer used to check if the game is ready for the next physics update
       float physicsAccumulator;
 
+      #if MULTI_THREAD
       /// Whether the main thread is finished and ready to sync with the render thread
       bool updateFinished;
       /// Whether the render thread is finished and ready to sync with the main thread
@@ -126,6 +128,12 @@ namespace Engine2D {
       std::condition_variable cv;
       /// The thread responsible for rendering the game
       std::thread renderThread;
+
+      std::mutex controlMutex;
+      std::condition_variable controlCV;
+      std::function<void()> renderThreadCallback;
+      bool callbackPending;
+      #endif
 
       /// The update loop called on the main thread
       void updateLoop();

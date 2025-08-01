@@ -9,8 +9,8 @@
 #include "Engine/Macros/Profiling.hpp"
 
 namespace Engine::Rendering {
-  Texture::Texture(const std::string &path)
-    : id(0), width(0), height(0), path(path), transparent(false) {}
+  Texture::Texture()
+    : id(0), width(0), height(0), transparent(false) {}
 
   int Texture::Width() const {
     return width;
@@ -30,6 +30,10 @@ namespace Engine::Rendering {
 
   const std::string &Texture::Path() const {
     return path;
+  }
+
+  bool Texture::Transparent() const {
+    return transparent;
   }
 
   void Texture::generate(

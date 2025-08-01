@@ -37,7 +37,7 @@ namespace Engine2D {
       int j = 0;
       json[TEXTURE_KEY].ReserveAndResize(textures.size());
       for (const auto texture: textures)
-        json.At(TEXTURE_KEY).At(j++) = {texture->Name(), texture->Path()};
+        json.At(TEXTURE_KEY).At(j++) = {texture->Name(), texture->Path(), texture->Transparent()};
 
       int k = 0;
       json[SPRITE_KEY].ReserveAndResize(sprites.size());
@@ -47,7 +47,8 @@ namespace Engine2D {
           sprite->texture->Name(),
           Engine::Reflection::Serializer::ToJson(sprite->rect),
           Engine::Reflection::Serializer::ToJson(sprite->pivot),
-          sprite->pixelsPerUnit
+          sprite->pixelsPerUnit,
+          sprite->transparent
         };
     }
   }
@@ -57,7 +58,8 @@ namespace Engine2D {
       for (const auto &shaderJSON: json.At(SHADER_KEY).GetArray())
         Engine::ResourceManager::LoadShader(shaderJSON.At(0).GetString(), shaderJSON.At(1).GetString());
       for (const auto &textureJSON: json.At(TEXTURE_KEY).GetArray())
-        Engine::ResourceManager::LoadTexture2D(textureJSON.At(0).GetString(), textureJSON.At(1).GetString());
+        Engine::ResourceManager::LoadTexture2D(textureJSON.At(0).GetString(), textureJSON.At(1).GetString())
+            ->transparent = textureJSON.At(2).GetBool();
       for (const auto &spriteJSON: json.At(SPRITE_KEY).GetArray()) {
         Sprite *sprite = Engine::ResourceManager::GetSprite(spriteJSON.At(0).GetString());
         if (!sprite)
@@ -66,16 +68,8 @@ namespace Engine2D {
         sprite->rect = Engine::Reflection::Deserializer::FromJson<glm::vec4>(spriteJSON.At(2));
         sprite->pivot = Engine::Reflection::Deserializer::FromJson<glm::vec2>(spriteJSON.At(3));
         sprite->pixelsPerUnit = static_cast<float>(spriteJSON.At(4).GetNumber());
+        sprite->transparent = spriteJSON.At(5).GetBool();
       }
     }
-  }
-
-  bool ResourceData::operator==(const ResourceData &other) const {
-    return name == other.name && path == other.path;
-  }
-
-  bool SpriteData::operator==(const SpriteData &other) const {
-    return name == other.name && path == other.path && rect == other.rect && pivot == other.pivot &&
-           pixelsPerUnit == other.pixelsPerUnit;
   }
 } // Engine2D

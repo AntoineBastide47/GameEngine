@@ -57,6 +57,8 @@ namespace Engine2D::Rendering {
       /// Coefficients that control the shake of the camera on the Y axis
       std::vector<ShakeWave> shakeCoefficientsY;
 
+      ~Camera2D() override;
+
       /// Starts the camera shake effect
       void Shake(float duration);
       /// Checks if the sprite is visible to the camera

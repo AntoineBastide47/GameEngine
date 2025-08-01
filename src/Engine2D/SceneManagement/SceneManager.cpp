@@ -5,11 +5,13 @@
 //
 
 #include <ranges>
+#include <mutex>
 
 #include "Engine2D/SceneManagement/SceneManager.hpp"
 #include "Engine/Log.hpp"
 #include "Engine/Reflection/Deserializer.hpp"
 #include "Engine/Reflection/Serializer.hpp"
+#include "Engine2D/Game2D.hpp"
 
 namespace Engine2D {
   Scene *SceneManager::CreateScene(const std::string &name) {
@@ -21,20 +23,40 @@ namespace Engine2D {
     return ptr;
   }
 
+  std::mutex syncMutex;
+
   void SceneManager::LoadScene(const std::string &name, const std::string &path) {
-    auto loadedScene = Engine::Reflection::Deserializer::FromJsonFromFile<std::unique_ptr<Scene>>(path);
+    {
+      std::unique_lock controlLock(Game2D::instance->controlMutex);
+      {
+        std::scoped_lock syncLock(syncMutex);
+        Game2D::instance->renderThreadCallback = [&] {
+          auto loadedScene = Engine::Reflection::Deserializer::FromJsonFromFile<std::unique_ptr<Scene>>(path);
 
-    const bool isActiveScene = activeScene && activeScene->name == name;
+          const bool isActiveScene = activeScene && activeScene->name == name;
 
-    if (scenes.contains(name))
-      DestroyScene(name);
+          if (scenes.contains(name)) {
+            scenes.at(name)->destroy();
+            scenes.erase(name);
+          }
 
-    loadedScene->name = name;
-    loadedScene->loaded = true;
-    scenes.emplace(name, std::move(loadedScene));
+          loadedScene->name = name;
+          loadedScene->loaded = true;
+          scenes.emplace(name, std::move(loadedScene));
 
-    if (isActiveScene)
-      SetActiveScene(name);
+          if (isActiveScene)
+            activeScene = scenes.at(name).get();
+        };
+        Game2D::instance->callbackPending = true;
+        Game2D::instance->cv.notify_one(); // wake render thread
+      }
+      // now wait for render thread to consume the callback
+      Game2D::instance->controlCV.wait(
+        controlLock, [] {
+          return !Game2D::instance->callbackPending;
+        }
+      );
+    }
   }
 
   void SceneManager::SaveScene(
@@ -72,6 +94,7 @@ namespace Engine2D {
     if (scenes.contains(name)) {
       if (scenes.at(name).get() == activeScene)
         activeScene = nullptr;
+      scenes.at(name)->destroy();
       scenes.erase(name);
     }
   }

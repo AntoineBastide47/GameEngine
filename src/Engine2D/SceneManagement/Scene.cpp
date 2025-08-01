@@ -114,7 +114,11 @@ namespace Engine2D {
     );
   }
 
+  #if MULTI_THREAD
+  void Scene::update() {
+    #else
   void Scene::update() const {
+    #endif
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
     for (const auto &entity: entities) {
@@ -192,19 +196,27 @@ namespace Engine2D {
     std::erase(entities, nullptr);
 
     int i = 0;
-    for (const auto &entity: entities) {
+    for (auto it = entities.begin(); it != entities.end();) {
+      const auto entity = it->get();
+      if (entity->destroyed) {
+        entity->destroy();
+        entity->free();
+        it = entities.erase(it);
+        continue;
+      }
+
       const auto &entityData = json.At("entities").At(i++).At("data");
       const int index = static_cast<int>(entityData.At("transform").At("data").At("parent").GetNumber());
       const auto transform = entity->Transform();
 
       entity->scene = this;
-      transform->entity = entity.get();
+      transform->entity = entity;
       transform->SetPositionRotationAndScale(transform->worldPosition, transform->worldRotation, transform->worldScale);
       transform->SetParent(index == -1 ? nullptr : (entities.begin() + index)->get());
 
       std::erase(entity->allComponents, nullptr);
       for (auto &component: entity->allComponents) {
-        component->entity = entity.get();
+        component->entity = entity;
         if (const auto behaviour = dynamic_cast<Behaviour *>(component.get()); behaviour) {
           behaviour->OnBindInput();
           entity->behaviours.emplace_back(behaviour);
@@ -217,6 +229,7 @@ namespace Engine2D {
       int j = 0;
       for (const auto &component: entity->allComponents)
         component->OnDeserialize(format, entityData.At("allComponents").At(j++).At("data"));
+      ++it;
     }
 
     cameraComponent = Find("Camera")->GetComponent<Rendering::Camera2D>();

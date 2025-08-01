@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(GameEngine VERSION 0.9.4)
+project(GameEngine VERSION 0.10.1)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -102,7 +102,11 @@ set_target_properties(Engine2D PROPERTIES
     OUTPUT_NAME Engine2D-${PROJECT_VERSION}$<IF:$<STREQUAL:$<CONFIG>,Debug>,d,>$<IF:$<BOOL:${PROFILE}>,p,>
     PREFIX ""
 )
-target_include_directories(Engine2D PUBLIC include)
+
+target_include_directories(Engine2D PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
 
 # --------------------------
 # Dependencies
@@ -192,5 +196,5 @@ add_custom_command(
 target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
-    MULTI_THREAD=0 # Set this to 0 if you have mutex errors or race conditions when modifying the engine
+    MULTI_THREAD=1 # Set this to 0 if you have mutex errors or race conditions when modifying the engine
 )

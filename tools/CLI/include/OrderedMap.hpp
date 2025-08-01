@@ -11,7 +11,7 @@
 #include <list>
 #include <unordered_map>
 
-template<typename Key, typename Value> class OrderedMap {
+template<typename Key, typename Value> class OrderedMap final {
   public:
     void insert(const Key &key, Value value) {
       if (!map.contains(key)) {

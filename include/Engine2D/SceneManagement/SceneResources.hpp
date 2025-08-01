@@ -53,24 +53,6 @@ namespace Engine2D {
     class Sprite;
   }
 
-  struct ResourceData : Engine::Reflection::Reflectable {
-    SERIALIZE_RESOURCEDATA
-      std::string name;
-      std::string path;
-
-      bool operator==(const ResourceData &other) const;
-  };
-
-  struct SpriteData : ResourceData {
-    SERIALIZE_SPRITEDATA
-      std::string textureName;
-      glm::vec4 rect;
-      glm::vec2 pivot;
-      float pixelsPerUnit;
-
-      bool operator==(const SpriteData &other) const;
-  };
-
   class SceneResources final : public Engine::Reflection::Reflectable {
     SERIALIZE_SCENERESOURCES
       friend class Scene;

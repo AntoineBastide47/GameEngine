@@ -28,6 +28,13 @@ namespace Engine2D::Rendering {
     viewProjection = projection * view;
   }
 
+  Camera2D::~Camera2D() {
+    if (ubo > 0) {
+      glDeleteBuffers(1, &ubo);
+      ubo = 0;
+    }
+  }
+
   void Camera2D::Shake(const float duration) {
     shaking = true;
     shakeElapsed = 0;

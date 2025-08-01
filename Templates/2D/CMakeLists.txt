@@ -53,7 +53,7 @@ elseif (WIN32)
   message(WARNING "Windows build is not fully supported yet.")
 endif ()
 
-file(GLOB ENGINE_LIB ${ENGINE_LOCATION}/include/*-[0-9]*.[0-9]*.[0-9]*.*)
+file(GLOB ENGINE_LIB ${ENGINE_LOCATION}/*-[0-9]*.[0-9]*.[0-9]*.*)
 if (BUILD_TYPE STREQUAL "debug")
   set(CMAKE_BUILD_TYPE "Debug")
   list(FILTER ENGINE_LIB INCLUDE REGEX "-[0-9]+\\.[0-9]+\\.[0-9]+d\\.[^.]+$")

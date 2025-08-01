@@ -78,6 +78,8 @@ or
 * **CPU based Particle System:** Configurable particle emitters with control over lifetime, velocity, and color transitions.
 * **2D Camera System:** orthographic camera and follow-camera modes with zoom, pan, rotation and shake support.
 * **Animator:** Data-driven 2D animation system supporting transitions, conditions, triggers, and parameterized state machines.
+* **JSON Library:** JSON library mirroring python/javascript json usages and a very fast DOM parser
+* **Scene Management**: Create runtime scenes, Save scenes to json files and Load scenes from json files 
 
 > [!NOTE]
 > For planned updates and upcoming features, see the

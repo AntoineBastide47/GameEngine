@@ -146,7 +146,7 @@ namespace Engine {
     ENGINE_ASSERT(internalFormat & dataFormat, "Image format is not supported");
 
     // Generate the texture and free the image data
-    auto texture = std::make_unique<Texture>(filePath);
+    auto texture = std::make_unique<Texture>();
     texture->generate(width, height, data, internalFormat, dataFormat, transparent, blend);
     stbi_image_free(data);
 
@@ -243,9 +243,9 @@ namespace Engine {
   }
 
   void ResourceManager::Clear() {
-    //for (const auto &shader: shaders | std::views::values)
-    //  shader->clear();
-    //shaders.clear();
+    for (const auto &shader: shaders | std::views::values)
+      shader->clear();
+    shaders.clear();
     for (const auto &texture: textures | std::views::values)
       texture->clear();
     textures.clear();

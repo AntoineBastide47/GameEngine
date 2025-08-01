@@ -31,7 +31,11 @@ namespace Engine2D {
   Game2D::Game2D(const int width, const int height, const char *title)
     : aspectRatio(glm::vec2(1)), aspectRatioInv(glm::vec2(1)), title(title), width(width), height(height),
       window(nullptr), deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), frameCounter(0),
-      oneSecondTimer(0), physicsAccumulator(0), updateFinished(false), renderFinished(true) {
+      oneSecondTimer(0), physicsAccumulator(0)
+      #if MULTI_THREAD
+    , updateFinished(false), renderFinished(true), renderThreadCallback(nullptr), callbackPending(false)
+  #endif
+  {
     if (instance)
       throw std::runtime_error("ERROR::GAME2D: There can only be one instance of Game2D running.");
     if (width <= 0 || height <= 0)
@@ -273,18 +277,28 @@ namespace Engine2D {
     glfwMakeContextCurrent(window);
 
     while (!glfwWindowShouldClose(window)) {
-      {
-        std::unique_lock lock(syncMutex);
-        cv.wait(
-          lock, [this] {
-            return updateFinished;
-          }
-        );
-        // Now the engine data is exclusively ours; render the frame.
-        SceneManager::activeScene->render();
-        updateFinished = false;
-        renderFinished = true;
+      std::unique_lock lock(syncMutex);
+      cv.wait(
+        lock, [this] {
+          return updateFinished || callbackPending;
+        }
+      );
+
+      // Run render thread callback
+      if (callbackPending && renderThreadCallback) {
+        renderThreadCallback();
+        renderThreadCallback = nullptr;
+        callbackPending = false;
+        controlCV.notify_one();
+        continue;
       }
+
+      // Now the engine data is exclusively ours; render the frame.
+      if (SceneManager::ActiveScene())
+        SceneManager::ActiveScene()->render();
+
+      updateFinished = false;
+      renderFinished = true;
       cv.notify_one();
     }
   }

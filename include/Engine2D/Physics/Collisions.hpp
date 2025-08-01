@@ -7,6 +7,7 @@
 #ifndef COLLISIONS_H
 #define COLLISIONS_H
 
+#include <vector>
 #include <glm/vec2.hpp>
 
 namespace Engine2D::Physics {

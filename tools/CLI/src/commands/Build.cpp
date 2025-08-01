@@ -11,7 +11,7 @@
 
 Build::Build()
   : Command(
-    "builds the engine's debug, debug with profile and release static libraries", "{|true}", 1, "", true,
+    "build's the engine's debug, debug with profile and release static libraries", "{|true}", 1, "", true,
     "The release static library can be omitted when building to save time, add the argument 'true' to build it."
   ) {}
 

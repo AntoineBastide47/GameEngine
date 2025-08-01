@@ -133,7 +133,11 @@ namespace Engine2D {
       /// Initializes the scene
       void initialize();
       /// Updates all the entities in this scene
+      #if MULTI_THREAD
+      void update();
+      #else
       void update() const;
+      #endif
       /// Call the physics step for all the entities in this scene
       void fixedUpdate();
       /// Animates all entities

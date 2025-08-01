@@ -43,3 +43,4 @@ include/*.a
 **/engine-cli
 **/header-forge
 Engine/lastProcessingTimes.txt
+SDK

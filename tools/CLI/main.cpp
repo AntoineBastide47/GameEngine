@@ -8,6 +8,7 @@
 #include "Utils.hpp"
 #include "commands/Build.hpp"
 #include "commands/BuildProject.hpp"
+#include "commands/BuildSdk.hpp"
 #include "commands/BuildTools.hpp"
 #include "commands/CreateProject.hpp"
 #include "commands/Dependencies.hpp"
@@ -27,6 +28,7 @@ static OrderedMap<std::string, std::unique_ptr<Command>> CreateEngineCommands() 
   cmds.insert(COMMAND_LINK_PROJECT, std::make_unique<LinkProject>());
   cmds.insert(COMMAND_VERSION, std::make_unique<Version>());
   cmds.insert(COMMAND_REBUILD, std::make_unique<Rebuild>());
+  cmds.insert(COMMAND_BUILD_SDK, std::make_unique<BuildSDK>());
   return cmds;
 }
 
@@ -68,7 +70,6 @@ int main(const int argc, const char *argv[]) {
     std::cout << "Try " << CLI_EXECUTE_COMMAND(COMMAND_HELP) << " for usage." << RESET << std::endl;
     return 0;
   }
-
 
   std::vector<std::string> argvStr(argv, argv + argc);
   argvStr.erase(argvStr.begin());

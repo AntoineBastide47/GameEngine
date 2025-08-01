@@ -18,14 +18,9 @@ using Engine::Rendering::Shader;
 using Engine::Rendering::Texture;
 using Engine2D::Rendering::Sprite;
 
-namespace Engine2D {
-  class SceneResources;
-}
-
 namespace Engine {
   /** ResourceManager is a static class that keeps track of all the shaders and textures that have been loaded to the game. */
-  class ResourceManager {
-    friend class Engine2D::SceneResources;
+  class ResourceManager final {
     public:
       /**
        * Loads a shader to memory with the given OpenGL source shader files
