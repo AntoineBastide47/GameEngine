@@ -75,6 +75,10 @@ namespace Engine2D::Rendering {
 
       /// Stores the vertex array configuration for the quad.
       uint quadVAO;
+      /// Stores the vertex array configuration for the quad for static opaque renders.
+      uint staticOpaqueVAO;
+      /// Stores the vertex array configuration for the quad for static transparent renders.
+      uint staticTransparentVAO;
       /// Vertex buffer object used for vertex data
       uint vertexVBO;
       /// Vertex buffer object used for batching
@@ -115,7 +119,11 @@ namespace Engine2D::Rendering {
       /// Maps a texture id to it's index in the gpu texture array
       std::unordered_map<uint, uint> textureIdToIndexMap;
       /// Whether the renderables need to be sorted using the render order
-      bool zSort = false;
+      bool zSort;
+
+      bool resortOpaque;
+      bool resortStaticOpaque;
+      bool resortStaticTransparent;
 
       Renderer2D() = default;
       ~Renderer2D();
@@ -140,7 +148,7 @@ namespace Engine2D::Rendering {
       ) const;
       /// Builds and renders the given batch
       void buildAndRenderBatch(
-        std::vector<Renderable2D *> &renderers, std::vector<Flush> &flushList, uint particleCount,
+        std::vector<Renderable2D *> &renderers, std::vector<Flush> &flushList, uint particleCount, bool resort,
         uint framebuffer = 0
       );
       /// Changes the blend mode of the flush list

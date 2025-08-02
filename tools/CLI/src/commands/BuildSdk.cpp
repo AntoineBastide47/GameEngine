@@ -15,9 +15,12 @@ BuildSDK::BuildSDK()
 void BuildSDK::Run(
   const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands
 ) {
-  std::filesystem::remove_all(SDK_FOLDER);
   std::system("mkdir -p " SDK_FOLDER);
-  std::system("cp -r ./include " SDK_FOLDER);
+  std::system("cp -r ./Engine/include " SDK_FOLDER);
   std::system("cp -r ./vendor " SDK_FOLDER);
+  std::system("cp -r ./Templates " SDK_FOLDER);
+  std::system("cp -r ./engine-cli " SDK_FOLDER);
+  std::system("cp -r ./header-forge " SDK_FOLDER);
+  std::system("rm -rf " SDK_FOLDER "/Engine2D-*.a");
   std::system("mv " SDK_FOLDER "/include/Engine2D-*.a " SDK_FOLDER);
 }

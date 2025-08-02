@@ -135,8 +135,7 @@ namespace Engine2D::Rendering {
 
   void Renderer2D::buildAndRenderStaticBatch(
     std::vector<SpriteRenderer *> &renderers, std::vector<float> &batchData,
-    std::vector<Flush> &flushList,
-    const bool rebuild, const uint VBO, const uint framebuffer
+    std::vector<Flush> &flushList, const bool rebuild, const uint VBO, const uint framebuffer
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
@@ -215,16 +214,17 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::buildAndRenderBatch(
-    std::vector<Renderable2D *> &renderers, std::vector<Flush> &flushList, const uint particleCount,
+    std::vector<Renderable2D *> &renderers, std::vector<Flush> &flushList, const uint particleCount, const bool resort,
     const uint framebuffer
   ) {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
 
-    std::ranges::sort(
-      renderers, [this](const Renderable2D *a, const Renderable2D *b) {
-        return sortRenderers(a, b);
-      }
-    );
+    if (resort)
+      std::ranges::sort(
+        renderers, [this](const Renderable2D *a, const Renderable2D *b) {
+          return sortRenderers(a, b);
+        }
+      );
 
     flushList.clear();
 
@@ -242,7 +242,8 @@ namespace Engine2D::Rendering {
     glBufferData(GL_ARRAY_BUFFER, (validRange.size() + particleCount) * STRIDE_SIZE, nullptr, GL_STREAM_DRAW);
 
     const auto gpuPtr = static_cast<float *>(glMapBufferRange(
-      GL_ARRAY_BUFFER, 0, (validRange.size() + particleCount) * STRIDE_SIZE, GL_MAP_WRITE_BIT
+      GL_ARRAY_BUFFER, 0, (validRange.size() + particleCount) * STRIDE_SIZE,
+      GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT
     ));
 
     if (!gpuPtr)
@@ -480,6 +481,7 @@ namespace Engine2D::Rendering {
     if (!quadVAO)
       initRenderData();
 
+    const auto lastOpaqueCount = opaqueRenderers.size();
     lastOpaqueStaticCount = staticOpaqueRenderers.size();
     lastTransparentStaticCount = staticTransparentRenderers.size();
 
@@ -559,6 +561,8 @@ namespace Engine2D::Rendering {
       transparentRenderers.insert(transparentRenderers.end(), opaque_end.begin(), opaque_end.end());
     }
 
+    resortOpaque = lastOpaqueCount != opaqueRenderers.size();
+
     renderersToRemove.clear();
     renderersToAdd.clear();
     SceneManager::ActiveScene()->particleSystemRegistry.prerender();
@@ -594,7 +598,7 @@ namespace Engine2D::Rendering {
       }
     );
 
-    buildAndRenderBatch(renderables, opaqueFlushList, particleCount, framebuffer);
+    buildAndRenderBatch(renderables, opaqueFlushList, particleCount, resortOpaque, framebuffer);
   }
 
   void Renderer2D::transparentPass(const uint framebuffer) {
@@ -633,7 +637,7 @@ namespace Engine2D::Rendering {
       }
     );
 
-    buildAndRenderBatch(renderables, transparentFlushList, particleCount, framebuffer);
+    buildAndRenderBatch(renderables, transparentFlushList, particleCount, true, framebuffer);
   }
 
   void Renderer2D::render(const uint framebuffer) {
@@ -645,15 +649,11 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::addRenderer(SpriteRenderer *renderer) {
-    if (!renderer)
-      return;
     scene->resources.renderables.push_back(renderer);
     renderersToAdd.push_back(renderer);
   }
 
   void Renderer2D::removeRenderer(SpriteRenderer *renderer) {
-    if (!renderer)
-      return;
     std::erase(scene->resources.renderables, renderer);
     renderersToRemove.insert(renderer);
   }

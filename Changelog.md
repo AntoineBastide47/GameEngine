@@ -3,45 +3,52 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.2] - 2025-08-02
+### Added
+- **[[CLI/BuildSDK](tools/CLI/include/commands/BuildSdk.hpp)]**: copies the templates folder, the engine-cli and header-forge binaries into the SDK folder
+### Changes
+- **[[CLI/Build](tools/CLI/include/commands/Build.hpp)]**: uses new project structure and can build the engine, the editor or both
+- **[[CLI/BuildSDK](tools/CLI/include/commands/BuildSdk.hpp)]**: uses new project structure
+
 ## [0.10.1] - 2025-08-01
 ### Added
-- **[[Shader](include/Engine/Rendering/Shader.hpp), [Texture](include/Engine/Rendering/Texture.hpp)]**: both store their file path for serialization and deserialization
+- **[[Shader](Engine/include/Engine/Rendering/Shader.hpp), [Texture](Engine/include/Engine/Rendering/Texture.hpp)]**: both store their file path for serialization and deserialization
 - **[[CLI/BuildSDK](tools/CLI/include/commands/BuildSdk.hpp)]**: builds an SDK folder with all the required files and folders for releases
 ### Fixed
-- **[[SceneManager](include/Engine2D/SceneManagement/SceneManager.hpp)]**: scene loading in multi threaded mode now works by offsetting the creation of gpu shader and textures to the render thread
+- **[[SceneManager](Engine/include/Engine2D/SceneManagement/SceneManager.hpp)]**: scene loading in multithreaded mode now works by offsetting the creation of gpu shader and textures to the render thread
 
 ## [0.10.0] - 2025-07-31
 ### Added
-- **[[Reflectable](include/Engine/Reflection/Reflectable.hpp)]**: OnSerialize and OnDeserialize callbacks are used to perform custom logic during serialization and deserialization, allowing types to handle state beyond automatic member reflection
-- **[[ResourceManager](include/Engine/ResourceManager.hpp)]**: functions to get the name of their associated resource
-- **[[Behaviour](include/Engine2D/Behaviour.hpp)]**: OnBindInput callback specifically used for input binding, called after OnInitialize and OnDeserialize
-- **[[Entity2D](include/Engine2D/Entity2D.hpp)]**:
+- **[[Reflectable](Engine/include/Engine/Reflection/Reflectable.hpp)]**: OnSerialize and OnDeserialize callbacks are used to perform custom logic during serialization and deserialization, allowing types to handle state beyond automatic member reflection
+- **[[ResourceManager](Engine/include/Engine/ResourceManager.hpp)]**: functions to get the name of their associated resource
+- **[[Behaviour](Engine/include/Engine2D/Behaviour.hpp)]**: OnBindInput callback specifically used for input binding, called after OnInitialize and OnDeserialize
+- **[[Entity2D](Engine/include/Engine2D/Entity2D.hpp)]**:
   - AddInputCallback for automatic input callback removal when the entity is destroyed
   - Instantiate to create an entity, removed from Game2D
   - GetComponent(s)InChildren to find components in the children entities
   - TryGetComponent to check if an entity has a component of the given type and if so use it without having to call HasComponent and GetComponent
-- **[[Scene](include/Engine2D/SceneManagement/Scene.hpp)]**:
+- **[[Scene](Engine/include/Engine2D/SceneManagement/Scene.hpp)]**:
   - SetMainCamera to change the main camera of the scene
   - Find, FindObjectOfType and FindObjectsOfType to find entities by name or components in entities
-- **[[SceneResources](include/Engine2D/SceneManagement/SceneResources.hpp)]**: saves and loads all the scene resources when scenes are saved and loaded (shaders, textures, sprites)
-- **[[Transform2D](include/Engine2D/Transform2D.hpp)]**: MakeNthChild to change the ordering of children entities
+- **[[SceneResources](Engine/include/Engine2D/SceneManagement/SceneResources.hpp)]**: saves and loads all the scene resources when scenes are saved and loaded (shaders, textures, sprites)
+- **[[Transform2D](Engine/include/Engine2D/Transform2D.hpp)]**: MakeNthChild to change the ordering of children entities
 ### Changed
-- **[[Save](include/Engine/Reflection/Save.hpp), [Load](include/Engine/Reflection/Load.hpp)]**: containers use resize and reserve calls wherever possible to make loading and saving as fast as possible
+- **[[Save](Engine/include/Engine/Reflection/Save.hpp), [Load](Engine/include/Engine/Reflection/Load.hpp)]**: containers use resize and reserve calls wherever possible to make loading and saving as fast as possible
 ### Fixed
-- **[[ReflectionFactory](include/Engine/Reflection/ReflectionFactory.hpp)]**: CreateUnique now returns a unique pointer instead of a shared pointer
+- **[[ReflectionFactory](Engine/include/Engine/Reflection/ReflectionFactory.hpp)]**: CreateUnique now returns a unique pointer instead of a shared pointer
 
 ## [0.9.3] - 2025-07-27
 ### Added
-- **[[Scene](include/Engine2D/SceneManagement/Scene.hpp)]**: object that contains all the entities and everything needed to update, render, animate, ... them for the game to work
-- **[[SceneManager](include/Engine2D/SceneManagement/SceneManager.hpp)]**: static class used to create, load, switch and unload scenes
+- **[[Scene](Engine/include/Engine2D/SceneManagement/Scene.hpp)]**: object that contains all the entities and everything needed to update, render, animate, ... them for the game to work
+- **[[SceneManager](Engine/include/Engine2D/SceneManagement/SceneManager.hpp)]**: static class used to create, load, switch and unload scenes
 ### Changes
 - Made all the core systems (physics, animation, renderer) non-static and scene bound
-- **[[Physics2D](include/Engine2D/Physics/Physics2D.hpp)]**: friction uses geometric mean for static and dynamic coefficients
+- **[[Physics2D](Engine/include/Engine2D/Physics/Physics2D.hpp)]**: friction uses geometric mean for static and dynamic coefficients
 ### Fixed
 - **[[HeaderForge](tools/HeaderForge)]**:
   - the SERIALIZE_* macro not being included or being added in enum definitions
   - the clang error logged in the terminal: "error: invalid argument '-std=c++20' not allowed with 'C'"
-- **[[Collisions](include/Engine2D/Physics/Collisions.hpp)]**:
+- **[[Collisions](Engine/include/Engine2D/Physics/Collisions.hpp)]**:
   - circle-circle collisions now work as expected
   - polygon-polygon collisions now work as expected
 
