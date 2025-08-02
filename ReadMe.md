@@ -21,7 +21,7 @@ sudo snap install cmake --classic
 Manual installation required, follow the links above to do so.
 ### 1. Clone the Repository:
 ```bash
-git clone --recursive -j8 https://github.com/AntoineBastide47/GameEngine.git
+git clone --recursive https://github.com/AntoineBastide47/GameEngine.git
 ```
 ### 2. Build the CLI
 Build the command-line interface (CLI) to manage the engine and projects:
@@ -35,22 +35,41 @@ Run the CLI with:
 ```bash
 ./engine-cli
 ```
-### 3. Build the engine
-- **Debug Mode** (recommended for development; provides detailed error messages):
+### 3. Build the engine tools
+Build the engine tools to make sure all it's features work correctly:
 ```bash
-./engine-cli --build debug
+./engine-cli --build-tools
 ```
-- **Release Mode** (recommended for production; optimized performance, smaller executables):
+### 4. Build the engine and editor
+#### 4.1 Building the engine and the editor
 ```bash
-./engine-cli --build release
+./engine-cli --build
 ```
-### 4. Create a project
-1. Open the folder `GameEngine` in your terminal
-2. Run the CLI command:
+_Tip: Add the argument `true` after the build command to also build the `release mode` static library for production builds._
+#### 4.2 Building the engine static libraries only
+```bash
+./engine-cli --build-engine
+```
+_Tip: Add the argument `true` after the build command to also build the `release mode` static library for production builds._
+#### 4.3 Building the editor executable only
+```bash
+./engine-cli --build-editor
+```
+### 5. Create a project
+0. Build the engine if not already done
+1. Build the SDK
+```bash
+./engine-cli --build-sdk
+```
+2. Open the SDK folder in the terminal
+```bash
+cd SDK
+```
+3. Run the CLI command:
 ```bash
 ./engine-cli --create-project
 ```
-### 5. Running a Game Project
+### 6. Running a Game Project
 1. Navigate to your game folder:
 ```bash
 cd your/game/folder/location
@@ -60,7 +79,7 @@ cd your/game/folder/location
 ./engine-cli --build-project debug --run
 ```
 _Tip: Replace `debug` with `release` for production builds._
-### 6. CLI command information
+### 7. CLI command information
 For a list of available commands:
 ```bash
 ./engine-cli
@@ -69,6 +88,53 @@ or
 ```bash
 ./engine-cli --help
 ```
+### 8. Distributing the Engine
+1. Build the engine with all configurations:
+```bash
+./engine-cli --build true
+```
+2. Generate the SDK:
+```bash
+./engine-cli --build-sdk
+```
+3. Compress the `SDK/` folder:
+```bash
+zip -r EngineSDK.zip SDK
+```
+4. Rename the zip file if desired, then distribute it.
+
+## Project Structure
+```
+GameEngine/
+├─ Editor/            # Editor GUI application
+│  └─ (include|src)/  # Editor source code (headers|source) respectively
+├─ Engine/            # Engine source code and CMake config
+│  ├─ Assests/        # Empty but required for CMRC to work
+│  └─ (include|src)/  # Engine source code (headers|source) respectively
+│     ├─ Engine/      # All engine code non-specific to 2D
+│     ├─ Engine2D/    # All engine code specific to 2D
+│     └─ Shaders/     # Engine defined shaders (only in the include directory)
+├─ SDK/               # Generated SDK for engine distribution
+├─ Templates/         # Project templates
+│  └─ 2D/             # Template to create a brand new 2D game
+├─ tools/             # CLI and internal development tools
+│  ├─ CLI/            # engine-cli source code
+│  └─ HeaderForge/    # header-forge source code
+├─ vendor/            # Third-party libraries
+├─ CMakeLists.txt     # Top-level build configuration
+├─ engine-cli         # CLI tool to manage the engine and projects
+└─ header-forge       # Tool for header parsing to generate reflection code
+```
+
+## Profiling
+To profile your project:
+1. Build and run with profiling enabled:
+```bash
+./engine-cli --build-project profile --run
+```
+2. After the run completes, a file named `profiler` will be generated in the root directory of your project.
+3. Manually open Chrome and navigate to `chrome://tracing` by typing it in the address bar.
+4. Drag and drop the `profiler` file onto the tracing window to view the profiling results.
 
 ## Current Features
 * **Rendering Engine:** Efficient rendering of sprites and textures.
@@ -76,6 +142,7 @@ or
 * **Input Handling:** Supports keyboard, mouse, and gamepad input.
 * **Physics Engine:** Provides rigid body dynamics and collision responses.
 * **CPU based Particle System:** Configurable particle emitters with control over lifetime, velocity, and color transitions.
+* **Simple Profiler:** Captures timestamped CPU events and exports them to a trace file compatible with Chrome’s chrome://tracing viewer for performance analysis.
 * **2D Camera System:** orthographic camera and follow-camera modes with zoom, pan, rotation and shake support.
 * **Animator:** Data-driven 2D animation system supporting transitions, conditions, triggers, and parameterized state machines.
 * **JSON Library:** JSON library mirroring python/javascript json usages and a very fast DOM parser
@@ -148,5 +215,6 @@ The following references include a collection of articles and videos that have s
 engine (the list will evolve over time):
 - OpenGL, Particle System: [Learn OpenGL](https://learnopengl.com/)
 - Physics Engine: [Two-Bit Coding - Let's Make a Physics Engine](https://www.youtube.com/playlist?list=PLSlpr6o9vURwq3oxVZSimY8iC-cdd3kIs)
+- Profiler: [The Cherno - Game Engine](https://www.youtube.com/playlist?list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT)
 > [!Important]
 > These resources are guides. They provide insights but may not result in an identical engine implementation.

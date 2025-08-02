@@ -11,7 +11,10 @@
 
 class Build final : public Command {
   public:
-    Build();
+    bool buildEngine;
+    bool buildEditor;
+
+    explicit Build(bool buildEngine, bool buildEditor);
     void Run(
       const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands
     ) override;

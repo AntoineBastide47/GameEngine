@@ -5,7 +5,7 @@
 
 #include "Generator.hpp"
 #include "Parser.hpp"
-#include "../../include/Engine/Macros/PlatformDetection.hpp"
+#include "../../Engine/include/Engine/Macros/PlatformDetection.hpp"
 
 #define ALL_IN_ONE_CPP "allInOne.cpp"
 #define ALL_IN_ONE_I "allInOne.ii"

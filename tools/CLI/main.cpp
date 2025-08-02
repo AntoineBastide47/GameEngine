@@ -22,7 +22,9 @@ static OrderedMap<std::string, std::unique_ptr<Command>> CreateEngineCommands() 
   OrderedMap<std::string, std::unique_ptr<Command>> cmds;
   cmds.insert(COMMAND_HELP, std::make_unique<Help>());
   cmds.insert(COMMAND_DEPENDENCIES, std::make_unique<Dependencies>());
-  cmds.insert(COMMAND_BUILD, std::make_unique<Build>());
+  cmds.insert(COMMAND_BUILD, std::make_unique<Build>(true, true));
+  cmds.insert(COMMAND_BUILD_ENGINE, std::make_unique<Build>(true, false));
+  cmds.insert(COMMAND_BUILD_EDITOR, std::make_unique<Build>(false, true));
   cmds.insert(COMMAND_BUILD_TOOLS, std::make_unique<BuildTools>());
   cmds.insert(COMMAND_CREATE_PROJECT, std::make_unique<CreateProject>());
   cmds.insert(COMMAND_LINK_PROJECT, std::make_unique<LinkProject>());
@@ -50,7 +52,7 @@ int main(const int argc, const char *argv[]) {
   if (std::ifstream cmake("CMakeLists.txt"); cmake) {
     std::string line;
     while (std::getline(cmake, line)) {
-      if (line.find("add_library(Engine2D STATIC") != std::string::npos) {
+      if (line.find("project(GameEngine)") != std::string::npos) {
         useEngineCommands = true;
         break;
       }

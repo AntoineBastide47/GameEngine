@@ -30,6 +30,8 @@ static constexpr std::string COMMAND_HELP = "help";
 static constexpr std::string COMMAND_VERSION = "version";
 static constexpr std::string COMMAND_DEPENDENCIES = "dependencies";
 static constexpr std::string COMMAND_BUILD = "build";
+static constexpr std::string COMMAND_BUILD_ENGINE = "build-engine";
+static constexpr std::string COMMAND_BUILD_EDITOR = "build-editor";
 static constexpr std::string COMMAND_CREATE_PROJECT = "create-project";
 static constexpr std::string COMMAND_LINK_PROJECT = "link-project";
 static constexpr std::string COMMAND_REBUILD = "rebuild";
@@ -65,7 +67,8 @@ class Command {
       std::string description, std::string args = "", const int argCount = 0, std::string defaultArg = "",
       const bool argsAreOptional = false, std::string note = ""
     )
-      : description(std::move(description)), args(std::move(args)), defaultArg(std::move(defaultArg)), note(std::move(note)),
+      : description(std::move(description)), args(std::move(args)), defaultArg(std::move(defaultArg)),
+        note(std::move(note)),
         argCount(argCount), argsAreOptional(argsAreOptional) {}
 
     virtual ~Command() = default;
@@ -80,7 +83,7 @@ class Command {
         if (argsAreOptional)
           std::cout << "at most ";
         std::cout << argCount << " but got " << actualArgs << "\n"
-          << "Try '" << CLI_COMMAND() << " help " << args[0] << "' for more information." << RESET << std::endl;
+            << "Try '" << CLI_COMMAND() << " help " << args[0] << "' for more information." << RESET << std::endl;
         return;
       }
 

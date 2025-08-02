@@ -1,3 +1,8 @@
+# For macos executables: ignore all files, the keep directories and finally keep files with extentions
+**/*
+!**/*/
+!**/*.*
+
 # Prerequisites
 *.d
 
@@ -38,8 +43,9 @@ tools/CLI/.idea
 
 # other
 **/.DS_Store
-include/*.a
+Engine/include/*.a
 **/build
+**/Editor-*
 **/engine-cli
 **/header-forge
 Engine/lastProcessingTimes.txt
