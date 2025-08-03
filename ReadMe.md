@@ -55,40 +55,7 @@ _Tip: Add the argument `true` after the build command to also build the `release
 ```bash
 ./engine-cli --build-editor
 ```
-### 5. Create a project
-0. Build the engine if not already done
-1. Build the SDK
-```bash
-./engine-cli --build-sdk
-```
-2. Open the SDK folder in the terminal
-```bash
-cd SDK
-```
-3. Run the CLI command:
-```bash
-./engine-cli --create-project
-```
-### 6. Running a Game Project
-1. Navigate to your game folder:
-```bash
-cd your/game/folder/location
-```
-2. Build and run the game
-```bash
-./engine-cli --build-project debug --run
-```
-_Tip: Replace `debug` with `release` for production builds._
-### 7. CLI command information
-For a list of available commands:
-```bash
-./engine-cli
-```
-or
-```bash
-./engine-cli --help
-```
-### 8. Distributing the Engine
+### 5. Distributing the Engine
 1. Build the engine with all configurations:
 ```bash
 ./engine-cli --build true
@@ -102,6 +69,46 @@ or
 zip -r EngineSDK.zip SDK
 ```
 4. Rename the zip file if desired, then distribute it.
+### 6. Build everything at once
+```bash
+cd ./tools/CLI && cmake -B build && cmake --build build && cd ../..
+./engine-cli --build-tools --build true --build-sdk
+```
+### 7. CLI command information
+For a list of available commands:
+```bash
+./engine-cli
+```
+or
+```bash
+./engine-cli --help
+```
+
+## Using the engine 
+### 1. Create a project
+Make sure the whole engine is built, then open the SDK folder in the terminal and run:
+```bash
+./engine-cli --create-project
+```
+### 2. Running a Game Project
+1. Navigate to your game folder:
+```bash
+cd your/game/folder/location
+```
+2. Build and run the game
+```bash
+./engine-cli --build-project debug --run
+```
+_Tip: Replace `debug` with `release` for production builds._
+### 3. Profiling
+To profile your project:
+1. Build and run with profiling enabled:
+```bash
+./engine-cli --build-project profile --run
+```
+2. After the run completes, a file named `profiler` will be generated in the root directory of your project.
+3. Manually open Chrome and navigate to `chrome://tracing` by typing it in the address bar.
+4. Drag and drop the `profiler` file onto the tracing window to view the profiling results.
 
 ## Project Structure
 ```
@@ -125,16 +132,6 @@ GameEngine/
 ├─ engine-cli         # CLI tool to manage the engine and projects
 └─ header-forge       # Tool for header parsing to generate reflection code
 ```
-
-## Profiling
-To profile your project:
-1. Build and run with profiling enabled:
-```bash
-./engine-cli --build-project profile --run
-```
-2. After the run completes, a file named `profiler` will be generated in the root directory of your project.
-3. Manually open Chrome and navigate to `chrome://tracing` by typing it in the address bar.
-4. Drag and drop the `profiler` file onto the tracing window to view the profiling results.
 
 ## Current Features
 * **Rendering Engine:** Efficient rendering of sprites and textures.
