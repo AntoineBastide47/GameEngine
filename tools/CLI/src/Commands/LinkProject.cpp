@@ -4,7 +4,7 @@
 // Date: 27/03/2025
 //
 
-#include "commands/LinkProject.hpp"
+#include "Commands/LinkProject.hpp"
 
 LinkProject::LinkProject()
   : Command("Links an existing project to the engine", "{path}", 1, "~/Projects/Test") {}

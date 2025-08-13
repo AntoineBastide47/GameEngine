@@ -14,8 +14,9 @@
 
 using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 
-namespace Engine2D::Animation {
-  class AnimationSystem;
+namespace Editor {
+  class Window;
+  class LevelEditor;
 }
 
 namespace Engine {
@@ -24,12 +25,18 @@ namespace Engine {
 }
 
 namespace Engine2D {
+  namespace Animation {
+    class AnimationSystem;
+  }
+
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Scene;
     friend class Entity2D;
     friend class SceneManager;
+    friend class Editor::Window;
     friend class Engine::Settings;
+    friend class Editor::LevelEditor;
     friend class Engine::ResourceManager;
     public:
       /// @returns True if the Game2D instance has been initialized, False if not
@@ -38,6 +45,10 @@ namespace Engine2D {
       [[nodiscard]] static float ViewportWidth();
       /// @returns The height of the window's viewport
       [[nodiscard]] static float ViewportHeight();
+      /// @returns The width of the window's
+      [[nodiscard]] static float WindowWidth();
+      /// @returns The height of the window's
+      [[nodiscard]] static float WindowHeight();
       /// @returns The size of the window's viewport
       [[nodiscard]] static glm::vec2 ViewportSize();
       /// @returns The aspect ratio of the viewport
@@ -47,32 +58,27 @@ namespace Engine2D {
       /// @returns The fixed time span between the physics updates
       [[nodiscard]] static float FixedDeltaTime();
 
-      /**
-       * Set's the given resource loader of the game to load embedded resources
-       * @param resourceLoader The resource loader that contains the resources to load
-       * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
-       */
+      /// Set's the given resource loader of the game to load embedded resources
+      /// @param resourceLoader The resource loader that contains the resources to load
+      /// @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
       void SetGameResourceLoader(ResourceLoader resourceLoader);
 
       /// Quits the game
       static void Quit();
-      /**
-       * Start's and Run's the current game
-       * @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
-       */
+
+      /// Start's and Run's the current game
+      /// @note Do not call this function yourself in your code, it will be called in the main.cpp of your game
       void Run();
+
+      virtual ~Game2D();
     protected:
       Game2D();
 
-      /**
-       * Creates a game
-       * @param width The width of the game window
-       * @param height The height of the game window
-       * @param title The title of the game window
-       */
+      /// Creates a game
+      /// @param width The width of the game window
+      /// @param height The height of the game window
+      /// @param title The title of the game window
       Game2D(int width, int height, const char *title);
-
-      ~Game2D();
 
       /// Called during initialization, allowing derived classes to customize behavior.
       virtual void OnInitialize() {}
@@ -117,6 +123,9 @@ namespace Engine2D {
       /// Timer used to check if the game is ready for the next physics update
       float physicsAccumulator;
 
+      /// Whether the game is running in headless mode (no window)
+      bool headlessMode;
+
       #if MULTI_THREAD
       /// Whether the main thread is finished and ready to sync with the render thread
       bool updateFinished;
@@ -143,8 +152,10 @@ namespace Engine2D {
       void renderLoop();
       #endif
 
-      /// Initializes the game
-      void initialize();
+      /// Initialize's the graphics code
+      void initializeGraphicPipeline();
+      /// Initialize's the game code
+      void initializeGamePipeline(GLFWwindow *window);
       /// Processes all the inputs to the game
       static void processInput();
       /// Limits the frame rate of the game if needed
@@ -155,9 +166,21 @@ namespace Engine2D {
       /// Loads the given resource from the embedded resources
       [[nodiscard]] cmrc::file loadResource(const std::string &path) const;
 
+      /// Update game logic without rendering (for editor use)
+      void updateGame();
+      /// Render a single frame to the current framebuffer (for editor use)
+      void renderFrame() const;
+      /// Makes this game instance a headless instance of the game
+      void setAsHeadless();
+      /// Check if running in headless mode
+      [[nodiscard]] bool IsHeadless() const {
+        return headlessMode;
+      }
+
       // OpenGL callbacks
       static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
       static void scroll_callback(GLFWwindow *window, double xOffset, double yOffset);
+      static void window_close_callback(GLFWwindow *window);
   };
 } // Engine2D
 

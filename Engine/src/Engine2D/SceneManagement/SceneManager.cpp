@@ -27,8 +27,7 @@ namespace Engine2D {
 
   void SceneManager::LoadScene(const std::string &name, const std::string &path) {
     {
-      std::unique_lock controlLock(Game2D::instance->controlMutex);
-      {
+      std::unique_lock controlLock(Game2D::instance->controlMutex); {
         std::scoped_lock syncLock(syncMutex);
         Game2D::instance->renderThreadCallback = [&] {
           auto loadedScene = Engine::Reflection::Deserializer::FromJsonFromFile<std::unique_ptr<Scene>>(path);
@@ -97,6 +96,11 @@ namespace Engine2D {
       scenes.at(name)->destroy();
       scenes.erase(name);
     }
+  }
+
+  void SceneManager::DestroyAllScenes() {
+    while (!scenes.empty())
+      DestroyScene(scenes.begin()->first);
   }
 
   void SceneManager::SetActiveScene(const std::string &name) {

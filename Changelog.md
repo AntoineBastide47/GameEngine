@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.3] - 2025-08-13
+### Added
+- **[[imgui](vendor/imgui)]**: new submodule for the editor rendering
+- **[[GamePlugin](Editor/include/GamePlugin.hpp)]**: base class for game plugins so that games can be rendered in the editor
+- **[[ProjectLoader](Editor/include/ProjectLoader.hpp)]**: loads and unloads game projects as shared libraries from disc into the editor
+- **[[LevelEditor](Editor/include/LevelEditor.hpp)]**: updates and renders the game editor
+- **[[Window](Editor/include/Window.hpp)]**: the main window of the editor
+- **[[Game2D](Engine/include/Engine2D/Game2D.hpp)]**: game can now run in headless mode for editor builds
+- **[[Templates/2D/Plugin](Templates/2D/Engine/include/Plugin.hpp)]**: game plugin for the current game
+- **[[CLI/Build](tools/CLI/include/Commands/Build.hpp)]**: command to build the whole engine
+- **[[CLI/BuildEditor](tools/CLI/include/Commands/BuildEditor.hpp)]**: command to build the editor
+### Changed
+- **[[HeaderForge/main.cpp](tools/HeaderForge/main.cpp)]**: made all file paths absolute and a uniform format for time stamps
+- **[[cpptrace](vendor/cpptrace), [glfw](vendor/glfw)]**: upgraded the submodules
+- **[[CLI/BuildEngine](tools/CLI/include/Commands/BuildEngine.hpp)]**: no longer builds the editor
+- **[[CLI/BuildProject](tools/CLI/include/Commands/BuildProject.hpp)]**: building from editor uses a different build folder
+- **[[CLI/BuildSDK](tools/CLI/include/Commands/BuildSDK.hpp)]**: logging can be disabled internally
+### Fixed
+- **[[HeaderForge/Generator](tools/HeaderForge/include/Generator.hpp)]**: macro injection only happens when actually needed, leading to no unnecessary file rebuilding
+### Removed
+- **[[Templates/2D/{{PROJECT_NAME}}](Templates/2D/Game/include/{{PROJECT_NAME}}.hpp)]**: removed the close window on escape press in OnInitialize
+
 ## [0.10.2] - 2025-08-02
 ### Added
 - **[[CLI/BuildSDK](tools/CLI/include/commands/BuildSdk.hpp)]**: copies the templates folder, the engine-cli and header-forge binaries into the SDK folder

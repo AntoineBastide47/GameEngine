@@ -7,14 +7,10 @@
 #ifndef ENTITY2D_H
 #define ENTITY2D_H
 
-#include <iostream>
 #include <string>
 #include <vector>
 
 #include "Engine/Event.hpp"
-#include "Engine/Input/Gamepad.hpp"
-#include "Engine/Input/Keyboard.hpp"
-#include "Engine/Input/Mouse.hpp"
 #include "Engine/Reflection/Reflectable.hpp"
 #include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Component2D.hpp"

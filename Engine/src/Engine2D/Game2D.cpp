@@ -21,6 +21,9 @@
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine/Reflection/Serializer.hpp"
 #include "Engine2D/SceneManagement/SceneManager.hpp"
+#if ENGINE_EDITOR
+#include <imgui.h>
+#endif
 
 using Engine::ResourceManager;
 
@@ -31,7 +34,7 @@ namespace Engine2D {
   Game2D::Game2D(const int width, const int height, const char *title)
     : aspectRatio(glm::vec2(1)), aspectRatioInv(glm::vec2(1)), title(title), width(width), height(height),
       window(nullptr), deltaTime(0), timeScale(1), targetFrameRate(0), targetRenderRate(0), frameCounter(0),
-      oneSecondTimer(0), physicsAccumulator(0)
+      oneSecondTimer(0), physicsAccumulator(0), headlessMode(false)
       #if MULTI_THREAD
     , updateFinished(false), renderFinished(true), renderThreadCallback(nullptr), callbackPending(false)
   #endif
@@ -59,6 +62,14 @@ namespace Engine2D {
     return screenScaleFactor * static_cast<float>(instance->height) * instance->aspectRatioInv.y;
   }
 
+  float Game2D::WindowWidth() {
+    return static_cast<float>(instance->width);
+  }
+
+  float Game2D::WindowHeight() {
+    return static_cast<float>(instance->height);
+  }
+
   glm::vec2 Game2D::ViewportSize() {
     return screenScaleFactor * glm::vec2(instance->width, instance->height) * instance->aspectRatioInv;
   }
@@ -80,7 +91,9 @@ namespace Engine2D {
   }
 
   void Game2D::Quit() {
-    glfwSetWindowShouldClose(instance->window, true);
+    if (!instance->IsHeadless()) {
+      glfwSetWindowShouldClose(instance->window, true);
+    }
   }
 
   void Game2D::Run() {
@@ -100,7 +113,8 @@ namespace Engine2D {
     targetRenderRate = targetFrameRate == 0 ? 0.0f : 1.0f / targetFrameRate;
     frameCounter = 0;
 
-    initialize();
+    initializeGraphicPipeline();
+    initializeGamePipeline(instance->window);
 
     #if MULTI_THREAD
     // IMPORTANT:
@@ -126,7 +140,7 @@ namespace Engine2D {
     #endif
   }
 
-  void Game2D::initialize() {
+  void Game2D::initializeGraphicPipeline() {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
     // Initialize and Configure GLFW
@@ -185,10 +199,11 @@ namespace Engine2D {
       quit();
       exit(EXIT_FAILURE);
     }
+  }
 
-    // Initialize an input system
-    Engine::Input::Keyboard::initialize(window);
+  void Game2D::initializeGamePipeline(GLFWwindow *window) {
     Engine::Input::Mouse::initialize(window);
+    Engine::Input::Keyboard::initialize(window);
 
     // Create the default scene
     SceneManager::CreateScene("default");
@@ -197,6 +212,10 @@ namespace Engine2D {
     // Set up the shader preprocessor and load the engine shaders
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &Rendering::Renderer2D::MAX_TEXTURES);
     ResourceManager::LoadShader("sprite", "Engine/Shaders/sprite.glsl");
+
+    // Initialize timing
+    lastTime = std::chrono::steady_clock::now();
+    deltaTime = 0.016f;
 
     OnInitialize();
   }
@@ -339,16 +358,16 @@ namespace Engine2D {
     ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
 
     // Deallocate all the game resources
-    for (const auto &scene: SceneManager::scenes | std::views::values)
-      scene->destroy();
+    SceneManager::DestroyAllScenes();
     ResourceManager::Clear();
+    Engine::Reflection::ReflectionFactory::cleanup();
 
     // Destroy the window and terminate all OpenGL processes
     if (window) {
       glfwDestroyWindow(window);
       window = nullptr;
+      glfwTerminate();
     }
-    glfwTerminate();
 
     instance = nullptr;
   }
@@ -359,23 +378,20 @@ namespace Engine2D {
     throw std::runtime_error("ERROR::GAME2D: Resource loader not set.");
   }
 
-  void Game2D::framebuffer_size_callback(GLFWwindow *window, const int, const int) {
-    int framebufferWidth, framebufferHeight;
-    glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
-
-    instance->width = framebufferWidth;
-    instance->height = framebufferHeight;
+  void Game2D::framebuffer_size_callback(GLFWwindow *, const int width, const int height) {
+    instance->width = width;
+    instance->height = height;
 
     const glm::vec<2, size_t> initialSize = Engine::Settings::Window::GetScreenResolution();
 
     // Calculate the proper aspect ratio
-    const float ratioX = static_cast<float>(framebufferWidth) / static_cast<float>(initialSize.x);
-    const float ratioY = static_cast<float>(framebufferHeight) / static_cast<float>(initialSize.y);
+    const float ratioX = static_cast<float>(width) / static_cast<float>(initialSize.x);
+    const float ratioY = static_cast<float>(height) / static_cast<float>(initialSize.y);
     instance->aspectRatio = glm::vec2(ratioX, ratioY);
     instance->aspectRatioInv = 1.0f / instance->aspectRatio;
-    const bool maintainAspectRatio = Engine::Settings::Graphics::GetMaintainAspectRatio();
 
     // Calculate the viewport dimensions
+    const bool maintainAspectRatio = Engine::Settings::Graphics::GetMaintainAspectRatio();
     const int viewWidth = static_cast<int>(
       static_cast<float>(initialSize.x) * (maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX)
     );
@@ -384,11 +400,47 @@ namespace Engine2D {
     );
 
     // Center the viewport
-    glViewport((framebufferWidth - viewWidth) / 2, (framebufferHeight - viewHeight) / 2, viewWidth, viewHeight);
+    glViewport((width - viewWidth) / 2, (height - viewHeight) / 2, viewWidth, viewHeight);
   }
 
   void Game2D::scroll_callback(GLFWwindow *, double, const double yOffset) {
     if (Engine::Settings::Input::GetAllowMouseInput())
       Engine::Input::Mouse::processScroll(yOffset);
+  }
+
+  void Game2D::window_close_callback(GLFWwindow *) {
+    Quit();
+  }
+
+  void Game2D::updateGame() {
+    if (!headlessMode)
+      return;
+
+    // Calculate delta time
+    const auto currentFrameTime = std::chrono::high_resolution_clock::now();
+    deltaTime = std::chrono::duration<float>(currentFrameTime - lastTime).count() * timeScale;
+    lastTime = currentFrameTime;
+
+    // Update the active scene
+    if (const auto scene = SceneManager::ActiveScene(); scene) {
+      scene->syncEntities();
+      scene->update();
+      scene->fixedUpdate();
+      scene->animate();
+    }
+  }
+
+  void Game2D::renderFrame() const {
+    if (!headlessMode)
+      return;
+
+    // Render the active scene to the current framebuffer
+    if (const auto scene = SceneManager::ActiveScene(); scene) {
+      scene->renderHeadless();
+    }
+  }
+
+  void Game2D::setAsHeadless() {
+    headlessMode = true;
   }
 }

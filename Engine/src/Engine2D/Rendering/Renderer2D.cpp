@@ -124,8 +124,17 @@ namespace Engine2D::Rendering {
     }
 
     // Reset the mapping
-    if (textureIdToIndexMap.size() >= MAX_TEXTURES)
-      textureIdToIndexMap.clear();
+    if (textureIdToIndexMap.size() >= MAX_TEXTURES) {
+      // Instead of clearing, try to reuse least recently used slots
+      static std::queue<uint> lruQueue;
+      if (!lruQueue.empty()) {
+        const uint oldId = lruQueue.front();
+        lruQueue.pop();
+        textureIdToIndexMap.erase(oldId);
+      } else {
+        textureIdToIndexMap.clear();
+      }
+    }
 
     // Create the mapping
     const int texIndex = static_cast<int>(textureIdToIndexMap.size());

@@ -26,7 +26,6 @@
 *.app
 
 # Idea
-tools/CLI/.idea
 **/.idea
 
 # cmake
@@ -43,9 +42,8 @@ tools/CLI/.idea
 
 # other
 **/.DS_Store
-Engine/include/*.a
+Engine/lib
 **/build
-**/Editor-*
 **/engine-cli
 **/header-forge
 Engine/lastProcessingTimes.txt

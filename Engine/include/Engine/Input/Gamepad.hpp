@@ -13,6 +13,10 @@
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine/Input/InputContexts.hpp"
 
+namespace Editor {
+  class Window;
+};
+
 namespace Engine2D {
   class Game2D;
 }
@@ -21,6 +25,7 @@ namespace Engine::Input {
   class GamepadButtonEvent final : public Event<KeyAndButtonContext> {
     friend class Gamepad;
   };
+
   class GamepadStickEvent final : public Event<glm::vec2> {
     friend class Gamepad;
   };
@@ -31,6 +36,7 @@ namespace Engine::Input {
    * The gamepad left stick, right stick, and button all have an associated Event that triggers when they are updated.
    */
   class Gamepad final {
+    friend class Editor::Window;
     friend class Engine2D::Game2D;
     public:
       static GamepadButtonEvent BUTTON_NORTH, BUTTON_SOUTH, BUTTON_LEFT, BUTTON_RIGHT;

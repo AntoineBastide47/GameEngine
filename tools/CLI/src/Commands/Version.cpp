@@ -6,7 +6,7 @@
 
 // ReSharper disable CppDFAConstantConditions
 
-#include "commands/Version.hpp"
+#include "Commands/Version.hpp"
 
 constexpr std::array<std::string, 1> expectedLibraries = {
   "Engine2D"

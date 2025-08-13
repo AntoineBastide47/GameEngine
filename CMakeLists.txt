@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.29)
 project(GameEngine)
 
+option(BUILD_ENGINE "Build the engine library" ON)
+option(BUILD_EDITOR "Build the editor application" ON)
+
 # --------------------------
 # Dependencies
 # --------------------------
@@ -14,15 +17,15 @@ find_package(GLEW REQUIRED)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 add_subdirectory(vendor/glfw)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 # === GLM ===
 add_subdirectory(vendor/glm)
 
 # === CMakeRC ===
 include(vendor/CMakeRC/CMakeRC.cmake)
-cmrc_add_resource_library(cmrc NAMESPACE engineResources Engine/Assets)
 
 # === Cpptrace ===
 add_subdirectory(vendor/cpptrace)
@@ -33,12 +36,10 @@ target_include_directories(cpptrace PUBLIC vendor/cpptrace/include vendor/cpptra
 # Build Configs
 # --------------------------
 
-option(BUILD_ENGINE "Build the engine library" OFF)
 if (BUILD_ENGINE)
     add_subdirectory(Engine)
 endif ()
 
-option(BUILD_EDITOR "Build the editor application" OFF)
 if (BUILD_EDITOR)
     add_subdirectory(Editor)
 endif ()

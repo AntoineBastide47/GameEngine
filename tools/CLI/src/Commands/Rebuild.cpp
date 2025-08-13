@@ -4,7 +4,7 @@
 // Date: 03/04/2025
 //
 
-#include "commands/Rebuild.hpp"
+#include "Commands/Rebuild.hpp"
 
 Rebuild::Rebuild() : Command(std::string("Rebuilds the ") + CLI_COMMAND_NAME + " executable"){}
 

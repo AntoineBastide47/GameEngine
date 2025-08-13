@@ -4,9 +4,10 @@
 // Date: 27/03/2025
 //
 
-#include "commands/CreateProject.hpp"
+#include "Commands/CreateProject.hpp"
 
-CreateProject::CreateProject() : Command("Walks the user through the creation of a new project") {}
+CreateProject::CreateProject()
+  : Command("Walks the user through the creation of a new project") {}
 
 static std::string trim(const std::string &s) {
   const size_t start = s.find_first_not_of(" \t");
@@ -68,7 +69,7 @@ void CreateProject::Run(
     if (fs::is_directory("./Templates/" + type))
       break;
     std::cout << RED << "ERROR: Template for '" << type << "' does not exist.\nCurrently supported templates: "
-      << availableTemplates << RESET << "\n";
+        << availableTemplates << RESET << "\n";
   }
 
   std::string location;
@@ -94,7 +95,7 @@ void CreateProject::Run(
       std::cout << "ERROR: Name cannot be empty\n";
     else if (fs::exists(location + "/" + name))
       std::cout << RED << "ERROR: A directory with the name '" << name << "' already exists at the project location\n"
-        << RESET;
+          << RESET;
     else
       break;
   }
@@ -102,7 +103,7 @@ void CreateProject::Run(
   fs::path projectPath = fs::path(location) / name;
   fs::create_directories(projectPath);
   fs::copy("./Templates/" + type, projectPath, fs::copy_options::recursive);
-  fs::copy("./include/Shaders", projectPath / "Engine/Shaders", fs::copy_options::recursive);
+  fs::copy("./Engine/Shaders", projectPath / "Engine/Shaders", fs::copy_options::recursive);
 
   fs::path from = fs::canonical(projectPath);
   fs::path to = fs::canonical(fs::current_path());
@@ -116,6 +117,7 @@ void CreateProject::Run(
   fs::rename(projectPath / "Game/include/{{PROJECT_NAME}}.hpp", projectPath / ("Game/include/" + name + ".hpp"));
 
   fs::copy_file("./engine-cli", projectPath / "engine-cli", fs::copy_options::overwrite_existing);
+  fs::copy_file("./header-forge", projectPath / "header-forge", fs::copy_options::overwrite_existing);
 
-  std::cout << GREEN << "Project '" << name << "' of type '" << type << "' created at '" << projectPath << "'" << RESET;
+  std::cout << GREEN << "Project '" << name << "' of type '" << type << "' created at " << projectPath << RESET;
 }

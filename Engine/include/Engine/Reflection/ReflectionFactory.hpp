@@ -8,11 +8,18 @@
 #define REFLECTION_FACTORY_HPP
 
 #include <functional>
+#include <unordered_map>
+#include <memory>
+#include <stdexcept>
+#include <typeinfo>
+
+namespace Engine2D {
+  class Game2D;
+}
 
 namespace Engine::Reflection {
   class ReflectionFactory final {
-    inline static std::unordered_map<std::string, std::string> engineNameToTypeIdName;
-    inline static std::unordered_map<std::string, std::function<void*()>> typeIdNameToFactory;
+    friend class Engine2D::Game2D;
     public:
       template<typename T> static void RegisterType(const std::string &type) {
         engineNameToTypeIdName[type] = typeid(T).name();
@@ -47,6 +54,14 @@ namespace Engine::Reflection {
         if (!typedPtr)
           throw std::runtime_error("ReflectionFactory: Type mismatch for '" + type + "'");
         return std::unique_ptr<T>(typedPtr);
+      }
+    private:
+      inline static std::unordered_map<std::string, std::string> engineNameToTypeIdName;
+      inline static std::unordered_map<std::string, std::function<void*()>> typeIdNameToFactory;
+
+      static void cleanup() {
+        typeIdNameToFactory.clear();
+        engineNameToTypeIdName.clear();
       }
   };
 }

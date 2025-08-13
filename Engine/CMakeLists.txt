@@ -4,8 +4,16 @@ project(Engine VERSION 0.10.2)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (BUILD_ENGINE_SHARED STREQUAL "1")
+    set(ENGINE_LIB_TYPE SHARED)
+    set(ENGINE_SHARED ON)
+else ()
+    set(ENGINE_LIB_TYPE STATIC)
+    set(ENGINE_SHARED OFF)
+endif ()
+
 # Define the engine library
-add_library(Engine2D STATIC
+add_library(Engine2D ${ENGINE_LIB_TYPE}
     include/Engine2D/Rendering/stb_image.hpp
     include/Engine/RenderingHeaders.hpp
     include/Engine2D/Types/Vector2.hpp
@@ -98,8 +106,15 @@ add_library(Engine2D STATIC
     include/Engine2D/SceneManagement/SceneResources.hpp
 )
 
+# Set prefix at configure time instead of using generator expressions
+if (ENGINE_SHARED)
+    set(LIB_PREFIX "lib")
+else ()
+    set(LIB_PREFIX "")
+endif ()
+
 set_target_properties(Engine2D PROPERTIES
-    OUTPUT_NAME Engine2D-${PROJECT_VERSION}$<IF:$<STREQUAL:$<CONFIG>,Debug>,d,>$<IF:$<BOOL:${PROFILE}>,p,>
+    OUTPUT_NAME ${LIB_PREFIX}Engine2D-${PROJECT_VERSION}$<IF:$<STREQUAL:$<CONFIG>,Debug>,d,>$<IF:$<BOOL:${PROFILE}>,p,>
     PREFIX ""
 )
 
@@ -122,9 +137,10 @@ elseif (WIN32)
     message(WARNING "Windows build is not fully supported yet.")
 endif ()
 
+cmrc_add_resource_library(engineResources NAMESPACE engineResources Assets)
 target_link_libraries(Engine2D PRIVATE
     OpenGL::GL GLEW::GLEW glfw glm-header-only
-    cmrc cpptrace::cpptrace
+    cmrc-base cpptrace::cpptrace engineResources
 )
 
 # --------------------------
@@ -155,10 +171,15 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif ()
 endif ()
 
-add_custom_command(
-    TARGET Engine2D POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E rename $<TARGET_FILE:Engine2D> ${CMAKE_CURRENT_BINARY_DIR}/../../../include/$<TARGET_FILE_NAME:Engine2D>
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+if (ENGINE_SHARED)
+    set(NEW_PATH ${CMAKE_CURRENT_BINARY_DIR}/../../../lib/shared)
+else ()
+    set(NEW_PATH ${CMAKE_CURRENT_BINARY_DIR}/../../../lib/static)
+endif ()
+
+add_custom_target(copy_engine_library ALL
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Engine2D> ${NEW_PATH}/$<TARGET_FILE_NAME:Engine2D>
+    DEPENDS Engine2D WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # --------------------------
@@ -169,4 +190,5 @@ target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
     MULTI_THREAD=1 # Set this to 0 if you have mutex errors or race conditions when modifying the engine
+    ENGINE_EDITOR=0
 )

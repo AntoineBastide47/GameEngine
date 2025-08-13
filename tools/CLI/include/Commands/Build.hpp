@@ -1,7 +1,7 @@
 //
 // Build.hpp
 // Author: Antoine Bastide
-// Date: 27/03/2025
+// Date: 10.08.2025
 //
 
 #ifndef BUILD_HPP
@@ -11,16 +11,10 @@
 
 class Build final : public Command {
   public:
-    bool buildEngine;
-    bool buildEditor;
-
-    explicit Build(bool buildEngine, bool buildEditor);
+    Build();
     void Run(
       const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands
     ) override;
-
-    static int GetCoreCount();
-    static bool HasNinja();
 };
 
 #endif //BUILD_HPP

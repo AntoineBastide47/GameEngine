@@ -11,10 +11,11 @@
 
 class BuildProject final : public Command {
   public:
-    BuildProject();
+    explicit BuildProject(bool fromEditor);
     void Run(
       const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands
     ) override;
+    bool fromEditor;
 };
 
 #endif //BUILD_PROJECT_HPP

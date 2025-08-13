@@ -4,7 +4,7 @@
 // Date: 31/03/2025
 //
 
-#include "commands/RunProject.hpp"
+#include "Commands/RunProject.hpp"
 
 RunProject::RunProject() : Command("launches the executable of the current project") {}
 

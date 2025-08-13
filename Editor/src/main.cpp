@@ -6,7 +6,14 @@
 
 #include <iostream>
 
-int main(int argc, const char * argv[]) {
-  std::cout << "Hello World!\n";
-  return 0;
+#include "Window.hpp"
+
+int main(int, const char *[]) {
+  try {
+    Editor::Window{}.Run();
+    return 0;
+  } catch (const std::exception &e) {
+    std::cerr << "Application error: " << e.what() << std::endl;
+    return 1;
+  }
 }

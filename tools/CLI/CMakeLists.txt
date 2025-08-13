@@ -9,31 +9,36 @@ add_executable(${PROJECT_NAME}
     main.cpp
     include/OrderedMap.hpp
     include/Command.hpp
-    src/commands/Help.cpp
-    include/commands/Help.hpp
-    src/commands/Dependencies.cpp
-    include/commands/Dependencies.hpp
-    src/commands/Build.cpp
-    include/commands/Build.hpp
-    src/commands/CreateProject.cpp
-    include/commands/CreateProject.hpp
-    src/commands/LinkProject.cpp
-    include/commands/LinkProject.hpp
-    src/commands/Version.cpp
-    include/commands/Version.hpp
-    include/commands/BuildProject.hpp
-    src/commands/BuildProject.cpp
-    include/commands/BuildProject.hpp
-    src/commands/RunProject.cpp
-    include/commands/RunProject.hpp
-    src/commands/Rebuild.cpp
-    include/commands/Rebuild.hpp
+    src/Commands/Help.cpp
+    include/Commands/Help.hpp
+    src/Commands/Dependencies.cpp
+    include/Commands/Dependencies.hpp
+    src/Commands/BuildEngine.cpp
+    include/Commands/BuildEngine.hpp
+    src/Commands/CreateProject.cpp
+    include/Commands/CreateProject.hpp
+    src/Commands/LinkProject.cpp
+    include/Commands/LinkProject.hpp
+    src/Commands/Version.cpp
+    include/Commands/Version.hpp
+    include/Commands/BuildProject.hpp
+    src/Commands/BuildProject.cpp
+    include/Commands/BuildProject.hpp
+    src/Commands/RunProject.cpp
+    include/Commands/RunProject.hpp
+    src/Commands/Rebuild.cpp
+    include/Commands/Rebuild.hpp
     src/Utils.cpp
     include/Utils.hpp
-    src/commands/BuildTools.cpp
-    include/commands/BuildTools.hpp
-    src/commands/BuildSdk.cpp
-    include/commands/BuildSdk.hpp
+    src/Commands/BuildTools.cpp
+    include/Commands/BuildTools.hpp
+    src/Commands/BuildSdk.cpp
+    include/Commands/BuildSdk.hpp
+    src/Commands/Build.cpp
+    include/Commands/Build.hpp
+    src/Commands/BuildEditor.cpp
+    include/Commands/BuildEditor.hpp
+    src/Command.cpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME engine-cli)

@@ -4,6 +4,8 @@
 // Date: 25.07.2025
 //
 
+#include <iostream>
+
 #include "Engine2D/SceneManagement/Scene.hpp"
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Component2D.hpp"
@@ -102,7 +104,9 @@ namespace Engine2D {
     const auto mainCam = Entity2D::Instantiate("Camera");
     if (!mainCam) {
       std::cerr << "ERROR: Failed to create main camera" << std::endl;
-      Game2D::instance->quit();
+      if (!Game2D::instance->IsHeadless()) {
+        Game2D::instance->quit();
+      }
       exit(EXIT_FAILURE);
     }
     cameraComponent = mainCam->AddComponent<Rendering::Camera2D>(
@@ -175,6 +179,16 @@ namespace Engine2D {
       // Prepare the next frame
       glfwSwapBuffers(Game2D::instance->window);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+  }
+
+  void Scene::renderHeadless() {
+    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+
+    // Make sure there is something to render
+    if (!entities.empty()) {
+      SceneManager::ActiveScene()->MainCamera()->updateCamera();
+      renderingSystem.render();
     }
   }
 

@@ -70,15 +70,15 @@ namespace Engine2D::Rendering {
   }
 
   const glm::mat4 &Camera2D::GetProjectionMatrix() const {
-    return this->projection;
+    return projection;
   }
 
   const glm::mat4 &Camera2D::GetViewMatrix() const {
-    return this->view;
+    return view;
   }
 
   const glm::mat4 &Camera2D::GetViewProjectionMatrix() const {
-    return this->viewProjection;
+    return viewProjection;
   }
 
   inline int index_of_ptr(const std::vector<std::unique_ptr<Entity2D>> &vec, const Entity2D *ptr) {

@@ -9,11 +9,42 @@
 #include <regex>
 #include <set>
 #include <sstream>
+#include <filesystem>
 
 #include "Generator.hpp"
 #include "Parser.hpp"
 
 namespace Engine::Reflection {
+  std::string Generator::GenerateRecordContent(const std::vector<Record> &records) {
+    std::ostringstream content;
+    content << "// Auto-generated – DO NOT EDIT\n\n#pragma once\n\nnamespace Engine::Reflection {\n";
+
+    for (auto it = records.begin(); it != records.end(); ++it) {
+      GenerateRecordMacro(*it, content, it == records.end() - 1);
+    }
+    content << "} // namespace Engine::Reflection\n";
+    return content.str();
+  }
+
+  bool Generator::WriteFileIfChanged(const std::string &filePath, const std::string &content) {
+    // Check if file exists and compare content
+    if (std::filesystem::exists(filePath)) {
+      std::ifstream existingFile(filePath);
+      std::ostringstream existingContent;
+      existingContent << existingFile.rdbuf();
+      
+      if (existingContent.str() == content) {
+        // Content is identical, don't write
+        return false;
+      }
+    }
+    
+    // Content is different or file doesn't exist, write it
+    std::ofstream outputFile(filePath);
+    outputFile << content;
+    return true;
+  }
+
   void Generator::GenerateRecordFiles(const std::vector<Record> &records) {
     std::unordered_map<std::string, std::vector<Record>> grouped;
     for (const auto &record: records)
@@ -24,12 +55,11 @@ namespace Engine::Reflection {
       const std::string fileName = path.parent_path().string() + "/" + path.stem().string() + ".gen" +
                                    path.extension().string();
 
-      std::ofstream generatedFile(fileName);
-      generatedFile.write("// Auto-generated – DO NOT EDIT\n\n#pragma once\n\nnamespace Engine::Reflection {\n", 80);
-
-      for (auto it = records.begin(); it != records.end(); ++it)
-        GenerateRecordMacro(*it, generatedFile, it == records.end() - 1);
-      generatedFile.write("} // namespace Engine::Reflection\n", 34);
+      // Generate content in memory first
+      const std::string content = GenerateRecordContent(records);
+      
+      // Only write if content has changed
+      WriteFileIfChanged(fileName, content);
 
       const std::string header = path.parent_path().string() + "/" + path.stem().string() + path.extension().string();
       std::ifstream headerFile(header);
@@ -39,7 +69,7 @@ namespace Engine::Reflection {
     }
   }
 
-  void Generator::GenerateRecordMacro(const Record &record, std::ofstream &output, const bool lastRecord) {
+  void Generator::GenerateRecordMacro(const Record &record, std::ostream &output, const bool lastRecord) {
     std::string name;
     if (const auto pos = record.name.rfind("::"); pos == std::string::npos)
       name = record.name;
@@ -67,7 +97,7 @@ namespace Engine::Reflection {
       output.put('\n');
   }
 
-  void Generator::GenerateReflectionFactoryCode(const Record &record, std::ofstream &output) {
+  void Generator::GenerateReflectionFactoryCode(const Record &record, std::ostream &output) {
     output.write(
       "  static inline const bool _reg = [] {\\\n"
       "    Engine::Reflection::ReflectionFactory::RegisterType<", 96
@@ -82,7 +112,7 @@ namespace Engine::Reflection {
     );
   }
 
-  void Generator::GenerateSaveFunction(const Record &record, std::ofstream &output) {
+  void Generator::GenerateSaveFunction(const Record &record, std::ostream &output) {
     output.write(
       "  void _e_save(const Engine::Reflection::Format format, Engine::JSON &json) const override { \\\n"
       "    if (format == Engine::Reflection::Format::JSON) { \\\n"
@@ -99,7 +129,7 @@ namespace Engine::Reflection {
     output.write("    }\\\n  }\\\n", 12);
   }
 
-  void Generator::GenerateLoadFunction(const Record &record, std::ofstream &output) {
+  void Generator::GenerateLoadFunction(const Record &record, std::ostream &output) {
     output.write(
       "  void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \\\n"
       "    if (format == Engine::Reflection::Format::JSON) {", 148
@@ -166,11 +196,14 @@ namespace Engine::Reflection {
     if (!inFile)
       throw std::runtime_error("Cannot open header file: " + headerPath);
 
-    std::vector<std::string> lines;
+    std::vector<std::string> originalLines;
     std::string line;
     while (std::getline(inFile, line))
-      lines.push_back(line);
+      originalLines.push_back(line);
     inFile.close();
+
+    std::vector<std::string> lines = originalLines;
+    bool modified = false;
 
     for (const auto &record: records) {
       std::string name = record.name;
@@ -200,14 +233,18 @@ namespace Engine::Reflection {
                 lines.begin() + static_cast<long>(insertLine),
                 lines[i].substr(0, leadingWhitespace) + "  SERIALIZE_" + upperName
               );
+              modified = true;
             }
           }
         }
       }
     }
 
-    std::ofstream outFile(headerPath, std::ios::trunc);
-    for (const auto &l: lines)
-      outFile << l << "\n";
+    // Only write the file if content has changed
+    if (modified) {
+      std::ofstream outFile(headerPath, std::ios::trunc);
+      for (const auto &l: lines)
+        outFile << l << "\n";
+    }
   }
 }

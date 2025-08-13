@@ -42,6 +42,5 @@
 
 # other
 **/.DS_Store
-CMakeConfig.txt
 build
-profiling_data.json
+build_editor

@@ -4,9 +4,13 @@
 // Date: 18/11/2024
 //
 
-#include "Engine/Input/Mouse.hpp"
+#if ENGINE_EDITOR
+#include "Window.hpp"
+#endif
 
+#include "Engine/Input/Mouse.hpp"
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine2D/Game2D.hpp"
 
 namespace Engine::Input {
   MouseButtonEvent Mouse::LEFT{};
@@ -37,7 +41,13 @@ namespace Engine::Input {
   glm::vec2 Mouse::Position() {
     double x, y;
     glfwGetCursorPos(window, &x, &y);
-    return glm::vec2(static_cast<float>(x), static_cast<float>(y));
+
+    if (Engine2D::Game2D::Initialized()) {
+      x -= Engine2D::Game2D::WindowWidth() * 0.25f;
+      y -= Engine2D::Game2D::WindowHeight() * 0.25f;
+    }
+
+    return glm::vec2(static_cast<float>(x), static_cast<float>(-y));
   }
 
   Mouse::~Mouse() {

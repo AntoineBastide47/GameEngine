@@ -4,11 +4,14 @@
 // Date: 27/03/2025
 //
 
-#include "commands/Help.hpp"
+#include "Commands/Help.hpp"
 
-Help::Help() : Command("displays information related to the given command", "<command-name>", 1, "version", true) {}
+Help::Help()
+  : Command("displays information related to the given command", "<command-name>", 1, "version", true) {}
 
-void Help::Run(const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands) {
+void Help::Run(
+  const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands
+) {
   if (args.size() == 1) {
     if (commands.contains(args[0])) {
       displayCommandInfo(args[0], commands[args[0]]);
@@ -20,11 +23,16 @@ void Help::Run(const std::vector<std::string> &args, const OrderedMap<std::strin
     return;
   }
 
-  std::cout << "engine-cli is a tool to help you build the engine, create and link projects all from your terminal";
+  std::cout << "engine-cli: A command-line tool for:\n"
+      << "  • Building the engine, editor, and SDK\n"
+      << "  • Creating and linking projects\n"
+      << "  • Managing your development workflow";
   std::cout << "\n\nAvailable commands:";
   for (const auto &[name, command]: commands) {
-    std::cout << "\n";
-    displayCommandInfo(name, command);
+    if (!command->hidden) {
+      std::cout << "\n";
+      displayCommandInfo(name, command);
+    }
   }
 }
 

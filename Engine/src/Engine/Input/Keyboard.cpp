@@ -7,9 +7,7 @@
 #include <ranges>
 
 #include "Engine/Input/Keyboard.hpp"
-
 #include "Engine/Macros/Profiling.hpp"
-#include "Engine/Macros/Utils.hpp"
 
 namespace Engine::Input {
   KeyboardEvent Keyboard::A{};
@@ -138,8 +136,6 @@ namespace Engine::Input {
 
   Keyboard::~Keyboard() {
     window = nullptr;
-    for (auto eventPtr: variableKeyEvents | std::views::values)
-      SAFE_DELETE(eventPtr);
     variableKeyEvents.clear();
   }
 
@@ -197,7 +193,7 @@ namespace Engine::Input {
       ctx.pressed = !wasPressed && isPressed;
       ctx.held = wasPressed && isPressed;
       ctx.released = wasPressed && !isPressed;
-      (keyName && variableKeyEvents.contains(*keyName) ? variableKeyEvents[*keyName] : event)->trigger(ctx);
+      (keyName && variableKeyEvents.contains(*keyName) ? variableKeyEvents.at(*keyName) : event)->trigger(ctx);
     }
   }
 

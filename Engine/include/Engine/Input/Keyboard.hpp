@@ -13,6 +13,10 @@
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine/Input/InputContexts.hpp"
 
+namespace Editor {
+  class Window;
+};
+
 namespace Engine2D {
   class Game2D;
   class Entity2D;
@@ -29,6 +33,8 @@ namespace Engine::Input {
    * The keys all have an associated Event that triggers when they are updated.
    */
   class Keyboard final {
+    friend class Editor::Window;
+    friend class Engine2D::Game2D;
     public:
       static KeyboardEvent A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, NUM0, NUM1,
           NUM2, NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, SPACE, APOSTROPHE, COMMA, MINUS, PERIOD, SLASH, SEMICOLON,
@@ -38,8 +44,6 @@ namespace Engine::Input {
           F25, KP_NUM0, KP_NUM1, KP_NUM2, KP_NUM3, KP_NUM4, KP_NUM5, KP_NUM6, KP_NUM7, KP_NUM8, KP_NUM9, KP_DECIMAL,
           KP_DIVIDE, KP_MULTIPLY, KP_SUBTRACT, KP_ADD, KP_ENTER, KP_EQUAL, LEFT_SHIFT, LEFT_CONTROL, LEFT_ALT,
           LEFT_SUPER, RIGHT_SHIFT, RIGHT_CONTROL, RIGHT_ALT, RIGHT_SUPER, MENU;
-
-      friend class Engine2D::Game2D;
     private:
       /// If any of the keys were pressed last frame
       static std::bitset<GLFW_KEY_LAST + 1> previousKeyStates;

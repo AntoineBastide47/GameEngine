@@ -14,6 +14,10 @@
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine/Input/InputContexts.hpp"
 
+namespace Editor {
+  class Window;
+};
+
 namespace Engine2D {
   class Game2D;
 }
@@ -22,9 +26,11 @@ namespace Engine::Input {
   class MouseButtonEvent final : public Event<KeyboardAndMouseContext> {
     friend class Mouse;
   };
+
   class MousePositionEvent final : public Event<glm::vec2> {
     friend class Mouse;
   };
+
   class MouseScrollEvent final : public Event<MouseScroll> {
     friend class Mouse;
   };
@@ -35,6 +41,8 @@ namespace Engine::Input {
    * The mouse position, scroll and button all have an associated Event that triggers when they are updated.
    */
   class Mouse final {
+    friend class Editor::Window;
+    friend class Engine2D::Game2D;
     public:
       static MouseButtonEvent LEFT, MIDDLE, RIGHT, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8;
       static MouseScrollEvent SCROLL;
@@ -47,8 +55,6 @@ namespace Engine::Input {
       static void SetMouseDisabled();
       /// @returns The current position of the mouse on the screen
       [[nodiscard]] static glm::vec2 Position();
-
-      friend class Engine2D::Game2D;
     private:
       /// If any of the mouse buttons were pressed last frame
       static std::bitset<GLFW_MOUSE_BUTTON_LAST + 1> previousKeyStates;

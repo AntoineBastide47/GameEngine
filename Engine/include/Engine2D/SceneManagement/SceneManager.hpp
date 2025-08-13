@@ -72,6 +72,10 @@ namespace Engine2D {
       /// @param name The name of the scene to destroy
       static void DestroyScene(const std::string &name);
 
+      /// Remove's all the scene from the game, all their entities and their components from memory
+      /// @note Can not be reverted and is destructive
+      static void DestroyAllScenes();
+
       /// Set's the scene with the given scene as the active scene
       /// @param name The name of the scene to set active
       /// @note If the scene is not loaded, it will be loaded

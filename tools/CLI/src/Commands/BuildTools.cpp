@@ -4,7 +4,7 @@
 // Date: 17.06.2025
 //
 
-#include "commands/BuildTools.hpp"
+#include "Commands/BuildTools.hpp"
 
 BuildTools::BuildTools()
   : Command("build's the engine tools", "", 0, "", false, "Does not rebuild the " + CLI_COMMAND_NAME + " executable.") {}

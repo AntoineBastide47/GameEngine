@@ -22,6 +22,7 @@ Manual installation required, follow the links above to do so.
 ### 1. Clone the Repository:
 ```bash
 git clone --recursive https://github.com/AntoineBastide47/GameEngine.git
+git submodule update --init --recursive
 ```
 ### 2. Build the CLI
 Build the command-line interface (CLI) to manage the engine and projects:
@@ -41,30 +42,31 @@ Build the engine tools to make sure all it's features work correctly:
 ./engine-cli --build-tools
 ```
 ### 4. Build the engine and editor
-#### 4.1 Building the engine and the editor
+#### 4.1 Building the engine, the SDK and the editor
 ```bash
 ./engine-cli --build
 ```
-_Tip: Add the argument `true` after the build command to also build the `release mode` static library for production builds._
-#### 4.2 Building the engine static libraries only
+_Tip: Add the argument `true` after the build command to also build the `release mode` library for production builds._
+#### 4.2 Building the engine libraries only
 ```bash
 ./engine-cli --build-engine
 ```
-_Tip: Add the argument `true` after the build command to also build the `release mode` static library for production builds._
+_Tip: Add the argument `true` after the build command to also build the `release mode` library for production builds._
 #### 4.3 Building the editor executable only
 ```bash
 ./engine-cli --build-editor
+```
+_Tip: Add the argument `true` after the build command to also build the `release mode` executable for production builds._
+### 4.4 Building the SDK
+```bash
+./engine-cli --build-sdk
 ```
 ### 5. Distributing the Engine
 1. Build the engine with all configurations:
 ```bash
 ./engine-cli --build true
 ```
-2. Generate the SDK:
-```bash
-./engine-cli --build-sdk
-```
-3. Compress the `SDK/` folder:
+2. Compress the `SDK/` folder:
 ```bash
 zip -r EngineSDK.zip SDK
 ```

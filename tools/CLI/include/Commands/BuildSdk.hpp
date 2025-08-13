@@ -15,6 +15,10 @@ class BuildSDK final : public Command {
     void Run(
       const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands
     ) override;
+    void DisableLogging();
+    void EnableLogging();
+  private:
+    bool loggingDisabled;
 };
 
 #endif //BUILD_SDK_HPP

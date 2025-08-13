@@ -15,14 +15,18 @@ namespace Engine {
     if (!Engine2D::Game2D::instance)
       return;
     resolution = newValue;
-    glfwSetWindowSize(Engine2D::Game2D::instance->window, newValue.x, newValue.y);
+    if (!Engine2D::Game2D::instance->IsHeadless()) {
+      glfwSetWindowSize(Engine2D::Game2D::instance->window, newValue.x, newValue.y);
+    }
   }
 
   void Settings::Window::SetTitle(const std::string &newTitle) {
     if (!Engine2D::Game2D::instance)
       return;
     title = std::move(newTitle);
-    glfwSetWindowTitle(Engine2D::Game2D::instance->window, title.c_str());
+    if (!Engine2D::Game2D::instance->IsHeadless()) {
+      glfwSetWindowTitle(Engine2D::Game2D::instance->window, title.c_str());
+    }
   }
 
   void Settings::Window::SetAllowResize(const bool newState) {

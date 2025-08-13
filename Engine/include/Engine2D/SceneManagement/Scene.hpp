@@ -144,6 +144,8 @@ namespace Engine2D {
       void animate() const;
       /// Renders all the entities in this scene
       void render();
+      /// Renders the scene in headless mode
+      void renderHeadless();
       /// Destroys this scene
       void destroy();
   };
