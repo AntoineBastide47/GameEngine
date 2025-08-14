@@ -46,6 +46,11 @@ namespace Editor {
       inline static bool showLoadProjectDialog = false;
       inline static char projectPathBuffer[512] = "";
 
+      inline static int maxFramebufferDims[2];
+
+      /// Initializes the level editor
+      static void initialize();
+
       /// Loads a project to be rendered in the level editor
       /// @param projectPath The path of the project to load
       static bool loadProject(const std::string &projectPath);

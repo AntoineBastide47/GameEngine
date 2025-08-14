@@ -65,7 +65,6 @@ add_library(Engine2D ${ENGINE_LIB_TYPE}
     include/Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp
     include/Engine2D/Behaviour.hpp
     include/Engine/Macros/Utils.hpp
-    include/Engine/Macros/PlatformDetection.hpp
     include/Engine/Macros/Assert.hpp
     include/Engine2D/Rendering/Sprite.hpp
     src/Engine2D/Rendering/SpriteRenderer.cpp
@@ -192,3 +191,7 @@ target_compile_definitions(Engine2D PUBLIC
     MULTI_THREAD=1 # Set this to 0 if you have mutex errors or race conditions when modifying the engine
     ENGINE_EDITOR=0
 )
+
+#
+include(CMake/PlatformDetection.cmake)
+setup_platform_detection(Engine2D)

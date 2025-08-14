@@ -73,7 +73,7 @@ namespace Editor {
     const float width = std::max(viewportSize.x, 800.0f);
     const float height = std::max(viewportSize.y, 600.0f);
 
-    if (frameBufferData.width != width || frameBufferData.height != height)
+    if ((frameBufferData.width != width || frameBufferData.height != height) && width > 0 && height > 0)
       resizeSceneFrameBuffer(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
     bindSceneFrameBuffer();
@@ -184,13 +184,21 @@ namespace Editor {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
-  void LevelEditor::resizeSceneFrameBuffer(uint32_t width, uint32_t height) {
+  void LevelEditor::resizeSceneFrameBuffer(const uint32_t width, const uint32_t height) {
+    if (width == 0 || height == 0 || width > maxFramebufferDims[0] || height > maxFramebufferDims[1])
+      return;
+
     frameBufferData.width = width;
     frameBufferData.height = height;
     createSceneFrameBuffer(frameBufferData);
 
     if (loadedGame)
       loadedGame->framebuffer_size_callback(nullptr, width, height);
+  }
+
+  void LevelEditor::initialize() {
+    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxFramebufferDims);
+    createSceneFrameBuffer(frameBufferData);
   }
 
   bool LevelEditor::loadProject(const std::string &projectPath) {

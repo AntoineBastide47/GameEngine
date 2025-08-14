@@ -161,7 +161,7 @@ namespace Editor {
     const auto glsl_version = "#version 330 core";
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    LevelEditor::createSceneFrameBuffer(LevelEditor::frameBufferData);
+    LevelEditor::initialize();
   }
 
   void Window::quit() {

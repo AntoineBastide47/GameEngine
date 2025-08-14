@@ -8,7 +8,6 @@
 #define ASSERT_H
 
 #include "Engine/Macros/Utils.hpp"
-#include "Engine/Macros/PlatformDetection.hpp"
 
 #if defined(ENGINE_DEBUG) || defined(GAME_DEBUG)
 #if defined(ENGINE_WINDOWS)

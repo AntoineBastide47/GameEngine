@@ -17,7 +17,7 @@ void BuildSDK::Run(
 ) {
   namespace fs = std::filesystem;
 
-  auto safe_copy = [&](const std::string &src, const std::string &dst, bool is_directory = false) {
+  auto safe_copy = [&](const std::string &src, const std::string &dst, const bool is_directory = false) {
     try {
       if (!fs::exists(src)) {
         if (!loggingDisabled)
@@ -65,6 +65,7 @@ void BuildSDK::Run(
     safe_copy("./Editor/EditorExe", SDK_FOLDER "/EditorExe");
     safe_copy("./engine-cli", SDK_FOLDER "/engine-cli");
     safe_copy("./header-forge", SDK_FOLDER "/header-forge");
+    safe_copy("./Engine/CMake", SDK_FOLDER "/CMake", true);
 
     if (!loggingDisabled)
       std::cout << "SDK build completed!" << '\n';
