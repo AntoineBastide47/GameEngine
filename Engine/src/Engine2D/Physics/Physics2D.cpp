@@ -4,24 +4,21 @@
 // Date: 29/11/2024
 //
 
-#include <unordered_set>
 #include <algorithm>
-#include <vector>
-#include <thread>
 #include <future>
-#include <iterator>
 #include <numeric>
+#include <unordered_set>
+#include <vector>
 
-#include "Engine2D/SceneManagement/Scene.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
-#include "Engine2D/Entity2D.hpp"
-#include "Engine2D/Physics/Collisions.hpp"
-#include "Engine2D/Physics/Rigidbody2D.hpp"
 #include "Engine/Settings.hpp"
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Behaviour.hpp"
+#include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Physics/CollisionGrid.hpp"
 #include "Engine2D/Physics/CollisionManifold.hpp"
+#include "Engine2D/Physics/Collisions.hpp"
+#include "Engine2D/Physics/Rigidbody2D.hpp"
 #include "Engine2D/Types/Vector2.hpp"
 
 namespace Engine2D::Physics {
@@ -135,6 +132,7 @@ namespace Engine2D::Physics {
 
     // Precompute AABBs
     std::vector<std::pair<Collider2D *, Collider2D::AABB>> colliderPairs;
+    colliderPairs.reserve(collidersToChecks.size());
     for (const auto col: collidersToChecks)
       colliderPairs.push_back({col, col->getAABB()});
 

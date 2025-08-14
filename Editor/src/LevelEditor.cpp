@@ -65,6 +65,17 @@ namespace Editor {
   }
 
   void LevelEditor::renderViewport() {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoCollapse);
+    const ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+
+    // Ensure minimum viewport size
+    const float width = std::max(viewportSize.x, 800.0f);
+    const float height = std::max(viewportSize.y, 600.0f);
+
+    if (frameBufferData.width != width || frameBufferData.height != height)
+      resizeSceneFrameBuffer(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+
     bindSceneFrameBuffer();
     if (projectLoader.IsProjectLoaded() && loadedGame) {
       glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -78,17 +89,6 @@ namespace Editor {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     unbindSceneFrameBuffer();
-
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoCollapse);
-    const ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-
-    // Ensure minimum viewport size
-    const float width = std::max(viewportSize.x, 800.0f);
-    const float height = std::max(viewportSize.y, 600.0f);
-
-    if (frameBufferData.width != width || frameBufferData.height != height)
-      resizeSceneFrameBuffer(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
     // Cast texture ID for ImGui (flipped on Y-axis)
     ImGui::Image(colorAttachment, ImVec2(width, height), ImVec2(0, 1), ImVec2(1, 0));
@@ -188,6 +188,9 @@ namespace Editor {
     frameBufferData.width = width;
     frameBufferData.height = height;
     createSceneFrameBuffer(frameBufferData);
+
+    if (loadedGame)
+      loadedGame->framebuffer_size_callback(nullptr, width, height);
   }
 
   bool LevelEditor::loadProject(const std::string &projectPath) {

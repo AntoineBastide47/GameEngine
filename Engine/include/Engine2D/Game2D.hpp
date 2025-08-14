@@ -29,6 +29,10 @@ namespace Engine2D {
     class AnimationSystem;
   }
 
+  namespace Rendering {
+    class Camera2D;
+  }
+
   /** Game2D is the class that represents a game and manages each part of it. */
   class Game2D {
     friend class Scene;
@@ -37,6 +41,7 @@ namespace Engine2D {
     friend class Editor::Window;
     friend class Engine::Settings;
     friend class Editor::LevelEditor;
+    friend class Rendering::Camera2D;
     friend class Engine::ResourceManager;
     public:
       /// @returns True if the Game2D instance has been initialized, False if not

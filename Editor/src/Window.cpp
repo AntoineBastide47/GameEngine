@@ -111,7 +111,7 @@ namespace Editor {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetWindowCloseCallback(window, window_close_callback);
 
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     // The official code for "Setting Your Raster Position to a Pixel Location" (i.e., set up a camera for 2D screen)
     glMatrixMode(GL_PROJECTION);

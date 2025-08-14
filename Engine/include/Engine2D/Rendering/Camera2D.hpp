@@ -14,6 +14,7 @@
 
 namespace Engine2D {
   class Scene;
+  class Game2D;
   class Entity2D;
 }
 
@@ -25,6 +26,7 @@ namespace Engine2D::Rendering {
   class Camera2D final : public Component2D {
     SERIALIZE_CAMERA2D
       friend class Engine2D::Scene;
+      friend class Engine2D::Game2D;
       friend class Engine2D::Entity2D;
       friend class Engine::ResourceManager;
     public:
@@ -51,6 +53,8 @@ namespace Engine2D::Rendering {
       /// Lower values result in faster, snappier motion. Higher values produce slower, smoother tracking.
       /// Must be greater than zero to avoid invalid calculations in smoothDamp.
       float damping;
+      /// How zoomed in the camera is
+      float zoomLevel;
 
       /// Coefficients that control the shake of the camera on the X axis
       std::vector<ShakeWave> shakeCoefficientsX;
@@ -65,6 +69,9 @@ namespace Engine2D::Rendering {
       /// @param position the position of the sprite
       /// @param scale the scale of the sprite
       bool IsInViewport(const glm::vec2 &position, const glm::vec2 &scale) const;
+
+      void Resize(float width, float height);
+      void SetProjection(float left, float right, float bottom, float top);
 
       /// @returns The orthographic projection matrix that defines the camera's visible region in world space.
       const glm::mat4 &GetProjectionMatrix() const;
@@ -95,12 +102,12 @@ namespace Engine2D::Rendering {
       /// The index of the entity in the entities vector the camera is following
       int followTargetIndex;
 
-      float m00, m01, m03;
-      float m10, m11, m13;
+      float left, right, bottom, top;
 
       inline static uint ENGINE_DATA_BINDING_PORT = 0;
 
       Camera2D();
+      Camera2D(float aspect, float zoomLevel);
       Camera2D(float left, float right, float bottom, float top, float near = -1, float far = 1);
 
       void initialize();

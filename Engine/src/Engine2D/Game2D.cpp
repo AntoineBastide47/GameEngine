@@ -20,6 +20,7 @@
 #endif
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine/Reflection/Serializer.hpp"
+#include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/SceneManagement/SceneManager.hpp"
 #if ENGINE_EDITOR
 #include <imgui.h>
@@ -379,6 +380,9 @@ namespace Engine2D {
   }
 
   void Game2D::framebuffer_size_callback(GLFWwindow *, const int width, const int height) {
+    if (!instance)
+      return;
+
     instance->width = width;
     instance->height = height;
 
@@ -390,17 +394,12 @@ namespace Engine2D {
     instance->aspectRatio = glm::vec2(ratioX, ratioY);
     instance->aspectRatioInv = 1.0f / instance->aspectRatio;
 
-    // Calculate the viewport dimensions
-    const bool maintainAspectRatio = Engine::Settings::Graphics::GetMaintainAspectRatio();
-    const int viewWidth = static_cast<int>(
-      static_cast<float>(initialSize.x) * (maintainAspectRatio ? std::min(ratioX, ratioY) : ratioX)
-    );
-    const int viewHeight = static_cast<int>(
-      static_cast<float>(initialSize.y) * (maintainAspectRatio ? std::min(ratioX, ratioY) : ratioY)
-    );
-
     // Center the viewport
-    glViewport((width - viewWidth) / 2, (height - viewHeight) / 2, viewWidth, viewHeight);
+    glViewport(0, 0, width, height);
+
+    if (Engine::Settings::Graphics::GetMaintainAspectRatio())
+      if (auto *camera = SceneManager::ActiveScene()->MainCamera())
+        camera->Resize(width, height);
   }
 
   void Game2D::scroll_callback(GLFWwindow *, double, const double yOffset) {

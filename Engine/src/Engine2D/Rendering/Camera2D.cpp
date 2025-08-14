@@ -19,12 +19,27 @@ namespace Engine2D::Rendering {
   Camera2D::Camera2D()
     : Camera2D(-1, 1, -1, 1) {}
 
+  Camera2D::Camera2D(const float aspect, const float zoomLevel)
+    : followTarget(), positionOffset(0), rotationOffset(0), damping(1), zoomLevel(zoomLevel),
+      projection(
+        glm::ortho(
+          -aspect * zoomLevel / 2.0f, aspect * zoomLevel / 2.0f, -zoomLevel / 2.0f, zoomLevel / 2.0f, -32768.0f,
+          32768.0f
+        )
+      ),
+      view(1.0f), initialized(false), shakeDuration(0), shaking(false), shakeElapsed(0), ubo(0), followTargetIndex(-1),
+      left(-aspect * zoomLevel / 2.0f), right(aspect * zoomLevel / 2.0f), bottom(-zoomLevel / 2.0f),
+      top(zoomLevel / 2.0f) {
+    viewProjection = projection * view;
+  }
+
   Camera2D::Camera2D(
     const float left, const float right, const float bottom, const float top, const float near, const float far
   )
-    : followTarget(), positionOffset(0), rotationOffset(0), damping(1),
+    : followTarget(), positionOffset(0), rotationOffset(0), damping(1), zoomLevel(1.0f),
       projection(glm::ortho(left, right, bottom, top, near, far)), view(1.0f), initialized(false), shakeDuration(0),
-      shaking(false), shakeElapsed(0), ubo(0), followTargetIndex(-1), m00(0), m01(0), m03(0), m10(0), m11(0), m13(0) {
+      shaking(false), shakeElapsed(0), ubo(0), followTargetIndex(-1), left(left), right(right), bottom(bottom),
+      top(top) {
     viewProjection = projection * view;
   }
 
@@ -42,31 +57,39 @@ namespace Engine2D::Rendering {
   }
 
   bool Camera2D::IsInViewport(const glm::vec2 &position, const glm::vec2 &scale) const {
-    // Project the sprite center into clip space
-    const float cx = m00 * position.x + m01 * position.y + m03;
-    const float cy = m10 * position.x + m11 * position.y + m13;
+    // Transform position to camera space
+    const glm::vec4 camPos = view * glm::vec4(position.x, position.y, 0.0f, 1.0f);
+    const float cx = camPos.x;
+    const float cy = camPos.y;
 
-    // Compute sprite’s world‐space bounding‐circle radius (half‐diagonal)
-    const float hx = scale.x * 0.5f;
-    const float hy = scale.y * 0.5f;
-    const float worldRadius = hx * hx + hy * hy;
+    // Calculate object bounds in camera space
+    const float halfWidth = scale.x * 0.5f;
+    const float halfHeight = scale.y * 0.5f;
 
-    // Compute max clip‐space scale factor (to map world -> clip uniformly)
-    const float sx = m00 * m00 + m10 * m10;
-    const float sy = m01 * m01 + m11 * m11;
-    const float clipScale = sx > sy ? sx : sy;
-    const float r = worldRadius * clipScale;
+    // Check if object overlaps with camera bounds
+    return !(cx + halfWidth < left || cx - halfWidth > right || cy + halfHeight < bottom || cy - halfHeight > top);
+  }
 
-    // Check the bounds of the circle using squared distances
-    if (cx > 1.0f && (cx - 1.0f) * (cx - 1.0f) > r)
-      return false;
-    if (cx < -1.0f && (cx + 1.0f) * (cx + 1.0f) > r)
-      return false;
-    if (cy > 1.0f && (cy - 1.0f) * (cy - 1.0f) > r)
-      return false;
-    if (cy < -1.0f && (cy + 1.0f) * (cy + 1.0f) > r)
-      return false;
-    return true;
+  void Camera2D::Resize(const float width, const float height) {
+    constexpr float baseZoom = 60.0f;
+    constexpr float baseAspect = 4.0f / 3.0f; // TODO: read this from main.cpp
+
+    if (const float currentAspect = width / height; currentAspect > baseAspect) {
+      // Window is wider than base - fit to height
+      constexpr float viewHeight = baseZoom;
+      const float viewWidth = viewHeight * currentAspect;
+      SetProjection(-viewWidth * 0.5f, viewWidth * 0.5f, -viewHeight * 0.5f, viewHeight * 0.5f);
+    } else {
+      // Window is taller than base - fit to width
+      constexpr float viewWidth = baseZoom * baseAspect;
+      const float viewHeight = viewWidth / currentAspect;
+      SetProjection(-viewWidth * 0.5f, viewWidth * 0.5f, -viewHeight * 0.5f, viewHeight * 0.5f);
+    }
+  }
+
+  void Camera2D::SetProjection(const float left, const float right, const float bottom, const float top) {
+    projection = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    viewProjection = projection * view;
   }
 
   const glm::mat4 &Camera2D::GetProjectionMatrix() const {
@@ -148,13 +171,6 @@ namespace Engine2D::Rendering {
     // Update the camera's matrices
     view = baseView;
     viewProjection = projection * view;
-
-    m00 = viewProjection[0][0];
-    m01 = viewProjection[1][0];
-    m03 = viewProjection[3][0];
-    m10 = viewProjection[0][1];
-    m11 = viewProjection[1][1];
-    m13 = viewProjection[3][1];
 
     // Send the engine data to shaders
     void *ptr = glMapBufferRange(

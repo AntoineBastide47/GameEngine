@@ -15,6 +15,7 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_saveImpl(positionOffset, format, json["positionOffset"]);\
       Engine::Reflection::_e_saveImpl(rotationOffset, format, json["rotationOffset"]);\
       Engine::Reflection::_e_saveImpl(damping, format, json["damping"]);\
+      Engine::Reflection::_e_saveImpl(zoomLevel, format, json["zoomLevel"]);\
       Engine::Reflection::_e_saveImpl(shakeCoefficientsX, format, json["shakeCoefficientsX"]);\
       Engine::Reflection::_e_saveImpl(shakeCoefficientsY, format, json["shakeCoefficientsY"]);\
       Engine::Reflection::_e_saveImpl(projection, format, json["projection"]);\
@@ -27,6 +28,7 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(positionOffset, format, json["positionOffset"]);\
       Engine::Reflection::_e_loadImpl(rotationOffset, format, json["rotationOffset"]);\
       Engine::Reflection::_e_loadImpl(damping, format, json["damping"]);\
+      Engine::Reflection::_e_loadImpl(zoomLevel, format, json["zoomLevel"]);\
       Engine::Reflection::_e_loadImpl(shakeCoefficientsX, format, json["shakeCoefficientsX"]);\
       Engine::Reflection::_e_loadImpl(shakeCoefficientsY, format, json["shakeCoefficientsY"]);\
       Engine::Reflection::_e_loadImpl(projection, format, json["projection"]);\
