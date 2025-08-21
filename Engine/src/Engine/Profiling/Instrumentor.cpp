@@ -30,10 +30,10 @@ namespace Engine::Profiling {
   void Instrumentor::writeProfile(const ProfileResult &result) {
     std::lock_guard lock(mutex);
 
-    if (result.level > Settings::Profiling::GetProfilingLevel())
+    if (result.level > Settings::Profiling::Level())
       return;
     const long long duration = result.end - result.start;
-    if (duration < Settings::Profiling::GetProfilingThreshold())
+    if (duration < Settings::Profiling::ProfilingThreshold())
       return;
 
     if (profileCount++ > 0)

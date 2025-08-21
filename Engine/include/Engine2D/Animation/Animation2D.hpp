@@ -68,11 +68,11 @@ namespace Engine2D::Animation {
       /// Sets the duration of each frame in the animation
       void SetFrameDuration(float frameDuration);
       /// @returns The duration of each frame in the animation
-      [[nodiscard]] float GetFrameDuration() const;
+      [[nodiscard]] float FrameDuration() const;
       /// Sets the speed of the animation, set to 1 by default
       void SetSpeed(float speed);
       /// @returns The speed of the animation
-      [[nodiscard]] float GetSpeed() const;
+      [[nodiscard]] float Speed() const;
 
       void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
     private:

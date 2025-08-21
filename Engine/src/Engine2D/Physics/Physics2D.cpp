@@ -47,10 +47,10 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::step() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     if (!initialized) {
-      collisionGrid = CollisionGrid{Engine::Settings::Physics::GetPartitionSize()};
+      collisionGrid = CollisionGrid{Engine::Settings::Physics::PartitionSize()};
       initialized = true;
     }
 
@@ -61,10 +61,10 @@ namespace Engine2D::Physics {
         if (const auto rb = collider->rigidbody; rb && rb->IsActive())
           rb->step();
 
-      if (Engine::Settings::Physics::GetUseScreenPartitioning()) {
+      if (Engine::Settings::Physics::UseScreenPartitioning()) {
         // Update the collision grid
         if (collisionGridNeedsResizing)
-          collisionGrid.setGridSize(Engine::Settings::Physics::GetPartitionSize());
+          collisionGrid.setGridSize(Engine::Settings::Physics::PartitionSize());
         collisionGrid.update(activeColliders);
         // Perform the broad phase for each cell of the grid
         for (auto &gridCol: collisionGrid.grid)
@@ -82,7 +82,7 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::findActiveColliders() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
     for (const auto collider: colliders)
       if (collider->IsActive())
         activeColliders.push_back(collider);
@@ -92,7 +92,7 @@ namespace Engine2D::Physics {
     const Collider2D *sender, const Collider2D *receiver,
     const CollisionEventType eventType
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     if (sender->isTrigger) {
       switch (eventType) {
@@ -128,7 +128,7 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::broadPhase(const std::vector<Collider2D *> &collidersToChecks) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     // Precompute AABBs
     std::vector<std::pair<Collider2D *, Collider2D::AABB>> colliderPairs;
@@ -191,7 +191,7 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::narrowPhase() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     if (contactPairs.empty()) {
       previousCollisionPairs.clear();
@@ -238,7 +238,7 @@ namespace Engine2D::Physics {
   void Physics2D::separateBodies(
     const Collider2D *col1, const Collider2D *col2, const Rigidbody2D *rb1, const Rigidbody2D *rb2, const glm::vec2 mtv
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     const bool separateBody1 = rb1 && !rb1->isKinematic && !col1->isTrigger;
     const bool separateBody2 = rb2 && !rb2->isKinematic && !col2->isTrigger;
@@ -258,7 +258,7 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::resolveCollision(const CollisionManifold &contact) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     float elasticity = std::max(contact.col1->elasticity, contact.col2->elasticity);
     if (elasticity > 1.0f)
@@ -279,8 +279,8 @@ namespace Engine2D::Physics {
 
     // Find the impulses to apply
     for (int i = 0; i < N; i++) {
-      ra[i] = contact.contactPoints[i] - contact.col1->Transform()->GetWorldPosition();
-      rb[i] = contact.contactPoints[i] - contact.col2->Transform()->GetWorldPosition();
+      ra[i] = contact.contactPoints[i] - contact.col1->Transform()->WorldPosition();
+      rb[i] = contact.contactPoints[i] - contact.col2->Transform()->WorldPosition();
       raPerp[i] = glm::perpendicular(ra[i]);
       rbPerp[i] = glm::perpendicular(rb[i]);
       const float raPerpMag = glm::dot(raPerp[i], contact.normal);

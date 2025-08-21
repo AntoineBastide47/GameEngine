@@ -56,7 +56,9 @@ namespace Engine::Reflection {
 
   template<typename T> concept IsUniquePtr = requires(T ptr) {
     typename T::element_type;
-    requires std::is_same_v<std::remove_cvref_t<T>, std::unique_ptr<typename T::element_type>>;
+    typename T::deleter_type;
+    requires std::is_same_v<std::remove_cvref_t<T>,
+      std::unique_ptr<typename T::element_type, typename T::deleter_type>>;
   };
 
   template<typename T> concept IsSmartPtr = IsSharedPtr<T> || IsUniquePtr<T>;

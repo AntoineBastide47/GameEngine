@@ -11,12 +11,12 @@
 #include "Engine/RenderingHeaders.hpp"
 #include "Engine/Macros/Profiling.hpp"
 #include "Engine2D/Game2D.hpp"
-#include "../../../include/Engine2D/SceneManagement/SceneManager.hpp"
 #include "Engine2D/Transform2D.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine2D/Rendering/Sprite.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
 
 #define STRIDE (16)
 #define STRIDE_SIZE (STRIDE * sizeof(float))
@@ -24,19 +24,19 @@
 namespace Engine2D {
   ParticleSystem2D::ParticleSystem2D()
     : Renderable2D(ParticleSystem), loop(false), restart(false), useGlobalVelocities(false), simulateInWorldSpace(true),
-      startDelay(0), startPosition(glm::vec2(0)), startVelocity(glm::vec2(0)), endVelocity(glm::vec2(0)),
-      startAngularVelocity(0), endAngularVelocity(), startScale(glm::vec2(1)), endScale(glm::vec2(0)),
-      startColor(glm::vec4(1)), endColor(glm::vec4(1)), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1),
-      blendMode(Alpha), duration(1), particleLifetime(1), inverseLifetime(1), particles(0), head(0), capacity(0),
-      maxParticles(0), simulationFinished(false), emissionAcc(0), durationAcc(0), quadVAO(0), quadVBO(0),
-      instanceVBO(0) {}
+      startDelay(0), startPosition(glm::vec2(0)), flip({false, false}), startVelocity(glm::vec2(0)),
+      endVelocity(glm::vec2(0)), startAngularVelocity(0), endAngularVelocity(), startScale(glm::vec2(1)),
+      endScale(glm::vec2(0)), startColor(glm::vec4(1)), endColor(glm::vec4(1)), simulationSpeed(1), emissionRate(0),
+      maxStartPositionOffset(1), blendMode(Alpha), duration(1), particleLifetime(1), inverseLifetime(1), particles(0),
+      head(0), capacity(0), maxParticles(0), simulationFinished(false), emissionAcc(0), durationAcc(0), quadVAO(0),
+      quadVBO(0), instanceVBO(0) {}
 
   void ParticleSystem2D::SetDuration(const float duration) {
     this->duration = duration;
     durationAcc = 0;
   }
 
-  float ParticleSystem2D::GetDuration() const {
+  float ParticleSystem2D::Duration() const {
     return duration;
   }
 
@@ -53,7 +53,7 @@ namespace Engine2D {
       emissionRate = maxParticles * inverseLifetime;
   }
 
-  uint32_t ParticleSystem2D::GetMaxParticles() const {
+  uint32_t ParticleSystem2D::MaxParticles() const {
     return maxParticles;
   }
 
@@ -62,7 +62,7 @@ namespace Engine2D {
     inverseLifetime = 1.0f / lifetime;
   }
 
-  float ParticleSystem2D::GetParticleLifetime() const {
+  float ParticleSystem2D::ParticleLifetime() const {
     return particleLifetime;
   }
 
@@ -81,7 +81,7 @@ namespace Engine2D {
   }
 
   void ParticleSystem2D::updateAndRender(const uint textureIndex, float *data) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     // Make sure we can update and render the particles
     if (const bool canUpdateAndRender = Game2D::Initialized() && SceneManager::ActiveScene()->MainCamera(); !
@@ -146,7 +146,7 @@ namespace Engine2D {
       if (simulateInWorldSpace)
         pos = position;
       else
-        pos = glm::vec2(Transform()->GetWorldMatrix() * glm::vec4(position, 0, 1));
+        pos = glm::vec2(Transform()->WorldMatrix() * glm::vec4(position, 0, 1));
 
       const int idx = j * STRIDE;
       const float inversePPU = 1.0f / sprite->pixelsPerUnit;
@@ -165,16 +165,19 @@ namespace Engine2D {
       data[idx + 7] = startColor.a + colorDelta.a * tOpp;
 
       // Rect
-      data[idx + 8] = sprite->rect.x;
-      data[idx + 9] = sprite->rect.y;
-      data[idx + 10] = sprite->rect.z;
-      data[idx + 11] = sprite->rect.w;
+      data[idx + 8] = std::clamp(sprite->rect.x, 0.0f, 1.0f);
+      data[idx + 9] = std::clamp(sprite->rect.y, 0.0f, 1.0f);
+      data[idx + 10] = std::clamp(sprite->rect.z, 0.0f, 1.0f);
+      data[idx + 11] = std::clamp(sprite->rect.w, 0.0f, 1.0f);
 
       // Pivot, rotation and renderOrder
-      data[idx + 12] = Rendering::Renderer2D::PackTwoFloats(sprite->pivot.x, sprite->pivot.y);
+      data[idx + 12] = Rendering::Renderer2D::PackTwoFloats(
+        std::clamp(sprite->pivot.x, -1.0f, 1.0f),
+        std::clamp(sprite->pivot.y, -1.0f, 1.0f)
+      );
       data[idx + 13] = rotation;
-      data[idx + 14] = renderOrder;
-      data[idx + 15] = textureIndex;
+      data[idx + 14] = renderOrder << 16 | textureIndex;
+      data[idx + 15] = Rendering::Renderer2D::PackTwoFloats(flip.x, flip.y);
 
       j++;
     }
@@ -199,7 +202,7 @@ namespace Engine2D {
   static std::mt19937 gen(std::random_device{}());
 
   void ParticleSystem2D::respawnParticle() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     std::uniform_real_distribution dist_random(-maxStartPositionOffset, maxStartPositionOffset);
 
@@ -210,7 +213,7 @@ namespace Engine2D {
     particle.startVelocity = startVelocity;
     particle.endVelocity = endVelocity;
     particle.scale = startScale;
-    particle.position = (simulateInWorldSpace ? Transform()->GetWorldPosition() : glm::vec2(0))
+    particle.position = (simulateInWorldSpace ? Transform()->WorldPosition() : glm::vec2(0))
                         + startPosition + glm::vec2(dist_random(gen), dist_random(gen));
 
     if (capacity < maxParticles)

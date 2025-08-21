@@ -17,6 +17,7 @@ using ResourceLoader = std::function<cmrc::file(const std::string &)>;
 namespace Editor {
   class Window;
   class LevelEditor;
+  class SceneViewport;
 }
 
 namespace Engine {
@@ -42,6 +43,7 @@ namespace Engine2D {
     friend class Engine::Settings;
     friend class Editor::LevelEditor;
     friend class Rendering::Camera2D;
+    friend class Editor::SceneViewport;
     friend class Engine::ResourceManager;
     public:
       /// @returns True if the Game2D instance has been initialized, False if not

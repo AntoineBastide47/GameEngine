@@ -36,6 +36,8 @@ target_include_directories(cpptrace PUBLIC vendor/cpptrace/include vendor/cpptra
 # Build Configs
 # --------------------------
 
+set(MULTI_THREAD 1)
+
 if (BUILD_ENGINE)
     add_subdirectory(Engine)
 endif ()

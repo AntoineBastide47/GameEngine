@@ -5,7 +5,6 @@
 //
 
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
-#include "Engine2D/Rendering/Renderer2D.hpp"
 #include "Engine2D/SceneManagement/SceneManager.hpp"
 
 namespace Engine2D::Rendering {
@@ -17,7 +16,7 @@ namespace Engine2D::Rendering {
     dirty = true;
   }
 
-  const glm::vec<4, float> &SpriteRenderer::GetColor() const {
+  const glm::vec<4, float> &SpriteRenderer::Color() const {
     return this->color;
   }
 
@@ -26,7 +25,7 @@ namespace Engine2D::Rendering {
     dirty = true;
   }
 
-  const glm::vec<2, bool> &SpriteRenderer::GetFlip() const {
+  const glm::vec<2, bool> &SpriteRenderer::Flip() const {
     return this->flip;
   }
 

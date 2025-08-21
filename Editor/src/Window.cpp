@@ -11,6 +11,7 @@
 
 #include "Window.hpp"
 #include "LevelEditor.hpp"
+#include "Panels/SceneViewport.hpp"
 
 namespace Editor {
   Window::Window()
@@ -28,6 +29,8 @@ namespace Editor {
 
     initialize();
 
+    LevelEditor::loadProject("../TestGames/BrickBreaker");
+
     while (!glfwWindowShouldClose(window)) {
       glfwPollEvents();
 
@@ -35,10 +38,10 @@ namespace Editor {
       ImGui_ImplOpenGL3_NewFrame();
       ImGui::NewFrame();
 
-      if (LevelEditor::loadedGame) {
-        if (LevelEditor::IsViewportFocused())
-          LevelEditor::loadedGame->processInput();
-        LevelEditor::loadedGame->updateGame();
+      if (const auto game = Engine2D::Game2D::instance) {
+        if (SceneViewport::Focused())
+          game->processInput();
+        game->updateGame();
       }
 
       LevelEditor::Render();

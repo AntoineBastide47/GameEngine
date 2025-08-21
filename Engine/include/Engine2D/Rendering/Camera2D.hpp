@@ -74,11 +74,11 @@ namespace Engine2D::Rendering {
       void SetProjection(float left, float right, float bottom, float top);
 
       /// @returns The orthographic projection matrix that defines the camera's visible region in world space.
-      const glm::mat4 &GetProjectionMatrix() const;
+      const glm::mat4 &ProjectionMatrix() const;
       /// @returns The view matrix representing the inverse of the camera's world transformation (position, rotation, scale).
-      const glm::mat4 &GetViewMatrix() const;
+      const glm::mat4 &ViewMatrix() const;
       /// @returns The combined view-projection matrix used to transform world coordinates into clip space.
-      const glm::mat4 &GetViewProjectionMatrix() const;
+      const glm::mat4 &ViewProjectionMatrix() const;
 
       void OnSerialize(Engine::Reflection::Format format, Engine::JSON &json) const override;
       void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
@@ -102,7 +102,7 @@ namespace Engine2D::Rendering {
       /// The index of the entity in the entities vector the camera is following
       int followTargetIndex;
 
-      float left, right, bottom, top;
+      ENGINE_SERIALIZE float left, right, bottom, top;
 
       inline static uint ENGINE_DATA_BINDING_PORT = 0;
 

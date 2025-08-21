@@ -89,9 +89,11 @@ namespace Engine {
     if (type == array) {
       if (const auto &array = GetArray(); index < array.size())
         return array[index];
-      throw std::out_of_range("JSON::operator[]");
+      Log::Error("JSON::operator[]");
+      throw std::out_of_range("");
     }
-    throw std::logic_error("JSON::operator[] on a non array-type");
+    Log::Error("JSON::operator[] on a non array-type");
+    throw std::logic_error("");
   }
 
   JSON &JSON::operator[](const std::string &key) {
@@ -108,82 +110,96 @@ namespace Engine {
       if (const auto &obj = GetObject(); obj.contains(key))
         return obj.at(key);
       Log::Error("JSON::operator[] key: \"" + key + "\" not found");
-      throw std::out_of_range("JSON::operator[] key: \"" + key + "\" not found");
+      Log::Error("JSON::operator[] key: \"" + key + "\" not found");
+      throw std::out_of_range("");
     }
-    throw std::logic_error("JSON::operator[] on a non object-type");
+    Log::Error("JSON::operator[] on a non object-type");
+    throw std::logic_error("");
   }
 
   null_t &JSON::GetNull() {
     if (type == Null)
       return std::get<null_t>(data);
-    throw std::logic_error("JSON::GetNull called on a non-null type");
+    Log::Error("JSON::GetNull called on a non-null type");
+    throw std::logic_error("");
   }
 
   bool &JSON::GetBool() {
     if (type == Boolean)
       return std::get<bool>(data);
-    throw std::logic_error("JSON::GetBool called on a non-boolean type");
+    Log::Error("JSON::GetBool called on a non-boolean type");
+    throw std::logic_error("");
   }
 
   double &JSON::GetNumber() {
     if (type == Number)
       return std::get<double>(data);
 
-    throw std::logic_error("JSON::GetNumber called on a non-number type");
+    Log::Error("JSON::GetNumber called on a non-number type");
+    throw std::logic_error("");
   }
 
   std::string &JSON::GetString() {
     if (type == String)
       return std::get<std::string>(data);
-    throw std::logic_error("JSON::GetString called on a non-string type");
+    Log::Error("JSON::GetString called on a non-string type");
+    throw std::logic_error("");
   }
 
   JSON::JSONArray &JSON::GetArray() {
     if (type == array)
       return std::get<JSONArray>(data);
-    throw std::logic_error("JSON::GetArray called on a non-array type");
+    Log::Error("JSON::GetArray called on a non-array type");
+    throw std::logic_error("");
   }
 
   JSON::JSONObject &JSON::GetObject() {
     if (type == object)
       return std::get<JSONObject>(data);
-    throw std::logic_error("JSON::GetObject called on a non-object type");
+    Log::Error("JSON::GetObject called on a non-object type");
+    throw std::logic_error("");
   }
 
   const null_t &JSON::GetNull() const {
     if (type == Null)
       return std::get<null_t>(data);
-    throw std::logic_error("JSON::GetNull called on a non-null type");
+    Log::Error("JSON::GetNull called on a non-null type");
+    throw std::logic_error("");
   }
 
   const bool &JSON::GetBool() const {
     if (type == Boolean)
       return std::get<bool>(data);
-    throw std::logic_error("JSON::GetBool called on a non-boolean type");
+    Log::Error("JSON::GetBool called on a non-boolean type");
+    throw std::logic_error("");
   }
 
   const double &JSON::GetNumber() const {
     if (type == Number)
       return std::get<double>(data);
-    throw std::logic_error("JSON::GetNumber called on a non-number type");
+    Log::Error("JSON::GetNumber called on a non-number type");
+    throw std::logic_error("");
   }
 
   const std::string &JSON::GetString() const {
     if (type == String)
       return std::get<std::string>(data);
-    throw std::logic_error("JSON::GetString called on a non-string type");
+    Log::Error("JSON::GetString called on a non-string type");
+    throw std::logic_error("");
   }
 
   const JSON::JSONArray &JSON::GetArray() const {
     if (type == array)
       return std::get<JSONArray>(data);
-    throw std::logic_error("JSON::GetArray called on a non-array type");
+    Log::Error("JSON::GetArray called on a non-array type");
+    throw std::logic_error("");
   }
 
   const JSON::JSONObject &JSON::GetObject() const {
     if (type == object)
       return std::get<JSONObject>(data);
-    throw std::logic_error("JSON::GetObject called on a non-object type");
+    Log::Error("JSON::GetObject called on a non-object type");
+    throw std::logic_error("");
   }
 
   void JSON::PushBack(const JSON &value) {
@@ -205,12 +221,14 @@ namespace Engine {
 
   void JSON::Erase(const size_t index) {
     if (type == array) {
-      if (auto &array = std::get<JSONArray>(data); index >= array.size())
-        throw std::out_of_range("JSON::Erase");
-      else
+      if (auto &array = std::get<JSONArray>(data); index >= array.size()) {
+        Log::Error("JSON::Erase");
+        throw std::out_of_range("");
+      } else
         std::get<JSONArray>(data).erase(array.begin() + index);
     }
-    throw std::logic_error("JSON::Erase on a non-array type");
+    Log::Error("JSON::Erase on a non-array type");
+    throw std::logic_error("");
   }
 
   void JSON::Resize(const size_t size) {
@@ -227,7 +245,8 @@ namespace Engine {
     else if (type == object)
       std::get<JSONObject>(data).reserve(size);
     else
-      throw std::logic_error("JSON::Reserve called on non-array and non-object type");
+      Log::Error("JSON::Reserve called on non-array and non-object type");
+    throw std::logic_error("");
   }
 
   void JSON::ReserveAndResize(const size_t size) {
@@ -242,37 +261,43 @@ namespace Engine {
   JSON &JSON::Front() {
     if (type == array)
       return std::get<JSONArray>(data).front();
-    throw std::logic_error("JSON::Front() called on non-array type");
+    Log::Error("JSON::Front() called on non-array type");
+    throw std::logic_error("");
   }
 
   const JSON &JSON::Front() const {
     if (type == array)
       return std::get<JSONArray>(data).front();
-    throw std::logic_error("JSON::Front() called on non-array type");
+    Log::Error("JSON::Front() called on non-array type");
+    throw std::logic_error("");
   }
 
   JSON &JSON::Back() {
     if (type == array)
       return std::get<JSONArray>(data).back();
-    throw std::logic_error("JSON::Back called on non-array type");
+    Log::Error("JSON::Back called on non-array type");
+    throw std::logic_error("");
   }
 
   const JSON &JSON::Back() const {
     if (type == array)
       return std::get<JSONArray>(data).back();
-    throw std::logic_error("JSON::Back called on non-array type");
+    Log::Error("JSON::Back called on non-array type");
+    throw std::logic_error("");
   }
 
   JSON &JSON::At(const size_t index) {
     if (type == array)
       return std::get<JSONArray>(data).at(index);
-    throw std::out_of_range("JSON::At() on a non array-type");
+    Log::Error("JSON::At() on a non array-type");
+    throw std::out_of_range("");
   }
 
   const JSON &JSON::At(const size_t index) const {
     if (type == array)
       return std::get<JSONArray>(data).at(index);
-    throw std::out_of_range("JSON::At() on a non array-type");
+    Log::Error("JSON::At() on a non array-type");
+    throw std::out_of_range("");
   }
 
   JSON &JSON::Value(const size_t index, JSON &defaultValue) {
@@ -293,11 +318,14 @@ namespace Engine {
 
   void JSON::Insert(const size_t index, const JSON &value) {
     if (type == array) {
-      if (const auto &array = std::get<JSONArray>(data); index >= array.size())
-        throw std::out_of_range("JSON::Insert()");
+      if (const auto &array = std::get<JSONArray>(data); index >= array.size()) {
+        Log::Error("JSON::Insert()");
+        throw std::out_of_range("");
+      }
       std::get<JSONArray>(data).at(index) = value;
     }
-    throw std::logic_error("JSON::Insert() called on non-array type");
+    Log::Error("JSON::Insert() called on non-array type");
+    throw std::logic_error("");
   }
 
   void JSON::Emplace(const std::string &key, const JSON &value) {
@@ -330,13 +358,15 @@ namespace Engine {
   JSON &JSON::At(const std::string &key) {
     if (type == object)
       return std::get<JSONObject>(data).at(key);
-    throw std::out_of_range("JSON::At() on a non object-type");
+    Log::Error("JSON::At() on a non object-type");
+    throw std::out_of_range("");
   }
 
   const JSON &JSON::At(const std::string &key) const {
     if (type == object)
       return std::get<JSONObject>(data).at(key);
-    throw std::out_of_range("JSON::At() on a non object-type");
+    Log::Error("JSON::At() on a non object-type");
+    throw std::out_of_range("");
   }
 
   JSON &JSON::Value(const std::string &key, JSON &defaultValue) {
@@ -370,13 +400,15 @@ namespace Engine {
       return std::ranges::find(array, value) != array.end();
     }
 
-    throw std::out_of_range("JSON::Contains() called on non-array or non-object type");
+    Log::Error("JSON::Contains() called on non-array or non-object type");
+    throw std::out_of_range("");
   }
 
   bool JSON::Contains(const std::string &key) const {
     if (type == object)
       return GetObject().contains(key);
-    throw std::out_of_range("JSON::Size() called on non-object type");
+    Log::Error("JSON::Size() called on non-object type");
+    throw std::out_of_range("");
   }
 
   bool JSON::Contains(const char *key) const {
@@ -388,7 +420,8 @@ namespace Engine {
       return GetArray().size();
     if (type == object)
       return GetObject().size();
-    throw std::out_of_range("JSON::Size() called on non-array or non-object type");
+    Log::Error("JSON::Size() called on non-array or non-object type");
+    throw std::out_of_range("");
   }
 
   bool JSON::Empty() const {
@@ -396,7 +429,8 @@ namespace Engine {
       return GetArray().empty();
     if (type == object)
       return GetObject().empty();
-    throw std::out_of_range("JSON::Empty() called on non-array or non-object type");
+    Log::Error("JSON::Empty() called on non-array or non-object type");
+    throw std::out_of_range("");
   }
 
   void JSON::Clear() {

@@ -20,6 +20,10 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_saveImpl(shakeCoefficientsY, format, json["shakeCoefficientsY"]);\
       Engine::Reflection::_e_saveImpl(projection, format, json["projection"]);\
       Engine::Reflection::_e_saveImpl(shakeDuration, format, json["shakeDuration"]);\
+      Engine::Reflection::_e_saveImpl(left, format, json["left"]);\
+      Engine::Reflection::_e_saveImpl(right, format, json["right"]);\
+      Engine::Reflection::_e_saveImpl(bottom, format, json["bottom"]);\
+      Engine::Reflection::_e_saveImpl(top, format, json["top"]);\
     }\
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
@@ -33,6 +37,10 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(shakeCoefficientsY, format, json["shakeCoefficientsY"]);\
       Engine::Reflection::_e_loadImpl(projection, format, json["projection"]);\
       Engine::Reflection::_e_loadImpl(shakeDuration, format, json["shakeDuration"]);\
+      Engine::Reflection::_e_loadImpl(left, format, json["left"]);\
+      Engine::Reflection::_e_loadImpl(right, format, json["right"]);\
+      Engine::Reflection::_e_loadImpl(bottom, format, json["bottom"]);\
+      Engine::Reflection::_e_loadImpl(top, format, json["top"]);\
     }\
   }\
   private: 

@@ -11,6 +11,8 @@
 #include "Engine/Macros/Utils.hpp"
 #include "Engine/Profiling/Timer.hpp"
 
+using ProfilingLevel = Engine::Settings::Profiling::Level;
+
 #if defined(ENGINE_DEBUG) && defined(ENGINE_PROFILING)
 #define ENGINE_PROFILE_SCOPE(name, level) Engine::Profiling::Timer timer##__LINE__(name, level)
 #define ENGINE_PROFILE_FUNCTION(level) ENGINE_PROFILE_SCOPE(ENGINE_FUNC_SIG, level)

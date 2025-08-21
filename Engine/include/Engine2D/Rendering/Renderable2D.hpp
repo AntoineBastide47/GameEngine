@@ -31,20 +31,20 @@ namespace Engine2D::Rendering {
       /// @note Will not work outside OnInitialize if the entity is marked as static
       void SetShader(Engine::Rendering::Shader *shader);
       /// @returns the shader that will be used for rendering
-      [[nodiscard]] Engine::Rendering::Shader *GetShader() const;
+      [[nodiscard]] Engine::Rendering::Shader *Shader() const;
       /// Sets the sprite that will be used for rendering
       /// @note Will not work outside OnInitialize if the entity is marked as static
       void SetSprite(Sprite *sprite);
       /// @returns the shader that will be used for rendering
-      [[nodiscard]] Sprite *GetSprite() const;
+      [[nodiscard]] Sprite *Sprite() const;
       /// Sets the render order that will be used for rendering
       /// @note Will not work outside OnInitialize if the entity is marked as static
       void SetRenderOrder(int16_t renderOrder);
       /// @returns the shader that will be used for rendering
-      [[nodiscard]] int16_t GetRenderOrder() const;
+      [[nodiscard]] int16_t RenderOrder() const;
     protected:
       Engine::Rendering::Shader *shader;
-      Sprite *sprite;
+      Rendering::Sprite *sprite;
       ENGINE_SERIALIZE int16_t renderOrder;
       ENGINE_SERIALIZE RenderableType renderType;
 

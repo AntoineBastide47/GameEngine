@@ -20,7 +20,7 @@ namespace Engine::Rendering {
   }
 
   void Shader::compile(const char *vertexSource, const char *fragmentSource, const char *geometrySource) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     uint gShader = 0;
 

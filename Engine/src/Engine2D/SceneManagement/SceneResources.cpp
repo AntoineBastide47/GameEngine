@@ -23,9 +23,9 @@ namespace Engine2D {
     std::set<Sprite *> sprites;
 
     for (const auto renderer: renderables) {
-      shaders.insert(renderer->GetShader());
-      textures.insert(renderer->GetSprite()->texture);
-      sprites.insert(renderer->GetSprite());
+      shaders.insert(renderer->Shader());
+      textures.insert(renderer->Sprite()->texture);
+      sprites.insert(renderer->Sprite());
     }
 
     if (format == Engine::Reflection::Format::JSON) {

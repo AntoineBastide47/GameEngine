@@ -44,7 +44,7 @@ namespace Engine2D::Animation {
     frameDurationInv = 1.0f / frameDuration;
   }
 
-  float Animation2D::GetFrameDuration() const {
+  float Animation2D::FrameDuration() const {
     return frameDuration;
   }
 
@@ -53,7 +53,7 @@ namespace Engine2D::Animation {
     speedInv = 1.0f / speed;
   }
 
-  float Animation2D::GetSpeed() const {
+  float Animation2D::Speed() const {
     return speed;
   }
 

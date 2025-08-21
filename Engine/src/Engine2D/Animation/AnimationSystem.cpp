@@ -20,7 +20,7 @@ namespace Engine2D::Animation {
   }
 
   void AnimationSystem::update() const {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
     for (const auto &animator: animators)
       animator->update();
   }

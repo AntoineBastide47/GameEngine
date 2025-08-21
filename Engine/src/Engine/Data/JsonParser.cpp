@@ -35,7 +35,7 @@ namespace Engine {
   };
 
   JSON JSONParser::Parse() {
-    ENGINE_PROFILE_FUNCTION(Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     JSON json;
     stack.push_back(&json);
@@ -323,7 +323,7 @@ namespace Engine {
   }
 
   JSON JSONParser::parseNumber() {
-    ENGINE_PROFILE_FUNCTION(Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     // Optional minus
     bool neg = false;
@@ -403,7 +403,7 @@ namespace Engine {
   }
 
   JSON JSONParser::parseString() {
-    ENGINE_PROFILE_FUNCTION(Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     const char *start = ptr;
     if (const size_t newSize = end - ptr - 2; newSize > result.capacity())

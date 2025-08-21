@@ -40,7 +40,7 @@ namespace Engine::Rendering {
     const int width, const int height, const unsigned char *data, const int internalFormat, const int dataFormat,
     const bool transparent, const bool blended
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     this->width = width;
     this->height = height;

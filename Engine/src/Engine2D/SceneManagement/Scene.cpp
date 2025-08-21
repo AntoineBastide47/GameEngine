@@ -8,6 +8,7 @@
 
 #include "Engine2D/SceneManagement/Scene.hpp"
 #include "Engine/Macros/Profiling.hpp"
+#include "Engine/Reflection/Serializer.hpp"
 #include "Engine2D/Component2D.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
@@ -46,7 +47,7 @@ namespace Engine2D {
       if (entity->name == name)
         return entity.get();
     for (const auto &entity: entities)
-      if (entity->name == name)
+      if (entity->name == name && !entity->destroyed)
         return entity.get();
     return nullptr;
   }
@@ -123,7 +124,7 @@ namespace Engine2D {
     #else
   void Scene::update() const {
     #endif
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     for (const auto &entity: entities) {
       if (entity->IsActive()) {
@@ -147,10 +148,10 @@ namespace Engine2D {
   }
 
   void Scene::fixedUpdate() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     Game2D::instance->physicsAccumulator += Game2D::DeltaTime();
-    const float fixedDeltaTime = Engine::Settings::Physics::GetFixedDeltaTime();
+    const float fixedDeltaTime = Engine::Settings::Physics::FixedDeltaTime();
     while (Game2D::instance->physicsAccumulator >= fixedDeltaTime) {
       for (const auto &entity: entities)
         if (entity->IsActive())
@@ -163,18 +164,20 @@ namespace Engine2D {
   }
 
   void Scene::animate() const {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     animationSystem.update();
   }
 
   void Scene::render() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     // Make sure there is something to render
     if (!entities.empty()) {
-      SceneManager::ActiveScene()->MainCamera()->updateCamera();
-      renderingSystem.render();
+      if (const auto cam = SceneManager::ActiveScene()->MainCamera(); cam->Entity()->IsActive() && cam->IsActive()) {
+        cam->updateCamera();
+        renderingSystem.render();
+      }
 
       // Prepare the next frame
       glfwSwapBuffers(Game2D::instance->window);
@@ -183,13 +186,14 @@ namespace Engine2D {
   }
 
   void Scene::renderHeadless() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     // Make sure there is something to render
-    if (!entities.empty()) {
-      SceneManager::ActiveScene()->MainCamera()->updateCamera();
-      renderingSystem.render();
-    }
+    if (!entities.empty())
+      if (const auto cam = SceneManager::ActiveScene()->MainCamera(); cam->Entity()->IsActive() && cam->IsActive()) {
+        cam->updateCamera();
+        renderingSystem.render();
+      }
   }
 
   void Scene::destroy() {
@@ -219,30 +223,7 @@ namespace Engine2D {
         continue;
       }
 
-      const auto &entityData = json.At("entities").At(i++).At("data");
-      const int index = static_cast<int>(entityData.At("transform").At("data").At("parent").GetNumber());
-      const auto transform = entity->Transform();
-
-      entity->scene = this;
-      transform->entity = entity;
-      transform->SetPositionRotationAndScale(transform->worldPosition, transform->worldRotation, transform->worldScale);
-      transform->SetParent(index == -1 ? nullptr : (entities.begin() + index)->get());
-
-      std::erase(entity->allComponents, nullptr);
-      for (auto &component: entity->allComponents) {
-        component->entity = entity;
-        if (const auto behaviour = dynamic_cast<Behaviour *>(component.get()); behaviour) {
-          behaviour->OnBindInput();
-          entity->behaviours.emplace_back(behaviour);
-        } else {
-          component->forward();
-          entity->components.emplace_back(component.get());
-        }
-      }
-
-      int j = 0;
-      for (const auto &component: entity->allComponents)
-        component->OnDeserialize(format, entityData.At("allComponents").At(j++).At("data"));
+      entity->onDeserialize(format, json.At("entities").At(i++).At("data"), this);
       ++it;
     }
 

@@ -84,7 +84,7 @@ namespace Engine2D {
   }
 
   float Game2D::FixedDeltaTime() {
-    return Engine::Settings::Physics::GetFixedDeltaTime();
+    return Engine::Settings::Physics::FixedDeltaTime();
   }
 
   void Game2D::SetGameResourceLoader(ResourceLoader resourceLoader) {
@@ -110,7 +110,7 @@ namespace Engine2D {
     // Set the render variables
     oneSecondTimer = 0.0f;
     lastTime = std::chrono::steady_clock::now();
-    targetFrameRate = Engine::Settings::Graphics::GetTargetFrameRate();
+    targetFrameRate = Engine::Settings::Graphics::TargetFrameRate();
     targetRenderRate = targetFrameRate == 0 ? 0.0f : 1.0f / targetFrameRate;
     frameCounter = 0;
 
@@ -142,7 +142,7 @@ namespace Engine2D {
   }
 
   void Game2D::initializeGraphicPipeline() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     // Initialize and Configure GLFW
     if (!glfwInit()) {
@@ -158,7 +158,7 @@ namespace Engine2D {
     #endif
 
     // Set window hints
-    glfwWindowHint(GLFW_RESIZABLE, Engine::Settings::Window::GetAllowResize());
+    glfwWindowHint(GLFW_RESIZABLE, Engine::Settings::Window::AllowResize());
 
     // Create the window
     window = glfwCreateWindow(width, height, title, nullptr, nullptr);
@@ -174,7 +174,7 @@ namespace Engine2D {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    glfwSwapInterval(Engine::Settings::Graphics::GetVsyncEnabled());
+    glfwSwapInterval(Engine::Settings::Graphics::VsyncEnabled());
 
     // The official code for "Setting Your Raster Position to a Pixel Location" (i.e., set up a camera for 2D screen)
     glMatrixMode(GL_PROJECTION);
@@ -222,7 +222,7 @@ namespace Engine2D {
   }
 
   void Game2D::updateLoop() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerThread);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerThread);
 
     while (!glfwWindowShouldClose(window)) {
       // Calculate the current deltaTime
@@ -284,7 +284,7 @@ namespace Engine2D {
 
   #if MULTI_THREAD
   void Game2D::renderLoop() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerThread);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerThread);
 
     if (!instance) {
       cv.notify_one();
@@ -325,22 +325,22 @@ namespace Engine2D {
   #endif
 
   void Game2D::processInput() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
-    if (Engine::Settings::Input::GetAllowMouseInput())
+    if (Engine::Settings::Input::AllowMouseInput())
       Engine::Input::Mouse::processInput();
-    if (Engine::Settings::Input::GetAllowKeyboardInput())
+    if (Engine::Settings::Input::AllowKeyboardInput())
       Engine::Input::Keyboard::processInput();
-    if (Engine::Settings::Input::GetAllowGamepadInput())
+    if (Engine::Settings::Input::AllowGamepadInput())
       Engine::Input::Gamepad::processInput();
   }
 
   void Game2D::limitFrameRate() const {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     using namespace std::chrono;
 
-    if (Engine::Settings::Graphics::GetVsyncEnabled())
+    if (Engine::Settings::Graphics::VsyncEnabled())
       return;
 
     static auto nextFrameTime = steady_clock::now();
@@ -356,7 +356,7 @@ namespace Engine2D {
   }
 
   void Game2D::quit() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     // Deallocate all the game resources
     SceneManager::DestroyAllScenes();
@@ -386,7 +386,7 @@ namespace Engine2D {
     instance->width = width;
     instance->height = height;
 
-    const glm::vec<2, size_t> initialSize = Engine::Settings::Window::GetScreenResolution();
+    const glm::vec<2, size_t> initialSize = Engine::Settings::Window::ScreenResolution();
 
     // Calculate the proper aspect ratio
     const float ratioX = static_cast<float>(width) / static_cast<float>(initialSize.x);
@@ -397,13 +397,13 @@ namespace Engine2D {
     // Center the viewport
     glViewport(0, 0, width, height);
 
-    if (Engine::Settings::Graphics::GetMaintainAspectRatio())
+    if (Engine::Settings::Graphics::MaintainAspectRatio())
       if (auto *camera = SceneManager::ActiveScene()->MainCamera())
         camera->Resize(width, height);
   }
 
   void Game2D::scroll_callback(GLFWwindow *, double, const double yOffset) {
-    if (Engine::Settings::Input::GetAllowMouseInput())
+    if (Engine::Settings::Input::AllowMouseInput())
       Engine::Input::Mouse::processScroll(yOffset);
   }
 

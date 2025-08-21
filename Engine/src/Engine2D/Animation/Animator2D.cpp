@@ -73,7 +73,7 @@ namespace Engine2D::Animation {
     return nullptr;
   }
 
-  Animation2D *Animator2D::GetCurrentAnimation() const {
+  Animation2D *Animator2D::CurrentAnimation() const {
     return currentAnimation;
   }
 
@@ -293,7 +293,7 @@ namespace Engine2D::Animation {
   }
 
   void Animator2D::update() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     if (animations.empty())
       return;
@@ -305,7 +305,7 @@ namespace Engine2D::Animation {
     if (!currentAnimation)
       Play(defaultAnimationName);
 
-    const auto sprite = renderer->GetSprite();
+    const auto sprite = renderer->Sprite();
     if (!sprite)
       return;
 

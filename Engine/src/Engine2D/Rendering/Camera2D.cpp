@@ -57,22 +57,29 @@ namespace Engine2D::Rendering {
   }
 
   bool Camera2D::IsInViewport(const glm::vec2 &position, const glm::vec2 &scale) const {
-    // Transform position to camera space
-    const glm::vec4 camPos = view * glm::vec4(position.x, position.y, 0.0f, 1.0f);
-    const float cx = camPos.x;
-    const float cy = camPos.y;
+    // Get camera world position
+    const glm::vec2 cameraPos = Transform()->WorldPosition();
 
-    // Calculate object bounds in camera space
+    // Calculate relative position to camera
+    const float relativeX = position.x - cameraPos.x;
+    const float relativeY = position.y - cameraPos.y;
+
+    // Calculate object bounds
     const float halfWidth = scale.x * 0.5f;
     const float halfHeight = scale.y * 0.5f;
 
     // Check if object overlaps with camera bounds
-    return !(cx + halfWidth < left || cx - halfWidth > right || cy + halfHeight < bottom || cy - halfHeight > top);
+    const bool result = !(
+      relativeX + halfWidth < left || relativeX - halfWidth > right ||
+      relativeY + halfHeight < bottom || relativeY - halfHeight > top
+    );
+
+    return result;
   }
 
   void Camera2D::Resize(const float width, const float height) {
     constexpr float baseZoom = 60.0f;
-    constexpr float baseAspect = 4.0f / 3.0f; // TODO: read this from main.cpp
+    constexpr float baseAspect = 4.0f / 3.0f; // TODO: read this from settings
 
     if (const float currentAspect = width / height; currentAspect > baseAspect) {
       // Window is wider than base - fit to height
@@ -88,19 +95,24 @@ namespace Engine2D::Rendering {
   }
 
   void Camera2D::SetProjection(const float left, const float right, const float bottom, const float top) {
-    projection = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    projection = glm::ortho(left, right, bottom, top, -32768.0f, 32768.0f);
     viewProjection = projection * view;
+
+    this->left = left;
+    this->right = right;
+    this->bottom = bottom;
+    this->top = top;
   }
 
-  const glm::mat4 &Camera2D::GetProjectionMatrix() const {
+  const glm::mat4 &Camera2D::ProjectionMatrix() const {
     return projection;
   }
 
-  const glm::mat4 &Camera2D::GetViewMatrix() const {
+  const glm::mat4 &Camera2D::ViewMatrix() const {
     return view;
   }
 
-  const glm::mat4 &Camera2D::GetViewProjectionMatrix() const {
+  const glm::mat4 &Camera2D::ViewProjectionMatrix() const {
     return viewProjection;
   }
 
@@ -122,6 +134,8 @@ namespace Engine2D::Rendering {
   void Camera2D::OnDeserialize(const Engine::Reflection::Format format, const Engine::JSON &json) {
     if (format == Engine::Reflection::Format::JSON)
       followTargetIndex = static_cast<int>(json["followTarget"].GetNumber());
+
+    SetProjection(left, right, bottom, top);
   }
 
   void Camera2D::initialize() {
@@ -140,24 +154,24 @@ namespace Engine2D::Rendering {
   auto velocity = glm::vec2(0.0f);
 
   void Camera2D::updateCamera() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     if (!initialized)
       initialize();
 
     /// Update the camera's transform
     if (followTarget) {
-      const glm::vec2 target = followTarget->Transform()->GetWorldPosition() + positionOffset;
+      const glm::vec2 target = followTarget->Transform()->WorldPosition() + positionOffset;
       Transform()->SetPosition(
         glm::smoothDamp(
-          Transform()->GetWorldPosition(), target, velocity, std::clamp(damping, 1e-6f, 1.0f), Game2D::DeltaTime()
+          Transform()->WorldPosition(), target, velocity, std::clamp(damping, 1e-6f, 1.0f), Game2D::DeltaTime()
         )
       );
-      Transform()->SetRotation(rotationOffset + followTarget->Transform()->GetWorldRotation());
+      Transform()->SetRotation(rotationOffset + followTarget->Transform()->WorldRotation());
     }
 
     // Compute the view so that we can apply the camera shake to it
-    glm::mat4 baseView = glm::inverse(Transform()->GetWorldMatrix());
+    glm::mat4 baseView = glm::inverse(Transform()->WorldMatrix());
 
     // Run camera shake
     if (shaking) {
@@ -183,7 +197,7 @@ namespace Engine2D::Rendering {
   }
 
   glm::vec2 Camera2D::getCameraShake(const float frac) const {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     if (frac <= 0.0f || frac >= 1.0f)
       return glm::vec2(0.0f);

@@ -59,7 +59,7 @@ namespace Engine::Input {
   }
 
   void Mouse::processInput() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     KeyboardAndMouseContext ctx = {
       .leftShiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_RELEASE,

@@ -33,7 +33,7 @@ namespace Engine::Input {
   GLFWgamepadstate Gamepad::state{};
 
   void Gamepad::processInput() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     if (glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
       if (glfwGetGamepadState(GLFW_JOYSTICK_1, &state)) {
@@ -69,7 +69,7 @@ namespace Engine::Input {
   void Gamepad::processButton(const int keyCode, GamepadButtonEvent *event, const bool useAxes) {
     // Get previous state
     const bool isPressed = useAxes
-                             ? state.axes[keyCode] > Settings::Input::GetGamepadTriggerThreshold()
+                             ? state.axes[keyCode] > Settings::Input::GamepadTriggerThreshold()
                              : state.buttons[keyCode] == GLFW_PRESS;
     const int updatedKeyCode = useAxes ? GLFW_GAMEPAD_BUTTON_LAST + keyCode - GLFW_GAMEPAD_AXIS_LEFT_TRIGGER + 1 : keyCode;
     const bool wasPressed = previousKeyStates[updatedKeyCode];
@@ -90,7 +90,7 @@ namespace Engine::Input {
   }
 
   bool Gamepad::axisTriggered(const float value) {
-    const float axisThreshold = Settings::Input::GetGamepadStickThreshold();
+    const float axisThreshold = Settings::Input::GamepadStickThreshold();
     return value < -axisThreshold || axisThreshold < value;
   }
 }

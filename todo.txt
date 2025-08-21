@@ -1,0 +1,4 @@
+After SceneHierarchy push:
+ - Make Renderer2D manage all Renderable2D classes (update and render) and remove ParticleSystemRegistry2D class
+ - Make SDK already contain the static libraries of each vendor item and link to those instead of rebuilding each time
+ - Make SDK not come with docs, .github folders and other non code folders

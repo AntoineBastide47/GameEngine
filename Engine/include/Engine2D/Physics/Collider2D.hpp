@@ -36,7 +36,7 @@ namespace Engine2D::Physics {
       friend class CollisionGrid;
       friend class Engine2D::Entity2D;
     public:
-      enum Type {
+      enum ColliderType {
         None = -1, Circle = 0, Rectangle = 1, Polygon = 2,
       };
 
@@ -54,7 +54,7 @@ namespace Engine2D::Physics {
 
       /// @returns The points at which this rigidbody collided with another rigidbody
       [[nodiscard]] std::vector<glm::vec2> ContactPoints() const;
-      Type GetType() const;
+      ColliderType Type() const;
     protected:
       struct AABB final : Reflectable {
         SERIALIZE_AABB
@@ -66,7 +66,7 @@ namespace Engine2D::Physics {
       };
 
       /// The type of this collider
-      ENGINE_SERIALIZE Type type;
+      ENGINE_SERIALIZE ColliderType type;
       /// The vertices that make up the initial collider.
       ENGINE_SERIALIZE std::vector<glm::vec2> vertices;
       /// The vertices that make up the initial collider transformed to match its current position, rotation and scale.

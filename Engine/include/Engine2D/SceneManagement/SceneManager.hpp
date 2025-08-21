@@ -12,6 +12,10 @@
 
 #include "Scene.hpp"
 
+namespace Editor {
+  class SceneHierarchy;
+}
+
 namespace Engine {
   class ResourceManager;
 }
@@ -19,6 +23,7 @@ namespace Engine {
 namespace Engine2D {
   class SceneManager final {
     friend class Game2D;
+    friend class Editor::SceneHierarchy;
     friend class Engine::ResourceManager;
     public:
       /// Create's a new scene with the given name
@@ -31,7 +36,8 @@ namespace Engine2D {
       /// @param name The name of the scene to load
       /// @param path The file in which the scene to load is stored
       /// @note If a scene with the given name already exists, it will be overridden
-      static void LoadScene(const std::string &name, const std::string &path);
+      /// @returns A pointer to the loaded scene
+      static Scene *LoadScene(const std::string &name, const std::string &path);
 
       /// Save's the scene with the given name into the given file
       /// @param name The name of the scene to save
@@ -84,11 +90,18 @@ namespace Engine2D {
 
       /// @returns A pointer to the currently loaded scene
       static Scene *ActiveScene();
+
+      /// @returns A pointer to the scene with the given name, nullptr if no scene is found
+      static Scene *GetScene(const std::string &name);
     private:
       /// All the created or loaded scenes in the game
       inline static std::unordered_map<std::string, std::unique_ptr<Scene>> scenes;
       /// The scene currently displayed
       inline static Scene *activeScene;
+
+      /// Internal call to get the scene unique pointer
+      /// @note Does not check if a scene with the given name exists
+      static std::unique_ptr<Scene> &getSceneRef(const std::string &name);
   };
 } // Engine2D
 

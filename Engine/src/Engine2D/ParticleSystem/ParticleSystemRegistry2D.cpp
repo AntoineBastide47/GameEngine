@@ -15,7 +15,7 @@ namespace Engine2D {
     : scene(nullptr), repartition(false), dirty(false) {}
 
   void ParticleSystemRegistry2D::prerender() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     const size_t lastParticleCount = particleSystems.size();
 

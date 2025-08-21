@@ -13,10 +13,6 @@
 #include "ProjectLoader.hpp"
 
 namespace Editor {
-  ProjectLoader::~ProjectLoader() {
-    UnloadProject();
-  }
-
   bool ProjectLoader::LoadProject(const std::string &projectPath) {
     // Unload any existing project
     UnloadProject();

@@ -29,19 +29,19 @@ namespace Engine2D::Rendering {
     }
   }
 
-  void Renderable2D::SetShader(Shader *shader) {
+  void Renderable2D::SetShader(Engine::Rendering::Shader *shader) {
     this->shader = shader;
   }
 
-  Shader *Renderable2D::GetShader() const {
+  Shader *Renderable2D::Shader() const {
     return shader;
   }
 
-  void Renderable2D::SetSprite(Sprite *sprite) {
+  void Renderable2D::SetSprite(Rendering::Sprite *sprite) {
     this->sprite = sprite;
   }
 
-  Sprite *Renderable2D::GetSprite() const {
+  Sprite *Renderable2D::Sprite() const {
     return sprite;
   }
 
@@ -49,7 +49,7 @@ namespace Engine2D::Rendering {
     this->renderOrder = renderOrder;
   }
 
-  int16_t Renderable2D::GetRenderOrder() const {
+  int16_t Renderable2D::RenderOrder() const {
     return renderOrder;
   }
 }

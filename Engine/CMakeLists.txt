@@ -188,7 +188,7 @@ add_custom_target(copy_engine_library ALL
 target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
-    MULTI_THREAD=1 # Set this to 0 if you have mutex errors or race conditions when modifying the engine
+    MULTI_THREAD=${MULTI_THREAD} # Set this to 0 if you have mutex errors or race conditions when modifying the engine
     ENGINE_EDITOR=0
 )
 

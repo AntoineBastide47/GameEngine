@@ -14,8 +14,18 @@
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
 #include "Engine2D/Physics/Physics2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
+#include "Engine2D/SceneManagement/SceneResources.hpp"
 #include "Scene.gen.hpp"
-#include "SceneResources.hpp"
+
+namespace Editor {
+  class SceneHierarchy;
+
+  namespace History {
+    class CreateEntityCommand;
+    class SelectEntityCommand;
+    class DeleteEntityCommand;
+  }
+}
 
 namespace Engine {
   class Settings;
@@ -51,9 +61,13 @@ namespace Engine2D {
       friend class Rendering::Camera2D;
       friend class Animation::Animator2D;
       friend class Rendering::Renderer2D;
+      friend class Editor::SceneHierarchy;
       friend class Engine::ResourceManager;
       friend class ParticleSystemRegistry2D;
       friend class Rendering::SpriteRenderer;
+      friend class Editor::History::CreateEntityCommand;
+      friend class Editor::History::SelectEntityCommand;
+      friend class Editor::History::DeleteEntityCommand;
     public:
       ~Scene() override;
 
@@ -75,7 +89,7 @@ namespace Engine2D {
           return entities.front()->Transform();
 
         for (const auto &entity: entities)
-          if (T *component = nullptr; entity->TryGetComponent<T>(&component))
+          if (T *component = nullptr; !entity->destroyed && entity->TryGetComponent<T>(&component))
             return component;
 
         return nullptr;
@@ -86,7 +100,7 @@ namespace Engine2D {
       std::vector<T *> FindObjectsOfType() const {
         std::vector<T *> res;
         for (const auto &entity: entities)
-          if (T *component = nullptr; entity->TryGetComponent<T>(&component))
+          if (T *component = nullptr; !entity->destroyed && entity->TryGetComponent<T>(&component))
             res.emplace_back(component);
 
         return res;

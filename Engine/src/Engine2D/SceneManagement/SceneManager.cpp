@@ -25,7 +25,7 @@ namespace Engine2D {
 
   std::mutex syncMutex;
 
-  void SceneManager::LoadScene(const std::string &name, const std::string &path) {
+  Scene *SceneManager::LoadScene(const std::string &name, const std::string &path) {
     {
       std::unique_lock controlLock(Game2D::instance->controlMutex); {
         std::scoped_lock syncLock(syncMutex);
@@ -55,6 +55,7 @@ namespace Engine2D {
           return !Game2D::instance->callbackPending;
         }
       );
+      return scenes.at(name).get();
     }
   }
 
@@ -114,5 +115,16 @@ namespace Engine2D {
 
   Scene *SceneManager::ActiveScene() {
     return activeScene;
+  }
+
+  Scene *SceneManager::GetScene(const std::string &name) {
+    for (const auto &[n, scene]: scenes)
+      if (n == name)
+        return scene.get();
+    return nullptr;
+  }
+
+  std::unique_ptr<Scene> &SceneManager::getSceneRef(const std::string &name) {
+    return scenes.at(name);
   }
 } // Engine2D

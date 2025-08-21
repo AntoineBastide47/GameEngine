@@ -27,6 +27,21 @@ add_executable(${EXECUTABLE_NAME}
     include/GamePlugin.hpp
     src/ProjectLoader.cpp
     include/ProjectLoader.hpp
+    src/Panels/SceneViewport.cpp
+    include/Panels/SceneViewport.hpp
+    src/Panels/SceneViewport.cpp
+    include/Panels/SceneViewport.hpp
+    src/Panels/SceneHierarchy.cpp
+    include/Panels/SceneHierarchy.hpp
+    include/History/EditorCommand.hpp
+    src/History/CommandHistory.cpp
+    include/History/CommandHistory.hpp
+    src/History/Commands/CreateEntityCommand.cpp
+    include/History/Commands/CreateEntityCommand.hpp
+    src/History/Commands/DeleteEntityCommand.cpp
+    include/History/Commands/DeleteEntityCommand.hpp
+    src/History/Commands/SelectEntityCommand.cpp
+    include/History/Commands/SelectEntityCommand.hpp
 )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
@@ -120,4 +135,5 @@ add_custom_command(
 
 target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
     ENGINE_EDITOR=1
+    MULTI_THREAD=${MULTI_THREAD}
 )

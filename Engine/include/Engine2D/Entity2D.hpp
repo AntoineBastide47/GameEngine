@@ -17,6 +17,16 @@
 #include "Engine2D/Transform2D.hpp"
 #include "Entity2D.gen.hpp"
 
+namespace Editor {
+  class SceneHierarchy;
+
+  namespace History {
+    class CreateEntityCommand;
+    class SelectEntityCommand;
+    class DeleteEntityCommand;
+  }
+}
+
 namespace Engine2D {
   class Scene;
 
@@ -35,6 +45,10 @@ namespace Engine2D {
       friend class Transform2D;
       friend class SceneManager;
       friend class Physics::Physics2D;
+      friend class Editor::SceneHierarchy;
+      friend class Editor::History::CreateEntityCommand;
+      friend class Editor::History::SelectEntityCommand;
+      friend class Editor::History::DeleteEntityCommand;
     public:
       /// The name of the entity.
       std::string name;
@@ -45,7 +59,12 @@ namespace Engine2D {
       bool operator!=(const Entity2D &entity) const;
 
       /// @returns The pointer to this entity's transform component
-      Transform2D *Transform() const;
+      [[nodiscard]] Transform2D *Transform() const;
+
+      /// @returns The id of this entity
+      [[nodiscard]] uint64_t Id() const;
+      /// @returns The id of this entity
+      operator uint64_t() const;
 
       /// Creates a component of the given type and adds it to the entity
       template<typename T, typename... Args> requires
@@ -216,7 +235,7 @@ namespace Engine2D {
       /// @returns True if this entity is static, false if not
       [[nodiscard]] bool IsStatic() const;
       /// The scene this entity is a part of
-      Scene *Scene() const;
+      [[nodiscard]] Scene *Scene() const;
       /// Removes this Entity2D and all it's attached components from the game
       void Destroy();
 
@@ -224,11 +243,18 @@ namespace Engine2D {
       /// @param event The event to bind the callback to
       /// @param callback The callback to bind
       /// @note The given callback will automatically be removed with this entity when it is removed from the game
+      /// @note The callback will only execute if this entity is active
       /// @returns The handle of the newly bound callback
-      template<typename T> typename Engine::Event<T>::CallbackHandle AddInputCallback(
-        Engine::Event<T> &event, const typename Engine::Event<T>::Callback &callback
+      template<typename... Args> typename Engine::Event<Args...>::CallbackHandle AddInputCallback(
+        Engine::Event<Args...> &event, const typename Engine::Event<Args...>::Callback &callback
       ) {
-        auto handle = event.AddCallback(callback);
+        auto handle = event.AddCallback(
+          [this, callback](Args... args) {
+            if (IsActive()) {
+              callback(args...);
+            }
+          }
+        );
         inputCallbackRemovers.emplace_back(
           [&event, handle]() {
             event.RemoveCallback(handle);
@@ -242,6 +268,8 @@ namespace Engine2D {
         const std::string &name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
         float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), Entity2D *parent = nullptr
       );
+
+      void OnSerialize(Engine::Reflection::Format format, Engine::JSON &json) const override;
     protected:
       Entity2D();
 
@@ -271,6 +299,10 @@ namespace Engine2D {
       /// How long an entity stays alive after being flagged to be destroyed
       float timeToLive;
 
+      inline static uint64_t nextId = 1;
+      /// The id of this entity
+      uint64_t id;
+
       /// The transform representing the position, rotation, and scale of the entity in the game world.
       ENGINE_SERIALIZE std::unique_ptr<Transform2D> transform;
       /// The list of components linked to this entity
@@ -287,11 +319,14 @@ namespace Engine2D {
       std::vector<std::function<void()>> inputCallbackRemovers;
 
       /// Initializes the entity, setting its parent to the main parent if none is set.
-      void initialize() const;
+      void initialize();
       /// Cleans up resources when the game ends
       void destroy();
       /// Free's up all the memory used by this entity
       void free();
+
+      void forceSetParent(Entity2D *parent);
+      void onDeserialize(Engine::Reflection::Format format, const Engine::JSON &json, Engine2D::Scene *scene);
   };
 }
 

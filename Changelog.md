@@ -3,6 +3,39 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.4] - 2025-08-21
+### Added
+- **[[ParticleSystem2D](Engine/include/Engine2D/ParticleSystem/ParticleSystem2D.hpp)]**: ability to flip the rendered particle sprites
+- **[[CommandHistory](Editor/include/History/CommandHistory.hpp)]**: saves the editor actions to undo/redo them
+- **[[EditorCommand](Editor/include/History/EditorCommand.hpp)]**: editor command to create a child/parent entity to one or multiple entities
+- **[[CreateEntityCommand](Editor/include/History/Commands/CreateEntityCommand.hpp)]**: editor command to create a child/parent entity to one or multiple entities
+- **[[DeleteEntityCommand](Editor/include/History/Commands/DeleteEntityCommand.hpp)]**: editor command to delete one or multiple entities and all their children
+- **[[SelectEntityCommand](Editor/include/History/Commands/SelectEntityCommand.hpp)]**: editor command to select one or multiple entities
+- **[[SceneHierarchy](Editor/include/Panels/SceneHierarchy.hpp)]**: draws and manages the scene hierarchy
+- **[[SceneViewport](Editor/include/Panels/SceneViewport.hpp)]**: draws and manages the scene viewport
+- **[[Entity2D](Engine/include/Engine2D/Entity2D.hpp)]**: simple incremental id system
+- **[[Settings](Engine/include/Engine/Settings.hpp)]**: using statement to simplify settings the profiling level (reduced namespace bloating)
+### Changed
+- **[[ProjectLoader](Editor/include/ProjectLoader.hpp)]**: now a static class
+### Fixed
+- **[[Entity2D](Engine/include/Engine2D/Entity2D.hpp)]**
+  - passing a parent in the entity constructor now correctly sets the parent
+  - parent entity keeping a reference to a destroyed child
+  - child entity  keeping a reference to a destroyed parent
+  - input callbacks called when the entity wasn't active
+- **[[Scene](Engine/include/Engine2D/SceneManagement/Scene.hpp)]**: window being rendered when main camera is deactivated
+- **[[LevelEditor](Editor/include/LevelEditor.hpp)]**: viewport not maintaining aspect ratio before first resize
+- **[[Camera2D](Engine/include/Engine2D/Rendering/Camera2D.hpp)]**: 
+  - SetProject not using the correct near and far values
+  - projection matrix components not being serialized
+- **[[ParticleSystem2D](Engine/include/Engine2D/ParticleSystem/ParticleSystem2D.hpp)]**: now uses the correct shader data layout
+- **[[Renderer2D](Engine/include/Engine2D/Rendering/Renderer2D.hpp)]**: 
+  - deactivated static renderers are now no longer rendered
+  - transparent static batch always being rebuilt due to comparison with opaque static renderer count
+- **[[Concepts](Engine/include/Engine/Reflection/Concepts.hpp)]**: unique pointers with custom deleters are matched by IsUniquePtr<T>
+### Removed
+- **[[LevelEditor](Editor/include/LevelEditor.hpp)]**: all scene viewport code
+
 ## [0.10.3] - 2025-08-13
 ### Added
 - **[[imgui](vendor/imgui)]**: new submodule for the editor rendering

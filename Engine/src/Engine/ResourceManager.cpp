@@ -27,7 +27,7 @@ using Engine2D::Game2D;
 
 namespace Engine {
   Shader *ResourceManager::LoadShader(const std::string &name, const std::string &filePath) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     if (filePath.empty())
       return Log::Error("Shader file path is required to load a shader");
@@ -84,7 +84,7 @@ namespace Engine {
   }
 
   Shader *ResourceManager::GetShaderById(const uint id) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     for (const auto &val: shaders | std::views::values)
       if (val->id == id)
@@ -93,7 +93,7 @@ namespace Engine {
   }
 
   Texture *ResourceManager::LoadTexture2D(const std::string &name, const std::string &filePath, const bool blend) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     if (filePath.empty())
       return Log::Error("File path is required to load a texture");
@@ -163,7 +163,7 @@ namespace Engine {
   }
 
   Texture *ResourceManager::GetTexture2DById(const uint id) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     for (const auto &val: textures | std::views::values)
       if (val->id == id)
@@ -180,7 +180,7 @@ namespace Engine {
   std::pair<Texture *, Sprite *> ResourceManager::LoadTexture2DAndSprite(
     const std::string &name, const std::string &filePath, const glm::vec4 &rect, const bool blend
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     auto texture = LoadTexture2D(name, filePath, blend);
     auto sprite = CreateSpriteFromTexture(name, rect);

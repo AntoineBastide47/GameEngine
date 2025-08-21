@@ -53,7 +53,7 @@ namespace Engine2D::Physics {
       /// Sets the mass of this rigidbody
       void SetMass(float mass);
       /// @returns The mass of this rigidbody
-      [[nodiscard]] float GetMass() const;
+      [[nodiscard]] float Mass() const;
 
       /**
        * Applies a force to the rigid body.

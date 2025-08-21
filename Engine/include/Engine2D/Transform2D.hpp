@@ -35,11 +35,11 @@ namespace Engine2D {
       [[nodiscard]] std::vector<Entity2D *>::const_iterator end() const;
 
       /// @returns The local position of this transform
-      [[nodiscard]] glm::vec2 GetPosition() const;
+      [[nodiscard]] glm::vec2 Position() const;
       /// @returns The local scale of this transform
-      [[nodiscard]] glm::vec2 GetScale() const;
+      [[nodiscard]] glm::vec2 Scale() const;
       /// @returns The local rotation of this transform
-      [[nodiscard]] float GetRotation() const;
+      [[nodiscard]] float Rotation() const;
 
       /// Overrides the current local position of this transform with the given position
       /// @param newPosition The new local position to set
@@ -114,49 +114,52 @@ namespace Engine2D {
       /// @returns A unit vector representing the up direction of this entity.
       [[nodiscard]] glm::vec2 Up() const;
 
-      /**
-       * Sets the parent entity of this entity for hierarchical organization.
-       * @param parent A pointer to the new parent Entity2D, or nullptr to remove the parent.
-       */
+      /// Sets the parent entity of this entity for hierarchical organization.
+      /// @param parent A pointer to the new parent Entity2D, or nullptr to remove the parent.
+      /// @note Does nothing if the entity this transform is attached to is static
       void SetParent(Entity2D *parent);
       /// @returns The parent of the Entity2D this transform is attached to
-      [[nodiscard]] Entity2D *GetParent() const;
+      [[nodiscard]] Entity2D *Parent() const;
       /// @returns True if the given entity is a parent of the Entity2D this transform is attached to
       [[nodiscard]] bool IsChildOf(const Entity2D *entity) const;
       /// @returns True if the given entity is a child of the Entity2D this transform is attached to
       [[nodiscard]] bool IsParentOf(const Entity2D *entity) const;
 
       /// @returns False if the transform of this entity is not entirely in the viewport of the screen, True if not
-      [[nodiscard]] bool GetIsVisible() const;
+      [[nodiscard]] bool IsVisible() const;
       /// @returns The position of the Entity2D this transform is attached to in world coordinates
-      [[nodiscard]] glm::vec2 GetWorldPosition() const;
+      [[nodiscard]] glm::vec2 WorldPosition() const;
       /// @returns The rotation of the Entity2D this transform is attached to in world coordinates
-      [[nodiscard]] float GetWorldRotation() const;
+      [[nodiscard]] float WorldRotation() const;
       /// @returns The scale of the Entity2D this transform is attached to in world coordinates
-      [[nodiscard]] glm::vec2 GetWorldScale() const;
+      [[nodiscard]] glm::vec2 WorldScale() const;
       /// @returns The scale of the Entity2D this transform is attached to in world coordinates divided by 2
-      [[nodiscard]] glm::vec2 GetWorldHalfScale() const;
+      [[nodiscard]] glm::vec2 WorldHalfScale() const;
       /// @returns The transform matrix of this entity
-      [[nodiscard]] const glm::mat4 &GetWorldMatrix();
+      [[nodiscard]] const glm::mat4 &WorldMatrix();
 
       /// @returns The given point for world to local coordinates
       [[nodiscard]] glm::vec2 WorldToLocal(const glm::vec2 &point);
 
+      [[nodiscard]] const std::vector<Entity2D *> &Children() const;
       /// Sets the parent of all the children of the Entity2D this transform is attached to the current scene's root
       void RemoveAllChildren();
       /// @returns The child with the given name if it was found, nullptr if not
       [[nodiscard]] Entity2D *Find(const std::string &name) const;
-      /**
-       * @returns The child at the given index
-       * @note Log's an error if index is out of bounds
-       */
-      [[nodiscard]] Entity2D *GetChild(int index) const;
+
+      /// @returns The position of this child, -1 if it isn't a child of this entity
+      [[nodiscard]] int ChildIndex(const Entity2D *child) const;
+      /// @returns The child at the given index
+      /// @note Log's an error if index is out of bounds
+      [[nodiscard]] Entity2D *ChildAt(int index) const;
       /// Puts the given child at the start of the list of children attached to the Entity2D this component is attached to
       void MakeFirstChild(Entity2D *child);
       /// Puts the given child at the nth position of the list of children attached to the Entity2D this component is attached to
       void MakeNthChild(Entity2D *child, size_t n);
       /// Puts the given child at the end of list of children attached to the Entity2D this component is attached to
       void MakeLastChild(Entity2D *child);
+      /// @returns The number of children this transform has
+      [[nodiscard]] size_t ChildCount() const;
 
       void OnSerialize(Engine::Reflection::Format format, Engine::JSON &json) const override;
     private:
@@ -206,8 +209,6 @@ namespace Engine2D {
 
       /// Adds the given child to the child list of the current entity's transform
       void addChild(Entity2D *child);
-      /// Removes the given child to the child list of the current entity's transform
-      void removeChild(Entity2D *child);
   };
 } // namespace Engine2D
 

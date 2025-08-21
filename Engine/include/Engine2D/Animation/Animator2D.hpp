@@ -39,7 +39,7 @@ namespace Engine2D::Animation {
       /// @returns A pointer to the animation with the given name, or nullptr if no animation has that name
       [[nodiscard]] Animation2D *GetAnimation(const std::string &name);
       /// @returns A pointer to the animation currently played by the animator
-      [[nodiscard]] Animation2D *GetCurrentAnimation() const;
+      [[nodiscard]] Animation2D *CurrentAnimation() const;
 
       /// Sets the value of the given boolean parameter
       /// @note Overrides the current value mapped to the given name

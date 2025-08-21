@@ -20,6 +20,7 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_saveImpl(simulateInWorldSpace, format, json["simulateInWorldSpace"]);\
       Engine::Reflection::_e_saveImpl(startDelay, format, json["startDelay"]);\
       Engine::Reflection::_e_saveImpl(startPosition, format, json["startPosition"]);\
+      Engine::Reflection::_e_saveImpl(flip, format, json["flip"]);\
       Engine::Reflection::_e_saveImpl(startVelocity, format, json["startVelocity"]);\
       Engine::Reflection::_e_saveImpl(endVelocity, format, json["endVelocity"]);\
       Engine::Reflection::_e_saveImpl(startAngularVelocity, format, json["startAngularVelocity"]);\
@@ -49,6 +50,7 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(simulateInWorldSpace, format, json["simulateInWorldSpace"]);\
       Engine::Reflection::_e_loadImpl(startDelay, format, json["startDelay"]);\
       Engine::Reflection::_e_loadImpl(startPosition, format, json["startPosition"]);\
+      Engine::Reflection::_e_loadImpl(flip, format, json["flip"]);\
       Engine::Reflection::_e_loadImpl(startVelocity, format, json["startVelocity"]);\
       Engine::Reflection::_e_loadImpl(endVelocity, format, json["endVelocity"]);\
       Engine::Reflection::_e_loadImpl(startAngularVelocity, format, json["startAngularVelocity"]);\

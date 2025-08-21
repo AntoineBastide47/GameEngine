@@ -10,7 +10,7 @@
 #include "Engine/Profiling/Instrumentor.hpp"
 
 namespace Engine::Profiling {
-  Timer::Timer(const char *name, const Settings::Profiling::ProfilingLevel level)
+  Timer::Timer(const char *name, const Settings::Profiling::Level level)
     : name(name), level(level), startTimepoint(std::chrono::high_resolution_clock::now()) {}
 
   Timer::~Timer() {

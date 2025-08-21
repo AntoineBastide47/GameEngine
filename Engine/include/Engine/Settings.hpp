@@ -15,7 +15,7 @@ namespace Engine {
   class Settings {
     public:
       /// Static class containing all the settings related to the window
-      class Window {
+      class Window final {
         friend class Settings;
         public:
           /// Changes the current screen resolution to the new value
@@ -26,11 +26,11 @@ namespace Engine {
           static void SetAllowResize(bool newState);
 
           /// @returns The initial screen resolution (before any resizing)
-          [[nodiscard]] static glm::vec<2, size_t> GetScreenResolution();
+          [[nodiscard]] static glm::vec<2, size_t> ScreenResolution();
           /// @returns The title of the window
-          [[nodiscard]] static std::string GetTitle();
+          [[nodiscard]] static std::string Title();
           /// @returns True if the user can resize the window, false if not
-          [[nodiscard]] static bool GetAllowResize();
+          [[nodiscard]] static bool AllowResize();
         private:
           inline static auto resolution = glm::vec<2, size_t>(800, 600);
           inline static std::string title = "Game Window";
@@ -40,7 +40,7 @@ namespace Engine {
       };
 
       /// Static class containing all the settings related to the graphics
-      class Graphics {
+      class Graphics final {
         friend class Settings;
         public:
           /// If true, the render rate will match the refresh rate of the current monitor the screen is running on
@@ -52,11 +52,11 @@ namespace Engine {
           static void SetTargetFrameRate(unsigned int newValue);
 
           /// @returns True if the rendering will sync to the refresh rate of the monitor it is running on, false if not.
-          [[nodiscard]] static bool GetVsyncEnabled();
+          [[nodiscard]] static bool VsyncEnabled();
           /// @returns True if the textures will scale with the window, false if not
-          [[nodiscard]] static bool GetMaintainAspectRatio();
+          [[nodiscard]] static bool MaintainAspectRatio();
           /// @returns How many frames wil be rendered per second, if 0 the engine will render as many as possible
-          [[nodiscard]] static unsigned int GetTargetFrameRate();
+          [[nodiscard]] static unsigned int TargetFrameRate();
         private:
           inline static bool vsyncEnabled = false;
           inline static bool maintainAspectRatio = true;
@@ -66,7 +66,7 @@ namespace Engine {
       };
 
       /// Static class containing all the settings related to the physics engine
-      class Physics {
+      class Physics final {
         friend class Settings;
         public:
           /// Changes the rate at which the physics simulations are run, clamped between 0.02f and 0.016...7f (50 or 60 times a second).
@@ -82,13 +82,13 @@ namespace Engine {
           static void SetGravity(glm::vec2 newValue);
 
           /// @returns The rate at which the physics simulations are run
-          [[nodiscard]] static float GetFixedDeltaTime();
+          [[nodiscard]] static float FixedDeltaTime();
           /// @returns True if the physics engine is currently using screen partitioning, false if not
-          [[nodiscard]] static bool GetUseScreenPartitioning();
+          [[nodiscard]] static bool UseScreenPartitioning();
           /// @return The size of the screen partitioning used by the physics engine
-          [[nodiscard]] static glm::vec<2, size_t> GetPartitionSize();
+          [[nodiscard]] static glm::vec<2, size_t> PartitionSize();
           /// @returns The value of gravity used by the physics engine
-          [[nodiscard]] static glm::vec2 GetGravity();
+          [[nodiscard]] static glm::vec2 Gravity();
         private:
           inline static float fixedDeltaTime = 1.0f / 60.0f;
           inline static bool useScreenPartitioning = false;
@@ -98,8 +98,8 @@ namespace Engine {
           Physics() = default;
       };
 
-      /// Static class containing all the settings related to the input sytem
-      class Input {
+      /// Static class containing all the settings related to the input system
+      class Input final {
         friend class Settings;
         public:
           /// Changes if the game allows mouse inputs or not
@@ -114,15 +114,15 @@ namespace Engine {
           static void SetGamepadTriggerThreshold(float newValue);
 
           /// @returns True if the game allows mouse input, False if not
-          [[nodiscard]] static bool GetAllowMouseInput();
+          [[nodiscard]] static bool AllowMouseInput();
           /// @returns True if the game allows keyboard input, False if not
-          [[nodiscard]] static bool GetAllowKeyboardInput();
+          [[nodiscard]] static bool AllowKeyboardInput();
           /// @returns True if the game allows gamepad input, False if not
-          [[nodiscard]] static bool GetAllowGamepadInput();
+          [[nodiscard]] static bool AllowGamepadInput();
           /// @returns The value of the stick threshold of the gamepad
-          [[nodiscard]] static float GetGamepadStickThreshold();
+          [[nodiscard]] static float GamepadStickThreshold();
           /// @returns The value of the trigger threshold of the gamepad
-          [[nodiscard]] static float GetGamepadTriggerThreshold();
+          [[nodiscard]] static float GamepadTriggerThreshold();
         private:
           inline static bool allowMouseInput = true;
           inline static bool allowKeyboardInput = true;
@@ -133,9 +133,9 @@ namespace Engine {
           Input() = default;
       };
 
-      class Profiling {
+      class Profiling final {
         public:
-          enum class ProfilingLevel {
+          enum class Level {
             Disabled = 0, PerThread, PerSystem, PerSubSystem, PerFunction
           };
 
@@ -145,20 +145,22 @@ namespace Engine {
           /// - PerSystem: only the main functions of each thread and system
           /// - PerSubSystem: only the main functions of each thread, system and subsystem
           /// - PerFunction: most functions of each thread, system and subsystem
-          static void SetProfilingLevel(ProfilingLevel newValue);
+          static void SetProfilingLevel(Level newValue);
           /// @returns The current profiling level the profiler uses
-          [[nodiscard]] static ProfilingLevel GetProfilingLevel();
+          [[nodiscard]] static Level ProfilingLevel();
           /// Defines the minimum execution time threshold (in microseconds) for a function to be recorded by the profiler.
           static void SetProfilingThreshold(size_t newValue);
           /// @returns The minimum execution time threshold (in microseconds) used by the profiler
-          [[nodiscard]] static size_t GetProfilingThreshold();
+          [[nodiscard]] static size_t ProfilingThreshold();
         private:
-          static ProfilingLevel profilingLevel;
+          static Level profilingLevel;
           static size_t profilingThreshold;
       };
     private:
       Settings() = default;
   };
 }
+
+using ProfilingLevel = Engine::Settings::Profiling::Level;
 
 #endif //SETTINGS_H

@@ -32,11 +32,11 @@ namespace Engine2D::Rendering {
       /// Sets the color of the sprite
       void SetColor(const glm::vec4 &color);
       /// @returns the color of the sprite
-      const glm::vec4 &GetColor() const;
+      const glm::vec4 &Color() const;
       /// Sets on which axis to flip the sprite
       void SetFlip(const glm::vec<2, bool> &flip);
       /// @returns on which axis the sprite is flipped
-      const glm::vec<2, bool> &GetFlip() const;
+      const glm::vec<2, bool> &Flip() const;
     private:
       /// The color of the sprite
       ENGINE_SERIALIZE glm::vec4 color;

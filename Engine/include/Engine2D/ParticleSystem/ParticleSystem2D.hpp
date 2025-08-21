@@ -48,6 +48,8 @@ namespace Engine2D {
       /// The initial position of the particles
       glm::vec2 startPosition;
 
+      /// Sets on which axis to flip the sprite
+      glm::vec<2, bool> flip;
       /// The initial velocity of the particles
       glm::vec2 startVelocity;
       /// The final velocity of the particles
@@ -77,16 +79,16 @@ namespace Engine2D {
       /// Sets how long the particle system simulation will last
       void SetDuration(float duration);
       /// @returns How long the simulation of particles lasts
-      [[nodiscard]] float GetDuration() const;
+      [[nodiscard]] float Duration() const;
       /// Sets the maximum number of particles this particle system can simulate at once
       /// @note Once the particle system has been updated once, this method will not do anything
       void SetMaxParticles(size_t maxParticles, bool uniformEmissionRate = true);
       /// @returns The maximum of particles this particle system will simulate
-      [[nodiscard]] uint32_t GetMaxParticles() const;
+      [[nodiscard]] uint32_t MaxParticles() const;
       /// Sets how long each particle will live for
       void SetParticleLifetime(float lifetime);
       /// @returns how long each particle lives for
-      [[nodiscard]] float GetParticleLifetime() const;
+      [[nodiscard]] float ParticleLifetime() const;
 
       void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
     protected:

@@ -31,12 +31,12 @@ namespace Engine2D::Physics {
     return contactPoints;
   }
 
-  Collider2D::Type Collider2D::GetType() const {
+  Collider2D::ColliderType Collider2D::Type() const {
     return type;
   }
 
   Collider2D::AABB Collider2D::getAABB() {
-    const auto matrix = Transform()->GetWorldMatrix();
+    const auto matrix = Transform()->WorldMatrix();
     if (!rigidbody)
       rigidbody = Entity()->GetComponent<Rigidbody2D>();
     if (initialized && lastModelMatrix == matrix)
@@ -49,7 +49,7 @@ namespace Engine2D::Physics {
   }
 
   glm::vec2 Collider2D::getPosition() const {
-    return (autoCompute ? Transform()->GetWorldPosition() : position) + offset;
+    return (autoCompute ? Transform()->WorldPosition() : position) + offset;
   }
 
   CircleCollider2D::CircleCollider2D()
@@ -63,7 +63,7 @@ namespace Engine2D::Physics {
   }
 
   glm::vec2 CircleCollider2D::getScale() const {
-    return autoCompute ? Transform()->GetWorldHalfScale() : glm::vec2(1) * radius;
+    return autoCompute ? Transform()->WorldHalfScale() : glm::vec2(1) * radius;
   }
 
   BoxCollider2D::BoxCollider2D()
@@ -73,17 +73,17 @@ namespace Engine2D::Physics {
 
   void BoxCollider2D::computeAABB() {
     // Find the bounds of the rectangle
-    const float left = -(autoCompute ? Transform()->GetWorldHalfScale().x : width);
+    const float left = -(autoCompute ? Transform()->WorldHalfScale().x : width);
     const float right = -left;
-    const float top = autoCompute ? Transform()->GetWorldHalfScale().y : height;
+    const float top = autoCompute ? Transform()->WorldHalfScale().y : height;
     const float bottom = -top;
 
     // Transform the bounds of the rectangle
     this->transformedVertices = {
-      glm::rotate(glm::vec2(left, top), glm::radians(Transform()->GetWorldRotation())) + getPosition(),
-      glm::rotate(glm::vec2(right, top), glm::radians(Transform()->GetWorldRotation())) + getPosition(),
-      glm::rotate(glm::vec2(right, bottom), glm::radians(Transform()->GetWorldRotation())) + getPosition(),
-      glm::rotate(glm::vec2(left, bottom), glm::radians(Transform()->GetWorldRotation())) + getPosition(),
+      glm::rotate(glm::vec2(left, top), glm::radians(Transform()->WorldRotation())) + getPosition(),
+      glm::rotate(glm::vec2(right, top), glm::radians(Transform()->WorldRotation())) + getPosition(),
+      glm::rotate(glm::vec2(right, bottom), glm::radians(Transform()->WorldRotation())) + getPosition(),
+      glm::rotate(glm::vec2(left, bottom), glm::radians(Transform()->WorldRotation())) + getPosition(),
     };
 
     // Construct the AABB
@@ -98,7 +98,7 @@ namespace Engine2D::Physics {
   }
 
   glm::vec2 BoxCollider2D::getScale() const {
-    return autoCompute ? Transform()->GetWorldScale() : glm::vec2(width, height);
+    return autoCompute ? Transform()->WorldScale() : glm::vec2(width, height);
   }
 
   PolygonCollider2D::PolygonCollider2D() {
@@ -115,7 +115,7 @@ namespace Engine2D::Physics {
     // Transform the bounds of the rectangle
     this->transformedVertices.resize(vertices.size());
     for (int i = 0; i < vertices.size(); ++i)
-      this->transformedVertices[i] = glm::rotate(vertices[i], glm::radians(Transform()->GetWorldRotation())) +
+      this->transformedVertices[i] = glm::rotate(vertices[i], glm::radians(Transform()->WorldRotation())) +
                                      getPosition();
 
     // Construct the AABB

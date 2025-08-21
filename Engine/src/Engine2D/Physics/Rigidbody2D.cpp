@@ -27,7 +27,7 @@ namespace Engine2D::Physics {
     }
   }
 
-  float Rigidbody2D::GetMass() const {
+  float Rigidbody2D::Mass() const {
     return mass;
   }
 
@@ -50,8 +50,8 @@ namespace Engine2D::Physics {
       return;
 
     // Apply gravity
-    const float dt = Engine::Settings::Physics::GetFixedDeltaTime();
-    linearVelocity += (glm::vec2(affectedByGravity) * Engine::Settings::Physics::GetGravity() + force) * massInv * dt;
+    const float dt = Engine::Settings::Physics::FixedDeltaTime();
+    linearVelocity += (glm::vec2(affectedByGravity) * Engine::Settings::Physics::Gravity() + force) * massInv * dt;
 
     // Clamp velocities
     constexpr float maxVel = 120.0f;
@@ -80,11 +80,11 @@ namespace Engine2D::Physics {
         break;
       case Collider2D::Circle:
         inertia =
-            0.5f * mass * Transform()->GetWorldHalfScale().x * Transform()->GetWorldHalfScale().x;
+            0.5f * mass * Transform()->WorldHalfScale().x * Transform()->WorldHalfScale().x;
         break;
       case Collider2D::Rectangle:
         inertia =
-            RECTANGLE_COLLISION_FACTOR * mass * glm::dot(Transform()->GetWorldScale(), Transform()->GetWorldScale());
+            RECTANGLE_COLLISION_FACTOR * mass * glm::dot(Transform()->WorldScale(), Transform()->WorldScale());
         break;
       case Collider2D::Polygon: {
         float area = 0.0f;

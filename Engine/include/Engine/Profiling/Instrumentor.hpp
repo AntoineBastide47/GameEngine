@@ -21,7 +21,7 @@ namespace Engine::Profiling {
     std::string name;
     long long start, end;
     uint32_t threadID;
-    Settings::Profiling::ProfilingLevel level;
+    Settings::Profiling::Level level;
   };
 
   class Instrumentor final {

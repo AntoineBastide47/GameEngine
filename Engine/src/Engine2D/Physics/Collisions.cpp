@@ -17,7 +17,7 @@ namespace Engine2D::Physics {
   bool Collisions::collide(
     const Collider2D *col1, const Collider2D *col2, glm::vec<2, double> *normal, double *depth
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     if (col1->type == Collider2D::Circle && col2->type == Collider2D::Circle)
       return circlesIntersect(
@@ -44,11 +44,11 @@ namespace Engine2D::Physics {
     const Collider2D *col1, const Collider2D *col2, glm::vec2 *contactPoint1, glm::vec2 *contactPoint2,
     uint8_t *contactCount
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     if (col1->type == Collider2D::Circle && col2->type == Collider2D::Circle) {
       findCirclesContactPoint(
-        col1->getPosition(), col2->getPosition(), col1->Transform()->GetWorldHalfScale().x, contactPoint1
+        col1->getPosition(), col2->getPosition(), col1->Transform()->WorldHalfScale().x, contactPoint1
       );
       *contactCount = 1;
     } else if (col1->type == Collider2D::Circle && col2->type != Collider2D::Circle) {
@@ -67,7 +67,7 @@ namespace Engine2D::Physics {
     const glm::vec2 centerA, const glm::vec2 scaleA, const glm::vec2 centerB, const glm::vec2 scaleB,
     glm::vec<2, double> *normal, double *depth
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     // Calculate the vector between the circle centers
     const float distance = glm::distance(centerA, centerB);
@@ -90,7 +90,7 @@ namespace Engine2D::Physics {
     const std::vector<glm::vec2> &verticesB, const glm::vec2 positionB,
     glm::vec<2, double> *normal, double *depth
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     const size_t countA = verticesA.size();
     const size_t countB = verticesB.size();
@@ -135,7 +135,7 @@ namespace Engine2D::Physics {
     const std::vector<glm::vec2> &polygonVertices, const glm::vec2 polygonCenter, const glm::vec2 circleCenter,
     const glm::vec2 circleHalfScale, glm::vec<2, double> *normal, double *depth
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     double minA, maxA, minB, maxB, axisDepth;
     glm::vec2 axis;
@@ -202,7 +202,7 @@ namespace Engine2D::Physics {
   }
 
   glm::vec2 Collisions::closestPointOnPolygon(const glm::vec2 circleCenter, const std::vector<glm::vec2> &vertices) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     auto closestPoint = glm::vec2(0);
     double minDistanceSquared = std::numeric_limits<float>::max();
@@ -225,7 +225,7 @@ namespace Engine2D::Physics {
   void Collisions::findCircleAndPolygonContactPoint(
     const glm::vec2 circleCenter, const std::vector<glm::vec2> &vertices, glm::vec2 *contactPoint
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     double minDistanceSquared = std::numeric_limits<double>::max();
     for (int i = 0; i < vertices.size(); ++i) {
@@ -293,7 +293,7 @@ namespace Engine2D::Physics {
     glm::vec2 *contactPoint1, glm::vec2 *contactPoint2,
     uint8_t *contactCount
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     constexpr double EPS = 1e-9;
     double minDist2 = std::numeric_limits<double>::max();

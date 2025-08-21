@@ -55,7 +55,7 @@ namespace Engine2D::Rendering {
   }
 
   bool Renderer2D::cannotBeRendered(const Renderable2D *r) {
-    return !r->Entity()->IsActive() || !r->IsActive() || !r->Transform()->GetIsVisible() || !r->shader ||
+    return !r->Entity()->IsActive() || !r->IsActive() || !r->Transform()->IsVisible() || !r->shader ||
            !r->sprite || !r->sprite->texture;
   }
 
@@ -71,23 +71,23 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::extractRendererData(const SpriteRenderer *renderer, float *data) const {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
-    const SpriteRenderer &r = *renderer;
-    if (!r.Entity()->IsActive() || !r.IsActive() || !r.Transform()->GetIsVisible())
+    if (cannotBeRendered(renderer))
       return;
 
     // Get the model matrix and other data
+    const SpriteRenderer &r = *renderer;
     const auto sprite = r.sprite;
     const auto color = r.color;
     const float invPPU = 1.0f / sprite->pixelsPerUnit;
     const auto rect = sprite->rect;
 
     // Position and scale
-    *data++ = r.Transform()->GetWorldPosition().x;
-    *data++ = r.Transform()->GetWorldPosition().y;
-    *data++ = r.Transform()->GetWorldScale().x * invPPU;
-    *data++ = r.Transform()->GetWorldScale().y * invPPU;
+    *data++ = r.Transform()->WorldPosition().x;
+    *data++ = r.Transform()->WorldPosition().y;
+    *data++ = r.Transform()->WorldScale().x * invPPU;
+    *data++ = r.Transform()->WorldScale().y * invPPU;
 
     // Color
     *data++ = std::clamp(color.x, 0.0f, 1.0f);
@@ -106,9 +106,9 @@ namespace Engine2D::Rendering {
       std::clamp(r.sprite->pivot.x, -1.0f, 1.0f),
       std::clamp(r.sprite->pivot.y, -1.0f, 1.0f)
     );
-    *data++ = r.Transform()->GetWorldRotation();
+    *data++ = r.Transform()->WorldRotation();
     *data++ = r.renderOrder << 16 | textureIdToIndexMap.at(r.sprite->texture->id);
-    *data = PackTwoFloats(r.GetFlip().x ? -1.0f : 1.0, r.GetFlip().y ? -1.0f : 1.0);
+    *data = PackTwoFloats(r.Flip().x ? -1.0f : 1.0, r.Flip().y ? -1.0f : 1.0);
   }
 
   void Renderer2D::mapTextureIdToIndex(const uint &textureId) {
@@ -124,17 +124,8 @@ namespace Engine2D::Rendering {
     }
 
     // Reset the mapping
-    if (textureIdToIndexMap.size() >= MAX_TEXTURES) {
-      // Instead of clearing, try to reuse least recently used slots
-      static std::queue<uint> lruQueue;
-      if (!lruQueue.empty()) {
-        const uint oldId = lruQueue.front();
-        lruQueue.pop();
-        textureIdToIndexMap.erase(oldId);
-      } else {
-        textureIdToIndexMap.clear();
-      }
-    }
+    if (textureIdToIndexMap.size() >= MAX_TEXTURES)
+      textureIdToIndexMap.clear();
 
     // Create the mapping
     const int texIndex = static_cast<int>(textureIdToIndexMap.size());
@@ -146,7 +137,7 @@ namespace Engine2D::Rendering {
     std::vector<SpriteRenderer *> &renderers, std::vector<float> &batchData,
     std::vector<Flush> &flushList, const bool rebuild, const uint VBO, const uint framebuffer
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     if (rebuild) {
       std::ranges::sort(
@@ -157,15 +148,14 @@ namespace Engine2D::Rendering {
 
       // Only extract data for valid sprite renderers
       const auto it = std::ranges::find_if(renderers, cannotBeRendered);
-      const auto validRange = std::ranges::subrange(renderers.begin(), it);
       uint32_t start = 0, count = 0, currentShaderID = 0, currentTextureID = 0, index = 0;
 
       flushList.clear();
       batchData.clear();
-      batchData.reserve(validRange.size() * STRIDE);
-      batchData.resize(validRange.size() * STRIDE);
+      batchData.reserve(renderers.size() * STRIDE);
+      batchData.resize(renderers.size() * STRIDE);
 
-      for (const auto &renderer: validRange) {
+      for (const auto &renderer: renderers) {
         // Check for change in shader or texture ID
         const uint32_t shaderID = renderer->shader->id;
         if (const uint32_t textureID = renderer->sprite->texture->id;
@@ -209,16 +199,22 @@ namespace Engine2D::Rendering {
   void Renderer2D::updateBatch(
     const std::vector<SpriteRenderer *> &renderers, std::vector<float> &staticBatchData
   ) const {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSubSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
+    size_t count = renderers.size();
     for (size_t i = 0; i < renderers.size(); i++) {
       auto &renderer = renderers[i];
-      if (!renderer || !renderer->dirty)
-        continue;
-
       const size_t offset = i * STRIDE;
-      extractRendererData(renderer, &staticBatchData[offset]);
-      renderer->dirty = false;
+      if (cannotBeRendered(renderer)) {
+        auto data = &staticBatchData[offset];
+        data += 2;
+        *data++ = 0.0f;
+        *data = 0.0f;
+        count--;
+      } else if (renderer->dirty) {
+        extractRendererData(renderer, &staticBatchData[offset]);
+        renderer->dirty = false;
+      }
     }
   }
 
@@ -226,7 +222,7 @@ namespace Engine2D::Rendering {
     std::vector<Renderable2D *> &renderers, std::vector<Flush> &flushList, const uint particleCount, const bool resort,
     const uint framebuffer
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     if (resort)
       std::ranges::sort(
@@ -259,35 +255,10 @@ namespace Engine2D::Rendering {
       return;
 
     for (const auto &renderer: validRange) {
-      if (renderer->renderType == Renderable2D::ParticleSystem) {
-        // Send the previous sprites to the flush list
-        flushList.emplace_back(currentShaderID, currentTextureID, start, count, !zSort << 5 | 0);
-        start += count;
-        count = 0;
-
-        const auto particleSystem = dynamic_cast<ParticleSystem2D *>(renderer);
-        mapTextureIdToIndex(particleSystem->sprite->texture->id);
-        particleSystem->updateAndRender(
-          textureIdToIndexMap.at(particleSystem->sprite->texture->id), &gpuPtr[index * STRIDE]
-        );
-
-        // Send the particles to the flush list
-        currentShaderID = particleSystem->shader->id;
-        currentTextureID = particleSystem->sprite->texture->id;
-        flushList.emplace_back(
-          currentShaderID, currentTextureID, start, particleSystem->capacity,
-          !zSort << 5 | 1 << 4 | static_cast<int>(particleSystem->blendMode)
-        );
-        start += particleSystem->capacity;
-        index += particleSystem->capacity;
-        continue;
-      }
-
-      // Check for change in shader or texture ID
+      // Send the previous sprites to the flush list
+      const uint32_t shaderID = renderer->shader->id;
       const uint32_t textureID = renderer->sprite->texture->id;
-      if (const uint32_t shaderID = renderer->shader->id;
-        shaderID != currentShaderID || textureID != currentTextureID) {
-        // Save the previous flush range if any
+      if (currentShaderID != shaderID || currentTextureID != textureID) {
         if (count > 0) {
           flushList.emplace_back(currentShaderID, currentTextureID, start, count, !zSort << 5 | 0);
           start += count;
@@ -296,12 +267,27 @@ namespace Engine2D::Rendering {
 
         currentShaderID = shaderID;
         currentTextureID = textureID;
-        mapTextureIdToIndex(textureID);
       }
 
-      extractRendererData(static_cast<SpriteRenderer *>(renderer), &gpuPtr[index * STRIDE]);
-      count++;
-      index++;
+      mapTextureIdToIndex(textureID);
+
+      if (renderer->renderType == Renderable2D::ParticleSystem) {
+        const auto particleSystem = dynamic_cast<ParticleSystem2D *>(renderer);
+        const int capacity = particleSystem->capacity;
+        particleSystem->updateAndRender(textureIdToIndexMap.at(textureID), &gpuPtr[index * STRIDE]);
+
+        // Send the particles to the flush list
+        flushList.emplace_back(
+          currentShaderID, currentTextureID, start, capacity,
+          !zSort << 5 | 1 << 4 | static_cast<int>(particleSystem->blendMode)
+        );
+        start += capacity;
+        index += capacity;
+      } else {
+        extractRendererData(static_cast<SpriteRenderer *>(renderer), &gpuPtr[index * STRIDE]);
+        count++;
+        index++;
+      }
     }
     if (count > 0)
       flushList.emplace_back(currentShaderID, currentTextureID, start, count, !zSort << 5 | 0);
@@ -400,7 +386,7 @@ namespace Engine2D::Rendering {
   void Renderer2D::flush(
     const uint VBO, const float *data, const int drawMode, const uint32_t count, const uint32_t framebuffer
   ) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     if (!count || !data)
       return;
@@ -430,7 +416,7 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::initRenderData() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerFunction);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     glGenVertexArrays(1, &quadVAO);
     glBindVertexArray(quadVAO);
@@ -485,7 +471,7 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::updateAndSplitRenderList() {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     if (!quadVAO)
       initRenderData();
@@ -520,7 +506,7 @@ namespace Engine2D::Rendering {
     // Check if the invalid renderers are now valid
     if (!invalidRenderers.empty()) {
       // Sort out the invalid renderers
-      auto valid_partition = std::ranges::stable_partition(
+      auto valid_partition = std::ranges::partition(
         invalidRenderers, [](const auto &renderer) {
           return renderer && renderer->sprite && renderer->sprite->texture;
         }
@@ -532,7 +518,7 @@ namespace Engine2D::Rendering {
     // Add all pending renderers
     if (!renderersToAdd.empty()) {
       // Sort out the invalid renderers
-      auto invalid_partition = std::ranges::stable_partition(
+      auto invalid_partition = std::ranges::partition(
         renderersToAdd, [](const auto &renderer) {
           return renderer->sprite && renderer->sprite->texture;
         }
@@ -541,21 +527,21 @@ namespace Engine2D::Rendering {
       renderersToAdd.erase(invalid_partition.begin(), invalid_partition.end());
 
       // First partition: static vs. non-static
-      auto static_end = std::ranges::stable_partition(
+      auto static_end = std::ranges::partition(
         renderersToAdd, [](const auto &renderer) {
-          return renderer->Entity()->IsStatic() && !renderer->sprite->transparent;
+          return renderer->Entity()->IsStatic();
         }
       );
 
       // Second partition within static: opaque vs. transparent
-      auto static_opaque_end = std::ranges::stable_partition(
+      auto static_opaque_end = std::ranges::partition(
         renderersToAdd.begin(), static_end.end(), [](const auto &renderer) {
           return !renderer->sprite->transparent;
         }
       );
 
       // Third partition within non-static: opaque vs. transparent
-      auto opaque_end = std::ranges::stable_partition(
+      auto opaque_end = std::ranges::partition(
         static_end.begin(), renderersToAdd.end(), [](const auto &renderer) {
           return !renderer->sprite->transparent;
         }
@@ -578,9 +564,9 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::opaquePass(const uint framebuffer) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
-    const auto particleSystemRegistry = SceneManager::ActiveScene()->particleSystemRegistry;
+    const auto &particleSystemRegistry = SceneManager::ActiveScene()->particleSystemRegistry;
     if (opaqueRenderers.empty() && staticOpaqueRenderers.empty() && particleSystemRegistry.subrange.empty())
       return;
 
@@ -611,9 +597,9 @@ namespace Engine2D::Rendering {
   }
 
   void Renderer2D::transparentPass(const uint framebuffer) {
-    ENGINE_PROFILE_FUNCTION(Engine::Settings::Profiling::ProfilingLevel::PerSystem);
+    ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
-    auto particleSystemRegistry = SceneManager::ActiveScene()->particleSystemRegistry;
+    const auto &particleSystemRegistry = SceneManager::ActiveScene()->particleSystemRegistry;
     if (opaqueRenderers.empty() && staticOpaqueRenderers.empty() &&
         particleSystemRegistry.particleSystems.begin() == particleSystemRegistry.subrange.begin())
       return;
@@ -623,7 +609,7 @@ namespace Engine2D::Rendering {
     // Render the static transparent sprites
     buildAndRenderStaticBatch(
       staticTransparentRenderers, staticTransparentBatchData, staticTransparentFlushList,
-      staticTransparentRenderers.size() != lastOpaqueStaticCount, staticTransparentBatchVBO, framebuffer
+      staticTransparentRenderers.size() != lastTransparentStaticCount, staticTransparentBatchVBO, framebuffer
     );
 
     const auto transparentEnd = particleSystemRegistry.subrange.size() == 0

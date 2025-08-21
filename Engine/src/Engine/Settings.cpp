@@ -33,15 +33,15 @@ namespace Engine {
     allowResize = newState;
   }
 
-  glm::vec<2, size_t> Settings::Window::GetScreenResolution() {
+  glm::vec<2, size_t> Settings::Window::ScreenResolution() {
     return resolution;
   }
 
-  std::string Settings::Window::GetTitle() {
+  std::string Settings::Window::Title() {
     return title;
   }
 
-  bool Settings::Window::GetAllowResize() {
+  bool Settings::Window::AllowResize() {
     return allowResize;
   }
 
@@ -73,15 +73,15 @@ namespace Engine {
     }
   }
 
-  bool Settings::Graphics::GetVsyncEnabled() {
+  bool Settings::Graphics::VsyncEnabled() {
     return vsyncEnabled;
   }
 
-  bool Settings::Graphics::GetMaintainAspectRatio() {
+  bool Settings::Graphics::MaintainAspectRatio() {
     return maintainAspectRatio;
   }
 
-  unsigned int Settings::Graphics::GetTargetFrameRate() {
+  unsigned int Settings::Graphics::TargetFrameRate() {
     return targetFrameRate;
   }
 
@@ -104,19 +104,19 @@ namespace Engine {
     gravity = newValue;
   }
 
-  float Settings::Physics::GetFixedDeltaTime() {
+  float Settings::Physics::FixedDeltaTime() {
     return fixedDeltaTime;
   }
 
-  bool Settings::Physics::GetUseScreenPartitioning() {
+  bool Settings::Physics::UseScreenPartitioning() {
     return useScreenPartitioning;
   }
 
-  glm::vec<2, size_t> Settings::Physics::GetPartitionSize() {
+  glm::vec<2, size_t> Settings::Physics::PartitionSize() {
     return partitionSize;
   }
 
-  glm::vec2 Settings::Physics::GetGravity() {
+  glm::vec2 Settings::Physics::Gravity() {
     return gravity;
   }
 
@@ -140,34 +140,34 @@ namespace Engine {
     gamepadTriggerThreshold = std::clamp(newValue, -1.0f, 1.0f);
   }
 
-  bool Settings::Input::GetAllowMouseInput() {
+  bool Settings::Input::AllowMouseInput() {
     return allowMouseInput;
   }
 
-  bool Settings::Input::GetAllowKeyboardInput() {
+  bool Settings::Input::AllowKeyboardInput() {
     return allowKeyboardInput;
   }
 
-  bool Settings::Input::GetAllowGamepadInput() {
+  bool Settings::Input::AllowGamepadInput() {
     return allowGamepadInput;
   }
 
-  float Settings::Input::GetGamepadStickThreshold() {
+  float Settings::Input::GamepadStickThreshold() {
     return gamepadStickThreshold;
   }
 
-  float Settings::Input::GetGamepadTriggerThreshold() {
+  float Settings::Input::GamepadTriggerThreshold() {
     return gamepadTriggerThreshold;
   }
 
-  Settings::Profiling::ProfilingLevel Settings::Profiling::profilingLevel = ProfilingLevel::Disabled;
+  Settings::Profiling::Level Settings::Profiling::profilingLevel = Level::Disabled;
   size_t Settings::Profiling::profilingThreshold = 50;
 
-  void Settings::Profiling::SetProfilingLevel(const ProfilingLevel newValue) {
+  void Settings::Profiling::SetProfilingLevel(const Level newValue) {
     profilingLevel = newValue;
   }
 
-  Settings::Profiling::ProfilingLevel Settings::Profiling::GetProfilingLevel() {
+  Settings::Profiling::Level Settings::Profiling::ProfilingLevel() {
     return profilingLevel;
   }
 
@@ -175,7 +175,7 @@ namespace Engine {
     profilingThreshold = newValue;
   }
 
-  size_t Settings::Profiling::GetProfilingThreshold() {
+  size_t Settings::Profiling::ProfilingThreshold() {
     return profilingThreshold;
   }
 }
