@@ -32,6 +32,10 @@ add_subdirectory(vendor/cpptrace)
 add_library(cpptrace STATIC vendor/cpptrace/src/cpptrace.cpp)
 target_include_directories(cpptrace PUBLIC vendor/cpptrace/include vendor/cpptrace/src)
 
+# === ImGui ===
+include(Engine/CMake/ImGui.cmake)
+setup_imgui(${CMAKE_SOURCE_DIR})
+
 # --------------------------
 # Build Configs
 # --------------------------

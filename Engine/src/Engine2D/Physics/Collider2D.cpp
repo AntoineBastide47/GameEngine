@@ -16,8 +16,8 @@
 
 namespace Engine2D::Physics {
   Collider2D::Collider2D()
-    : elasticity(1), offset(glm::vec2(0)), autoCompute(true), position(glm::vec2(0)), isTrigger(false), type(None),
-      initialized(false), lastModelMatrix(), rigidbody() {}
+    : elasticity(1), positionOffset(glm::vec2(0)), isTrigger(false), autoCompute(true), position(glm::vec2(0)),
+      type(None), initialized(false), lastModelMatrix(), rigidbody() {}
 
   void Collider2D::forward() {
     Entity()->Scene()->physicsSystem.addCollider(this);
@@ -49,7 +49,7 @@ namespace Engine2D::Physics {
   }
 
   glm::vec2 Collider2D::getPosition() const {
-    return (autoCompute ? Transform()->WorldPosition() : position) + offset;
+    return (autoCompute ? Transform()->WorldPosition() : position) + positionOffset;
   }
 
   CircleCollider2D::CircleCollider2D()
@@ -67,15 +67,15 @@ namespace Engine2D::Physics {
   }
 
   BoxCollider2D::BoxCollider2D()
-    : width(0), height(0) {
+    : size(0) {
     type = Rectangle;
   }
 
   void BoxCollider2D::computeAABB() {
     // Find the bounds of the rectangle
-    const float left = -(autoCompute ? Transform()->WorldHalfScale().x : width);
+    const float left = -(autoCompute ? Transform()->WorldHalfScale().x : size.x);
     const float right = -left;
-    const float top = autoCompute ? Transform()->WorldHalfScale().y : height;
+    const float top = autoCompute ? Transform()->WorldHalfScale().y : size.y;
     const float bottom = -top;
 
     // Transform the bounds of the rectangle
@@ -98,7 +98,7 @@ namespace Engine2D::Physics {
   }
 
   glm::vec2 BoxCollider2D::getScale() const {
-    return autoCompute ? Transform()->WorldScale() : glm::vec2(width, height);
+    return autoCompute ? Transform()->WorldScale() : size;
   }
 
   PolygonCollider2D::PolygonCollider2D() {
@@ -114,7 +114,7 @@ namespace Engine2D::Physics {
 
     // Transform the bounds of the rectangle
     this->transformedVertices.resize(vertices.size());
-    for (int i = 0; i < vertices.size(); ++i)
+    for (size_t i = 0; i < vertices.size(); ++i)
       this->transformedVertices[i] = glm::rotate(vertices[i], glm::radians(Transform()->WorldRotation())) +
                                      getPosition();
 

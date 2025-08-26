@@ -23,12 +23,13 @@ namespace Editor {
       static void Render(const ImGuiWindowClass *winClass);
       /// Set's the scene to be rendered
       static void SetContext(Engine2D::Scene *scene);
+
+      static std::unique_ptr<History::EditorCommand> ToggleActiveCommand(Engine2D::Entity2D *entity, bool isStatic);
     private:
       inline static bool recurseSelect;
       inline static Engine2D::Scene *context;
       inline static Engine2D::Entity2D *renamingEntity;
       inline static Engine2D::Entity2D *defaultParent;
-      inline static History::CommandHistory commandHistory;
       inline static std::vector<Engine2D::Entity2D *> selectedEntities;
       inline static std::unordered_set<Engine2D::Entity2D *> forceOpenEntities;
       inline static std::unordered_set<Engine2D::Entity2D *> openedTreeNodes;
@@ -42,7 +43,8 @@ namespace Editor {
       static std::vector<Engine2D::Entity2D *> calculateRangeSelection(Engine2D::Entity2D *targetEntity);
       /// Finds selected entities
       static void collectVisibleEntities(
-        const std::vector<std::unique_ptr<Engine2D::Entity2D>> &entities, std::vector<Engine2D::Entity2D *> &outList, std::
+        const std::vector<std::unique_ptr<Engine2D::Entity2D>> &entities, std::vector<Engine2D::Entity2D *> &outList,
+        std::
         vector<bool> &isChild
       );
       /// Finds selected entities recursively

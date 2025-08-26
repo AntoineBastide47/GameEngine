@@ -11,6 +11,7 @@
 
 #include "Engine/Data/JSON.hpp"
 #include "Engine/Reflection/Concepts.hpp"
+#include "Engine/Reflection/Deserializer.hpp"
 #include "Engine/Reflection/ReflectionFactory.hpp"
 
 namespace Engine2D {
@@ -108,7 +109,7 @@ No save overloads were found for the requested type.
         if constexpr (requires { result.resize(array.size()); })
           result.resize(array.size());
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (const auto &e: array)
           _e_loadImpl(result[i++], format, e);
       } else {
@@ -132,8 +133,10 @@ No save overloads were found for the requested type.
 
         if constexpr (std::is_same_v<typename T::key_type, std::string>)
           key = k;
-        else
-          _e_loadImpl(key, format, k);
+        else {
+          using KeyType = typename T::key_type;
+          key = Engine::Reflection::Deserializer::FromJsonString<KeyType>(k);
+        }
 
         _e_loadImpl(value, format, v);
         result.emplace(std::move(key), std::move(value));
@@ -156,7 +159,7 @@ No save overloads were found for the requested type.
         return;
       }
 
-      if constexpr (IsSTL<typename T::element_type>) {
+      if constexpr (IsNotReflectable<typename T::element_type>) {
         if constexpr (IsSharedPtr<T>)
           result = std::make_shared<typename T::element_type>();
         else
@@ -177,7 +180,7 @@ No save overloads were found for the requested type.
     }
   }
 
-  template<IsNotSTL T> static void _e_load(T &result, const Format format, const Engine::JSON &json) {
+  template<IsReflectable T> static void _e_load(T &result, const Format format, const Engine::JSON &json) {
     if constexpr (requires { result._e_load(format, json); }) {
       result._e_load(format, json);
       result.OnDeserialize(format, json);
@@ -187,7 +190,7 @@ No save overloads were found for the requested type.
 
   template<typename... Ts> static void _e_load(std::tuple<Ts...> &t, const Format format, const Engine::JSON &json) {
     if (format == JSON) {
-      std::size_t i = 0;
+      size_t i = 0;
       std::apply(
         [&](Ts &... elems) {
           (([&] {

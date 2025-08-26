@@ -120,7 +120,7 @@ namespace Engine2D::Rendering {
     if (!ptr)
       return -1;
 
-    for (int i = 0; i < vec.size(); ++i)
+    for (size_t i = 0; i < vec.size(); ++i)
       if (vec[i].get() == ptr)
         return i;
     return -1;
@@ -163,7 +163,7 @@ namespace Engine2D::Rendering {
     if (followTarget) {
       const glm::vec2 target = followTarget->Transform()->WorldPosition() + positionOffset;
       Transform()->SetPosition(
-        glm::smoothDamp(
+        glm::smooth_damp(
           Transform()->WorldPosition(), target, velocity, std::clamp(damping, 1e-6f, 1.0f), Game2D::DeltaTime()
         )
       );

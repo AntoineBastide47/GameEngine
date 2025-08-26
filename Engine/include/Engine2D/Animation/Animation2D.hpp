@@ -102,6 +102,8 @@ namespace Engine2D::Animation {
       );
 
       int FrameCount() const;
+
+      void OnEditorValueChanged() override;
   };
 }
 

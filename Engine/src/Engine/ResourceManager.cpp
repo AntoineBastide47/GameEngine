@@ -65,10 +65,12 @@ namespace Engine {
 
     // Tell the shader how many textures it can hold
     if (const GLint texturesLoc = glGetUniformLocation(shader->Id(), "textures"); texturesLoc != -1) {
-      int locations[Engine2D::Rendering::Renderer2D::MAX_TEXTURES];
-      for (int i = 0; i < Engine2D::Rendering::Renderer2D::MAX_TEXTURES; ++i)
-        locations[i] = i;
-      glUniform1iv(texturesLoc, Engine2D::Rendering::Renderer2D::MAX_TEXTURES, locations);
+      std::vector<int> locations;
+      locations.reserve(Engine2D::Rendering::Renderer2D::MAX_TEXTURES);
+      locations.resize(Engine2D::Rendering::Renderer2D::MAX_TEXTURES);
+      for (size_t i = 0; i < Engine2D::Rendering::Renderer2D::MAX_TEXTURES; ++i)
+        locations.at(i) = static_cast<int>(i);
+      glUniform1iv(texturesLoc, Engine2D::Rendering::Renderer2D::MAX_TEXTURES, locations.data());
     }
 
     shader->name = name;

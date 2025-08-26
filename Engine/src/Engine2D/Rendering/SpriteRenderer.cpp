@@ -9,7 +9,7 @@
 
 namespace Engine2D::Rendering {
   SpriteRenderer::SpriteRenderer()
-    : Renderable2D(RenderableType::SpriteRenderer), color({1, 1, 1, 1}), flip({0, 0}), dirty(true) {}
+    : Renderable2D(RenderableType::SpriteRenderer), color({1, 1, 1, 1}), flip({0, 0}) {}
 
   void SpriteRenderer::SetColor(const glm::vec<4, float> &color) {
     this->color = color;

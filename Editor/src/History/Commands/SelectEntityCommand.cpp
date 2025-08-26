@@ -8,6 +8,7 @@
 
 #include "History/Commands/SelectEntityCommand.hpp"
 #include "Engine2D/SceneManagement/Scene.hpp"
+#include "Panels/EntityInspector.hpp"
 
 namespace Editor::History {
   SelectEntityCommand::SelectEntityCommand(
@@ -26,10 +27,12 @@ namespace Editor::History {
 
   void SelectEntityCommand::Execute() {
     selectedEntities = findEntitiesById(entities);
+    EntityInspector::SetContext(selectedEntities.size() == 1 ? selectedEntities.front() : nullptr);
   }
 
   void SelectEntityCommand::Undo() {
     selectedEntities = findEntitiesById(oldSelectedEntities);
+    EntityInspector::SetContext(selectedEntities.size() == 1 ? selectedEntities.front() : nullptr);
   }
 
   std::string SelectEntityCommand::Name() const {
@@ -44,6 +47,10 @@ namespace Editor::History {
     }
 
     return "Select Entities";
+  }
+
+  bool SelectEntityCommand::AffectsScene() {
+    return false;
   }
 
   std::vector<Engine2D::Entity2D *> SelectEntityCommand::findEntitiesById(

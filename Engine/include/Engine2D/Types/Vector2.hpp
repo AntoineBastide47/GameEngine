@@ -46,7 +46,7 @@ namespace glm {
     return os << glm::to_string(vector);
   }
 
-  static vec2 smoothDamp(
+  static vec2 smooth_damp(
     const vec2 &current, const vec2 &target, vec2 &currentVelocity, const float smoothTime,
     const float deltaTime, const float maxSpeed = std::numeric_limits<float>::infinity()
   ) {

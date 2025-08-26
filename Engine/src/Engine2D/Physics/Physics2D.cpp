@@ -278,7 +278,7 @@ namespace Engine2D::Physics {
       contact.rb2->computeInertia(contact.col2);
 
     // Find the impulses to apply
-    for (int i = 0; i < N; i++) {
+    for (size_t i = 0; i < N; i++) {
       ra[i] = contact.contactPoints[i] - contact.col1->Transform()->WorldPosition();
       rb[i] = contact.contactPoints[i] - contact.col2->Transform()->WorldPosition();
       raPerp[i] = glm::perpendicular(ra[i]);
@@ -296,7 +296,7 @@ namespace Engine2D::Physics {
 
     for (size_t it = 0; it < maxIterations; it++) {
       bool done = true;
-      for (int i = 0; i < N; i++) {
+      for (size_t i = 0; i < N; i++) {
         // Find the relative velocity
         const auto velA = contact.rb1
                             ? raPerp[i] * contact.rb1->angularVelocity + contact.rb1->linearVelocity
@@ -350,7 +350,7 @@ namespace Engine2D::Physics {
         df = contact.rb2->dynamicFriction;
       }
 
-      for (int i = 0; i < N; i++) {
+      for (size_t i = 0; i < N; i++) {
         // recompute post–bounce relative velocity
         const auto velA = contact.rb1
                             ? raPerp[i] * contact.rb1->angularVelocity + contact.rb1->linearVelocity

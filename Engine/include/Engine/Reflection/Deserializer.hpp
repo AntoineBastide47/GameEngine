@@ -11,10 +11,13 @@
 #include <string_view>
 
 #include "Engine/Reflection/Concepts.hpp"
-#include "Engine/Reflection/Load.hpp"
+//#include "Engine/Reflection/Load.hpp"
+#include "Engine/Data/JSON.hpp"
 #include "Engine/Data/JsonParser.hpp"
 
 namespace Engine::Reflection {
+  template<typename T> static void _e_loadImpl(T &, Format, const Engine::JSON &);
+
   class Deserializer final {
     public:
       /**

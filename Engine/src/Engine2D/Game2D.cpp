@@ -211,7 +211,9 @@ namespace Engine2D {
     SceneManager::SetActiveScene("default");
 
     // Set up the shader preprocessor and load the engine shaders
-    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &Rendering::Renderer2D::MAX_TEXTURES);
+    int textureCount = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &textureCount);
+    Rendering::Renderer2D::MAX_TEXTURES = textureCount;
     ResourceManager::LoadShader("sprite", "Engine/Shaders/sprite.glsl");
 
     // Initialize timing

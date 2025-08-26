@@ -41,10 +41,15 @@ namespace Engine2D {
   }
 
   // Prevent reallocation if the particle system has already been used.
-  void ParticleSystem2D::SetMaxParticles(const size_t maxParticles, const bool uniformEmissionRate) {
+  void ParticleSystem2D::SetMaxParticles(const int maxParticles, const bool uniformEmissionRate) {
+    if (maxParticles < 0) {
+      this->maxParticles = 0;
+      return;
+    }
+
     particles.reserve(maxParticles);
     particles.resize(maxParticles);
-    head = (head + maxParticles - 1) % maxParticles;
+    head = (head + maxParticles - 1) % (maxParticles == 0 ? 1 : maxParticles);
     if (capacity > maxParticles)
       capacity = maxParticles;
     this->maxParticles = maxParticles;
@@ -121,7 +126,7 @@ namespace Engine2D {
     const glm::vec4 colorDelta = endColor - startColor;
 
     int j = 0;
-    for (size_t i = 0; i < capacity; ++i) {
+    for (int i = 0; i < capacity; ++i) {
       int index = head + capacity - 1 - i;
       if (index >= maxParticles)
         index -= maxParticles;
@@ -218,5 +223,11 @@ namespace Engine2D {
 
     if (capacity < maxParticles)
       ++capacity;
+  }
+
+  void ParticleSystem2D::OnEditorValueChanged() {
+    SetDuration(duration);
+    SetMaxParticles(maxParticles);
+    SetParticleLifetime(particleLifetime);
   }
 }

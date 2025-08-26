@@ -19,9 +19,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC include ../../Engine/include .
 find_package(LLVM REQUIRED CONFIG)
 find_package(Clang REQUIRED CONFIG)
 
+include(../../Engine/CMake/ImGui.cmake)
+setup_imgui(../../)
+
 include_directories(${LLVM_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}
     clangTooling clangFrontend clangASTMatchers clangAST clangBasic libclang
+    imgui
 )
 
 # --------------------------
@@ -53,9 +57,9 @@ string(TOLOWER "${PROJECT_NAME_DASHED}" PROJECT_NAME_DASHED)
 string(REGEX REPLACE "^-+" "" PROJECT_NAME_DASHED "${PROJECT_NAME_DASHED}")
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        $<TARGET_FILE:${PROJECT_NAME}>
-        ${CMAKE_CURRENT_BINARY_DIR}/../../../${PROJECT_NAME_DASHED}$<TARGET_FILE_SUFFIX:${PROJECT_NAME}>
-    COMMAND ${CMAKE_COMMAND} -E remove
-        $<TARGET_FILE:${PROJECT_NAME}>
+    COMMAND ${CMAKE_COMMAND} -E rename $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_CURRENT_BINARY_DIR}/../../../${PROJECT_NAME_DASHED}$<TARGET_FILE_SUFFIX:${PROJECT_NAME}>
+    #COMMAND ${CMAKE_COMMAND} -E remove $<TARGET_FILE:${PROJECT_NAME}>
 )
+
+include(../../Engine/CMake/PlatformDetection.cmake)
+setup_platform_detection(${PROJECT_NAME})

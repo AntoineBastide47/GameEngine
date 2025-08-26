@@ -19,7 +19,7 @@ namespace Engine2D {
 namespace Engine::Profiling {
   struct ProfileResult final {
     std::string name;
-    long long start, end;
+    unsigned long long start, end;
     uint32_t threadID;
     Settings::Profiling::Level level;
   };

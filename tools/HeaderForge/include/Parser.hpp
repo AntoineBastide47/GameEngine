@@ -11,14 +11,6 @@
 #include <vector>
 
 namespace Engine::Reflection {
-  /// Represents a member variable with its fully-qualified type name and identifier.
-  struct Variable {
-    /// Fully qualified type name (including namespace, templates, pointers).
-    std::string type;
-    /// Variable name as declared in the class.
-    std::string name;
-  };
-
   /// Represents a record (class/struct) with its name, location, and serializable fields.
   struct Record {
     /// True if this record is a class, False if not
@@ -28,9 +20,9 @@ namespace Engine::Reflection {
     /// File path where this class is defined.
     std::string filePath;
     /// List of serializable member variables.
-    std::vector<Variable> fields;
-    /// List of all template parameters of this record
-    std::vector<std::string> templateParameters;
+    std::vector<std::string> fields;
+    /// List of editor inspectable member variables.
+    std::vector<std::string> editorFields;
   };
 
   /**

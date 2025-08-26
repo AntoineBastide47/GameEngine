@@ -160,9 +160,6 @@ namespace Engine {
     return gamepadTriggerThreshold;
   }
 
-  Settings::Profiling::Level Settings::Profiling::profilingLevel = Level::Disabled;
-  size_t Settings::Profiling::profilingThreshold = 50;
-
   void Settings::Profiling::SetProfilingLevel(const Level newValue) {
     profilingLevel = newValue;
   }
@@ -171,11 +168,11 @@ namespace Engine {
     return profilingLevel;
   }
 
-  void Settings::Profiling::SetProfilingThreshold(const size_t newValue) {
+  void Settings::Profiling::SetProfilingThreshold(const unsigned long long newValue) {
     profilingThreshold = newValue;
   }
 
-  size_t Settings::Profiling::ProfilingThreshold() {
+  unsigned long long Settings::Profiling::ProfilingThreshold() {
     return profilingThreshold;
   }
 }

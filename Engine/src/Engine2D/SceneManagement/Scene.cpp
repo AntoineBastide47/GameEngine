@@ -197,7 +197,6 @@ namespace Engine2D {
   }
 
   void Scene::destroy() {
-    // Remove all the entities from the game
     for (const auto &entity: entitiesToAdd) {
       entity->destroy();
       entity->free();

@@ -50,7 +50,7 @@ namespace Engine::Rendering {
             << "vec4 SampleTexture() {\n"
             << "  int idx = int(vTextureData.z);\n"
             << "  if (idx == 0) return texture(textures[0], vTextureData.xy);\n";
-          for (int i = 1; i < Engine2D::Rendering::Renderer2D::MAX_TEXTURES; ++i) {
+          for (size_t i = 1; i < Engine2D::Rendering::Renderer2D::MAX_TEXTURES; ++i) {
             processedSource
               << "  else if (idx == " << i << ") return texture(textures[" << i << "], vTextureData.xy);\n";
           }

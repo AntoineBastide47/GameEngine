@@ -140,7 +140,7 @@ namespace Engine2D::Physics {
     double minA, maxA, minB, maxB, axisDepth;
     glm::vec2 axis;
 
-    for (int i = 0; i < polygonVertices.size(); ++i) {
+    for (size_t i = 0; i < polygonVertices.size(); ++i) {
       const glm::vec2 pointA = polygonVertices[i];
       const glm::vec2 pointB = polygonVertices[(i + 1) % polygonVertices.size()];
       axis = glm::normalize(glm::perpendicular(pointB - pointA));
@@ -228,7 +228,7 @@ namespace Engine2D::Physics {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
     double minDistanceSquared = std::numeric_limits<double>::max();
-    for (int i = 0; i < vertices.size(); ++i) {
+    for (size_t i = 0; i < vertices.size(); ++i) {
       const glm::vec2 v1 = vertices[i];
       const glm::vec2 v2 = vertices[(i + 1) % vertices.size()];
 

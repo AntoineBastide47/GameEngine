@@ -37,7 +37,7 @@ namespace Engine2D::Physics {
 
 template<>
 struct std::hash<Engine2D::Physics::ContactPair> {
-  std::size_t operator()(const Engine2D::Physics::ContactPair &pair) const noexcept {
+  size_t operator()(const Engine2D::Physics::ContactPair &pair) const noexcept {
     const auto h1 = reinterpret_cast<std::uintptr_t>(pair.collider1);
     const auto h2 = reinterpret_cast<std::uintptr_t>(pair.collider2);
     // Use a fast bitwise combination

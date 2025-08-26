@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(Engine VERSION 0.10.2)
+project(Engine VERSION 0.10.5)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -103,6 +103,7 @@ add_library(Engine2D ${ENGINE_LIB_TYPE}
     include/Engine2D/SceneManagement/SceneManager.hpp
     src/Engine2D/SceneManagement/SceneResources.cpp
     include/Engine2D/SceneManagement/SceneResources.hpp
+    include/Engine/Reflection/RenderInEditor.hpp
 )
 
 # Set prefix at configure time instead of using generator expressions
@@ -138,7 +139,7 @@ endif ()
 
 cmrc_add_resource_library(engineResources NAMESPACE engineResources Assets)
 target_link_libraries(Engine2D PRIVATE
-    OpenGL::GL GLEW::GLEW glfw glm-header-only
+    OpenGL::GL GLEW::GLEW glfw glm-header-only imgui
     cmrc-base cpptrace::cpptrace engineResources
 )
 
@@ -146,29 +147,8 @@ target_link_libraries(Engine2D PRIVATE
 # Build Configs
 # --------------------------
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(Engine2D PRIVATE
-        -O3 -DNDEBUG -finline-functions -fomit-frame-pointer
-        -ffunction-sections -fdata-sections
-        -fno-fast-math -fno-strict-aliasing -frounding-math
-    )
-    target_link_options(Engine2D PRIVATE -Wl,-O2)
-    set_target_properties(Engine2D PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-    add_custom_command(TARGET Engine2D POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:Engine2D>)
-elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-        set(SANITIZER_FLAGS "-fsanitize=address,undefined")
-        set(DEBUG_FLAGS -g -fno-omit-frame-pointer -fsanitize-address-use-after-scope)
-
-        # Apply compile and link flags properly
-        target_compile_options(Engine2D PRIVATE ${SANITIZER_FLAGS} ${DEBUG_FLAGS})
-        target_link_options(Engine2D PRIVATE ${SANITIZER_FLAGS} ${DEBUG_FLAGS})
-
-        # ASAN runtime options as a macro
-        add_compile_definitions(ASAN_OPTIONS="verbosity=1:halt_on_error=1:detect_leaks=1:symbolize=1")
-    endif ()
-endif ()
+include(CMake/BuildConfig.cmake)
+setup_build_config(Engine2D)
 
 if (ENGINE_SHARED)
     set(NEW_PATH ${CMAKE_CURRENT_BINARY_DIR}/../../../lib/shared)
@@ -190,8 +170,9 @@ target_compile_definitions(Engine2D PUBLIC
     $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
     MULTI_THREAD=${MULTI_THREAD} # Set this to 0 if you have mutex errors or race conditions when modifying the engine
     ENGINE_EDITOR=0
+    $<$<BOOL:${_e_WITH_EDITOR}>:_e_WITH_EDITOR=1>
 )
 
-#
+# Setup all the per platform macros
 include(CMake/PlatformDetection.cmake)
 setup_platform_detection(Engine2D)

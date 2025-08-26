@@ -415,7 +415,7 @@ namespace Engine {
         if (ptr == end)
           THROW_JSON_ERROR("Unterminated escape sequence");
 
-        if (const char escaped = escapedMap[*ptr])
+        if (const char escaped = escapedMap[static_cast<unsigned char>(*ptr)])
           result.push_back(escaped);
         else if (*ptr++ == 'u') {
           if (end - ptr < 4)
@@ -447,12 +447,12 @@ namespace Engine {
           if (code < 0x80)
             result.push_back(static_cast<char>(code));
           else if (code < 0x800) {
-            result.push_back(static_cast<char>(0xC0 | code >> 6));
-            result.push_back(static_cast<char>(0x80 | code & 0x3F));
+            result.push_back(static_cast<char>(0xC0 | (code >> 6)));
+            result.push_back(static_cast<char>(0x80 | (code & 0x3F)));
           } else {
-            result.push_back(static_cast<char>(0xE0 | code >> 12));
-            result.push_back(static_cast<char>(0x80 | code >> 6 & 0x3F));
-            result.push_back(static_cast<char>(0x80 | code & 0x3F));
+            result.push_back(static_cast<char>(0xE0 | (code >> 12)));
+            result.push_back(static_cast<char>(0x80 | (code >> 6 & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | (code & 0x3F)));
           }
           break;
         } else

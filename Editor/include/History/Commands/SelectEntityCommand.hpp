@@ -21,6 +21,8 @@ namespace Editor::History {
       void Execute() override;
       void Undo() override;
       std::string Name() const override;
+
+      bool AffectsScene() override;
     private:
       struct EntityInfo {
         uint64_t id;

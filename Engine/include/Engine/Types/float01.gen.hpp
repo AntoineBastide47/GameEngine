@@ -19,5 +19,10 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(value, format, json["value"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(value, "Value", readOnly);\
+    return changed;\
+  }\
   private: 
 } // namespace Engine::Reflection

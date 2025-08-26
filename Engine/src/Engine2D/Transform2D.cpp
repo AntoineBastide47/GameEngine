@@ -31,7 +31,7 @@ namespace Engine2D {
     if (!ptr)
       return -1;
 
-    for (int i = 0; i < vec.size(); ++i)
+    for (size_t i = 0; i < vec.size(); ++i)
       if (vec[i].get() == ptr)
         return i;
     return -1;
@@ -253,10 +253,10 @@ namespace Engine2D {
     return -1;
   }
 
-  Entity2D *Transform2D::ChildAt(const int index) const {
+  Entity2D *Transform2D::ChildAt(const size_t index) const {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 
-    if (index < 0 || index >= children.size())
+    if (index >= children.size())
       return Engine::Log::Error("Transform2D::GetChild: index out of bounds");
 
     const auto child = children.at(index);
@@ -375,5 +375,9 @@ namespace Engine2D {
   void Transform2D::addChild(Entity2D *child) {
     if (std::ranges::find(children, child) == children.end())
       children.push_back(child);
+  }
+
+  void Transform2D::OnEditorValueChanged() {
+    onTransformChange();
   }
 }

@@ -69,5 +69,33 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(simulationFinished, format, json["simulationFinished"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(renderOrder, "RenderOrder", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(renderType, "RenderType", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(loop, "Loop", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(restart, "Restart", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(useGlobalVelocities, "UseGlobalVelocities", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(simulateInWorldSpace, "SimulateInWorldSpace", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startDelay, "StartDelay", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startPosition, "StartPosition", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(flip, "Flip", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startVelocity, "StartVelocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(endVelocity, "EndVelocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startAngularVelocity, "StartAngularVelocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(endAngularVelocity, "EndAngularVelocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startScale, "StartScale", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(endScale, "EndScale", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startColor, "StartColor", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(endColor, "EndColor", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(simulationSpeed, "SimulationSpeed", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(emissionRate, "EmissionRate", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(maxStartPositionOffset, "MaxStartPositionOffset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(blendMode, "BlendMode", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(duration, "Duration", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(particleLifetime, "ParticleLifetime", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(maxParticles, "MaxParticles", readOnly);\
+    return changed;\
+  }\
   private: 
 } // namespace Engine::Reflection

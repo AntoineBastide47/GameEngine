@@ -83,8 +83,8 @@ namespace Engine2D::Animation {
 
   bool Animator2D::GetBool(const std::string &name) {
     ENGINE_ASSERT(parameters.contains(name), "Parameter " + name + " of type bool does not exist in this animator.");
-    ENGINE_ASSERT(parameters[name].type == BOOL, "Parameter " + name + " is not of type bool.");
-    return parameters[name].boolean;
+    ENGINE_ASSERT(parameters.at(name).type == BOOL, "Parameter " + name + " is not of type bool.");
+    return parameters.at(name).boolean;
   }
 
   void Animator2D::SetInt(const std::string &name, const int value) {
@@ -93,8 +93,8 @@ namespace Engine2D::Animation {
 
   int Animator2D::GetInt(const std::string &name) {
     ENGINE_ASSERT(parameters.contains(name), "Parameter " + name + " of type integer does not exist in this animator.");
-    ENGINE_ASSERT(parameters[name].type == INT, "Parameter " + name + " is not of type integer.");
-    return parameters[name].integer;
+    ENGINE_ASSERT(parameters.at(name).type == INT, "Parameter " + name + " is not of type integer.");
+    return parameters.at(name).integer;
   }
 
   void Animator2D::SetFloat(const std::string &name, const float value) {
@@ -105,8 +105,8 @@ namespace Engine2D::Animation {
     ENGINE_ASSERT(
       parameters.contains(name), "Parameter " + name + " of type floating point does not exist in this animator."
     );
-    ENGINE_ASSERT(parameters[name].type == FLOAT, "Parameter " + name + " is not of type floating point.");
-    return parameters[name].floating;
+    ENGINE_ASSERT(parameters.at(name).type == FLOAT, "Parameter " + name + " is not of type floating point.");
+    return parameters.at(name).floating;
   }
 
   void Animator2D::CreateTrigger(const std::string &name) {
@@ -115,8 +115,8 @@ namespace Engine2D::Animation {
 
   void Animator2D::SetTrigger(const std::string &name) {
     ENGINE_ASSERT(parameters.contains(name), "Parameter " + name + " of type trigger does not exist in this animator.");
-    ENGINE_ASSERT(parameters[name].type == TRIGGER, "Parameter " + name + " is not of type trigger.");
-    parameters[name].trigger = true;
+    ENGINE_ASSERT(parameters.at(name).type == TRIGGER, "Parameter " + name + " is not of type trigger.");
+    parameters.at(name).trigger = true;
   }
 
   void Animator2D::SetDefaultAnimation(const std::string &name) {
@@ -141,7 +141,7 @@ namespace Engine2D::Animation {
       "Cannot create a transition that target's non existent " + parameter + " parameter"
     );
 
-    const Parameter &param = parameters[parameter];
+    const Parameter &param = parameters.at(parameter);
     bool invalidCondition = false;
     switch (param.type) {
       case BOOL:
@@ -165,36 +165,36 @@ namespace Engine2D::Animation {
       " is not supported for parameter type " + parameterTypeToString(param.type)
     )
 
-    transitions[from].emplace_back(
+    transitions.at(from).emplace_back(
       to, hasExitTime, hasExitTime ? std::clamp(exitTime, 0.0f, 1.0f) : 0,
       std::vector{TransitionCondition{parameter, condition, threshold}}
     );
-    return transitions[from].size() - 1;
+    return transitions.at(from).size() - 1;
   }
 
-  void Animator2D::RemoveAnimationTransition(const std::string &from, const int index) {
+  void Animator2D::RemoveAnimationTransition(const std::string &from, const size_t index) {
     ENGINE_ASSERT(
       animations.contains(from), "Cannot create a transition to target non existent " + from + " animation."
     );
-    ENGINE_ASSERT(0 <= index && index < transitions[from].size(), "Invalid transition index: " + std::to_string(index));
+    ENGINE_ASSERT(index < transitions.at(from).size(), "Invalid transition index: " + std::to_string(index));
 
-    transitions[from].erase(transitions[from].begin() + index);
+    transitions.at(from).erase(transitions.at(from).begin() + index);
   }
 
   void Animator2D::AddAnimationTransitionCondition(
-    const std::string &from, const int index, const std::string &parameter, AnimationCondition condition,
+    const std::string &from, const size_t index, const std::string &parameter, AnimationCondition condition,
     float threshold
   ) {
     ENGINE_ASSERT(
       animations.contains(from), "Cannot create a transition to target non existent " + from + " animation."
     );
-    ENGINE_ASSERT(0 <= index && index < transitions[from].size(), "Invalid transition index: " + std::to_string(index));
+    ENGINE_ASSERT(index < transitions.at(from).size(), "Invalid transition index: " + std::to_string(index));
     ENGINE_ASSERT(
       parameters.contains(parameter),
       "Cannot create a transition that target's non existent " + parameter + " parameter"
     );
 
-    const Parameter &param = parameters[parameter];
+    const Parameter &param = parameters.at(parameter);
     bool invalidCondition = false;
     switch (param.type) {
       case BOOL:
@@ -219,13 +219,13 @@ namespace Engine2D::Animation {
     )
 
     const auto it = std::ranges::find_if(
-      transitions[from][index].conditions, [parameter](const TransitionCondition &cond) {
+      transitions.at(from).at(index).conditions, [parameter](const TransitionCondition &cond) {
         return cond.parameter == parameter;
       }
     );
 
-    if (it == transitions[from][index].conditions.end())
-      transitions[from][index].conditions.emplace_back(parameter, condition, threshold);
+    if (it == transitions.at(from).at(index).conditions.end())
+      transitions.at(from).at(index).conditions.emplace_back(parameter, condition, threshold);
     else {
       it->condition = condition;
       it->threshold = threshold;
@@ -233,19 +233,19 @@ namespace Engine2D::Animation {
   }
 
   void Animator2D::RemoveAnimationTransitionCondition(
-    const std::string &from, const int index, const std::string &parameter
+    const std::string &from, const size_t index, const std::string &parameter
   ) {
     ENGINE_ASSERT(
       animations.contains(from), "Cannot create a transition to target non existent " + from + " animation."
     );
-    ENGINE_ASSERT(0 <= index && index < transitions[from].size(), "Invalid transition index: " + std::to_string(index));
+    ENGINE_ASSERT(index < transitions.at(from).size(), "Invalid transition index: " + std::to_string(index));
     ENGINE_ASSERT(
       parameters.contains(parameter),
       "Cannot create a transition that target's non existent " + parameter + " parameter"
     );
 
     std::erase_if(
-      transitions[from][index].conditions, [parameter](const TransitionCondition &condition) {
+      transitions.at(from).at(index).conditions, [parameter](const TransitionCondition &condition) {
         return condition.parameter == parameter;
       }
     );

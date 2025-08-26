@@ -16,7 +16,10 @@
 
 namespace Editor {
   void SceneViewport::Initialize() {
-    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxFramebufferDims);
+    int size[2];
+    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, size);
+    maxFramebufferDims[0] = size[0];
+    maxFramebufferDims[1] = size[1];
     createSceneFrameBuffer(frameBufferData);
   }
 

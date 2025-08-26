@@ -15,9 +15,9 @@ namespace Engine2D::Animation {
     const int frameOffsetY, const float frameRate, const bool vertical, const bool loop, const bool reverse
   )
     : frameCountX(frameCountX), frameCountY(frameCountY), frameOffsetX(frameOffsetX), frameOffsetY(frameOffsetY),
-      currentFrame(0), loop(loop), reverse(reverse), vertical(vertical), paused(false), completed(false),
-      frameDuration(frameRate), frameDurationInv(1.0f / frameRate), speed(1), speedInv(1), elapsedTime(0),
-      spriteName(std::move(spriteName)) {}
+      currentFrame(0), loop(loop), reverse(reverse), spriteName(std::move(spriteName)), vertical(vertical),
+      paused(false), completed(false), frameDuration(frameRate), frameDurationInv(1.0f / frameRate), speed(1),
+      speedInv(1), elapsedTime(0) {}
 
   int Animation2D::FrameCount() const {
     return vertical ? frameCountY : frameCountX;
@@ -58,6 +58,11 @@ namespace Engine2D::Animation {
   }
 
   void Animation2D::OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) {
+    SetFrameDuration(frameDuration);
+    SetSpeed(speed);
+  }
+
+  void Animation2D::OnEditorValueChanged() {
     SetFrameDuration(frameDuration);
     SetSpeed(speed);
   }

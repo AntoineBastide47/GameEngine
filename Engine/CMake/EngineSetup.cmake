@@ -51,6 +51,10 @@ add_subdirectory(
     ${CMAKE_BINARY_DIR}/glm
 )
 
+# === ImGui ===
+include(${ENGINE_LOCATION}/CMake/ImGui.cmake)
+setup_imgui(${ENGINE_LOCATION})
+
 # --------------------------
 # Platform Detection
 # --------------------------
@@ -91,7 +95,7 @@ elseif (ENGINE_COUNT GREATER 1)
     message(WARNING "Multiple engine libraries found.")
 endif ()
 
-set(ENGINE_DEPENDENCIES GLEW::GLEW glfw cpptrace::cpptrace glm)
+set(ENGINE_DEPENDENCIES GLEW::GLEW glfw cpptrace::cpptrace glm imgui)
 
 # --------------------------
 # Editor Setup
@@ -117,6 +121,7 @@ list(APPEND HEADER_FORGE_COMPILER_ARGS
     "-I../${ENGINE_LOCATION}/vendor/glfw/include "
     "-I../${ENGINE_LOCATION}/vendor/glm "
     "-I../${ENGINE_LOCATION}/vendor/cpptrace/include "
+    "-I../${ENGINE_LOCATION}/vendor/imgui "
     "-I./_cmrc/include "
 )
 
@@ -125,7 +130,7 @@ function(setup_header_forge)
     if (NOT TARGET HeaderForge)
         add_custom_target(HeaderForge
             COMMAND ${CMAKE_COMMAND} -E echo "Running reflection engine..."
-            COMMAND ../header-forge --parse ../Game/include --compilerArgs ${HEADER_FORGE_COMPILER_ARGS}
+            COMMAND ../${ENGINE_LOCATION}/header-forge --parse ../Game/include --compilerArgs ${HEADER_FORGE_COMPILER_ARGS}
             COMMENT "Engine header-forge step"
         )
         add_dependencies(HeaderForge ${ENGINE_DEPENDENCIES})
@@ -138,17 +143,10 @@ endfunction()
 
 function(setup_engine_target TARGET_NAME)
     # Add engine includes
-    target_include_directories(${TARGET_NAME} PRIVATE
-        ${ENGINE_LOCATION}/Engine
-        ${EDITOR_INCLUDE}
-    )
+    target_include_directories(${TARGET_NAME} PRIVATE ${ENGINE_LOCATION}/Engine ${EDITOR_INCLUDE})
 
     # Link engine libraries
-    target_link_libraries(${TARGET_NAME} PUBLIC
-        ${ENGINE_PLATFORM_LIBS}
-        ${ENGINE_LIB}
-        ${ENGINE_DEPENDENCIES}
-    )
+    target_link_libraries(${TARGET_NAME} PUBLIC ${ENGINE_PLATFORM_LIBS} ${ENGINE_LIB} ${ENGINE_DEPENDENCIES})
 
     # Setup HeaderForge dependency
     setup_header_forge()
@@ -177,33 +175,6 @@ function(setup_engine_target TARGET_NAME)
     add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${ENGINE_TEMP_LOCATION}"
     )
-
-    # --------------------------
-    # Build Configurations
-    # --------------------------
-
-    if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        target_compile_options(${TARGET_NAME} PRIVATE
-            -O3 -DNDEBUG -finline-functions -fomit-frame-pointer
-            -ffunction-sections -fdata-sections
-            -fno-fast-math -fno-strict-aliasing -frounding-math
-        )
-        target_link_options(${TARGET_NAME} PRIVATE -Wl,-O2)
-        set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-            COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${TARGET_NAME}>
-        )
-    elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-            set(SANITIZER_FLAGS "-fsanitize=address,undefined")
-            set(DEBUG_FLAGS -g -fno-omit-frame-pointer -fsanitize-address-use-after-scope)
-
-            target_compile_options(${TARGET_NAME} PRIVATE ${SANITIZER_FLAGS} ${DEBUG_FLAGS})
-            target_link_options(${TARGET_NAME} PRIVATE ${SANITIZER_FLAGS} ${DEBUG_FLAGS})
-
-            add_compile_definitions(ASAN_OPTIONS="verbosity=1:halt_on_error=1:detect_leaks=1:symbolize=1")
-        endif ()
-    endif ()
 
     # Move executable to parent directory
     add_custom_command(TARGET ${TARGET_NAME} POST_BUILD

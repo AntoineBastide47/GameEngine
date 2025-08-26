@@ -37,5 +37,18 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(inertia, format, json["inertia"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(isKinematic, "IsKinematic", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(affectedByGravity, "AffectedByGravity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(linearVelocity, "LinearVelocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(angularVelocity, "AngularVelocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(angularDamping, "AngularDamping", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(staticFriction, "StaticFriction", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(dynamicFriction, "DynamicFriction", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(mass, "Mass", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(inertia, "Inertia", readOnly);\
+    return changed;\
+  }\
   private: 
 } // namespace Engine::Reflection

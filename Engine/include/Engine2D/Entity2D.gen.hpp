@@ -31,5 +31,16 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(allComponents, format, json["allComponents"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(name, "Name", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(active, "Active", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(parentsActive, "ParentsActive", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(isStatic, "IsStatic", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(destroyed, "Destroyed", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(transform, "Transform", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(allComponents, "AllComponents", readOnly);\
+    return changed;\
+  }\
   private: 
 } // namespace Engine::Reflection

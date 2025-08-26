@@ -21,5 +21,11 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(entities, format, json["entities"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(resources, "Resources", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(entities, "Entities", readOnly);\
+    return changed;\
+  }\
   private: 
 } // namespace Engine::Reflection

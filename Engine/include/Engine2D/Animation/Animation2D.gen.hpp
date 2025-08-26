@@ -43,5 +43,22 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(speed, format, json["speed"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameCountX, "FrameCountX", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameCountY, "FrameCountY", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameOffsetX, "FrameOffsetX", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameOffsetY, "FrameOffsetY", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(currentFrame, "CurrentFrame", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(loop, "Loop", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(reverse, "Reverse", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(spriteName, "SpriteName", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(vertical, "Vertical", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(paused, "Paused", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(completed, "Completed", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameDuration, "FrameDuration", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(speed, "Speed", readOnly);\
+    return changed;\
+  }\
   private: 
 } // namespace Engine::Reflection

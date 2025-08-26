@@ -52,14 +52,14 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
 
     // Visit each CXXRecordDecl (class/struct) in the AST:
     // ReSharper disable once CppDFAConstantFunctionResult
-    bool VisitCXXRecordDecl(CXXRecordDecl *decl) const {
+    bool VisitCXXRecordDecl(const CXXRecordDecl *decl) const {
       // Skip forward declarations and anonymous classes/structs
       if (!decl->isThisDeclarationADefinition() || decl->isImplicit() || decl->getLocation().isInvalid() ||
           !decl->hasDefinition() || !decl->isCompleteDefinition() || !decl->getIdentifier() || decl->isUnion())
         return true;
 
       // Make sure we get the class from its source file
-      SourceManager &SM = decl->getASTContext().getSourceManager();
+      const SourceManager &SM = decl->getASTContext().getSourceManager();
       if (SM.isInSystemHeader(decl->getLocation()))
         return true;
 
@@ -71,14 +71,10 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
       rec.name = decl->getQualifiedNameAsString();
       rec.isClass = decl->isClass();
 
-      if (PresumedLoc ploc = SM.getPresumedLoc(decl->getLocation()); ploc.isValid())
+      if (const PresumedLoc ploc = SM.getPresumedLoc(decl->getLocation()); ploc.isValid())
         rec.filePath = ploc.getFilename();
       else
         rec.filePath = SM.getFilename(decl->getLocation());
-
-      if (const auto *tmpl = decl->getDescribedClassTemplate())
-        for (const TemplateParameterList *params = tmpl->getTemplateParameters(); const NamedDecl *param: *params)
-          rec.templateParameters.emplace_back(param->getNameAsString());
 
       // Extract class fields and inherited fields
       std::vector<const FieldDecl *> fields;
@@ -92,46 +88,86 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
         if (field->getName().empty() || field->isMutable() || field->getType().isVolatileQualified())
           continue;
 
-        // Check custom annotation attributes on the field
-        bool isSerializable = false;
-        bool isNonSerializable = false;
-        for (const Attr *attr: field->attrs()) {
-          if (const auto *ann = dyn_cast<AnnotateAttr>(attr)) {
-            if (const StringRef annotation = ann->getAnnotation(); annotation == _e_SERIALIZE_STRING)
-              isSerializable = true;
-            else if (annotation == _e_NON_SERIALIZABLE_STRING)
-              isNonSerializable = true;
-          }
-        }
-
-        // If annotated non-serializable, skip regardless of other factors
-        if (isNonSerializable)
-          continue;
-
+        // Start recursive check on this field's type
         bool isNonSerializableType = false;
         bool isPointerLike = false;
-
-        // Start recursive check on this field's type
         checkType(field->getType(), isNonSerializableType, isPointerLike);
         if (isNonSerializableType)
           continue;
 
-        // Skip public pointers not marked as serializable
-        if ((field->getAccessUnsafe() != AS_public || isPointerLike) && !isSerializable)
-          continue;
+        // Check custom annotation attributes on the field
+        bool isSerializable = false;
+        bool isNonSerializable = false;
+        bool isShowInInspector = false;
+        bool isHideInInspector = false;
+        findAnnotations(field, isSerializable, isNonSerializable, isShowInInspector, isHideInInspector);
 
-        // Use Clang to get fully qualified type name (including namespace and template parameters)
-        Variable var;
-        PrintingPolicy policy(field->getASTContext().getLangOpts());
-        policy.SuppressScope = false;
-        var.type = TypeName::getFullyQualifiedName(field->getType(), field->getASTContext(), policy);
-        var.name = field->getNameAsString();
-        rec.fields.push_back(std::move(var));
+        if (!isNonSerializable) {
+          if ((field->getAccessUnsafe() != AS_public || isPointerLike) && !isSerializable)
+            continue;
+
+          rec.fields.push_back(field->getNameAsString());
+        }
+
+        if (!isHideInInspector && (isShowInInspector || field->getAccessUnsafe() == AS_public))
+          rec.editorFields.push_back(field->getNameAsString());
       }
 
-      records.push_back(std::move(rec));
+      for (auto *d: decl->decls())
+        if (const auto *usingDecl = dyn_cast<UsingDecl>(d)) {
+          std::vector<const FieldDecl *> usingFields;
+          for (const auto *shadow: usingDecl->shadows())
+            if (const auto *fieldDecl = dyn_cast<FieldDecl>(shadow->getTargetDecl()))
+              usingFields.push_back(fieldDecl);
+
+          // Check custom annotation attributes on the field
+          bool isSerializable = false;
+          bool isNonSerializable = false;
+          bool isShowInInspector = false;
+          bool isHideInInspector = false;
+          findAnnotations(usingDecl, isSerializable, isNonSerializable, isShowInInspector, isHideInInspector);
+
+          for (const auto field: usingFields) {
+            bool isNonSerializableType = false;
+            bool isPointerLike = false;
+
+            // Start recursive check on this field's type
+            checkType(field->getType(), isNonSerializableType, isPointerLike);
+            if (isNonSerializableType)
+              continue;
+
+            if (!isNonSerializable) {
+              if ((field->getAccessUnsafe() != AS_public || isPointerLike) && !isSerializable)
+                continue;
+
+              rec.fields.push_back(field->getNameAsString());
+            }
+
+            if (!isHideInInspector && (isShowInInspector || field->getAccessUnsafe() == AS_public))
+              rec.editorFields.push_back(field->getNameAsString());
+          }
+        }
+
+      records.emplace_back(std::move(rec));
 
       return true;
+    }
+
+    static void findAnnotations(
+      const Decl *decl, bool &isSerializable, bool &isNonSerializable, bool &isShowInInspector, bool &isHideInInspector
+    ) {
+      for (const Attr *attr: decl->attrs()) {
+        if (const auto *ann = dyn_cast<AnnotateAttr>(attr)) {
+          if (const StringRef annotation = ann->getAnnotation(); annotation == _e_SERIALIZE_STRING)
+            isSerializable = true;
+          else if (annotation == _e_NON_SERIALIZABLE_STRING)
+            isNonSerializable = true;
+          else if (annotation == _e_SHOW_IN_INSPECTOR_STRING)
+            isShowInInspector = true;
+          else if (annotation == _e_HIDE_IN_INSPECTOR_STRING)
+            isHideInInspector = true;
+        }
+      }
     }
 
     static void collectAllFields(const CXXRecordDecl *decl, std::vector<const FieldDecl *> &out) { // NOLINT(*-no-recursion)
@@ -263,22 +299,27 @@ namespace Engine::Reflection {
   }
 
   void Parser::PrintRecords(const std::vector<Record> &records) {
-    for (const auto &[isClass, name, filePath, fields, templateParameters]: records) {
+    for (const auto &[isClass, name, filePath, fields, editorFields]: records) {
       std::cout << "Record: " << (isClass ? "class " : "struct ") << name << " (defined in " << filePath << ")\n";
-      if (!templateParameters.empty()) {
-        std::cout << "  [TemplateParameters: " << templateParameters.size() << "]\n";
-        for (const auto &templateParameter: templateParameters)
-          std::cout << "    - " << templateParameter << "\n";
-      }
 
       if (fields.empty())
         std::cout << "  [No serializable fields]\n";
       else {
         std::cout << "  [Fields: " << fields.size() << "]\n";
-        for (const auto &[type, name]: fields) {
-          std::cout << "    - " << type << " " << name << "\n";
+        for (const auto &field: fields) {
+          std::cout << "    - " << field << "\n";
         }
       }
+
+      if (editorFields.empty())
+        std::cout << "  [No editor fields]\n";
+      else {
+        std::cout << "  [Editor Fields: " << editorFields.size() << "]\n";
+        for (const auto &field: editorFields) {
+          std::cout << "    - " << field << "\n";
+        }
+      }
+
       std::cout << "\n";
     }
   }

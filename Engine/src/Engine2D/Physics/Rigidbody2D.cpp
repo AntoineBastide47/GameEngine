@@ -69,6 +69,11 @@ namespace Engine2D::Physics {
     force = {};
   }
 
+  void Rigidbody2D::OnEditorValueChanged() {
+    SetMass(mass);
+    inertiaInv = 1.0f / inertia;
+  }
+
   void Rigidbody2D::AddForce(const glm::vec2 &force) {
     this->force += force;
   }
@@ -89,7 +94,7 @@ namespace Engine2D::Physics {
       case Collider2D::Polygon: {
         float area = 0.0f;
         inertia = 0;
-        for (int i = 0; i < collider->transformedVertices.size() - 1; ++i) {
+        for (size_t i = 0; i < collider->transformedVertices.size() - 1; ++i) {
           const float cross = glm::cross_2(collider->transformedVertices[i], collider->transformedVertices[i + 1]);
           area += cross;
           inertia += cross *

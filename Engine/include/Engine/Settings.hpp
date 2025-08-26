@@ -149,12 +149,12 @@ namespace Engine {
           /// @returns The current profiling level the profiler uses
           [[nodiscard]] static Level ProfilingLevel();
           /// Defines the minimum execution time threshold (in microseconds) for a function to be recorded by the profiler.
-          static void SetProfilingThreshold(size_t newValue);
+          static void SetProfilingThreshold(unsigned long long newValue);
           /// @returns The minimum execution time threshold (in microseconds) used by the profiler
-          [[nodiscard]] static size_t ProfilingThreshold();
+          [[nodiscard]] static unsigned long long ProfilingThreshold();
         private:
-          static Level profilingLevel;
-          static size_t profilingThreshold;
+          inline static auto profilingLevel = Level::Disabled;
+          inline static unsigned long long profilingThreshold = 50;
       };
     private:
       Settings() = default;

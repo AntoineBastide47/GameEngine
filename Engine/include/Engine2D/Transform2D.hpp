@@ -13,6 +13,10 @@
 #include "Engine2D/Component2D.hpp"
 #include "Transform2D.gen.hpp"
 
+namespace Editor {
+  class EntityInspector;
+}
+
 namespace Engine2D {
   /**
    * Represents the position, rotation, and scale of a 2D entity.
@@ -23,6 +27,7 @@ namespace Engine2D {
     SERIALIZE_TRANSFORM2D
       friend class Scene;
       friend class Entity2D;
+      friend class Editor::EntityInspector;
     public:
       /// Equality operator to compare two Transform2D objects.
       bool operator==(const Transform2D &other) const;
@@ -151,7 +156,7 @@ namespace Engine2D {
       [[nodiscard]] int ChildIndex(const Entity2D *child) const;
       /// @returns The child at the given index
       /// @note Log's an error if index is out of bounds
-      [[nodiscard]] Entity2D *ChildAt(int index) const;
+      [[nodiscard]] Entity2D *ChildAt(size_t index) const;
       /// Puts the given child at the start of the list of children attached to the Entity2D this component is attached to
       void MakeFirstChild(Entity2D *child);
       /// Puts the given child at the nth position of the list of children attached to the Entity2D this component is attached to
@@ -166,17 +171,17 @@ namespace Engine2D {
       using Component2D::Transform; // Disallow unnecessary overhead to access this component
 
       /// Position of the transform in 2D space.
-      glm::vec2 position;
+      ENGINE_SERIALIZE glm::vec2 position;
       /// Position of the transform in 2D space.
-      ENGINE_SERIALIZE glm::vec2 worldPosition;
+      ENGINE_SERIALIZE_HIDDEN glm::vec2 worldPosition;
       /// Rotation of the transform in degrees.
-      float rotation;
+      ENGINE_SERIALIZE float rotation;
       /// Rotation of the transform in degrees.
-      ENGINE_SERIALIZE float worldRotation;
+      ENGINE_SERIALIZE_HIDDEN float worldRotation;
       /// Scale of the transform in 2D space.
-      glm::vec2 scale;
+      ENGINE_SERIALIZE glm::vec2 scale;
       /// Scale of the transform in 2D space.
-      ENGINE_SERIALIZE glm::vec2 worldScale;
+      ENGINE_SERIALIZE_HIDDEN glm::vec2 worldScale;
 
       /// The parent Entity2D of the entity that this transform is attached to
       Entity2D *parent;
@@ -209,6 +214,8 @@ namespace Engine2D {
 
       /// Adds the given child to the child list of the current entity's transform
       void addChild(Entity2D *child);
+
+      void OnEditorValueChanged() override;
   };
 } // namespace Engine2D
 

@@ -19,6 +19,7 @@
 
 namespace Editor {
   class SceneHierarchy;
+  class EntityInspector;
 
   namespace History {
     class CreateEntityCommand;
@@ -46,12 +47,15 @@ namespace Engine2D {
       friend class SceneManager;
       friend class Physics::Physics2D;
       friend class Editor::SceneHierarchy;
+      friend class Editor::EntityInspector;
       friend class Editor::History::CreateEntityCommand;
       friend class Editor::History::SelectEntityCommand;
       friend class Editor::History::DeleteEntityCommand;
     public:
       /// The name of the entity.
       std::string name;
+
+      ~Entity2D() override;
 
       /// Equality operator that checks if the current entity is the same as the given entity
       bool operator==(const Entity2D &entity) const;

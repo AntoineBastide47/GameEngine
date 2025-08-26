@@ -115,7 +115,7 @@ namespace Engine2D::Rendering {
       Scene *scene;
 
       /// The maximum number of texture that can be active at once on the GPU
-      inline static int MAX_TEXTURES = 0;
+      inline static size_t MAX_TEXTURES = 0;
       /// Maps a texture id to it's index in the gpu texture array
       std::unordered_map<uint, uint> textureIdToIndexMap;
       /// Whether the renderables need to be sorted using the render order

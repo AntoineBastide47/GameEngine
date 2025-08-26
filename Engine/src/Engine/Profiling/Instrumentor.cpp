@@ -32,7 +32,7 @@ namespace Engine::Profiling {
 
     if (result.level > Settings::Profiling::Level())
       return;
-    const long long duration = result.end - result.start;
+    const unsigned long long duration = result.end - result.start;
     if (duration < Settings::Profiling::ProfilingThreshold())
       return;
 

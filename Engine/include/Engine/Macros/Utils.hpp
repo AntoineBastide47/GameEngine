@@ -15,8 +15,10 @@
 
 #ifdef _MSC_VER
 #define ENGINE_FUNC_SIG __FUNCSIG__
-#else
+#elif defined(__GNUC__) || defined(__clang__)
 #define ENGINE_FUNC_SIG __PRETTY_FUNCTION__
+#else
+#error "Unknown Compiler"
 #endif
 
 constexpr std::string_view className(const std::string_view prettyFunction, const bool fullyQualified) {

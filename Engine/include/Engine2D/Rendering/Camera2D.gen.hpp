@@ -43,6 +43,17 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(top, format, json["top"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "PositionOffset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(rotationOffset, "RotationOffset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(damping, "Damping", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(zoomLevel, "ZoomLevel", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeCoefficientsX, "ShakeCoefficientsX", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeCoefficientsY, "ShakeCoefficientsY", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeDuration, "ShakeDuration", readOnly);\
+    return changed;\
+  }\
   private: 
 
   #define SERIALIZE_SHAKEWAVE _e_SERIALIZE_RECORD \
@@ -64,5 +75,12 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(frequency, format, json["frequency"]);\
       Engine::Reflection::_e_loadImpl(phase, format, json["phase"]);\
     }\
+  }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(amplitude, "Amplitude", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frequency, "Frequency", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(phase, "Phase", readOnly);\
+    return changed;\
   }
 } // namespace Engine::Reflection

@@ -43,14 +43,14 @@ namespace Engine2D::Physics {
       /// Coefficient of bounciness  of the rigid body.
       Engine::float01 elasticity;
       /// The positional offset of the collider in regard to the position of the entity it is attached to
-      glm::vec2 offset;
+      glm::vec2 positionOffset;
+      /// Determines whether the collider is configured as a trigger.
+      bool isTrigger;
       /// If true, the colliders bounds is computed using the transform of the entity it is attached to (works in most cases).
       /// If false, you need to specify the bounds of the entity manually (ex: width, height, radius).
       bool autoCompute;
       /// The position of the collider if it is not auto computed
       glm::vec2 position;
-      /// Determines whether the collider is configured as a trigger.
-      bool isTrigger;
 
       /// @returns The points at which this rigidbody collided with another rigidbody
       [[nodiscard]] std::vector<glm::vec2> ContactPoints() const;
@@ -66,9 +66,9 @@ namespace Engine2D::Physics {
       };
 
       /// The type of this collider
-      ENGINE_SERIALIZE ColliderType type;
+      ENGINE_SERIALIZE_HIDDEN ColliderType type;
       /// The vertices that make up the initial collider.
-      ENGINE_SERIALIZE std::vector<glm::vec2> vertices;
+      std::vector<glm::vec2> vertices;
       /// The vertices that make up the initial collider transformed to match its current position, rotation and scale.
       std::vector<glm::vec2> transformedVertices;
       /// Weather or not this collider has been initialized or not
@@ -120,10 +120,8 @@ namespace Engine2D::Physics {
     SERIALIZE_BOXCOLLIDER2D
       friend class Engine2D::Entity2D;
     public:
-      /// The height of this collider
-      float width;
-      /// The width of this collider
-      float height;
+      /// The size of this collider
+      glm::vec2 size;
     protected:
       BoxCollider2D();
       void computeAABB() override;
@@ -135,7 +133,7 @@ namespace Engine2D::Physics {
     SERIALIZE_POLYGONCOLLIDER2D
       friend class Engine2D::Entity2D;
     public:
-      using Collider2D::vertices;
+      using Collider2D::vertices ENGINE_SERIALIZE ENGINE_SHOW_IN_INSPECTOR;
     protected:
       PolygonCollider2D();
       void computeAABB() override;

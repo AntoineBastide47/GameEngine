@@ -9,12 +9,12 @@
 #include <iostream>
 
 #include "LevelEditor.hpp"
-
 #include "imgui_internal.h"
 #include "ProjectLoader.hpp"
 #include "Window.hpp"
-#include "../../Engine/include/Engine2D/SceneManagement/SceneManager.hpp"
 #include "Engine2D/Game2D.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
+#include "Panels/EntityInspector.hpp"
 #include "Panels/SceneHierarchy.hpp"
 #include "Panels/SceneViewport.hpp"
 
@@ -133,14 +133,13 @@ namespace Editor {
       }
 
       if (ImGui::BeginMenu("Edit")) {
-        auto &history = SceneHierarchy::commandHistory;
-        const bool canUndo = history.CanUndo();
-        const bool canRedo = history.CanRedo();
+        const bool canUndo = History::CommandHistory::CanUndo();
+        const bool canRedo = History::CommandHistory::CanRedo();
 
-        if (ImGui::MenuItem((canUndo ? "Undo: " + history.UndoCmdName() : "Undo").c_str(), "", false, canUndo))
-          history.Undo();
-        if (ImGui::MenuItem((canRedo ? "Redo: " + history.RedoCmdName() : "Redo").c_str(), "", false, canRedo))
-          history.Redo();
+        if (ImGui::MenuItem((canUndo ? "Undo: " + History::CommandHistory::UndoCmdName() : "Undo").c_str(), "", false, canUndo))
+          History::CommandHistory::Undo();
+        if (ImGui::MenuItem((canRedo ? "Redo: " + History::CommandHistory::RedoCmdName() : "Redo").c_str(), "", false, canRedo))
+          History::CommandHistory::Redo();
 
         ImGui::EndMenu();
       }
@@ -195,6 +194,7 @@ namespace Editor {
 
     SceneHierarchy::Render(&winClass);
     SceneViewport::Render(&winClass);
+    EntityInspector::Render(&winClass);
   }
 
   void LevelEditor::cleanup() {

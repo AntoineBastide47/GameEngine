@@ -12,6 +12,7 @@
 namespace Editor {
   class SceneViewport final {
     friend class LevelEditor;
+    friend class SceneHierarchy;
     public:
       /// Initializes the viewport
       static void Initialize();
@@ -29,7 +30,7 @@ namespace Editor {
       inline static uint32_t highResRendererID = 0, highResColorAttachment = 0, highResDepthAttachment = 0;
       inline static bool viewportFocused = false;
       inline static bool viewportHovered = false;
-      inline static int maxFramebufferDims[2];
+      inline static uint32_t maxFramebufferDims[2];
 
       struct FrameBufferData {
         uint32_t width, height;

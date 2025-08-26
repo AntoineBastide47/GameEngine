@@ -16,5 +16,9 @@ namespace Engine::Reflection {
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) {}\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    return false;\
+}\
+\
   private: 
 } // namespace Engine::Reflection

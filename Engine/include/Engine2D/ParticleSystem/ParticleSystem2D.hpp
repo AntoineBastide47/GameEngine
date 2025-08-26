@@ -82,7 +82,7 @@ namespace Engine2D {
       [[nodiscard]] float Duration() const;
       /// Sets the maximum number of particles this particle system can simulate at once
       /// @note Once the particle system has been updated once, this method will not do anything
-      void SetMaxParticles(size_t maxParticles, bool uniformEmissionRate = true);
+      void SetMaxParticles(int maxParticles, bool uniformEmissionRate = true);
       /// @returns The maximum of particles this particle system will simulate
       [[nodiscard]] uint32_t MaxParticles() const;
       /// Sets how long each particle will live for
@@ -93,6 +93,7 @@ namespace Engine2D {
       void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
     protected:
       ParticleSystem2D();
+
       void forward() override;
       void recall() override;
     private:
@@ -118,11 +119,11 @@ namespace Engine2D {
       /// The index of the first alive particle
       size_t head;
       /// How many particles are currently alive
-      size_t capacity;
+      int capacity;
       /// The maximum number of particles that can be rendered
-      ENGINE_SERIALIZE size_t maxParticles;
+      ENGINE_SERIALIZE int maxParticles;
       /// Whether the simulation is done or not
-      ENGINE_SERIALIZE bool simulationFinished;
+      ENGINE_SERIALIZE_HIDDEN bool simulationFinished;
 
       /// Emission accumulator timer
       float emissionAcc;
@@ -140,6 +141,8 @@ namespace Engine2D {
       void updateAndRender(uint textureIndex, float *data);
       /// Updates the dead particle at the given index and brings it back to life
       void respawnParticle();
+
+      void OnEditorValueChanged() override;
   };
 }
 

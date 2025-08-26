@@ -2,11 +2,11 @@
 #include <fstream>
 #include <iostream>
 #include <ranges>
+#include <regex>
 #include <set>
 
 #include "Generator.hpp"
 #include "Parser.hpp"
-#include "../../Engine/include/Engine/Macros/PlatformDetection.hpp"
 
 #define ALL_IN_ONE_CPP "allInOne.cpp"
 #define ALL_IN_ONE_II "allInOne.ii"
@@ -18,6 +18,8 @@
 
 #define PREPROCESS_CMD_START "clang++ -std=c++20 -E -DHEADER_FORGE_ENABLE_ANNOTATIONS "
 #define PREPROCESS_CMD_END " " OS_INCLUDES " " ALL_IN_ONE_CPP " -o " ALL_IN_ONE_II
+
+constexpr static std::array version = {1, 1, 1};
 
 namespace fs = std::filesystem;
 
@@ -48,39 +50,25 @@ int main(const int argc, char *argv[]) {
     return -1;
   }
 
-  if (!fs::exists("./Engine"))
-    fs::create_directory("./Engine");
-
-  std::unordered_map<std::string, std::string> fileProcessingTimes;
-  if (fs::exists(LAST_PROCESSING_TIMES_TXT)) {
-    std::fstream lastProcessingTimes(LAST_PROCESSING_TIMES_TXT, std::ios::in);
-    std::string line;
-    while (std::getline(lastProcessingTimes, line)) {
-      const size_t splitPoint = line.find_first_of(' ');
-      if (splitPoint == std::string::npos)
-        continue;
-
-      const std::string pathPart = line.substr(0, splitPoint);
-      const std::string timePart = line.substr(splitPoint + 1);
-      fileProcessingTimes[normalize_path(pathPart)] = timePart;
-    }
-    lastProcessingTimes.close();
-  }
-
   // Gather each file path recursively
   std::set<std::string> filesystemPaths;
   std::vector<std::string> compilerArgs;
+  std::string editorFilePath;
+
   bool parsingPaths = false;
+  bool parsingCompilerArgs = false;
 
   for (size_t i = 1; i < argc; ++i) {
     std::string arg = argv[i];
 
     if (arg == "--parse") {
       parsingPaths = true;
+      parsingCompilerArgs = false;
       continue;
     }
     if (arg == "--compilerArgs") {
       parsingPaths = false;
+      parsingCompilerArgs = true;
       continue;
     }
 
@@ -95,8 +83,41 @@ int main(const int argc, char *argv[]) {
               filesystemPaths.insert(normalize_path(entry.path().string()));
       } else
         std::cerr << "Path does not exist: " << p << "\n";
-    } else
+    } else if (parsingCompilerArgs)
       compilerArgs.push_back(arg);
+  }
+
+  if (!fs::exists("./Engine"))
+    fs::create_directory("./Engine");
+
+  bool overrideNeedsProcessing = !fs::exists(LAST_PROCESSING_TIMES_TXT);
+  std::unordered_map<std::string, std::string> fileProcessingTimes;
+  if (!overrideNeedsProcessing) {
+    std::fstream lastProcessingTimes(LAST_PROCESSING_TIMES_TXT, std::ios::in);
+    std::string line;
+    while (std::getline(lastProcessingTimes, line)) {
+      if (line.starts_with("##")) {
+        std::regex versionRegex(R"(##\s*Version:\s*(\d+)\.(\d+)\.(\d+))");
+
+        if (std::smatch matches; std::regex_match(line, matches, versionRegex)) {
+          int major = std::stoi(matches[1]);
+          int minor = std::stoi(matches[2]);
+          int patch = std::stoi(matches[3]);
+
+          overrideNeedsProcessing = major != version[0] || minor != version[1] || patch != version[2];
+        }
+        continue;
+      }
+
+      const size_t splitPoint = line.find_first_of(' ');
+      if (splitPoint == std::string::npos)
+        continue;
+
+      const std::string pathPart = line.substr(0, splitPoint);
+      const std::string timePart = line.substr(splitPoint + 1);
+      fileProcessingTimes[normalize_path(pathPart)] = timePart;
+    }
+    lastProcessingTimes.close();
   }
 
   // Check which files need processing
@@ -116,7 +137,7 @@ int main(const int argc, char *argv[]) {
     if (const auto it = fileProcessingTimes.find(path); it == fileProcessingTimes.end() || it->second != currentTimeStr)
       needsProcessing = true;
 
-    if (needsProcessing)
+    if (overrideNeedsProcessing || needsProcessing)
       filesToProcess[path] = currentTimeStr;
   }
 
@@ -154,7 +175,7 @@ int main(const int argc, char *argv[]) {
 
   // Write all the data
   try {
-    Engine::Reflection::Generator::GenerateRecordFiles(records);
+    Engine::Reflection::Generator::GenerateRecordFiles(records, overrideNeedsProcessing);
   } catch (const std::exception &e) {
     std::cerr << "Generation failed: " << e.what() << "\n";
     std::remove(ALL_IN_ONE_CPP);
@@ -170,6 +191,7 @@ int main(const int argc, char *argv[]) {
   // Write updated timestamps to file
   std::ofstream lastProcessingTimes(LAST_PROCESSING_TIMES_TXT, std::ios::out | std::ios::trunc);
   bool first = true;
+  lastProcessingTimes << "## Version: " << version.at(0) << '.' << version.at(1) << '.' << version.at(2) << '\n';
   for (const auto &[file, time]: fileProcessingTimes) {
     if (!first)
       lastProcessingTimes << "\n";

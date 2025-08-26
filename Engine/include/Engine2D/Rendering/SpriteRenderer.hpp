@@ -42,8 +42,6 @@ namespace Engine2D::Rendering {
       ENGINE_SERIALIZE glm::vec4 color;
       /// If the sprite should be flipped on a given axis
       ENGINE_SERIALIZE glm::vec<2, bool> flip;
-      /// Whether the sprite renderer was updated
-      bool dirty;
 
       SpriteRenderer();
 

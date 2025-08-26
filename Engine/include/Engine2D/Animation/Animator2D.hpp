@@ -95,7 +95,7 @@ namespace Engine2D::Animation {
        * @param from The name of the source animation
        * @param index The index of this transition relative to the "from" variable
        */
-      void RemoveAnimationTransition(const std::string &from, int index);
+      void RemoveAnimationTransition(const std::string &from, size_t index);
 
       /**
        * Add's a condition to an exiting transition
@@ -106,7 +106,7 @@ namespace Engine2D::Animation {
        * @param threshold The threshold used to check the condition applied to the given parameter
        */
       void AddAnimationTransitionCondition(
-        const std::string &from, int index, const std::string &parameter, AnimationCondition condition,
+        const std::string &from, size_t index, const std::string &parameter, AnimationCondition condition,
         float threshold = 0
       );
       /**
@@ -115,7 +115,7 @@ namespace Engine2D::Animation {
        * @param index The index of this transition relative to the "from" variable
        * @param parameter The name of the parameter used to transition between the animations
        */
-      void RemoveAnimationTransitionCondition(const std::string &from, int index, const std::string &parameter);
+      void RemoveAnimationTransitionCondition(const std::string &from, size_t index, const std::string &parameter);
 
       /// @returns The given animation condition converted to a string representation
       static std::string AnimationConditionToString(AnimationCondition condition);

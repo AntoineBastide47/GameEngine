@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(EngineEditor VERSION 0.0.1)
+project(EngineEditor VERSION 0.3.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -42,6 +42,8 @@ add_executable(${EXECUTABLE_NAME}
     include/History/Commands/DeleteEntityCommand.hpp
     src/History/Commands/SelectEntityCommand.cpp
     include/History/Commands/SelectEntityCommand.hpp
+    src/Panels/EntityInspector.cpp
+    include/Panels/EntityInspector.hpp
 )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
@@ -51,25 +53,6 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 
 target_include_directories(${EXECUTABLE_NAME} PUBLIC
     include ${CMAKE_SOURCE_DIR}/SDK/Engine
-)
-
-# ImGui source files
-set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/vendor/imgui)
-set(IMGUI_SOURCES
-    ${IMGUI_DIR}/imgui.cpp
-    ${IMGUI_DIR}/imgui_demo.cpp
-    ${IMGUI_DIR}/imgui_draw.cpp
-    ${IMGUI_DIR}/imgui_tables.cpp
-    ${IMGUI_DIR}/imgui_widgets.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-)
-add_library(imgui STATIC ${IMGUI_SOURCES})
-target_include_directories(imgui PUBLIC
-    ${CMAKE_SOURCE_DIR}/vendor/imgui
-    ${CMAKE_SOURCE_DIR}/vendor/imgui/backends
-    ${CMAKE_SOURCE_DIR}/vendor/glfw/include
-    ${CMAKE_SOURCE_DIR}/vendor/glew/include
 )
 
 # === OS Specific Requirements ===
@@ -99,29 +82,8 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE
 # Build Configs
 # --------------------------
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(${EXECUTABLE_NAME} PRIVATE
-        -O3 -DNDEBUG -finline-functions -fomit-frame-pointer
-        -ffunction-sections -fdata-sections
-        -fno-fast-math -fno-strict-aliasing -frounding-math
-    )
-    target_link_options(${EXECUTABLE_NAME} PRIVATE -Wl,-O2)
-    set_target_properties(${EXECUTABLE_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${EXECUTABLE_NAME}>)
-elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-        set(SANITIZER_FLAGS "-fsanitize=address,undefined")
-        set(DEBUG_FLAGS -g -fno-omit-frame-pointer -fsanitize-address-use-after-scope)
-
-        # Apply compile and link flags properly
-        target_compile_options(${EXECUTABLE_NAME} PRIVATE ${SANITIZER_FLAGS} ${DEBUG_FLAGS})
-        target_link_options(${EXECUTABLE_NAME} PRIVATE ${SANITIZER_FLAGS} ${DEBUG_FLAGS})
-
-        # ASAN runtime options as a macro
-        add_compile_definitions(ASAN_OPTIONS="verbosity=1:halt_on_error=1:detect_leaks=1:symbolize=1")
-    endif ()
-endif ()
+include(../Engine/CMake/BuildConfig.cmake)
+setup_build_config(${EXECUTABLE_NAME})
 
 add_custom_command(
     TARGET ${EXECUTABLE_NAME} POST_BUILD
@@ -137,3 +99,6 @@ target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
     ENGINE_EDITOR=1
     MULTI_THREAD=${MULTI_THREAD}
 )
+
+include(../Engine/CMake/PlatformDetection.cmake)
+setup_platform_detection(${EXECUTABLE_NAME})

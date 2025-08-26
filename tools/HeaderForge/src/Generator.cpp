@@ -12,40 +12,13 @@
 #include <filesystem>
 
 #include "Generator.hpp"
+
+#include <iostream>
+
 #include "Parser.hpp"
 
 namespace Engine::Reflection {
-  std::string Generator::GenerateRecordContent(const std::vector<Record> &records) {
-    std::ostringstream content;
-    content << "// Auto-generated – DO NOT EDIT\n\n#pragma once\n\nnamespace Engine::Reflection {\n";
-
-    for (auto it = records.begin(); it != records.end(); ++it) {
-      GenerateRecordMacro(*it, content, it == records.end() - 1);
-    }
-    content << "} // namespace Engine::Reflection\n";
-    return content.str();
-  }
-
-  bool Generator::WriteFileIfChanged(const std::string &filePath, const std::string &content) {
-    // Check if file exists and compare content
-    if (std::filesystem::exists(filePath)) {
-      std::ifstream existingFile(filePath);
-      std::ostringstream existingContent;
-      existingContent << existingFile.rdbuf();
-      
-      if (existingContent.str() == content) {
-        // Content is identical, don't write
-        return false;
-      }
-    }
-    
-    // Content is different or file doesn't exist, write it
-    std::ofstream outputFile(filePath);
-    outputFile << content;
-    return true;
-  }
-
-  void Generator::GenerateRecordFiles(const std::vector<Record> &records) {
+  void Generator::GenerateRecordFiles(const std::vector<Record> &records, const bool overrideWrite) {
     std::unordered_map<std::string, std::vector<Record>> grouped;
     for (const auto &record: records)
       grouped[record.filePath].emplace_back(record);
@@ -57,9 +30,9 @@ namespace Engine::Reflection {
 
       // Generate content in memory first
       const std::string content = GenerateRecordContent(records);
-      
+
       // Only write if content has changed
-      WriteFileIfChanged(fileName, content);
+      WriteFileIfChanged(fileName, content, overrideWrite);
 
       const std::string header = path.parent_path().string() + "/" + path.stem().string() + path.extension().string();
       std::ifstream headerFile(header);
@@ -67,6 +40,17 @@ namespace Engine::Reflection {
       AddGeneratedInclude(header, path.stem().string() + ".gen" + path.extension().string());
       InjectSerializeMacro(header, records);
     }
+  }
+
+  std::string Generator::GenerateRecordContent(const std::vector<Record> &records) {
+    std::ostringstream content;
+    content.write("// Auto-generated – DO NOT EDIT\n\n#pragma once\n\nnamespace Engine::Reflection {\n", 80);
+
+    for (auto it = records.begin(); it != records.end(); ++it)
+      GenerateRecordMacro(*it, content, it == records.end() - 1);
+
+    content.write("} // namespace Engine::Reflection\n", 34);
+    return content.str();
   }
 
   void Generator::GenerateRecordMacro(const Record &record, std::ostream &output, const bool lastRecord) {
@@ -83,6 +67,7 @@ namespace Engine::Reflection {
     GenerateReflectionFactoryCode(record, output);
     GenerateSaveFunction(record, output);
     GenerateLoadFunction(record, output);
+    GenerateEditorRecordFunction(record, output);
 
     if (record.isClass)
       output.write("\\\n  private: \n", 14);
@@ -119,11 +104,11 @@ namespace Engine::Reflection {
       "      json = Engine::JSON::Object();\\\n", 189
     );
 
-    for (const auto &[_, name]: record.fields) {
+    for (const auto &field: record.fields) {
       output.write("      Engine::Reflection::_e_saveImpl(", 38);
-      output.write(name.c_str(), static_cast<long>(name.size()));
+      output.write(field.c_str(), static_cast<long>(field.size()));
       output.write(", format, json[\"", 16);
-      output.write(name.c_str(), static_cast<long>(name.size()));
+      output.write(field.c_str(), static_cast<long>(field.size()));
       output.write("\"]);\\\n", 6);
     }
     output.write("    }\\\n  }\\\n", 12);
@@ -141,18 +126,59 @@ namespace Engine::Reflection {
     }
 
     output.write(" \\\n", 3);
-    bool first = true;
-    for (const auto &[_, name]: record.fields) {
-      if (!first)
-        output.write("\\\n", 2);
+    for (const auto &field: record.fields) {
       output.write("      Engine::Reflection::_e_loadImpl(", 38);
-      output.write(name.c_str(), static_cast<long>(name.size()));
+      output.write(field.c_str(), static_cast<long>(field.size()));
       output.write(", format, json[\"", 16);
-      output.write(name.c_str(), static_cast<long>(name.size()));
-      output.write("\"]);", 4);
-      first = false;
+      output.write(field.c_str(), static_cast<long>(field.size()));
+      output.write("\"]);\\\n", 6);
     }
-    output.write("\\\n    }\\\n  }", 12);
+    output.write("    }\\\n  }", 10);
+  }
+
+  void Generator::GenerateEditorRecordFunction(const Record &record, std::ostream &output) {
+    output.write("\\\n  bool _e_renderInEditor(const bool readOnly) override {", 58);
+
+    if (record.editorFields.empty()) {
+      output.write("\\\n    return false;\\\n}\\\n", 24);
+      return;
+    }
+
+    output.write("\\\n    bool changed = false;\\\n", 29);
+    for (const auto &field: record.editorFields) {
+      if (field.empty())
+        continue;
+
+      output.write("    changed |= Engine::Reflection::_e_renderInEditorImpl(", 57);
+      output.write(field.c_str(), static_cast<long>(field.size()));
+      output.write(", \"", 3);
+      output.put(static_cast<char>(std::toupper(static_cast<unsigned char>(field.at(0)))));
+      if (field.size() > 1) {
+        output.write(field.c_str() + 1, static_cast<long>(field.size() - 1));
+      }
+      output.write("\", readOnly);\\\n", 15);
+    }
+
+    output.write("    return changed;\\\n  }", 24);
+  }
+
+  bool Generator::WriteFileIfChanged(
+    const std::string &filePath, const std::string &content, const bool overrideWrite
+  ) {
+    // Check if file exists and compare content
+    if (!overrideWrite && std::filesystem::exists(filePath)) {
+      std::ifstream existingFile(filePath);
+      std::ostringstream existingContent;
+      existingContent << existingFile.rdbuf();
+
+      if (existingContent.str() == content)
+        return false;
+    }
+
+    // Content is different or file doesn't exist, write it
+    std::ofstream outputFile(filePath);
+    outputFile << content;
+    return true;
   }
 
   void Generator::AddGeneratedInclude(const std::string &headerPath, const std::string &generatedFile) {

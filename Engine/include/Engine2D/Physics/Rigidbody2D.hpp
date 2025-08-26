@@ -88,6 +88,8 @@ namespace Engine2D::Physics {
       void computeInertia(const Collider2D *collider);
       /// Runs a physics step on this rigidbody
       void step();
+
+      void OnEditorValueChanged() override;
   };
 }
 

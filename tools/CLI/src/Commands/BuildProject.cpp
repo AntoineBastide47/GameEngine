@@ -53,33 +53,20 @@ void BuildProject::Run(
     std::cerr << RED << "Could not determine project name from CMakeLists.txt." << RESET;
     return;
   }
-  fs::remove_all(fs::path("./" + projectName));
 
-  const std::string prefix = "./lib" + projectName + ".";
+  fs::remove_all(fs::path("./" + projectName));
   try {
     for (const auto &entry: fs::directory_iterator("./")) {
       if (entry.is_regular_file()) {
         if (const std::string filename = entry.path().filename().string();
           filename.starts_with("lib" + projectName + ".")) {
           fs::remove(entry.path());
-          std::cout << "Removed: " << filename << std::endl;
         }
       }
     }
   } catch (const fs::filesystem_error &e) {
-    std::cerr << "Error removing files: " << e.what() << std::endl;
+    std::cerr << RED << "Error removing files: " << e.what() << RESET;
   }
-
-  // Header Forge
-  const std::string engineInclude = "-I" + enginePath + "/Engine ";
-  const std::string vendorInclude =
-      "-I" + enginePath + "/vendor/glfw/include "
-      "-I" + enginePath + "/vendor/glm "
-      "-I" + enginePath + "/vendor/cpptrace/include "
-      "-I" + enginePath + "/build/debug/_cmrc/include ";
-  //std::system(
-  //  ("./header-forge --parse ./Game/include --compilerArgs -I./Game/include " + engineInclude + vendorInclude).c_str()
-  //);
 
   const std::string parallel = " --parallel " + std::to_string(GetCoreCount());
   const std::string buildDir = fromEditor ? "build_editor" : "build";

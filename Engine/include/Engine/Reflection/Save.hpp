@@ -9,21 +9,8 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Reflection/Concepts.hpp"
-#include "Engine/Macros/Utils.hpp"
 #include "Engine/Data/JSON.hpp"
-
-namespace Engine::Reflection {
-  class ReflectionFactory;
-}
-
-#define _e_SERIALIZE_RECORD \
-  friend class Engine::Reflection::ReflectionFactory; \
-  public: \
-    [[nodiscard]] std::string_view ClassNameQualified() const override { return ENGINE_CLASS_NAME_FULLY_QUALIFIED; } \
-    [[nodiscard]] std::string_view ClassName() const override { return ENGINE_CLASS_NAME; }
-#define _e_SERIALIZE_STRING "serialize"
-#define _e_NON_SERIALIZABLE_STRING "non_serializable"
+#include "Engine/Reflection/Concepts.hpp"
 
 namespace Engine::Reflection {
   template<typename T> static void _e_saveImpl(const T &data, const Format format, Engine::JSON &json) {
@@ -57,6 +44,7 @@ No save overloads were found for the requested type.
 
   template<IsContainer T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (format == JSON) {
+      json = JSON::Array();
       json.ReserveAndResize(data.size());
 
       size_t i = 0;
@@ -70,7 +58,9 @@ No save overloads were found for the requested type.
 
   template<IsMap T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (format == JSON) {
-      json.Reserve(data.size());
+      json = JSON::Object();
+      if constexpr (requires { data.reserve(); })
+        json.Reserve(data.size());
 
       for (const auto &[k, v]: data) {
         Engine::JSON key;
@@ -107,7 +97,7 @@ No save overloads were found for the requested type.
 
   template<IsSmartPtr T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (data) {
-      if constexpr (IsSTL<typename T::element_type>) {
+      if constexpr (IsNotReflectable<typename T::element_type>) {
         _e_saveImpl(*data, format, json);
       } else {
         json = JSON::Object();
@@ -119,7 +109,7 @@ No save overloads were found for the requested type.
       json = {};
   }
 
-  template<IsNotSTL T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
+  template<IsReflectable T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if constexpr (requires {
       data._e_save(format, json);
     }) {

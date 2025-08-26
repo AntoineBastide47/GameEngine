@@ -8,9 +8,6 @@
 #include "History/EditorCommand.hpp"
 
 namespace Editor::History {
-  CommandHistory::CommandHistory()
-    : currentIndex(-1), lastSavedIndex(-1), maxHistorySize(100000) {}
-
   void CommandHistory::Create(std::unique_ptr<EditorCommand> command) {
     pendingCommands.emplace_back(std::move(command));
   }
@@ -29,50 +26,47 @@ namespace Editor::History {
     }
   }
 
-  bool CommandHistory::CanUndo() const {
+  bool CommandHistory::CanUndo() {
     return currentIndex >= 0;
   }
 
-  bool CommandHistory::CanRedo() const {
+  bool CommandHistory::CanRedo() {
     return currentIndex < static_cast<int>(commands.size()) - 1;
   }
 
-  bool CommandHistory::HasUnsavedChanges() const {
-    return lastSavedIndex != currentIndex;
-  }
-
-  void CommandHistory::MarkSaved() {
-    lastSavedIndex = currentIndex;
+  bool CommandHistory::HasAffectedScene() {
+    for (const auto &command: commands)
+      if (command->AffectsScene())
+        return true;
+    return false;
   }
 
   void CommandHistory::Clear() {
     commands.clear();
     currentIndex = -1;
-    lastSavedIndex = -1;
   }
 
   // For debugging
-  std::string CommandHistory::History() const {
+  std::string CommandHistory::History() {
     std::string history;
-    for (size_t i = 0; i < commands.size(); ++i) {
+    const int size = std::distance(commands.begin(), commands.end());
+    for (int i = 0; i < size; ++i) {
       std::string entry = commands.at(i)->Name();
       if (i == currentIndex)
         entry += " <-- current";
-      if (i == lastSavedIndex)
-        entry += " [saved]";
       history += entry;
 
-      if (i < commands.size() - 1)
+      if (i < size - 1)
         history += '\n';
     }
     return history;
   }
 
-  std::string CommandHistory::UndoCmdName() const {
+  std::string CommandHistory::UndoCmdName() {
     return commands.at(currentIndex)->Name();
   }
 
-  std::string CommandHistory::RedoCmdName() const {
+  std::string CommandHistory::RedoCmdName() {
     return commands.at(currentIndex + 1)->Name();
   }
 

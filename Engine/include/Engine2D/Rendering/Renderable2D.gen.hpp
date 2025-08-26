@@ -23,5 +23,11 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(renderType, format, json["renderType"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(renderOrder, "RenderOrder", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(renderType, "RenderType", readOnly);\
+    return changed;\
+  }\
   private: 
 } // namespace Engine::Reflection

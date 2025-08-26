@@ -29,6 +29,15 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(defaultAnimationName, format, json["defaultAnimationName"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(animations, "Animations", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(parameters, "Parameters", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(transitions, "Transitions", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(currentAnimationName, "CurrentAnimationName", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(defaultAnimationName, "DefaultAnimationName", readOnly);\
+    return changed;\
+  }\
   private: 
 
   #define SERIALIZE_PARAMETER _e_SERIALIZE_RECORD \
@@ -46,6 +55,11 @@ namespace Engine::Reflection {
     if (format == Engine::Reflection::Format::JSON) { \
       Engine::Reflection::_e_loadImpl(type, format, json["type"]);\
     }\
+  }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(type, "Type", readOnly);\
+    return changed;\
   }
 
   #define SERIALIZE_TRANSITIONCONDITION _e_SERIALIZE_RECORD \
@@ -67,6 +81,13 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(condition, format, json["condition"]);\
       Engine::Reflection::_e_loadImpl(threshold, format, json["threshold"]);\
     }\
+  }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(parameter, "Parameter", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(condition, "Condition", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(threshold, "Threshold", readOnly);\
+    return changed;\
   }
 
   #define SERIALIZE_ANIMATIONTRANSITION _e_SERIALIZE_RECORD \
@@ -90,5 +111,13 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(exitTime, format, json["exitTime"]);\
       Engine::Reflection::_e_loadImpl(conditions, format, json["conditions"]);\
     }\
+  }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(to, "To", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(hasExitTime, "HasExitTime", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(exitTime, "ExitTime", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(conditions, "Conditions", readOnly);\
+    return changed;\
   }
 } // namespace Engine::Reflection

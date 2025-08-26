@@ -7,6 +7,8 @@
 #ifndef CONCEPTS_HPP
 #define CONCEPTS_HPP
 
+#include <glm/glm.hpp>
+
 namespace Engine {
   class JSON;
 }
@@ -14,16 +16,35 @@ namespace Engine {
 namespace Engine::Reflection {
   struct Reflectable;
 
-  template<typename T> concept IsString =
-      std::is_same_v<std::remove_cvref_t<T>, std::string> ||
+  template<typename T> concept IsOwningString = std::is_same_v<std::remove_cvref_t<T>, std::string>;
+
+  template<typename T> concept IsNonOwningString =
       std::is_same_v<std::remove_cvref_t<T>, std::string_view> ||
       std::is_same_v<std::remove_cvref_t<T>, const char *> ||
       std::is_same_v<std::remove_cvref_t<T>, char *>;
+
+  template<typename T> concept IsString = IsOwningString<T> || IsNonOwningString<T>;
 
   template<typename T> concept IsNumber =
       std::is_arithmetic_v<std::remove_cvref_t<T>> &&
       !std::is_same_v<std::remove_cvref_t<T>, bool> &&
       !IsString<T>;
+
+  template<typename T>
+  struct is_glm_vec234 : std::false_type {};
+
+  template<glm::length_t N, typename T, glm::qualifier Q>
+  struct is_glm_vec234<glm::vec<N, T, Q>> : std::bool_constant<N == 2 || N == 3 || N == 4> {};
+
+  template<typename T>
+  concept IsGlmVec234Alt = is_glm_vec234<std::remove_cvref_t<T>>::value;
+
+  template<typename T> concept IsNonRecursive =
+      IsNumber<T> || IsString<T> || std::is_same_v<std::remove_cvref_t<T>, bool> || IsGlmVec234Alt<T>;
+
+  template<typename T> concept IsTuple = requires {
+    std::tuple_size_v<std::remove_cvref_t<T>>;
+  };
 
   template<typename T> concept IsPair =
       requires {
@@ -63,63 +84,19 @@ namespace Engine::Reflection {
 
   template<typename T> concept IsSmartPtr = IsSharedPtr<T> || IsUniquePtr<T>;
 
-  template<typename T> concept IsNotSTL = std::is_base_of_v<Reflectable, std::remove_cvref_t<T>>;
-  template<typename T> concept IsSTL = !IsNotSTL<T>;
+  template<typename T> concept IsReflectable = std::is_base_of_v<Reflectable, std::remove_cvref_t<T>>;
+  template<typename T> concept IsNotReflectable = !IsReflectable<T>;
+  template<typename T>
+  concept IsReflectablePointer = requires {
+    requires std::is_pointer_v<T>;
+    requires std::is_base_of_v<Reflectable, std::remove_pointer_t<T>>;
+  };
 
   enum Format {
     JSON, TEXT, BINARY
   };
 
   template<typename> static constexpr bool _e_f = false;
-
-  // detection trait
-  template<typename, typename = void>
-  struct hasSaveFunction : std::false_type {};
-
-  template<typename U>
-  struct hasSaveFunction<
-        U,
-        std::void_t<
-          decltype(
-            true
-              ? _e_save(
-                std::declval<U>(),
-                std::declval<Format>(),
-                std::declval<std::ostringstream &>(),
-                std::declval<bool>(),
-                std::declval<int>()
-              )
-              : std::declval<const U>()._e_save(
-                std::declval<Format>(),
-                std::declval<std::ostringstream &>(),
-                std::declval<bool>(),
-                std::declval<int>()
-              )
-          )
-        >
-      > : std::true_type {};
-
-  template<typename, typename = void>
-  struct hasLoadFunction : std::false_type {};
-
-  template<typename U>
-  struct hasLoadFunction<
-        U,
-        std::void_t<
-          decltype(
-            true
-              ? _e_load(
-                std::declval<U &>(),
-                std::declval<Format>(),
-                std::declval<const Engine::JSON &>()
-              )
-              : std::declval<U>()._e_load(
-                std::declval<Format>(),
-                std::declval<const Engine::JSON &>()
-              )
-          )
-        >
-      > : std::true_type {};
 
   template<typename T, typename Format>
   concept HasFreeSave = requires(T &data, Format fmt, Engine::JSON &json) {

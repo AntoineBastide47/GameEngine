@@ -43,16 +43,23 @@ namespace Engine2D::Rendering {
       /// @returns the shader that will be used for rendering
       [[nodiscard]] int16_t RenderOrder() const;
     protected:
-      Engine::Rendering::Shader *shader;
-      Rendering::Sprite *sprite;
+      /// The order in which to render this renderable
       ENGINE_SERIALIZE int16_t renderOrder;
+      /// The type of renderable to render
       ENGINE_SERIALIZE RenderableType renderType;
+      /// The shader tied to this renderable
+      ENGINE_SHOW_IN_INSPECTOR Engine::Rendering::Shader *shader;
+      /// The sprite tied to this renderable
+      ENGINE_SHOW_IN_INSPECTOR Rendering::Sprite *sprite;
+      /// Whether the sprite renderer was updated
+      bool dirty;
 
       Renderable2D();
       explicit Renderable2D(RenderableType type);
 
       void OnSerialize(Engine::Reflection::Format format, Engine::JSON &json) const override;
       void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
+      void OnEditorValueChanged() override;
   };
 }
 

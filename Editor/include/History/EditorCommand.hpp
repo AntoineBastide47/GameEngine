@@ -16,12 +16,17 @@ namespace Editor::History {
       virtual void Execute() = 0;
       virtual void Undo() = 0;
       virtual std::string Name() const = 0;
+
+      virtual bool AffectsScene() {
+        return true;
+      }
   };
 
   template<typename ExecuteFunc, typename UndoFunc> class LambdaCommand final : public EditorCommand {
     public:
-      LambdaCommand(const std::string &name, ExecuteFunc executeFunc, UndoFunc undoFunc)
-        : commandName(name), executeFunc(std::move(executeFunc)), undoFunc(std::move(undoFunc)) {}
+      LambdaCommand(const std::string &name, ExecuteFunc executeFunc, UndoFunc undoFunc, const bool affectsScene = true)
+        : commandName(name), executeFunc(std::move(executeFunc)), undoFunc(std::move(undoFunc)),
+          affectsScene(affectsScene) {}
 
       void Execute() override {
         executeFunc();
@@ -34,10 +39,15 @@ namespace Editor::History {
       std::string Name() const override {
         return commandName;
       }
+
+      bool AffectsScene() override {
+        return affectsScene;
+      }
     private:
       std::string commandName;
       ExecuteFunc executeFunc;
       UndoFunc undoFunc;
+      const bool affectsScene;
   };
 
   // Helper function to create lambda commands with type deduction

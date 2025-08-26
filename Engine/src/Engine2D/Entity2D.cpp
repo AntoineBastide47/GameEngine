@@ -25,6 +25,11 @@ namespace Engine2D {
       transform(std::unique_ptr<Transform2D>(new Transform2D(position, rotation, scale, this, parent))),
       scene(nullptr) {}
 
+  Entity2D::~Entity2D() {
+    destroy();
+    free();
+  }
+
   bool Entity2D::operator==(const Entity2D &entity) const {
     return id == entity.id;
   }
@@ -95,6 +100,7 @@ namespace Engine2D {
   }
 
   void Entity2D::initialize() {
+    transform->entity = this;
     transform->onTransformChange();
     if (!transform->parent)
       transform->SetParent(nullptr);
@@ -109,15 +115,17 @@ namespace Engine2D {
       remove();
     for (auto it = allComponents.begin(); it != allComponents.end(); ++it)
       (*it)->recall();
-    SetActive(false);
+    active = false;
     destroyed = true;
-    transform->SetParent(nullptr);
 
-    for (const auto child: *transform) {
-      child->Transform()->parent = nullptr;
-      child->destroy();
+    if (transform) {
+      for (const auto child: *transform) {
+        child->Transform()->parent = nullptr;
+        child->destroy();
+      }
+      transform->parent = nullptr;
+      transform->children.clear();
     }
-    transform->children.clear();
   }
 
   void Entity2D::free() {

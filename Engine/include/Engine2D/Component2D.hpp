@@ -41,14 +41,16 @@ namespace Engine2D {
 
       friend std::ostream &operator<<(std::ostream &os, const Component2D &component);
     protected:
+      /// Whether this component is active in the scene
+      /// @warning Do not use directly, use the getter and setter instead as the component being active entails more that just this flag being true
+      ENGINE_SERIALIZE_HIDDEN bool active;
+
       Component2D();
+
       /// Internal call to forward this component to the system that handles it
       virtual void forward() {}
       /// Internal call to recall this component to the system that handles it
       virtual void recall() {}
-      /// Whether this component is active in the scene
-      /// @warning Do not use directly, use the getter and setter instead as the component being active entails more that just this flag being true
-      ENGINE_SERIALIZE bool active;
     private:
       /// The entity this component is attached to
       Entity2D *entity;

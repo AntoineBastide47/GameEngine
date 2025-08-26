@@ -19,5 +19,9 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
     }\
   }\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    return false;\
+}\
+\
   private: 
 } // namespace Engine::Reflection

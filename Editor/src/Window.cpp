@@ -57,6 +57,19 @@ namespace Editor {
       }
 
       glfwSwapBuffers(instance->window);
+
+      using namespace std::chrono;
+
+      constexpr float targetRenderRate = 1.0f / 60.0f;
+      static auto nextFrameTime = steady_clock::now();
+      nextFrameTime += duration_cast<steady_clock::duration>(duration<float>(targetRenderRate));
+
+      if (const auto now = steady_clock::now(); nextFrameTime > now) {
+        if (const auto sleepTime = nextFrameTime - now - microseconds(200); sleepTime > microseconds(0))
+          std::this_thread::sleep_for(sleepTime);
+        while (steady_clock::now() < nextFrameTime);
+      } else
+        nextFrameTime = now;
     }
 
     quit();
@@ -114,7 +127,7 @@ namespace Editor {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetWindowCloseCallback(window, window_close_callback);
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     // The official code for "Setting Your Raster Position to a Pixel Location" (i.e., set up a camera for 2D screen)
     glMatrixMode(GL_PROJECTION);

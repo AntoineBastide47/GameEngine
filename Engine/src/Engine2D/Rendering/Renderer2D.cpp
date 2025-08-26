@@ -147,7 +147,6 @@ namespace Engine2D::Rendering {
       );
 
       // Only extract data for valid sprite renderers
-      const auto it = std::ranges::find_if(renderers, cannotBeRendered);
       uint32_t start = 0, count = 0, currentShaderID = 0, currentTextureID = 0, index = 0;
 
       flushList.clear();
@@ -201,7 +200,6 @@ namespace Engine2D::Rendering {
   ) const {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
-    size_t count = renderers.size();
     for (size_t i = 0; i < renderers.size(); i++) {
       auto &renderer = renderers[i];
       const size_t offset = i * STRIDE;
@@ -210,7 +208,6 @@ namespace Engine2D::Rendering {
         data += 2;
         *data++ = 0.0f;
         *data = 0.0f;
-        count--;
       } else if (renderer->dirty) {
         extractRendererData(renderer, &staticBatchData[offset]);
         renderer->dirty = false;
