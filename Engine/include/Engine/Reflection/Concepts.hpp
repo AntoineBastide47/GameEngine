@@ -30,8 +30,7 @@ namespace Engine::Reflection {
       !std::is_same_v<std::remove_cvref_t<T>, bool> &&
       !IsString<T>;
 
-  template<typename T>
-  struct is_glm_vec234 : std::false_type {};
+  template<typename> struct is_glm_vec234 : std::false_type {};
 
   template<glm::length_t N, typename T, glm::qualifier Q>
   struct is_glm_vec234<glm::vec<N, T, Q>> : std::bool_constant<N == 2 || N == 3 || N == 4> {};
@@ -83,6 +82,8 @@ namespace Engine::Reflection {
   };
 
   template<typename T> concept IsSmartPtr = IsSharedPtr<T> || IsUniquePtr<T>;
+
+  template<typename T> concept IsEnum = std::is_enum_v<T>;
 
   template<typename T> concept IsReflectable = std::is_base_of_v<Reflectable, std::remove_cvref_t<T>>;
   template<typename T> concept IsNotReflectable = !IsReflectable<T>;

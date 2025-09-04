@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.6] - 2025-09-DD
+### Added
+- **[[ReflectionFactory](Engine/include/Engine/Reflection/ReflectionFactory.hpp)]**: enums and their values can be reflected, converted to and from strings
+- **[[RenderInEditor](Engine/include/Engine/Reflection/RenderInEditor.hpp)]**: enum rendering
+- **[[CLI/BuildSDK](tools/CLI/include/Commands/BuildSdk.hpp)]**: the LICENSE is now also included
+- **[[HeaderForge/Parser](tools/HeaderForge/include/Parser.hpp)]**: parses enums and adds them to their reflected record
+- **[[HeaderForge/Generator](tools/HeaderForge/include/Generator.hpp)]**: generates the enum reflection code
+### Changed
+### Fixed
+- **[[EntityInspector](Editor/include/Panels/EntityInspector.hpp)]**:
+  - child entities no longer rendered after being destroyed
+  - when the selected entity is destroyed, it is no longer rendered
+- **[[Renderable2D](Engine/include/Engine2D/Rendering/Renderable2D.hpp)]**: flip now works correctly
+### Removed
+
 ## [0.10.5] - 2025-08-26
 ### Added
 - **[[EditorCommand](Editor/include/History/EditorCommand.hpp)]**: a flag to determine if it changes the affected scene, defaults to true
@@ -13,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - macros for showing and hiding elements in the inspector
   - macros for showing and not serializing, serializing and hiding in the inspector
   - render in editor function and OnEditorValueChanged callback called when the user interacts with components in the editor
-- **[[RenderInEditor](Engine/include/Engine/Reflection/RenderInEditor.hpp)]**: reflection class used to render STL and Reflectable types in the editor 
+- **[[RenderInEditor](Engine/include/Engine/Reflection/RenderInEditor.hpp)]**: reflection class used to render STL and Reflectable types in the editor
 - **[[HeaderForge/Parser](tools/HeaderForge/include/Parser.hpp)]**: parses the editor related macros to extract which fields can be rendered in the editor
 - **[[HeaderForge/Generator](tools/HeaderForge/include/Generator.hpp)]**: generates the render in editor function for each reflectable type
 ### Changed
@@ -21,7 +36,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **[[Save](Engine/include/Engine/Reflection/Save.hpp)]**: moved the reflection macros to Reflectable
 ### Fixed
 - **[[Load](Engine/include/Engine/Reflection/Load.hpp)]**: non string map keys are now correctly deserialized
-### Removed
 
 ## [0.10.4] - 2025-08-21
 ### Added

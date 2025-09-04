@@ -21,12 +21,12 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(animations, format, json["animations"]);\
-      Engine::Reflection::_e_loadImpl(parameters, format, json["parameters"]);\
-      Engine::Reflection::_e_loadImpl(transitions, format, json["transitions"]);\
-      Engine::Reflection::_e_loadImpl(currentAnimationName, format, json["currentAnimationName"]);\
-      Engine::Reflection::_e_loadImpl(defaultAnimationName, format, json["defaultAnimationName"]);\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(animations, format, json.At("animations"));\
+      Engine::Reflection::_e_loadImpl(parameters, format, json.At("parameters"));\
+      Engine::Reflection::_e_loadImpl(transitions, format, json.At("transitions"));\
+      Engine::Reflection::_e_loadImpl(currentAnimationName, format, json.At("currentAnimationName"));\
+      Engine::Reflection::_e_loadImpl(defaultAnimationName, format, json.At("defaultAnimationName"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\
@@ -39,6 +39,39 @@ namespace Engine::Reflection {
     return changed;\
   }\
   private: 
+
+
+  #define REFLECT_ANIMATIONCONDITION\
+  static inline const bool _reg_ANIMATIONCONDITION = [] {\
+    Engine::Reflection::ReflectionFactory::RegisterEnum<Engine2D::Animation::Animator2D::AnimationCondition>(\
+    "Engine2D::Animation::Animator2D::AnimationCondition", {\
+      std::pair<std::string, Engine2D::Animation::Animator2D::AnimationCondition>{"LESS_THAN", Engine2D::Animation::Animator2D::AnimationCondition::LESS_THAN},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::AnimationCondition>{"LESS_OR_EQUAL", Engine2D::Animation::Animator2D::AnimationCondition::LESS_OR_EQUAL},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::AnimationCondition>{"GREATER_THAN", Engine2D::Animation::Animator2D::AnimationCondition::GREATER_THAN},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::AnimationCondition>{"GREATER_OR_EQUAL", Engine2D::Animation::Animator2D::AnimationCondition::GREATER_OR_EQUAL},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::AnimationCondition>{"EQUAL", Engine2D::Animation::Animator2D::AnimationCondition::EQUAL},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::AnimationCondition>{"NOT_EQUAL", Engine2D::Animation::Animator2D::AnimationCondition::NOT_EQUAL},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::AnimationCondition>{"IF_TRUE", Engine2D::Animation::Animator2D::AnimationCondition::IF_TRUE},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::AnimationCondition>{"IF_FALSE", Engine2D::Animation::Animator2D::AnimationCondition::IF_FALSE},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::AnimationCondition>{"IF_TRIGGER", Engine2D::Animation::Animator2D::AnimationCondition::IF_TRIGGER},\
+      }\
+    );\
+    return true;\
+  }();\
+
+
+  #define REFLECT_PARAMETERTYPE\
+  static inline const bool _reg_PARAMETERTYPE = [] {\
+    Engine::Reflection::ReflectionFactory::RegisterEnum<Engine2D::Animation::Animator2D::ParameterType>(\
+    "Engine2D::Animation::Animator2D::ParameterType", {\
+      std::pair<std::string, Engine2D::Animation::Animator2D::ParameterType>{"BOOL", Engine2D::Animation::Animator2D::ParameterType::BOOL},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::ParameterType>{"INT", Engine2D::Animation::Animator2D::ParameterType::INT},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::ParameterType>{"FLOAT", Engine2D::Animation::Animator2D::ParameterType::FLOAT},\
+      std::pair<std::string, Engine2D::Animation::Animator2D::ParameterType>{"TRIGGER", Engine2D::Animation::Animator2D::ParameterType::TRIGGER},\
+      }\
+    );\
+    return true;\
+  }();
 
   #define SERIALIZE_PARAMETER _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
@@ -53,7 +86,7 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(type, format, json["type"]);\
+      Engine::Reflection::_e_loadImpl(type, format, json.At("type"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\
@@ -77,9 +110,9 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(parameter, format, json["parameter"]);\
-      Engine::Reflection::_e_loadImpl(condition, format, json["condition"]);\
-      Engine::Reflection::_e_loadImpl(threshold, format, json["threshold"]);\
+      Engine::Reflection::_e_loadImpl(parameter, format, json.At("parameter"));\
+      Engine::Reflection::_e_loadImpl(condition, format, json.At("condition"));\
+      Engine::Reflection::_e_loadImpl(threshold, format, json.At("threshold"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\
@@ -106,10 +139,10 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(to, format, json["to"]);\
-      Engine::Reflection::_e_loadImpl(hasExitTime, format, json["hasExitTime"]);\
-      Engine::Reflection::_e_loadImpl(exitTime, format, json["exitTime"]);\
-      Engine::Reflection::_e_loadImpl(conditions, format, json["conditions"]);\
+      Engine::Reflection::_e_loadImpl(to, format, json.At("to"));\
+      Engine::Reflection::_e_loadImpl(hasExitTime, format, json.At("hasExitTime"));\
+      Engine::Reflection::_e_loadImpl(exitTime, format, json.At("exitTime"));\
+      Engine::Reflection::_e_loadImpl(conditions, format, json.At("conditions"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\

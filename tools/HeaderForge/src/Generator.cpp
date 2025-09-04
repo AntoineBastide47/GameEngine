@@ -4,17 +4,14 @@
 // Date: 18.06.2025
 //
 
+#include <filesystem>
 #include <fstream>
 #include <ranges>
 #include <regex>
 #include <set>
 #include <sstream>
-#include <filesystem>
 
 #include "Generator.hpp"
-
-#include <iostream>
-
 #include "Parser.hpp"
 
 namespace Engine::Reflection {
@@ -39,6 +36,9 @@ namespace Engine::Reflection {
 
       AddGeneratedInclude(header, path.stem().string() + ".gen" + path.extension().string());
       InjectSerializeMacro(header, records);
+
+      for (const auto &record: records)
+        InjectReflectMacro(header, record.enums);
     }
   }
 
@@ -46,20 +46,33 @@ namespace Engine::Reflection {
     std::ostringstream content;
     content.write("// Auto-generated – DO NOT EDIT\n\n#pragma once\n\nnamespace Engine::Reflection {\n", 80);
 
-    for (auto it = records.begin(); it != records.end(); ++it)
-      GenerateRecordMacro(*it, content, it == records.end() - 1);
+    for (auto it = records.begin(); it != records.end(); ++it) {
+      GenerateRecordMacro(*it, content);
+      for (auto iit = it->enums.begin(); iit != it->enums.end(); ++iit)
+        GenerateEnumReflectionMacro(*iit, content, iit == it->enums.end() - 1);
+
+      const bool lastRecord = it == records.end() - 1;
+      if (!lastRecord) {
+        if (!it->isClass)
+          content.put('\n');
+        content.put('\n');
+      }
+
+      if (lastRecord && !it->isClass)
+        content.put('\n');
+    }
 
     content.write("} // namespace Engine::Reflection\n", 34);
     return content.str();
   }
 
-  void Generator::GenerateRecordMacro(const Record &record, std::ostream &output, const bool lastRecord) {
+  void Generator::GenerateRecordMacro(const Record &record, std::ostream &output) {
     std::string name;
     if (const auto pos = record.name.rfind("::"); pos == std::string::npos)
       name = record.name;
     else
       name = record.name.substr(pos + 2);
-    std::ranges::transform(name, name.begin(), ::toupper);
+    std::ranges::transform(name, name.begin(), toupper);
     output.write("  #define SERIALIZE_", 20);
     output.write(name.c_str(), static_cast<long>(name.size()));
     output.write(" _e_SERIALIZE_RECORD \\\n", 23);
@@ -71,15 +84,6 @@ namespace Engine::Reflection {
 
     if (record.isClass)
       output.write("\\\n  private: \n", 14);
-
-    if (!lastRecord) {
-      if (!record.isClass)
-        output.put('\n');
-      output.put('\n');
-    }
-
-    if (lastRecord && !record.isClass)
-      output.put('\n');
   }
 
   void Generator::GenerateReflectionFactoryCode(const Record &record, std::ostream &output) {
@@ -90,10 +94,10 @@ namespace Engine::Reflection {
     output.write(record.name.c_str(), static_cast<long>(record.name.size()));
     output.write(">(\"", 3);
     output.write(record.name.c_str(), static_cast<long>(record.name.size()));
-    output.write("\");\\\n", 5);
     output.write(
+      "\");\\\n"
       "    return true;\\\n"
-      "  }();\\\n", 26
+      "  }();\\\n", 31
     );
   }
 
@@ -129,9 +133,9 @@ namespace Engine::Reflection {
     for (const auto &field: record.fields) {
       output.write("      Engine::Reflection::_e_loadImpl(", 38);
       output.write(field.c_str(), static_cast<long>(field.size()));
-      output.write(", format, json[\"", 16);
+      output.write(", format, json.At(\"", 19);
       output.write(field.c_str(), static_cast<long>(field.size()));
-      output.write("\"]);\\\n", 6);
+      output.write("\"));\\\n", 6);
     }
     output.write("    }\\\n  }", 10);
   }
@@ -160,6 +164,51 @@ namespace Engine::Reflection {
     }
 
     output.write("    return changed;\\\n  }", 24);
+  }
+
+  void Generator::GenerateEnumReflectionMacro(const Enum &enumerator, std::ostream &output, const bool lastEnum) {
+    std::string name;
+    if (const auto pos = enumerator.name.rfind("::"); pos == std::string::npos)
+      name = enumerator.name;
+    else
+      name = enumerator.name.substr(pos + 2);
+    std::ranges::transform(name, name.begin(), toupper);
+
+    output.write("\n\n  #define REFLECT_", 20);
+    output.write(name.c_str(), static_cast<long>(name.size()));
+    output.write("\\\n  static inline const bool _reg_", 34);
+    output.write(name.c_str(), static_cast<long>(name.size()));
+    output.write(
+      " = [] {\\\n"
+      "    Engine::Reflection::ReflectionFactory::RegisterEnum<", 65
+    );
+    output.write(enumerator.name.c_str(), static_cast<long>(enumerator.name.size()));
+    output.write(">(\\\n    \"", 9);
+    output.write(enumerator.name.c_str(), static_cast<long>(enumerator.name.size()));
+    output.write("\", {\\\n", 6);
+
+    for (const auto &value: enumerator.values) {
+      output.write("      std::pair<std::string, ", 29);
+      output.write(enumerator.name.c_str(), static_cast<long>(enumerator.name.size()));
+      output.write(">{\"", 3);
+      output.write(value.c_str(), static_cast<long>(value.size()));
+      output.write("\", ", 3);
+      output.write(enumerator.name.c_str(), static_cast<long>(enumerator.name.size()));
+      output.write("::", 2);
+      output.write(value.c_str(), static_cast<long>(value.size()));
+      output.write("},\\\n", 4);
+    }
+
+    output.write(
+      "      }\\\n"
+      "    );\\\n"
+      "    return true;\\\n"
+      "  }();", 41
+    );
+
+    if (!lastEnum)
+      output.put('\\');
+    output.put('\n');
   }
 
   bool Generator::WriteFileIfChanged(
@@ -236,7 +285,7 @@ namespace Engine::Reflection {
       if (const auto pos = record.name.rfind("::"); pos != std::string::npos)
         name = record.name.substr(pos + 2);
       std::string upperName = name;
-      std::ranges::transform(upperName, upperName.begin(), ::toupper);
+      std::ranges::transform(upperName, upperName.begin(), toupper);
 
       const std::regex declaration("^\\s*(class|struct)\\s+" + name + "\\b");
       for (size_t i = 0; i < lines.size(); ++i) {
@@ -258,6 +307,63 @@ namespace Engine::Reflection {
               lines.insert(
                 lines.begin() + static_cast<long>(insertLine),
                 lines[i].substr(0, leadingWhitespace) + "  SERIALIZE_" + upperName
+              );
+              modified = true;
+            }
+          }
+        }
+      }
+    }
+
+    // Only write the file if content has changed
+    if (modified) {
+      std::ofstream outFile(headerPath, std::ios::trunc);
+      for (const auto &l: lines)
+        outFile << l << "\n";
+    }
+  }
+
+  void Generator::InjectReflectMacro(const std::string &headerPath, const std::vector<Enum> &enums) {
+    std::ifstream inFile(headerPath);
+    if (!inFile)
+      throw std::runtime_error("Cannot open header file: " + headerPath);
+
+    std::vector<std::string> originalLines;
+    std::string line;
+    while (std::getline(inFile, line))
+      originalLines.push_back(line);
+    inFile.close();
+
+    std::vector<std::string> lines = originalLines;
+    bool modified = false;
+
+    for (const auto &enumerator: enums) {
+      std::string name = enumerator.name;
+      if (const auto pos = enumerator.name.rfind("::"); pos != std::string::npos)
+        name = enumerator.name.substr(pos + 2);
+      std::string upperName = name;
+      std::ranges::transform(upperName, upperName.begin(), toupper);
+
+      const std::regex declaration("^\\s*(enum)\\s+" + name + "\\b");
+      for (size_t i = 0; i < lines.size(); ++i) {
+        if (std::regex_search(lines[i], declaration)) {
+          // Find opening brace {
+          size_t braceLine = i;
+          while (braceLine < lines.size() && lines[braceLine].find('}') == std::string::npos)
+            ++braceLine;
+
+          if (braceLine < lines.size()) {
+            // Check if macro already exists
+            if (size_t insertLine = braceLine + 1;
+              insertLine < lines.size() && lines[insertLine].find("REFLECT_" + upperName) == std::string::npos) {
+              size_t leadingWhitespace = 0;
+              while (leadingWhitespace < lines[i].size() && (
+                       lines[i][leadingWhitespace] == ' ' || lines[i][leadingWhitespace] == '\t'))
+                ++leadingWhitespace;
+
+              lines.insert(
+                lines.begin() + static_cast<long>(insertLine),
+                lines[i].substr(0, leadingWhitespace) + "REFLECT_" + upperName
               );
               modified = true;
             }

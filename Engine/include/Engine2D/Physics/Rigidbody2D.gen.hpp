@@ -25,16 +25,16 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(isKinematic, format, json["isKinematic"]);\
-      Engine::Reflection::_e_loadImpl(affectedByGravity, format, json["affectedByGravity"]);\
-      Engine::Reflection::_e_loadImpl(linearVelocity, format, json["linearVelocity"]);\
-      Engine::Reflection::_e_loadImpl(angularVelocity, format, json["angularVelocity"]);\
-      Engine::Reflection::_e_loadImpl(angularDamping, format, json["angularDamping"]);\
-      Engine::Reflection::_e_loadImpl(staticFriction, format, json["staticFriction"]);\
-      Engine::Reflection::_e_loadImpl(dynamicFriction, format, json["dynamicFriction"]);\
-      Engine::Reflection::_e_loadImpl(mass, format, json["mass"]);\
-      Engine::Reflection::_e_loadImpl(inertia, format, json["inertia"]);\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(isKinematic, format, json.At("isKinematic"));\
+      Engine::Reflection::_e_loadImpl(affectedByGravity, format, json.At("affectedByGravity"));\
+      Engine::Reflection::_e_loadImpl(linearVelocity, format, json.At("linearVelocity"));\
+      Engine::Reflection::_e_loadImpl(angularVelocity, format, json.At("angularVelocity"));\
+      Engine::Reflection::_e_loadImpl(angularDamping, format, json.At("angularDamping"));\
+      Engine::Reflection::_e_loadImpl(staticFriction, format, json.At("staticFriction"));\
+      Engine::Reflection::_e_loadImpl(dynamicFriction, format, json.At("dynamicFriction"));\
+      Engine::Reflection::_e_loadImpl(mass, format, json.At("mass"));\
+      Engine::Reflection::_e_loadImpl(inertia, format, json.At("inertia"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\

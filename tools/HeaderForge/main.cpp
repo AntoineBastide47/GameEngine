@@ -19,7 +19,7 @@
 #define PREPROCESS_CMD_START "clang++ -std=c++20 -E -DHEADER_FORGE_ENABLE_ANNOTATIONS "
 #define PREPROCESS_CMD_END " " OS_INCLUDES " " ALL_IN_ONE_CPP " -o " ALL_IN_ONE_II
 
-constexpr static std::array version = {1, 1, 1};
+constexpr static std::array version = {1, 2, 0};
 
 namespace fs = std::filesystem;
 
@@ -148,9 +148,8 @@ int main(const int argc, char *argv[]) {
 
   // Create the all-in-one file with only files that need processing
   std::ofstream allInOne(ALL_IN_ONE_CPP);
-  for (const auto &path: filesToProcess | std::views::keys) {
+  for (const auto &path: filesToProcess | std::views::keys)
     allInOne << "#include \"" << path << "\"\n";
-  }
   allInOne.close();
 
   // Preprocess the file (faster than the clang tool doing it)

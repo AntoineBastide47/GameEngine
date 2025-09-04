@@ -22,6 +22,7 @@ namespace Engine2D::Animation {
       enum AnimationCondition {
         LESS_THAN, LESS_OR_EQUAL, GREATER_THAN, GREATER_OR_EQUAL, EQUAL, NOT_EQUAL, IF_TRUE, IF_FALSE, IF_TRIGGER
       };
+        REFLECT_ANIMATIONCONDITION
 
       /// Maps the given animation to it's name in the animator
       /// @note If an animation with the same name already exists, the new one will overwrite it
@@ -125,6 +126,7 @@ namespace Engine2D::Animation {
       enum ParameterType {
         BOOL, INT, FLOAT, TRIGGER
       };
+        REFLECT_PARAMETERTYPE
 
       struct Parameter : Reflectable {
         SERIALIZE_PARAMETER

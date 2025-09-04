@@ -26,6 +26,7 @@ namespace Engine2D::Rendering {
       enum RenderableType {
         None, SpriteRenderer, ParticleSystem
       };
+        REFLECT_RENDERABLETYPE
 
       /// Sets the shader that will be used for rendering
       /// @note Will not work outside OnInitialize if the entity is marked as static
@@ -46,7 +47,7 @@ namespace Engine2D::Rendering {
       /// The order in which to render this renderable
       ENGINE_SERIALIZE int16_t renderOrder;
       /// The type of renderable to render
-      ENGINE_SERIALIZE RenderableType renderType;
+      ENGINE_SERIALIZE_HIDDEN RenderableType renderType;
       /// The shader tied to this renderable
       ENGINE_SHOW_IN_INSPECTOR Engine::Rendering::Shader *shader;
       /// The sprite tied to this renderable

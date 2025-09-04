@@ -33,6 +33,7 @@ namespace Engine2D {
       enum BlendMode {
         Alpha, Additive, Multiply, PremultipliedAlpha, Subtractive, SoftAdditive, Opaque
       };
+      REFLECT_BLENDMODE
 
       /// If the particle system restarts after it finished simulating itself
       bool loop;

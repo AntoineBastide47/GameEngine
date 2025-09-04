@@ -66,6 +66,7 @@ void BuildSDK::Run(
     safe_copy("./engine-cli", SDK_FOLDER "/engine-cli");
     safe_copy("./header-forge", SDK_FOLDER "/header-forge");
     safe_copy("./Engine/CMake", SDK_FOLDER "/CMake", true);
+    safe_copy("./LICENSE", SDK_FOLDER "/LICENSE");
 
     if (!loggingDisabled)
       std::cout << "SDK build completed!" << '\n';

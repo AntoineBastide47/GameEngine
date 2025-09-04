@@ -22,13 +22,13 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(position, format, json["position"]);\
-      Engine::Reflection::_e_loadImpl(worldPosition, format, json["worldPosition"]);\
-      Engine::Reflection::_e_loadImpl(rotation, format, json["rotation"]);\
-      Engine::Reflection::_e_loadImpl(worldRotation, format, json["worldRotation"]);\
-      Engine::Reflection::_e_loadImpl(scale, format, json["scale"]);\
-      Engine::Reflection::_e_loadImpl(worldScale, format, json["worldScale"]);\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(position, format, json.At("position"));\
+      Engine::Reflection::_e_loadImpl(worldPosition, format, json.At("worldPosition"));\
+      Engine::Reflection::_e_loadImpl(rotation, format, json.At("rotation"));\
+      Engine::Reflection::_e_loadImpl(worldRotation, format, json.At("worldRotation"));\
+      Engine::Reflection::_e_loadImpl(scale, format, json.At("scale"));\
+      Engine::Reflection::_e_loadImpl(worldScale, format, json.At("worldScale"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\

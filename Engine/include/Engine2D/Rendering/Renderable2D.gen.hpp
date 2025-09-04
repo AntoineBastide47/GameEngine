@@ -18,16 +18,28 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(renderOrder, format, json["renderOrder"]);\
-      Engine::Reflection::_e_loadImpl(renderType, format, json["renderType"]);\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(renderOrder, format, json.At("renderOrder"));\
+      Engine::Reflection::_e_loadImpl(renderType, format, json.At("renderType"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(renderOrder, "RenderOrder", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(renderType, "RenderType", readOnly);\
     return changed;\
   }\
   private: 
+
+
+  #define REFLECT_RENDERABLETYPE\
+  static inline const bool _reg_RENDERABLETYPE = [] {\
+    Engine::Reflection::ReflectionFactory::RegisterEnum<Engine2D::Rendering::Renderable2D::RenderableType>(\
+    "Engine2D::Rendering::Renderable2D::RenderableType", {\
+      std::pair<std::string, Engine2D::Rendering::Renderable2D::RenderableType>{"None", Engine2D::Rendering::Renderable2D::RenderableType::None},\
+      std::pair<std::string, Engine2D::Rendering::Renderable2D::RenderableType>{"SpriteRenderer", Engine2D::Rendering::Renderable2D::RenderableType::SpriteRenderer},\
+      std::pair<std::string, Engine2D::Rendering::Renderable2D::RenderableType>{"ParticleSystem", Engine2D::Rendering::Renderable2D::RenderableType::ParticleSystem},\
+      }\
+    );\
+    return true;\
+  }();
 } // namespace Engine::Reflection

@@ -11,6 +11,14 @@
 #include <vector>
 
 namespace Engine::Reflection {
+  /// Represents an enum with its name and values
+  struct Enum {
+    /// The nam of this enum
+    std::string name;
+    /// All the values defined in this enum
+    std::vector<std::string> values;
+  };
+
   /// Represents a record (class/struct) with its name, location, and serializable fields.
   struct Record {
     /// True if this record is a class, False if not
@@ -23,6 +31,8 @@ namespace Engine::Reflection {
     std::vector<std::string> fields;
     /// List of editor inspectable member variables.
     std::vector<std::string> editorFields;
+    /// List of enums defined in this record
+    std::vector<Enum> enums;
   };
 
   /**
@@ -38,9 +48,7 @@ namespace Engine::Reflection {
        * @param records All the extracted records
        * @return Vector of Record structures with class and field info.
        */
-      static void ParseHeader(
-        const std::string &headerPath, std::vector<Record> &records
-      );
+      static void ParseHeader(const std::string &headerPath, std::vector<Record> &records);
 
       /**
        * Utility function to print the collected records and their fields to standard output.

@@ -297,7 +297,8 @@ namespace Editor {
 
     if (opened) {
       for (const auto &child: *entity->Transform())
-        drawEntityNode(child);
+        if (child && !child->destroyed)
+          drawEntityNode(child);
       ImGui::TreePop();
     }
   }

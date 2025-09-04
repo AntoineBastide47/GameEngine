@@ -11,10 +11,10 @@
 
 #include "Engine2D/Entity2D.hpp"
 #include "History/EditorCommand.hpp"
-#include "Engine/Reflection/RenderInEditor.hpp"
 
 namespace Editor {
   class EntityInspector final {
+    friend class Window;
     public:
       /// Render's the scene hierarchy
       static void Render(const ImGuiWindowClass *winClass);

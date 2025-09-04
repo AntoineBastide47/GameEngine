@@ -28,19 +28,19 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(positionOffset, format, json["positionOffset"]);\
-      Engine::Reflection::_e_loadImpl(rotationOffset, format, json["rotationOffset"]);\
-      Engine::Reflection::_e_loadImpl(damping, format, json["damping"]);\
-      Engine::Reflection::_e_loadImpl(zoomLevel, format, json["zoomLevel"]);\
-      Engine::Reflection::_e_loadImpl(shakeCoefficientsX, format, json["shakeCoefficientsX"]);\
-      Engine::Reflection::_e_loadImpl(shakeCoefficientsY, format, json["shakeCoefficientsY"]);\
-      Engine::Reflection::_e_loadImpl(projection, format, json["projection"]);\
-      Engine::Reflection::_e_loadImpl(shakeDuration, format, json["shakeDuration"]);\
-      Engine::Reflection::_e_loadImpl(left, format, json["left"]);\
-      Engine::Reflection::_e_loadImpl(right, format, json["right"]);\
-      Engine::Reflection::_e_loadImpl(bottom, format, json["bottom"]);\
-      Engine::Reflection::_e_loadImpl(top, format, json["top"]);\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(positionOffset, format, json.At("positionOffset"));\
+      Engine::Reflection::_e_loadImpl(rotationOffset, format, json.At("rotationOffset"));\
+      Engine::Reflection::_e_loadImpl(damping, format, json.At("damping"));\
+      Engine::Reflection::_e_loadImpl(zoomLevel, format, json.At("zoomLevel"));\
+      Engine::Reflection::_e_loadImpl(shakeCoefficientsX, format, json.At("shakeCoefficientsX"));\
+      Engine::Reflection::_e_loadImpl(shakeCoefficientsY, format, json.At("shakeCoefficientsY"));\
+      Engine::Reflection::_e_loadImpl(projection, format, json.At("projection"));\
+      Engine::Reflection::_e_loadImpl(shakeDuration, format, json.At("shakeDuration"));\
+      Engine::Reflection::_e_loadImpl(left, format, json.At("left"));\
+      Engine::Reflection::_e_loadImpl(right, format, json.At("right"));\
+      Engine::Reflection::_e_loadImpl(bottom, format, json.At("bottom"));\
+      Engine::Reflection::_e_loadImpl(top, format, json.At("top"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\
@@ -71,9 +71,9 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(amplitude, format, json["amplitude"]);\
-      Engine::Reflection::_e_loadImpl(frequency, format, json["frequency"]);\
-      Engine::Reflection::_e_loadImpl(phase, format, json["phase"]);\
+      Engine::Reflection::_e_loadImpl(amplitude, format, json.At("amplitude"));\
+      Engine::Reflection::_e_loadImpl(frequency, format, json.At("frequency"));\
+      Engine::Reflection::_e_loadImpl(phase, format, json.At("phase"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\

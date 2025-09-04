@@ -153,6 +153,40 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
       return true;
     }
 
+    // ReSharper disable once CppDFAConstantFunctionResult
+    bool VisitEnumDecl(const EnumDecl *enumerator) const {
+      if (!enumerator->isThisDeclarationADefinition())
+        return true;
+
+      const auto &SM = enumerator->getASTContext().getSourceManager();
+      if (SM.isInSystemHeader(enumerator->getLocation()))
+        return true;
+
+      std::string loc;
+      if (const PresumedLoc ploc = SM.getPresumedLoc(enumerator->getLocation()); ploc.isValid())
+        loc = ploc.getFilename();
+      else
+        loc = SM.getFilename(enumerator->getLocation()).str();
+
+      if (loc.starts_with("./vendor") || enumerator->getName().empty())
+        return true;
+
+      if (const auto *recordDecl = llvm::dyn_cast<CXXRecordDecl>(enumerator->getDeclContext())) {
+        for (auto &record: records)
+          if (recordDecl->getQualifiedNameAsString() == record.name) {
+            Enum newEnum{enumerator->getQualifiedNameAsString()};
+            newEnum.values.reserve(std::distance(enumerator->decls().begin(), enumerator->decls().end()));
+            for (const auto *EC: enumerator->enumerators())
+              newEnum.values.emplace_back(EC->getNameAsString());
+            record.enums.emplace_back(std::move(newEnum));
+
+            return true;
+          }
+      }
+
+      return true;
+    }
+
     static void findAnnotations(
       const Decl *decl, bool &isSerializable, bool &isNonSerializable, bool &isShowInInspector, bool &isHideInInspector
     ) {
@@ -299,7 +333,7 @@ namespace Engine::Reflection {
   }
 
   void Parser::PrintRecords(const std::vector<Record> &records) {
-    for (const auto &[isClass, name, filePath, fields, editorFields]: records) {
+    for (const auto &[isClass, name, filePath, fields, editorFields, enums]: records) {
       std::cout << "Record: " << (isClass ? "class " : "struct ") << name << " (defined in " << filePath << ")\n";
 
       if (fields.empty())

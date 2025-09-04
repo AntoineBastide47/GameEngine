@@ -159,7 +159,7 @@ namespace Engine2D {
       return;
 
     if (this->parent)
-      std::erase(this->parent->transform->children, Entity());
+      this->parent->transform->removeChild(Entity());
 
     dirty = true;
     this->parent = parent;
@@ -375,6 +375,11 @@ namespace Engine2D {
   void Transform2D::addChild(Entity2D *child) {
     if (std::ranges::find(children, child) == children.end())
       children.push_back(child);
+  }
+
+  void Transform2D::removeChild(Entity2D *child) {
+    if (const auto it = std::ranges::find(children, child); it != children.end())
+      children.erase(it);
   }
 
   void Transform2D::OnEditorValueChanged() {

@@ -79,7 +79,7 @@ namespace Engine2D::Rendering {
 
   void Camera2D::Resize(const float width, const float height) {
     constexpr float baseZoom = 60.0f;
-    constexpr float baseAspect = 4.0f / 3.0f; // TODO: read this from settings
+    constexpr float baseAspect = 16.0f / 9.0f; // TODO: read this from settings
 
     if (const float currentAspect = width / height; currentAspect > baseAspect) {
       // Window is wider than base - fit to height

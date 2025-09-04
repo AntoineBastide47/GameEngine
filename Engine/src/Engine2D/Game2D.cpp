@@ -19,12 +19,8 @@
 #include "Engine/Profiling/Instrumentor.hpp"
 #endif
 #include "Engine/Macros/Profiling.hpp"
-#include "Engine/Reflection/Serializer.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/SceneManagement/SceneManager.hpp"
-#if ENGINE_EDITOR
-#include <imgui.h>
-#endif
 
 using Engine::ResourceManager;
 

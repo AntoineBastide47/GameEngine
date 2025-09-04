@@ -17,8 +17,8 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(resources, format, json["resources"]);\
-      Engine::Reflection::_e_loadImpl(entities, format, json["entities"]);\
+      Engine::Reflection::_e_loadImpl(resources, format, json.At("resources"));\
+      Engine::Reflection::_e_loadImpl(entities, format, json.At("entities"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\

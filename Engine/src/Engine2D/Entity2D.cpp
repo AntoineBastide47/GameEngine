@@ -123,6 +123,8 @@ namespace Engine2D {
         child->Transform()->parent = nullptr;
         child->destroy();
       }
+      if (transform->parent && transform->parent->transform)
+        transform->parent->transform->removeChild(this);
       transform->parent = nullptr;
       transform->children.clear();
     }

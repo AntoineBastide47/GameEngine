@@ -7,6 +7,7 @@
 #include <imgui_internal.h>
 
 #include "Panels/EntityInspector.hpp"
+#include "Engine2D/SceneManagement/Scene.hpp"
 #include "History/CommandHistory.hpp"
 #include "Panels/SceneHierarchy.hpp"
 

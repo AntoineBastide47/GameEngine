@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(Engine VERSION 0.10.5)
+project(Engine VERSION 0.10.6)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -169,7 +169,7 @@ target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
     MULTI_THREAD=${MULTI_THREAD} # Set this to 0 if you have mutex errors or race conditions when modifying the engine
-    ENGINE_EDITOR=0
+    ENGINE_EDITOR=${ENGINE_EDITOR}
     $<$<BOOL:${_e_WITH_EDITOR}>:_e_WITH_EDITOR=1>
 )
 

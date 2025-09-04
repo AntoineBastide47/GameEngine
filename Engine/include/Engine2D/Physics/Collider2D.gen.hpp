@@ -22,13 +22,13 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(elasticity, format, json["elasticity"]);\
-      Engine::Reflection::_e_loadImpl(positionOffset, format, json["positionOffset"]);\
-      Engine::Reflection::_e_loadImpl(isTrigger, format, json["isTrigger"]);\
-      Engine::Reflection::_e_loadImpl(autoCompute, format, json["autoCompute"]);\
-      Engine::Reflection::_e_loadImpl(position, format, json["position"]);\
-      Engine::Reflection::_e_loadImpl(type, format, json["type"]);\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(elasticity, format, json.At("elasticity"));\
+      Engine::Reflection::_e_loadImpl(positionOffset, format, json.At("positionOffset"));\
+      Engine::Reflection::_e_loadImpl(isTrigger, format, json.At("isTrigger"));\
+      Engine::Reflection::_e_loadImpl(autoCompute, format, json.At("autoCompute"));\
+      Engine::Reflection::_e_loadImpl(position, format, json.At("position"));\
+      Engine::Reflection::_e_loadImpl(type, format, json.At("type"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\
@@ -41,6 +41,20 @@ namespace Engine::Reflection {
     return changed;\
   }\
   private: 
+
+
+  #define REFLECT_COLLIDERTYPE\
+  static inline const bool _reg_COLLIDERTYPE = [] {\
+    Engine::Reflection::ReflectionFactory::RegisterEnum<Engine2D::Physics::Collider2D::ColliderType>(\
+    "Engine2D::Physics::Collider2D::ColliderType", {\
+      std::pair<std::string, Engine2D::Physics::Collider2D::ColliderType>{"None", Engine2D::Physics::Collider2D::ColliderType::None},\
+      std::pair<std::string, Engine2D::Physics::Collider2D::ColliderType>{"Circle", Engine2D::Physics::Collider2D::ColliderType::Circle},\
+      std::pair<std::string, Engine2D::Physics::Collider2D::ColliderType>{"Rectangle", Engine2D::Physics::Collider2D::ColliderType::Rectangle},\
+      std::pair<std::string, Engine2D::Physics::Collider2D::ColliderType>{"Polygon", Engine2D::Physics::Collider2D::ColliderType::Polygon},\
+      }\
+    );\
+    return true;\
+  }();
 
   #define SERIALIZE_AABB _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
@@ -56,8 +70,8 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(min, format, json["min"]);\
-      Engine::Reflection::_e_loadImpl(max, format, json["max"]);\
+      Engine::Reflection::_e_loadImpl(min, format, json.At("min"));\
+      Engine::Reflection::_e_loadImpl(max, format, json.At("max"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\
@@ -87,14 +101,14 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(elasticity, format, json["elasticity"]);\
-      Engine::Reflection::_e_loadImpl(positionOffset, format, json["positionOffset"]);\
-      Engine::Reflection::_e_loadImpl(isTrigger, format, json["isTrigger"]);\
-      Engine::Reflection::_e_loadImpl(autoCompute, format, json["autoCompute"]);\
-      Engine::Reflection::_e_loadImpl(position, format, json["position"]);\
-      Engine::Reflection::_e_loadImpl(type, format, json["type"]);\
-      Engine::Reflection::_e_loadImpl(radius, format, json["radius"]);\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(elasticity, format, json.At("elasticity"));\
+      Engine::Reflection::_e_loadImpl(positionOffset, format, json.At("positionOffset"));\
+      Engine::Reflection::_e_loadImpl(isTrigger, format, json.At("isTrigger"));\
+      Engine::Reflection::_e_loadImpl(autoCompute, format, json.At("autoCompute"));\
+      Engine::Reflection::_e_loadImpl(position, format, json.At("position"));\
+      Engine::Reflection::_e_loadImpl(type, format, json.At("type"));\
+      Engine::Reflection::_e_loadImpl(radius, format, json.At("radius"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\
@@ -129,14 +143,14 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(elasticity, format, json["elasticity"]);\
-      Engine::Reflection::_e_loadImpl(positionOffset, format, json["positionOffset"]);\
-      Engine::Reflection::_e_loadImpl(isTrigger, format, json["isTrigger"]);\
-      Engine::Reflection::_e_loadImpl(autoCompute, format, json["autoCompute"]);\
-      Engine::Reflection::_e_loadImpl(position, format, json["position"]);\
-      Engine::Reflection::_e_loadImpl(type, format, json["type"]);\
-      Engine::Reflection::_e_loadImpl(size, format, json["size"]);\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(elasticity, format, json.At("elasticity"));\
+      Engine::Reflection::_e_loadImpl(positionOffset, format, json.At("positionOffset"));\
+      Engine::Reflection::_e_loadImpl(isTrigger, format, json.At("isTrigger"));\
+      Engine::Reflection::_e_loadImpl(autoCompute, format, json.At("autoCompute"));\
+      Engine::Reflection::_e_loadImpl(position, format, json.At("position"));\
+      Engine::Reflection::_e_loadImpl(type, format, json.At("type"));\
+      Engine::Reflection::_e_loadImpl(size, format, json.At("size"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\
@@ -171,14 +185,14 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(elasticity, format, json["elasticity"]);\
-      Engine::Reflection::_e_loadImpl(positionOffset, format, json["positionOffset"]);\
-      Engine::Reflection::_e_loadImpl(isTrigger, format, json["isTrigger"]);\
-      Engine::Reflection::_e_loadImpl(autoCompute, format, json["autoCompute"]);\
-      Engine::Reflection::_e_loadImpl(position, format, json["position"]);\
-      Engine::Reflection::_e_loadImpl(type, format, json["type"]);\
-      Engine::Reflection::_e_loadImpl(vertices, format, json["vertices"]);\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(elasticity, format, json.At("elasticity"));\
+      Engine::Reflection::_e_loadImpl(positionOffset, format, json.At("positionOffset"));\
+      Engine::Reflection::_e_loadImpl(isTrigger, format, json.At("isTrigger"));\
+      Engine::Reflection::_e_loadImpl(autoCompute, format, json.At("autoCompute"));\
+      Engine::Reflection::_e_loadImpl(position, format, json.At("position"));\
+      Engine::Reflection::_e_loadImpl(type, format, json.At("type"));\
+      Engine::Reflection::_e_loadImpl(vertices, format, json.At("vertices"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\

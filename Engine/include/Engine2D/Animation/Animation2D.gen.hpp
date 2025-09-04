@@ -28,19 +28,19 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(frameCountX, format, json["frameCountX"]);\
-      Engine::Reflection::_e_loadImpl(frameCountY, format, json["frameCountY"]);\
-      Engine::Reflection::_e_loadImpl(frameOffsetX, format, json["frameOffsetX"]);\
-      Engine::Reflection::_e_loadImpl(frameOffsetY, format, json["frameOffsetY"]);\
-      Engine::Reflection::_e_loadImpl(currentFrame, format, json["currentFrame"]);\
-      Engine::Reflection::_e_loadImpl(loop, format, json["loop"]);\
-      Engine::Reflection::_e_loadImpl(reverse, format, json["reverse"]);\
-      Engine::Reflection::_e_loadImpl(spriteName, format, json["spriteName"]);\
-      Engine::Reflection::_e_loadImpl(vertical, format, json["vertical"]);\
-      Engine::Reflection::_e_loadImpl(paused, format, json["paused"]);\
-      Engine::Reflection::_e_loadImpl(completed, format, json["completed"]);\
-      Engine::Reflection::_e_loadImpl(frameDuration, format, json["frameDuration"]);\
-      Engine::Reflection::_e_loadImpl(speed, format, json["speed"]);\
+      Engine::Reflection::_e_loadImpl(frameCountX, format, json.At("frameCountX"));\
+      Engine::Reflection::_e_loadImpl(frameCountY, format, json.At("frameCountY"));\
+      Engine::Reflection::_e_loadImpl(frameOffsetX, format, json.At("frameOffsetX"));\
+      Engine::Reflection::_e_loadImpl(frameOffsetY, format, json.At("frameOffsetY"));\
+      Engine::Reflection::_e_loadImpl(currentFrame, format, json.At("currentFrame"));\
+      Engine::Reflection::_e_loadImpl(loop, format, json.At("loop"));\
+      Engine::Reflection::_e_loadImpl(reverse, format, json.At("reverse"));\
+      Engine::Reflection::_e_loadImpl(spriteName, format, json.At("spriteName"));\
+      Engine::Reflection::_e_loadImpl(vertical, format, json.At("vertical"));\
+      Engine::Reflection::_e_loadImpl(paused, format, json.At("paused"));\
+      Engine::Reflection::_e_loadImpl(completed, format, json.At("completed"));\
+      Engine::Reflection::_e_loadImpl(frameDuration, format, json.At("frameDuration"));\
+      Engine::Reflection::_e_loadImpl(speed, format, json.At("speed"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\

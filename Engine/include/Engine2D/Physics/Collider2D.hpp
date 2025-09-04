@@ -39,6 +39,7 @@ namespace Engine2D::Physics {
       enum ColliderType {
         None = -1, Circle = 0, Rectangle = 1, Polygon = 2,
       };
+        REFLECT_COLLIDERTYPE
 
       /// Coefficient of bounciness  of the rigid body.
       Engine::float01 elasticity;
@@ -54,6 +55,7 @@ namespace Engine2D::Physics {
 
       /// @returns The points at which this rigidbody collided with another rigidbody
       [[nodiscard]] std::vector<glm::vec2> ContactPoints() const;
+      /// @returns The type of this collider
       ColliderType Type() const;
     protected:
       struct AABB final : Reflectable {

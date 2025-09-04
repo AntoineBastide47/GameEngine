@@ -67,13 +67,13 @@ namespace Engine::Reflection {
     bool changed = false;
     if constexpr (std::is_floating_point_v<T>) {
       float temp = static_cast<float>(data);
-      if (ImGui::DragFloat(("##" + name).c_str(), &temp, 0.01f)) {
+      if (ImGui::DragFloat(("##" + name).c_str(), &temp)) {
         data = static_cast<T>(temp);
         changed = true;
       }
     } else {
       int temp = static_cast<int>(data);
-      if (ImGui::DragInt(("##" + name).c_str(), &temp, 1)) {
+      if (ImGui::DragInt(("##" + name).c_str(), &temp)) {
         data = static_cast<T>(temp);
         changed = true;
       }
@@ -373,9 +373,51 @@ namespace Engine::Reflection {
     return false;
   }
 
-  template<typename T> requires std::is_enum_v<T>
-  static bool _e_renderInEditor(T &data, const std::string &name, const bool readOnly) {
-    return false;
+  template<IsEnum T> static bool _e_renderInEditor(T &data, const std::string &name, const bool readOnly) {
+    if (!ReflectionFactory::EnumRegistered<T>())
+      return false;
+
+    bool changed = false;
+
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("%s", name.c_str());
+    ImGui::TableNextColumn();
+    ImGui::SetNextItemWidth(-1);
+
+    ImGui::BeginDisabled(readOnly);
+
+    const auto &values = ReflectionFactory::GetEnumValues<T>();
+    size_t currentIndex = 0;
+    const std::string currentValue = ReflectionFactory::EnumValueToString(data);
+    for (size_t i = 0; i < values.size(); ++i) {
+      if (values[i] == currentValue) {
+        currentIndex = i;
+        break;
+      }
+    }
+
+    if (ImGui::BeginCombo(
+      ("##enum_" + name).c_str(), currentIndex < values.size() ? values[currentIndex].c_str() : "Unknown"
+    )) {
+      for (size_t i = 0; i < values.size(); ++i) {
+        const bool isSelected = i == currentIndex;
+        if (ImGui::Selectable(values[i].c_str(), isSelected) && i != currentIndex)
+          if (const auto potentialVal = ReflectionFactory::StringToEnumValue<T>(values[i])) {
+            data = *potentialVal;
+            changed = true;
+          }
+
+        if (isSelected)
+          ImGui::SetItemDefaultFocus();
+      }
+      ImGui::EndCombo();
+    }
+
+    ImGui::EndDisabled();
+
+    return changed;
   }
 
   template<glm::length_t N, typename T, glm::qualifier Q> requires (2 <= N && N <= 4)
@@ -387,11 +429,11 @@ namespace Engine::Reflection {
 
     if constexpr (std::is_floating_point_v<Type>) {
       if constexpr (N == 2) {
-        changed = ImGui::DragFloat2(("##" + name).c_str(), glm::value_ptr(data), 0.01f);
+        changed = ImGui::DragFloat2(("##" + name).c_str(), glm::value_ptr(data));
       } else if constexpr (N == 3) {
-        changed = ImGui::DragFloat3(("##" + name).c_str(), glm::value_ptr(data), 0.01f);
+        changed = ImGui::DragFloat3(("##" + name).c_str(), glm::value_ptr(data));
       } else {
-        changed = ImGui::DragFloat4(("##" + name).c_str(), glm::value_ptr(data), 0.01f);
+        changed = ImGui::DragFloat4(("##" + name).c_str(), glm::value_ptr(data));
       }
     } else if constexpr (std::is_same_v<Type, bool>) {
       static constexpr std::array labels = {"X:", " Y:", " Z:", " W:"};
@@ -412,14 +454,14 @@ namespace Engine::Reflection {
     } else {
       if constexpr (N == 2) {
         int temp[2] = {static_cast<int>(data[0]), static_cast<int>(data[1])};
-        if (ImGui::DragInt2(("##" + name).c_str(), temp, 1)) {
+        if (ImGui::DragInt2(("##" + name).c_str(), temp)) {
           data[0] = static_cast<T>(temp[0]);
           data[1] = static_cast<T>(temp[1]);
           changed = true;
         }
       } else if constexpr (N == 3) {
         int temp[3] = {static_cast<int>(data[0]), static_cast<int>(data[1]), static_cast<int>(data[2])};
-        if (ImGui::DragInt3(("##" + name).c_str(), temp, 1)) {
+        if (ImGui::DragInt3(("##" + name).c_str(), temp)) {
           data[0] = static_cast<T>(temp[0]);
           data[1] = static_cast<T>(temp[1]);
           data[2] = static_cast<T>(temp[2]);
@@ -430,7 +472,7 @@ namespace Engine::Reflection {
           static_cast<int>(data[0]), static_cast<int>(data[1]),
           static_cast<int>(data[2]), static_cast<int>(data[3])
         };
-        if (ImGui::DragInt4(("##" + name).c_str(), temp, 1)) {
+        if (ImGui::DragInt4(("##" + name).c_str(), temp)) {
           data[0] = static_cast<T>(temp[0]);
           data[1] = static_cast<T>(temp[1]);
           data[2] = static_cast<T>(temp[2]);
@@ -481,19 +523,19 @@ namespace Engine::Reflection {
 
           if constexpr (std::is_same_v<std::remove_cvref_t<T>, float>) {
             float temp = data[col][row];
-            if (ImGui::DragFloat(("##" + elementLabel).c_str(), &temp, 0.01f)) {
+            if (ImGui::DragFloat(("##" + elementLabel).c_str(), &temp)) {
               data[col][row] = temp;
               changed = true;
             }
           } else if constexpr (std::is_same_v<std::remove_cvref_t<T>, double>) {
             float temp = static_cast<float>(data[col][row]);
-            if (ImGui::DragFloat(("##" + elementLabel).c_str(), &temp, 0.01f)) {
+            if (ImGui::DragFloat(("##" + elementLabel).c_str(), &temp)) {
               data[col][row] = static_cast<double>(temp);
               changed = true;
             }
           } else if constexpr (std::is_integral_v<T>) {
             int temp = static_cast<int>(data[col][row]);
-            if (ImGui::DragInt(("##" + elementLabel).c_str(), &temp, 1)) {
+            if (ImGui::DragInt(("##" + elementLabel).c_str(), &temp)) {
               data[col][row] = static_cast<T>(temp);
               changed = true;
             }
@@ -511,7 +553,7 @@ namespace Engine::Reflection {
     return changed;
   }
 
-  template<size_t N> constexpr std::array<std::string_view, N> splitToArray(std::string_view str) {
+  template<size_t N> constexpr std::array<std::string_view, N> splitToArray(const std::string_view str) {
     std::array<std::string_view, N> result{};
 
     size_t start = 0;
@@ -621,7 +663,7 @@ namespace Engine::Reflection {
       // Render the current variant data
       std::visit(
         [&](auto &value) {
-          ImGui::PushID("variant_data");
+          ImGui::PushID(("variant_data_" + name).c_str());
           if (_e_renderInEditorImpl(value, "Value", readOnly)) {
             changed = true;
           }
@@ -649,7 +691,8 @@ namespace Engine::Reflection {
 
   template<typename T> static bool _e_renderInEditorImpl(T &data, const std::string &name, const bool readOnly) {
     if constexpr (HasRenderInEditorFunction<T>) {
-      ImGui::TableNextRow();
+      if constexpr (!IsEnum<T>)
+        ImGui::TableNextRow();
       if constexpr (IsNonRecursive<T>) {
         ImGui::TableNextColumn();
         ImGui::AlignTextToFramePadding();

@@ -41,6 +41,7 @@ setup_imgui(${CMAKE_SOURCE_DIR})
 # --------------------------
 
 set(MULTI_THREAD 1)
+set(ENGINE_EDITOR $<STREQUAL:${BUILD_ENGINE_SHARED},1>)
 
 if (BUILD_ENGINE)
     add_subdirectory(Engine)

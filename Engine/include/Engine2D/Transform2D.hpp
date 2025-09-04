@@ -214,6 +214,8 @@ namespace Engine2D {
 
       /// Adds the given child to the child list of the current entity's transform
       void addChild(Entity2D *child);
+      /// Removes the given child to the child list of the current entity's transform
+      void removeChild(Entity2D *child);
 
       void OnEditorValueChanged() override;
   };

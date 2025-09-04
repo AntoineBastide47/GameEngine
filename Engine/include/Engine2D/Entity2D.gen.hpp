@@ -22,13 +22,13 @@ namespace Engine::Reflection {
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
     if (format == Engine::Reflection::Format::JSON) { \
-      Engine::Reflection::_e_loadImpl(name, format, json["name"]);\
-      Engine::Reflection::_e_loadImpl(active, format, json["active"]);\
-      Engine::Reflection::_e_loadImpl(parentsActive, format, json["parentsActive"]);\
-      Engine::Reflection::_e_loadImpl(isStatic, format, json["isStatic"]);\
-      Engine::Reflection::_e_loadImpl(destroyed, format, json["destroyed"]);\
-      Engine::Reflection::_e_loadImpl(transform, format, json["transform"]);\
-      Engine::Reflection::_e_loadImpl(allComponents, format, json["allComponents"]);\
+      Engine::Reflection::_e_loadImpl(name, format, json.At("name"));\
+      Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
+      Engine::Reflection::_e_loadImpl(parentsActive, format, json.At("parentsActive"));\
+      Engine::Reflection::_e_loadImpl(isStatic, format, json.At("isStatic"));\
+      Engine::Reflection::_e_loadImpl(destroyed, format, json.At("destroyed"));\
+      Engine::Reflection::_e_loadImpl(transform, format, json.At("transform"));\
+      Engine::Reflection::_e_loadImpl(allComponents, format, json.At("allComponents"));\
     }\
   }\
   bool _e_renderInEditor(const bool readOnly) override {\

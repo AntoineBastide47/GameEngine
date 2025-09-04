@@ -18,6 +18,7 @@
 #include "Scene.gen.hpp"
 
 namespace Editor {
+  class Window;
   class SceneHierarchy;
 
   namespace History {
@@ -55,6 +56,7 @@ namespace Engine2D {
       friend class Entity2D;
       friend class Transform2D;
       friend class SceneManager;
+      friend class Editor::Window;
       friend class Engine::Settings;
       friend class ParticleSystem2D;
       friend class Physics::Collider2D;

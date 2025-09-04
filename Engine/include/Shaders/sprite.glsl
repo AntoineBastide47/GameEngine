@@ -22,8 +22,8 @@ out vec4 vVertColor;
 
 vec2 unpackTwoFloats(float packed) {
     uint raw = floatBitsToUint(packed);
-    float a = float(raw >> 16) / 65535.0;
-    float b = float(raw & 0xFFFFu) / 65535.0;
+    float a = (float(raw >> 16) / 32767.5) - 1.0;
+    float b = (float(raw & 0xFFFFu) / 32767.5) - 1.0;
     return vec2(a, b);
 }
 

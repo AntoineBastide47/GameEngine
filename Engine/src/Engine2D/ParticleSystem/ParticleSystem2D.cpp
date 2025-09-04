@@ -182,7 +182,7 @@ namespace Engine2D {
       );
       data[idx + 13] = rotation;
       data[idx + 14] = renderOrder << 16 | textureIndex;
-      data[idx + 15] = Rendering::Renderer2D::PackTwoFloats(flip.x, flip.y);
+      data[idx + 15] = Rendering::Renderer2D::PackTwoFloats(flip.x ? -1.0f : 1.0, flip.y ? -1.0f : 1.0);
 
       j++;
     }

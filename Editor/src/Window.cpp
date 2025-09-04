@@ -11,6 +11,8 @@
 
 #include "Window.hpp"
 #include "LevelEditor.hpp"
+#include "Engine2D/SceneManagement/SceneManager.hpp"
+#include "Panels/EntityInspector.hpp"
 #include "Panels/SceneViewport.hpp"
 
 namespace Editor {
@@ -41,7 +43,16 @@ namespace Editor {
       if (const auto game = Engine2D::Game2D::instance) {
         if (SceneViewport::Focused())
           game->processInput();
-        game->updateGame();
+
+        if (const auto scene = Engine2D::SceneManager::ActiveScene(); scene) {
+          #if MULTI_THREAD
+          if (std::ranges::find(scene->entitiesToDestroy, EntityInspector::context) != scene->entitiesToDestroy.end())
+          #else
+          if (std::ranges::find(scene->entitiesToRemove, EntityInspector::context) != scene->entitiesToRemove.end())
+          #endif
+            EntityInspector::SetContext(nullptr);
+          game->updateGame();
+        }
       }
 
       LevelEditor::Render();

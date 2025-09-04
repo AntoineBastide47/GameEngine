@@ -51,7 +51,15 @@ namespace Engine2D::Rendering {
   }
 
   float Renderer2D::PackTwoFloats(const float a, const float b) {
-    return glm::uintBitsToFloat(static_cast<uint>(a * 65535.0) << 16 | static_cast<uint>(b * 65535.0));
+    // Map from [-1, 1] to [0, 65535]
+    uint packedA = static_cast<uint>((a + 1.0f) * 32767.5f);
+    uint packedB = static_cast<uint>((b + 1.0f) * 32767.5f);
+
+    // Clamp to ensure we stay within 16-bit range
+    packedA = glm::clamp(packedA, 0u, 65535u);
+    packedB = glm::clamp(packedB, 0u, 65535u);
+
+    return glm::uintBitsToFloat(packedA << 16 | packedB);
   }
 
   bool Renderer2D::cannotBeRendered(const Renderable2D *r) {
