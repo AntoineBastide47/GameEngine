@@ -9,7 +9,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Types/float01.hpp"
+#include "Engine/Rendering/Color.hpp"
 #include "Engine2D/Rendering/Renderable2D.hpp"
 #include "SpriteRenderer.gen.hpp"
 
@@ -30,16 +30,16 @@ namespace Engine2D::Rendering {
       friend class Engine2D::Entity2D;
     public:
       /// Sets the color of the sprite
-      void SetColor(const glm::vec4 &color);
+      void SetColor(const Engine::Rendering::Color &color);
       /// @returns the color of the sprite
-      const glm::vec4 &Color() const;
+      const Engine::Rendering::Color &Color() const;
       /// Sets on which axis to flip the sprite
       void SetFlip(const glm::vec<2, bool> &flip);
       /// @returns on which axis the sprite is flipped
       const glm::vec<2, bool> &Flip() const;
     private:
       /// The color of the sprite
-      ENGINE_SERIALIZE glm::vec4 color;
+      ENGINE_SERIALIZE Engine::Rendering::Color color;
       /// If the sprite should be flipped on a given axis
       ENGINE_SERIALIZE glm::vec<2, bool> flip;
 

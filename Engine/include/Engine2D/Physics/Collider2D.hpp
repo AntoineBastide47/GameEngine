@@ -10,8 +10,9 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "Engine2D/Component2D.hpp"
+#include "Engine/Reflection/ICustomEditor.hpp"
 #include "Engine/Types/float01.hpp"
+#include "Engine2D/Component2D.hpp"
 #include "Collider2D.gen.hpp"
 
 namespace Engine2D {
@@ -28,7 +29,7 @@ namespace Engine2D::Physics {
    *
    * This class is intended to be extended to implement specific collider shapes.
    */
-  class Collider2D : public Component2D {
+  class Collider2D : public Component2D, public Engine::Reflection::ICustomEditor {
     SERIALIZE_COLLIDER2D
       friend class Physics2D;
       friend class Collisions;
@@ -57,6 +58,10 @@ namespace Engine2D::Physics {
       [[nodiscard]] std::vector<glm::vec2> ContactPoints() const;
       /// @returns The type of this collider
       ColliderType Type() const;
+
+      #if ENGINE_EDITOR
+      bool OnRenderInEditor(const std::string &name, bool isConst, bool readOnly) override;
+      #endif
     protected:
       struct AABB final : Reflectable {
         SERIALIZE_AABB
@@ -111,6 +116,10 @@ namespace Engine2D::Physics {
     public:
       /// The radius of this collider
       float radius;
+
+      #if ENGINE_EDITOR
+      bool OnRenderInEditor(const std::string &name, bool isConst, bool readOnly) override;
+      #endif
     protected:
       CircleCollider2D();
       void computeAABB() override;
@@ -124,6 +133,10 @@ namespace Engine2D::Physics {
     public:
       /// The size of this collider
       glm::vec2 size;
+
+      #if ENGINE_EDITOR
+      bool OnRenderInEditor(const std::string &name, bool isConst, bool readOnly) override;
+      #endif
     protected:
       BoxCollider2D();
       void computeAABB() override;
@@ -135,7 +148,11 @@ namespace Engine2D::Physics {
     SERIALIZE_POLYGONCOLLIDER2D
       friend class Engine2D::Entity2D;
     public:
-      using Collider2D::vertices ENGINE_SERIALIZE ENGINE_SHOW_IN_INSPECTOR;
+      using Collider2D::vertices ENGINE_SERIALIZE;
+
+      #if ENGINE_EDITOR
+      bool OnRenderInEditor(const std::string &name, bool isConst, bool readOnly) override;
+      #endif
     protected:
       PolygonCollider2D();
       void computeAABB() override;

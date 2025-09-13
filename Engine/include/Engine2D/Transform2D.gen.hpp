@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_TRANSFORM2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_TRANSFORM2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Transform2D>("Engine2D::Transform2D");\
     return true;\
@@ -31,12 +30,19 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(worldScale, format, json.At("worldScale"));\
     }\
   }\
+  RENDER_TRANSFORM2D\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_TRANSFORM2D
+#else
+#define RENDER_TRANSFORM2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(position, "Position", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(rotation, "Rotation", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(scale, "Scale", readOnly);\
     return changed;\
-  }\
-  private: 
-} // namespace Engine::Reflection
+  }
+#endif

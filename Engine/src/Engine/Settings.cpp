@@ -11,13 +11,13 @@
 #include "Engine2D/SceneManagement/SceneManager.hpp"
 
 namespace Engine {
-  void Settings::Window::SetScreenResolution(const glm::vec<2, size_t> newValue) {
+  void Settings::Window::SetScreenResolution(const glm::vec<2, uint> newValue) {
     if (!Engine2D::Game2D::instance)
       return;
+
     resolution = newValue;
-    if (!Engine2D::Game2D::instance->IsHeadless()) {
+    if (!Engine2D::Game2D::instance->IsHeadless())
       glfwSetWindowSize(Engine2D::Game2D::instance->window, newValue.x, newValue.y);
-    }
   }
 
   void Settings::Window::SetTitle(const std::string &newTitle) {
@@ -33,7 +33,7 @@ namespace Engine {
     allowResize = newState;
   }
 
-  glm::vec<2, size_t> Settings::Window::ScreenResolution() {
+  glm::vec<2, uint> Settings::Window::ScreenResolution() {
     return resolution;
   }
 

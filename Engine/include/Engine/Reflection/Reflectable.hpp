@@ -25,6 +25,7 @@ namespace Engine::Reflection {
 #define _e_SERIALIZE_RECORD \
   friend class Editor::EntityInspector; \
   friend class Engine::Reflection::ReflectionFactory; \
+  template<typename T> friend bool _e_renderInEditor(T &, const std::string &, bool, const std::string &); \
   public: \
     [[nodiscard]] std::string_view ClassNameQualified() const override { return ENGINE_CLASS_NAME_FULLY_QUALIFIED; } \
     [[nodiscard]] std::string_view ClassName() const override { return ENGINE_CLASS_NAME; }
@@ -62,24 +63,28 @@ namespace Engine::Reflection {
 
     /// Serializes the current class instance
     virtual void _e_save(Format format, Engine::JSON &json) const = 0;
-    /// Loads a class instance
-    virtual void _e_load(Format format, const Engine::JSON &json) = 0;
-    /// Renders the object in the editor
-    virtual bool _e_renderInEditor(const bool readOnly) {
-      return false;
-    }
-
     /// Called when this class instance is serialized/saved
     /// @param format The format in which to save the data
     /// @param json The json representation of this class instance
     virtual void OnSerialize(Format format, Engine::JSON &json) const {}
+
+    /// Loads a class instance
+    virtual void _e_load(Format format, const Engine::JSON &json) = 0;
     /// Called when this class instance is deserialized/loaded
     /// @param format The format in which to load the data
     /// @param json The json representation of this class instance
     virtual void OnDeserialize(Format format, const Engine::JSON &json) {}
 
+    #if ENGINE_EDITOR
+    bool _e_renderInEditorImpl(bool readOnly, const std::string &name);
+
+    virtual bool _e_renderInEditor(const bool readOnly) {
+      return false;
+    }
+
     /// Called when an interaction with script variables occurs in the editor
     virtual void OnEditorValueChanged() {}
+    #endif
   };
 }
 

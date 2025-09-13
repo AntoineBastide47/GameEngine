@@ -42,10 +42,23 @@ No save overloads were found for the requested type.
       json = data;
   }
 
+  template<typename T, size_t N> static void _e_save(const T (&data)[N], const Format format, Engine::JSON &json) {
+    if (format == JSON) {
+      json = JSON::Array();
+      json.ReserveAndResize(N);
+
+      for (size_t i = 0; i < N; ++i) {
+        Engine::JSON value;
+        _e_saveImpl(data[i], format, value);
+        json.At(i) = value;
+      }
+    }
+  }
+
   template<IsContainer T> static void _e_save(const T &data, const Format format, Engine::JSON &json) {
     if (format == JSON) {
       json = JSON::Array();
-      json.ReserveAndResize(data.size());
+      json.ReserveAndResize(std::distance(data.begin(), data.end()));
 
       size_t i = 0;
       for (const auto &item: data) {

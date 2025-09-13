@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_RIGIDBODY2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_RIGIDBODY2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Physics::Rigidbody2D>("Engine2D::Physics::Rigidbody2D");\
     return true;\
@@ -37,18 +36,25 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(inertia, format, json.At("inertia"));\
     }\
   }\
+  RENDER_RIGIDBODY2D\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_RIGIDBODY2D
+#else
+#define RENDER_RIGIDBODY2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(isKinematic, "IsKinematic", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(affectedByGravity, "AffectedByGravity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(linearVelocity, "LinearVelocity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(angularVelocity, "AngularVelocity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(angularDamping, "AngularDamping", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(staticFriction, "StaticFriction", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(dynamicFriction, "DynamicFriction", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(isKinematic, "Is Kinematic", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(affectedByGravity, "Affected By Gravity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(linearVelocity, "Linear Velocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(angularVelocity, "Angular Velocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(angularDamping, "Angular Damping", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(staticFriction, "Static Friction", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(dynamicFriction, "Dynamic Friction", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(mass, "Mass", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(inertia, "Inertia", readOnly);\
     return changed;\
-  }\
-  private: 
-} // namespace Engine::Reflection
+  }
+#endif

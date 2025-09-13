@@ -12,6 +12,7 @@
 #include "ProjectLoader.hpp"
 #include "../../../Engine/include/Engine2D/Game2D.hpp"
 #include "Engine/Reflection/Deserializer.hpp"
+#include "Engine/Reflection/RenderInEditor.hpp"
 #include "Engine2D/SceneManagement/Scene.hpp"
 #include "Engine2D/SceneManagement/SceneManager.hpp"
 #include "History/Commands/CreateEntityCommand.hpp"
@@ -85,9 +86,8 @@ namespace Editor {
       const std::string path = ProjectLoader::GetProjectPath() + '/' + context->name + ".json";
 
       if (ImGui::BeginPopup("SceneContextMenu")) {
-        if (ImGui::MenuItem("Save Scene")) {
+        if (ImGui::MenuItem("Save Scene"))
           Engine2D::SceneManager::SaveScene(context->name, path, Engine::Reflection::JSON);
-        }
 
         ImGui::Separator();
 
@@ -199,21 +199,9 @@ namespace Editor {
         ImGui::GetCursorPosX() - ImGui::GetStyle().IndentSpacing * (
           0.8f + entity->Transform()->Children().empty() * 1.2f)
       );
-      if (ImGui::InputText("##rename", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
-        if (buffer != entity->name)
-          History::CommandHistory::Create(RenameEntityCommand(entity, buffer));
-        renamingEntity = nullptr;
-      }
 
-      if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+      if (Engine::Reflection::InputText("rename", entity->name, 1024 * 1024, true))
         renamingEntity = nullptr;
-      }
-
-      if ((!ImGui::IsItemActive() && ImGui::IsMouseClicked(0)) || ImGui::IsItemDeactivated()) {
-        if (renamingEntity && buffer != entity->name)
-          History::CommandHistory::Create(RenameEntityCommand(entity, buffer));
-        renamingEntity = nullptr;
-      }
       ImGui::PopStyleVar();
     } else {
       if (!entity->Transform()->Children().empty())

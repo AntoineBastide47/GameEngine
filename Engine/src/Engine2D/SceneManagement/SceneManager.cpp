@@ -5,7 +5,6 @@
 //
 
 #include <ranges>
-#include <mutex>
 
 #include "Engine2D/SceneManagement/SceneManager.hpp"
 #include "Engine/Log.hpp"
@@ -65,7 +64,9 @@ namespace Engine2D {
   ) {
     if (scenes.contains(name)) {
       if (format == Engine::Reflection::Format::JSON)
-        Engine::Reflection::Serializer::ToJsonToFile(scenes.at(name), path, prettyPrint, indentChar);
+        Engine::Reflection::Serializer::ToJsonToFile(
+          scenes.at(name), path.empty() ? name + ".json" : path, prettyPrint, indentChar
+        );
     }
   }
 
@@ -76,13 +77,15 @@ namespace Engine2D {
     for (const auto &s: scenes | std::views::values)
       if (s.get() == scene)
         if (format == Engine::Reflection::Format::JSON)
-          Engine::Reflection::Serializer::ToJsonToFile(s, path, prettyPrint, indentChar);
+          Engine::Reflection::Serializer::ToJsonToFile(
+            s, path.empty() ? scene->name + ".json" : path, prettyPrint, indentChar
+          );
   }
 
   void SceneManager::SaveActiveScene(
     const std::string &path, const Engine::Reflection::Format format, const bool prettyPrint, const char indentChar
   ) {
-    SaveScene(activeScene, path, format, prettyPrint, indentChar);
+    SaveScene(activeScene, path.empty() ? activeScene->name + ".json" : path, format, prettyPrint, indentChar);
   }
 
   void SceneManager::UnloadScene(const std::string &name) {

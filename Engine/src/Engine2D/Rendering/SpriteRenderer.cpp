@@ -9,15 +9,15 @@
 
 namespace Engine2D::Rendering {
   SpriteRenderer::SpriteRenderer()
-    : Renderable2D(RenderableType::SpriteRenderer), color({1, 1, 1, 1}), flip({0, 0}) {}
+    : Renderable2D(RenderableType::SpriteRenderer), color(Engine::Rendering::Color::White()), flip({0, 0}) {}
 
-  void SpriteRenderer::SetColor(const glm::vec<4, float> &color) {
+  void SpriteRenderer::SetColor(const Engine::Rendering::Color &color) {
     this->color = color;
     dirty = true;
   }
 
-  const glm::vec<4, float> &SpriteRenderer::Color() const {
-    return this->color;
+  const Engine::Rendering::Color &SpriteRenderer::Color() const {
+    return color;
   }
 
   void SpriteRenderer::SetFlip(const glm::vec<2, bool> &flip) {
@@ -26,7 +26,7 @@ namespace Engine2D::Rendering {
   }
 
   const glm::vec<2, bool> &SpriteRenderer::Flip() const {
-    return this->flip;
+    return flip;
   }
 
   void SpriteRenderer::forward() {

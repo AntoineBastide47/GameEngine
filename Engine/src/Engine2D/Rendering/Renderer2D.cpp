@@ -87,7 +87,7 @@ namespace Engine2D::Rendering {
     // Get the model matrix and other data
     const SpriteRenderer &r = *renderer;
     const auto sprite = r.sprite;
-    const auto color = r.color;
+    const auto color = r.color.Clamped();
     const float invPPU = 1.0f / sprite->pixelsPerUnit;
     const auto rect = sprite->rect;
 
@@ -98,10 +98,10 @@ namespace Engine2D::Rendering {
     *data++ = r.Transform()->WorldScale().y * invPPU;
 
     // Color
-    *data++ = std::clamp(color.x, 0.0f, 1.0f);
-    *data++ = std::clamp(color.y, 0.0f, 1.0f);
-    *data++ = std::clamp(color.z, 0.0f, 1.0f);
-    *data++ = std::clamp(color.w, 0.0f, 1.0f);
+    *data++ = color.r;
+    *data++ = color.g;
+    *data++ = color.b;
+    *data++ = color.a;
 
     // Rect
     *data++ = std::clamp(rect.x, 0.0f, 1.0f);

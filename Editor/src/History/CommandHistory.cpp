@@ -8,10 +8,6 @@
 #include "History/EditorCommand.hpp"
 
 namespace Editor::History {
-  void CommandHistory::Create(std::unique_ptr<EditorCommand> command) {
-    pendingCommands.emplace_back(std::move(command));
-  }
-
   void CommandHistory::Undo() {
     if (CanUndo()) {
       commands.at(currentIndex)->Undo();
@@ -35,10 +31,7 @@ namespace Editor::History {
   }
 
   bool CommandHistory::HasAffectedScene() {
-    for (const auto &command: commands)
-      if (command->AffectsScene())
-        return true;
-    return false;
+    return hasAffectedScene;
   }
 
   void CommandHistory::Clear() {
@@ -72,10 +65,10 @@ namespace Editor::History {
 
   void CommandHistory::execute(std::unique_ptr<EditorCommand> command) {
     // Remove any commands after current index (branching history)
-    if (currentIndex < static_cast<int>(commands.size()) - 1) {
+    if (currentIndex < static_cast<int>(commands.size()) - 1)
       commands.erase(commands.begin() + currentIndex + 1, commands.end());
-    }
 
+    hasAffectedScene = hasAffectedScene || command->AffectsScene();
     command->Execute();
     commands.push_back(std::move(command));
     currentIndex++;

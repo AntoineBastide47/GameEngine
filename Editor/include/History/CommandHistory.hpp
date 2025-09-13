@@ -22,7 +22,9 @@ namespace Editor::History {
     public:
       /// Creates a new editor command
       /// @note The created command will be registered and executed at the end of the frame
-      static void Create(std::unique_ptr<EditorCommand> command);
+      static void Create(std::unique_ptr<EditorCommand> command) {
+        pendingCommands.emplace_back(std::move(command));
+      }
       /// Undoes the last executed command
       static void Undo();
       /// Redoes the last undone command
@@ -48,6 +50,8 @@ namespace Editor::History {
       inline static int currentIndex = -1;
       /// The maximum number of commands that can be stored in memory
       constexpr static size_t maxHistorySize = 1000;
+      /// Whether all the current commands have changed the active scene
+      inline static bool hasAffectedScene = false;
       /// All the commands stored in memory
       inline static std::vector<std::unique_ptr<EditorCommand>> commands;
       /// All the commands waiting to be stored in memory

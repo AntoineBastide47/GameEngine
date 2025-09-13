@@ -3,7 +3,30 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.10.6] - 2025-09-DD
+## [0.10.7] - 2025-09-DD
+### Added
+- **[[RenderInEditor](Engine/include/Engine/Reflection/RenderInEditor.hpp)]**: all _e_renderInEditor functions are now integrated with the editor command system so that modifications to components can be undone/redone
+- **[[ICustomEditor](Engine/include/Engine/Reflection/ICustomEditor.hpp)]**: interface to allow user defined editor scripts for custom editor rendering, all definitions must be encapsulated in a #if ENGINE_EDITOR block
+- **[[Load](Engine/include/Engine/Reflection/Load.hpp)]**: fixed size c-style arrays can now be loaded
+- **[[Save](Engine/include/Engine/Reflection/Save.hpp)]**: fixed size c-style arrays can now be saved
+- **[[Color](Engine/include/Engine/Rendering/Color.hpp)]**: color class with a lot of utility functions
+### Changed
+- **[[CommandHistory](Editor/include/History/CommandHistory.hpp)]**: made the HasAffectScene function more efficient by setting a flag each time a command is executed instead of looping over all commands
+- **[[EntityInspector](Editor/include/Panels/EntityInspector.hpp)]**: renders component custom editors if they have one instead of always rendering the default one
+- **[[EngineSetup](Engine/CMake/EngineSetup.cmake)]**: made the header forge binary use the one in the SDK instead of in the game project
+- **[[SceneManager](Engine/include/Engine2D/SceneManagement/SceneManager.hpp)]**: saving uses the name and format for the default path
+- **[[CLI/Build](tools/CLI/include/Commands/Build.hpp), [CLI/BuildEditor](tools/CLI/include/Commands/BuildEditor.hpp), [CLI/BuildProject](tools/CLI/include/Commands/BuildProject.hpp)]**: cmake automatically uses the best number of cores for builds
+- **[[HeaderForge/Generator](tools/HeaderForge/include/Generator.hpp)]**: render functions are conditionally built into the engine
+### Fixed
+- **[[RenderInEditor](Engine/include/Engine/Reflection/RenderInEditor.hpp)]**: adding and removing values to containers now works for all supported containers
+- **[[Load](Engine/include/Engine/Reflection/Load.hpp)]**: std::variant are now loaded properly
+- **[[Save](Engine/include/Engine/Reflection/Save.hpp)]**: containers that do not have a .size() function are now saved properly 
+### Removed
+- **[[CLI/Command](tools/CLI/include/Command.hpp)]**: core count detection
+- **[[CLI/LinkProject](tools/CLI/include/Commands/LinkProject.hpp)]**: header-forge copying
+- **[[HeaderForge/Generator](tools/HeaderForge/include/Generator.hpp)]**: namespaces in generated files
+
+## [0.10.6] - 2025-09-04
 ### Added
 - **[[ReflectionFactory](Engine/include/Engine/Reflection/ReflectionFactory.hpp)]**: enums and their values can be reflected, converted to and from strings
 - **[[RenderInEditor](Engine/include/Engine/Reflection/RenderInEditor.hpp)]**: enum rendering

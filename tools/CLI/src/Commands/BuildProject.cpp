@@ -68,7 +68,6 @@ void BuildProject::Run(
     std::cerr << RED << "Error removing files: " << e.what() << RESET;
   }
 
-  const std::string parallel = " --parallel " + std::to_string(GetCoreCount());
   const std::string buildDir = fromEditor ? "build_editor" : "build";
   const std::string buildType = fromEditor ? " -DPROJECT_BUILD_TYPE=shared" : " -DPROJECT_BUILD_TYPE=static";
 
@@ -82,5 +81,5 @@ void BuildProject::Run(
         "cmake -B " + buildDir + " -S . -DBUILD_TYPE=" + arg + " -Wdev -Wdeprecated --log-level=WARNING" + buildType
       ).c_str()
   );
-  std::system(("cmake --build " + buildDir + parallel).c_str());
+  std::system(("cmake --build " + buildDir + " --parallel").c_str());
 }

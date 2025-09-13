@@ -62,8 +62,10 @@ namespace Engine2D::Animation {
     SetSpeed(speed);
   }
 
+  #if ENGINE_EDITOR
   void Animation2D::OnEditorValueChanged() {
     SetFrameDuration(frameDuration);
     SetSpeed(speed);
   }
+  #endif
 }

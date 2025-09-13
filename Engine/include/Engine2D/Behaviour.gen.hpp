@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_BEHAVIOUR _e_SERIALIZE_RECORD \
+#define SERIALIZE_BEHAVIOUR _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Behaviour>("Engine2D::Behaviour");\
     return true;\
@@ -19,9 +18,15 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(active, format, json.At("active"));\
     }\
   }\
+  RENDER_BEHAVIOUR\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_BEHAVIOUR
+#else
+#define RENDER_BEHAVIOUR\
   bool _e_renderInEditor(const bool readOnly) override {\
     return false;\
-}\
-\
-  private: 
-} // namespace Engine::Reflection
+}
+#endif

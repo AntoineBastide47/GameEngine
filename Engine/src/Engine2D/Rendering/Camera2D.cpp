@@ -19,22 +19,8 @@ namespace Engine2D::Rendering {
   Camera2D::Camera2D()
     : Camera2D(-1, 1, -1, 1) {}
 
-  Camera2D::Camera2D(const float aspect, const float zoomLevel)
-    : followTarget(), positionOffset(0), rotationOffset(0), damping(1), zoomLevel(zoomLevel),
-      projection(
-        glm::ortho(
-          -aspect * zoomLevel / 2.0f, aspect * zoomLevel / 2.0f, -zoomLevel / 2.0f, zoomLevel / 2.0f, -32768.0f,
-          32768.0f
-        )
-      ),
-      view(1.0f), initialized(false), shakeDuration(0), shaking(false), shakeElapsed(0), ubo(0), followTargetIndex(-1),
-      left(-aspect * zoomLevel / 2.0f), right(aspect * zoomLevel / 2.0f), bottom(-zoomLevel / 2.0f),
-      top(zoomLevel / 2.0f) {
-    viewProjection = projection * view;
-  }
-
   Camera2D::Camera2D(
-    const float left, const float right, const float bottom, const float top, const float near, const float far
+    const float left, const float right, const float bottom, const float top
   )
     : followTarget(), positionOffset(0), rotationOffset(0), damping(1), zoomLevel(1.0f),
       projection(glm::ortho(left, right, bottom, top, near, far)), view(1.0f), initialized(false), shakeDuration(0),
@@ -69,12 +55,10 @@ namespace Engine2D::Rendering {
     const float halfHeight = scale.y * 0.5f;
 
     // Check if object overlaps with camera bounds
-    const bool result = !(
+    return !(
       relativeX + halfWidth < left || relativeX - halfWidth > right ||
       relativeY + halfHeight < bottom || relativeY - halfHeight > top
     );
-
-    return result;
   }
 
   void Camera2D::Resize(const float width, const float height) {
@@ -95,7 +79,7 @@ namespace Engine2D::Rendering {
   }
 
   void Camera2D::SetProjection(const float left, const float right, const float bottom, const float top) {
-    projection = glm::ortho(left, right, bottom, top, -32768.0f, 32768.0f);
+    projection = glm::ortho(left, right, bottom, top, near, far);
     viewProjection = projection * view;
 
     this->left = left;
@@ -212,7 +196,7 @@ namespace Engine2D::Rendering {
     for (const auto &[amplitude, frequency, phase]: shakeCoefficientsY)
       y += amplitude * std::sin(frequency * glm::pi<float>() * frac + phase);
 
-    const float lim = (frac <= mid) ? frac / mid : 1.0f - (frac - mid) / (1.0f - mid);
+    const float lim = frac <= mid ? frac / mid : 1.0f - (frac - mid) / (1.0f - mid);
     return glm::vec2(x, y) * lim;
   }
 }

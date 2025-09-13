@@ -105,10 +105,11 @@ namespace Engine2D::Rendering {
       ENGINE_SERIALIZE_HIDDEN float left, right, bottom, top;
 
       inline static uint ENGINE_DATA_BINDING_PORT = 0;
+      static constexpr float near = -32768.0f;
+      static constexpr float far = 32768.0f;
 
       Camera2D();
-      Camera2D(float aspect, float zoomLevel);
-      Camera2D(float left, float right, float bottom, float top, float near = -1, float far = 1);
+      Camera2D(float left, float right, float bottom, float top);
 
       void initialize();
       void updateCamera();

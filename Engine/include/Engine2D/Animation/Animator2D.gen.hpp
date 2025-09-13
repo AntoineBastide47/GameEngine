@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_ANIMATOR2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_ANIMATOR2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Animation::Animator2D>("Engine2D::Animation::Animator2D");\
     return true;\
@@ -29,17 +28,24 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(defaultAnimationName, format, json.At("defaultAnimationName"));\
     }\
   }\
+  RENDER_ANIMATOR2D\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_ANIMATOR2D
+#else
+#define RENDER_ANIMATOR2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(animations, "Animations", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(parameters, "Parameters", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(transitions, "Transitions", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(currentAnimationName, "CurrentAnimationName", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(defaultAnimationName, "DefaultAnimationName", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(currentAnimationName, "Current Animation Name", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(defaultAnimationName, "Default Animation Name", readOnly);\
     return changed;\
-  }\
-  private: 
-
+  }
+#endif
 
   #define REFLECT_ANIMATIONCONDITION\
   static inline const bool _reg_ANIMATIONCONDITION = [] {\
@@ -73,7 +79,7 @@ namespace Engine::Reflection {
     return true;\
   }();
 
-  #define SERIALIZE_PARAMETER _e_SERIALIZE_RECORD \
+#define SERIALIZE_PARAMETER _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Animation::Animator2D::Parameter>("Engine2D::Animation::Animator2D::Parameter");\
     return true;\
@@ -89,13 +95,20 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(type, format, json.At("type"));\
     }\
   }\
+  RENDER_PARAMETER
+
+#if !ENGINE_EDITOR
+#define RENDER_PARAMETER
+#else
+#define RENDER_PARAMETER\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(type, "Type", readOnly);\
     return changed;\
   }
+#endif
 
-  #define SERIALIZE_TRANSITIONCONDITION _e_SERIALIZE_RECORD \
+#define SERIALIZE_TRANSITIONCONDITION _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Animation::Animator2D::TransitionCondition>("Engine2D::Animation::Animator2D::TransitionCondition");\
     return true;\
@@ -115,6 +128,12 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(threshold, format, json.At("threshold"));\
     }\
   }\
+  RENDER_TRANSITIONCONDITION
+
+#if !ENGINE_EDITOR
+#define RENDER_TRANSITIONCONDITION
+#else
+#define RENDER_TRANSITIONCONDITION\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(parameter, "Parameter", readOnly);\
@@ -122,8 +141,9 @@ namespace Engine::Reflection {
     changed |= Engine::Reflection::_e_renderInEditorImpl(threshold, "Threshold", readOnly);\
     return changed;\
   }
+#endif
 
-  #define SERIALIZE_ANIMATIONTRANSITION _e_SERIALIZE_RECORD \
+#define SERIALIZE_ANIMATIONTRANSITION _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Animation::Animator2D::AnimationTransition>("Engine2D::Animation::Animator2D::AnimationTransition");\
     return true;\
@@ -145,12 +165,18 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(conditions, format, json.At("conditions"));\
     }\
   }\
+  RENDER_ANIMATIONTRANSITION
+
+#if !ENGINE_EDITOR
+#define RENDER_ANIMATIONTRANSITION
+#else
+#define RENDER_ANIMATIONTRANSITION\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(to, "To", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(hasExitTime, "HasExitTime", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(exitTime, "ExitTime", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(hasExitTime, "Has Exit Time", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(exitTime, "Exit Time", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(conditions, "Conditions", readOnly);\
     return changed;\
   }
-} // namespace Engine::Reflection
+#endif

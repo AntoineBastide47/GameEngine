@@ -16,14 +16,14 @@ namespace Engine {
 namespace Engine::Reflection {
   struct Reflectable;
 
-  template<typename T> concept IsOwningString = std::is_same_v<std::remove_cvref_t<T>, std::string>;
+  template<typename T> concept IsConst = std::is_const_v<std::remove_reference_t<T>>;
 
   template<typename T> concept IsNonOwningString =
       std::is_same_v<std::remove_cvref_t<T>, std::string_view> ||
       std::is_same_v<std::remove_cvref_t<T>, const char *> ||
       std::is_same_v<std::remove_cvref_t<T>, char *>;
 
-  template<typename T> concept IsString = IsOwningString<T> || IsNonOwningString<T>;
+  template<typename T> concept IsString = std::is_same_v<std::remove_cvref_t<T>, std::string> || IsNonOwningString<T>;
 
   template<typename T> concept IsNumber =
       std::is_arithmetic_v<std::remove_cvref_t<T>> &&

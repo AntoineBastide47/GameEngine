@@ -133,6 +133,9 @@ namespace Engine2D {
       /// Whether the game is running in headless mode (no window)
       bool headlessMode;
 
+      /// The update loop called on the main thread
+      void updateLoop();
+
       #if MULTI_THREAD
       /// Whether the main thread is finished and ready to sync with the render thread
       bool updateFinished;
@@ -149,12 +152,7 @@ namespace Engine2D {
       std::condition_variable controlCV;
       std::function<void()> renderThreadCallback;
       bool callbackPending;
-      #endif
 
-      /// The update loop called on the main thread
-      void updateLoop();
-
-      #if MULTI_THREAD
       /// The render loop called on the render thread
       void renderLoop();
       #endif

@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_RENDERABLE2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_RENDERABLE2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Rendering::Renderable2D>("Engine2D::Rendering::Renderable2D");\
     return true;\
@@ -23,13 +22,20 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(renderType, format, json.At("renderType"));\
     }\
   }\
-  bool _e_renderInEditor(const bool readOnly) override {\
-    bool changed = false;\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(renderOrder, "RenderOrder", readOnly);\
-    return changed;\
-  }\
+  RENDER_RENDERABLE2D\
   private: 
 
+
+#if !ENGINE_EDITOR
+#define RENDER_RENDERABLE2D
+#else
+#define RENDER_RENDERABLE2D\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(renderOrder, "Render Order", readOnly);\
+    return changed;\
+  }
+#endif
 
   #define REFLECT_RENDERABLETYPE\
   static inline const bool _reg_RENDERABLETYPE = [] {\
@@ -42,4 +48,3 @@ namespace Engine::Reflection {
     );\
     return true;\
   }();
-} // namespace Engine::Reflection

@@ -8,23 +8,6 @@
 
 #include "Command.hpp"
 
-int Command::GetCoreCount() {
-  #if defined(_WIN32)
-  SYSTEM_INFO sysinfo;
-  GetSystemInfo(&sysinfo);
-  return sysinfo.dwNumberOfProcessors;
-  #elif defined(__APPLE__)
-  int count;
-  size_t size = sizeof(count);
-  sysctlbyname("hw.ncpu", &count, &size, nullptr, 0);
-  return count;
-  #elif defined(__linux__)
-  return sysconf(_SC_NPROCESSORS_ONLN);
-  #else
-  return 2;
-  #endif
-}
-
 bool Command::HasNinja() {
   #if defined(_WIN32)
   return std::system("where ninja >nul 2>&1") == 0;

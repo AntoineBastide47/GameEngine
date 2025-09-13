@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_ANIMATION2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_ANIMATION2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Animation::Animation2D>("Engine2D::Animation::Animation2D");\
     return true;\
@@ -43,22 +42,29 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(speed, format, json.At("speed"));\
     }\
   }\
+  RENDER_ANIMATION2D\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_ANIMATION2D
+#else
+#define RENDER_ANIMATION2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(frameCountX, "FrameCountX", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(frameCountY, "FrameCountY", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(frameOffsetX, "FrameOffsetX", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(frameOffsetY, "FrameOffsetY", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(currentFrame, "CurrentFrame", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameCountX, "Frame Count X", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameCountY, "Frame Count Y", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameOffsetX, "Frame Offset X", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameOffsetY, "Frame Offset Y", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(currentFrame, "Current Frame", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(loop, "Loop", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(reverse, "Reverse", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(spriteName, "SpriteName", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(spriteName, "Sprite Name", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(vertical, "Vertical", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(paused, "Paused", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(completed, "Completed", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(frameDuration, "FrameDuration", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(frameDuration, "Frame Duration", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(speed, "Speed", readOnly);\
     return changed;\
-  }\
-  private: 
-} // namespace Engine::Reflection
+  }
+#endif

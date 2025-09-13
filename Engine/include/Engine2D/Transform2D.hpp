@@ -217,7 +217,9 @@ namespace Engine2D {
       /// Removes the given child to the child list of the current entity's transform
       void removeChild(Entity2D *child);
 
+      #if ENGINE_EDITOR
       void OnEditorValueChanged() override;
+      #endif
   };
 } // namespace Engine2D
 

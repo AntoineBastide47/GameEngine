@@ -36,8 +36,6 @@ void BuildEditor::Run(
   // Remove previously built executable
   fs::remove("Engine/lib/EditorExe");
 
-  const std::string parallel = " --parallel " + std::to_string(GetCoreCount());
-
   // Release
   if (buildRelease == "true") {
     fs::remove_all(EDITOR_BUILD "/release");
@@ -47,7 +45,7 @@ void BuildEditor::Run(
         ? "cmake -G Ninja -B " EDITOR_BUILD "/release" EDITOR_RELEASE_CMD
         : "cmake -B " EDITOR_BUILD "/release" EDITOR_RELEASE_CMD
     );
-    std::system(("cmake --build " EDITOR_BUILD "/release" + parallel).c_str());
+    std::system("cmake --build " EDITOR_BUILD "/release --parallel");
   } else {
     if (!fs::exists("Engine/build/debug"))
       fs::create_directory("Engine/build/debug");
@@ -57,6 +55,6 @@ void BuildEditor::Run(
         ? "cmake -G Ninja -B " EDITOR_BUILD "/debug" EDITOR_DEBUG_CMD
         : "cmake -B " EDITOR_BUILD "/debug" EDITOR_DEBUG_CMD
     );
-    std::system(("cmake --build " EDITOR_BUILD "/debug" + parallel).c_str());
+    std::system("cmake --build " EDITOR_BUILD "/debug --parallel");
   }
 }

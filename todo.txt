@@ -1,15 +1,21 @@
 SDK Changed:
- - Make SDK already contain the static libraries of each vendor item and link to those instead of rebuilding each time
+ - Make SDK already contain the static libraries of each vendor item and link to those instead of rebuilding each time, built in debug and release mode
  - Make SDK not come with docs, .github folders and other non code folders
 
 Rendering Changes:
  - Make Renderer2D manage all Renderable2D classes (update and render) and remove ParticleSystemRegistry2D class
 
-EntityInspector Changes:
- - Make changing component data reflect in command history using a void* command
- - Add custom editor classes for user defined editor scripts
- - Allow component dragging
+Game2D Changes:
+ - fix viewport not resizing as much as possible
 
-RenderInEditor Changes:
- - for containers, check other forms of pushing/popping
- - render enums
+ - instead of using raw pointers for entities and components use a wrapper so that they can't accidentally be deleted
+ - render entity and component pointers in the editor
+ - allow component dragging for setting
+ - create in class macros for easier editor rendering changes without needing to override the EditorRendering function
+
+ - add UI for adding/removing components
+ - allow component reordering
+
+ - add a Play/Pause button in the scene viewport
+ - add a UI pannel for the animator
+ - add a UI popup for simulating particle systems when the game isn't running

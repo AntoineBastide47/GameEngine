@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(Engine VERSION 0.10.6)
+project(Engine VERSION 0.10.7)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -104,6 +104,11 @@ add_library(Engine2D ${ENGINE_LIB_TYPE}
     src/Engine2D/SceneManagement/SceneResources.cpp
     include/Engine2D/SceneManagement/SceneResources.hpp
     include/Engine/Reflection/RenderInEditor.hpp
+    src/Engine/Rendering/Color.cpp
+    include/Engine/Rendering/Color.hpp
+    src/Engine/Reflection/ICustomEditor.cpp
+    include/Engine/Reflection/ICustomEditor.hpp
+    src/Engine/Reflection/Reflectable.cpp
 )
 
 # Set prefix at configure time instead of using generator expressions

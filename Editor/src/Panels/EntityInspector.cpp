@@ -7,6 +7,7 @@
 #include <imgui_internal.h>
 
 #include "Panels/EntityInspector.hpp"
+#include "Engine/Reflection/RenderInEditor.hpp"
 #include "Engine2D/SceneManagement/Scene.hpp"
 #include "History/CommandHistory.hpp"
 #include "Panels/SceneHierarchy.hpp"
@@ -27,18 +28,12 @@ namespace Editor {
 
       ImGui::SameLine();
 
-      char buffer[256] = {};
-      strncpy(buffer, context->name.c_str(), sizeof(buffer) - 1);
-      buffer[sizeof(buffer) - 1] = '\0';
-      if (ImGui::InputText("##name", buffer, sizeof(buffer))) {
-        context->name = buffer;
-      }
+      Engine::Reflection::InputText("Name", context->name, 1024 * 1024, true);
 
       ImGui::SameLine();
       bool isStatic = context->isStatic;
-      if (ImGui::Checkbox("Static", &isStatic)) {
+      if (ImGui::Checkbox("Static", &isStatic))
         History::CommandHistory::Create(toggleStaticCommand(context, isActive));
-      }
 
       ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetStyle().IndentSpacing * 0.5f);
 
@@ -102,7 +97,10 @@ namespace Editor {
         ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, ImGui::GetWindowWidth() * 0.35f);
         ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
-        if (comp->_e_renderInEditor(false))
+        if (const auto customEditor = dynamic_cast<Engine::Reflection::ICustomEditor *>(comp)) {
+          if (customEditor->OnRenderInEditor("", false, false))
+            comp->OnEditorValueChanged();
+        } else if (comp->_e_renderInEditorImpl(false, context->name))
           comp->OnEditorValueChanged();
 
         ImGui::EndTable();

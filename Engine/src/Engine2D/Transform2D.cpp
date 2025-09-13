@@ -14,6 +14,7 @@
 #include "Engine2D/Game2D.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/SceneManagement/SceneManager.hpp"
+#include "Engine2D/Rendering/SpriteRenderer.hpp"
 
 namespace Engine2D {
   Transform2D::Transform2D()
@@ -347,6 +348,9 @@ namespace Engine2D {
     visible = Game2D::Initialized() && SceneManager::ActiveScene() && SceneManager::ActiveScene()->MainCamera() &&
               SceneManager::ActiveScene()->MainCamera()->IsInViewport(worldPosition, worldScale);
 
+    if (const auto renderer = Entity()->GetComponent<Rendering::SpriteRenderer>())
+      renderer->dirty = true;
+
     // Update the children of this transform as they depend on the transform of their parent
     for (const auto child: children)
       if (child)
@@ -382,7 +386,9 @@ namespace Engine2D {
       children.erase(it);
   }
 
+  #if ENGINE_EDITOR
   void Transform2D::OnEditorValueChanged() {
     onTransformChange();
   }
+  #endif
 }

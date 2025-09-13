@@ -16,12 +16,17 @@ namespace Engine::Rendering {
   class Shader;
 }
 
+namespace Engine2D {
+  class Transform2D;
+}
+
 namespace Engine2D::Rendering {
   class Sprite;
 
   class Renderable2D : public Component2D {
     SERIALIZE_RENDERABLE2D
       friend class Renderer2D;
+      friend class Engine2D::Transform2D;
     public:
       enum RenderableType {
         None, SpriteRenderer, ParticleSystem
@@ -60,7 +65,10 @@ namespace Engine2D::Rendering {
 
       void OnSerialize(Engine::Reflection::Format format, Engine::JSON &json) const override;
       void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
+
+      #if ENGINE_EDITOR
       void OnEditorValueChanged() override;
+      #endif
   };
 }
 

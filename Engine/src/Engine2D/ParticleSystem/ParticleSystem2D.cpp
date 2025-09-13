@@ -26,10 +26,11 @@ namespace Engine2D {
     : Renderable2D(ParticleSystem), loop(false), restart(false), useGlobalVelocities(false), simulateInWorldSpace(true),
       startDelay(0), startPosition(glm::vec2(0)), flip({false, false}), startVelocity(glm::vec2(0)),
       endVelocity(glm::vec2(0)), startAngularVelocity(0), endAngularVelocity(), startScale(glm::vec2(1)),
-      endScale(glm::vec2(0)), startColor(glm::vec4(1)), endColor(glm::vec4(1)), simulationSpeed(1), emissionRate(0),
-      maxStartPositionOffset(1), blendMode(Alpha), duration(1), particleLifetime(1), inverseLifetime(1), particles(0),
-      head(0), capacity(0), maxParticles(0), simulationFinished(false), emissionAcc(0), durationAcc(0), quadVAO(0),
-      quadVBO(0), instanceVBO(0) {}
+      endScale(glm::vec2(0)), startColor(Engine::Rendering::Color::White()),
+      endColor(Engine::Rendering::Color::White()), simulationSpeed(1), emissionRate(0), maxStartPositionOffset(1),
+      blendMode(Alpha), duration(1), particleLifetime(1), inverseLifetime(1), particles(0), head(0), capacity(0),
+      maxParticles(0), simulationFinished(false), emissionAcc(0), durationAcc(0), quadVAO(0), quadVBO(0),
+      instanceVBO(0) {}
 
   void ParticleSystem2D::SetDuration(const float duration) {
     this->duration = duration;
@@ -123,7 +124,7 @@ namespace Engine2D {
     const float dt = deltaTime * simulationSpeed;
     const glm::vec2 scaleDelta = startScale - endScale;
     const float angularVelDelta = endAngularVelocity - startAngularVelocity;
-    const glm::vec4 colorDelta = endColor - startColor;
+    const Engine::Rendering::Color colorDelta = endColor - startColor;
 
     int j = 0;
     for (int i = 0; i < capacity; ++i) {
@@ -225,9 +226,11 @@ namespace Engine2D {
       ++capacity;
   }
 
+  #if ENGINE_EDITOR
   void ParticleSystem2D::OnEditorValueChanged() {
     SetDuration(duration);
     SetMaxParticles(maxParticles);
     SetParticleLifetime(particleLifetime);
   }
+  #endif
 }

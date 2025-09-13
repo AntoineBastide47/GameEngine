@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_ENTITY2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_ENTITY2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Entity2D>("Engine2D::Entity2D");\
     return true;\
@@ -31,16 +30,23 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(allComponents, format, json.At("allComponents"));\
     }\
   }\
+  RENDER_ENTITY2D\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_ENTITY2D
+#else
+#define RENDER_ENTITY2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(name, "Name", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(active, "Active", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(parentsActive, "ParentsActive", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(isStatic, "IsStatic", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(parentsActive, "Parents Active", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(isStatic, "Is Static", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(destroyed, "Destroyed", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(transform, "Transform", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(allComponents, "AllComponents", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(allComponents, "All Components", readOnly);\
     return changed;\
-  }\
-  private: 
-} // namespace Engine::Reflection
+  }
+#endif

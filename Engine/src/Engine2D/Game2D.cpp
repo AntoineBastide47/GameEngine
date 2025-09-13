@@ -384,7 +384,7 @@ namespace Engine2D {
     instance->width = width;
     instance->height = height;
 
-    const glm::vec<2, size_t> initialSize = Engine::Settings::Window::ScreenResolution();
+    const glm::vec<2, uint> initialSize = Engine::Settings::Window::ScreenResolution();
 
     // Calculate the proper aspect ratio
     const float ratioX = static_cast<float>(width) / static_cast<float>(initialSize.x);

@@ -50,7 +50,6 @@ void BuildEngine::Run(
   fs::remove_all("Engine/lib/static");
   fs::create_directory("Engine/lib/static");
 
-  const std::string parallel = " --parallel " + std::to_string(GetCoreCount());
   const bool hasNinja = HasNinja();
 
   // Header Forge
@@ -77,7 +76,7 @@ void BuildEngine::Run(
          : "cmake -B " + debugDir + DEBUG_CMD + buildShared + editorMacros
       ).c_str()
     );
-    std::system(("cmake --build " + debugDir + parallel).c_str());
+    std::system(("cmake --build " + debugDir + " --parallel").c_str());
 
     // Profiling
     const std::string profilingDir = ENGINE_BUILD "/profiling" + buildFolder;
@@ -90,7 +89,7 @@ void BuildEngine::Run(
          : "cmake -B " + profilingDir + PROFILING_CMD + buildShared + editorMacros
       ).c_str()
     );
-    std::system(("cmake --build " + profilingDir + parallel).c_str());
+    std::system(("cmake --build " + profilingDir + " --parallel").c_str());
   }
 
   // Release
@@ -108,6 +107,6 @@ void BuildEngine::Run(
          : "cmake -B " + releaseDir + RELEASE_CMD
       ).c_str()
     );
-    std::system(("cmake --build " + releaseDir + parallel).c_str());
+    std::system(("cmake --build " + releaseDir + " --parallel").c_str());
   }
 }

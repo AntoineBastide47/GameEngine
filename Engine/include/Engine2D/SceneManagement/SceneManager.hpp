@@ -46,8 +46,8 @@ namespace Engine2D {
       /// @param prettyPrint Whether to pretty print the data or not
       /// @param indentChar The indent char to use
       static void SaveScene(
-        const std::string &name, const std::string &path, Engine::Reflection::Format format, bool prettyPrint = false,
-        char indentChar = ' '
+        const std::string &name, const std::string &path = "",
+        Engine::Reflection::Format format = Engine::Reflection::JSON, bool prettyPrint = false, char indentChar = ' '
       );
 
       /// Save's the given scene into the given file
@@ -57,8 +57,8 @@ namespace Engine2D {
       /// @param prettyPrint Whether to pretty print the data or not
       /// @param indentChar The indent char to use
       static void SaveScene(
-        const Scene *scene, const std::string &path, Engine::Reflection::Format format, bool prettyPrint = false,
-        char indentChar = ' '
+        const Scene *scene, const std::string &path = "", Engine::Reflection::Format format = Engine::Reflection::JSON,
+        bool prettyPrint = false, char indentChar = ' '
       );
 
       /// Save's the currently active scene into the given file
@@ -67,7 +67,8 @@ namespace Engine2D {
       /// @param prettyPrint Whether to pretty print the data or not
       /// @param indentChar The indent char to use
       static void SaveActiveScene(
-        const std::string &path, Engine::Reflection::Format format, bool prettyPrint = false, char indentChar = ' '
+        const std::string &path = "", Engine::Reflection::Format format = Engine::Reflection::JSON,
+        bool prettyPrint = false, char indentChar = ' '
       );
 
       /// Unload's the scene with the given name and remove's all it's entities and their components from memory

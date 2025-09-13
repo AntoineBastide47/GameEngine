@@ -11,6 +11,7 @@
 
 #include "Engine2D/Rendering/Renderable2D.hpp"
 #include "ParticleSystem2D.gen.hpp"
+#include "Engine/Rendering/Color.hpp"
 
 namespace Engine::Rendering {
   class Shader;
@@ -64,9 +65,9 @@ namespace Engine2D {
       /// The scale of the particles at the end of there life
       glm::vec2 endScale;
       /// The initial color of the particles
-      glm::vec4 startColor;
+      Engine::Rendering::Color startColor;
       /// The final color of the particles
-      glm::vec4 endColor;
+      Engine::Rendering::Color endColor;
 
       /// How fast the simulation is run, 1.0f runs at normal sped
       float simulationSpeed;
@@ -143,7 +144,9 @@ namespace Engine2D {
       /// Updates the dead particle at the given index and brings it back to life
       void respawnParticle();
 
+      #if ENGINE_EDITOR
       void OnEditorValueChanged() override;
+      #endif
   };
 }
 

@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_CAMERA2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_CAMERA2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Rendering::Camera2D>("Engine2D::Rendering::Camera2D");\
     return true;\
@@ -43,20 +42,27 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(top, format, json.At("top"));\
     }\
   }\
-  bool _e_renderInEditor(const bool readOnly) override {\
-    bool changed = false;\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "PositionOffset", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(rotationOffset, "RotationOffset", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(damping, "Damping", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(zoomLevel, "ZoomLevel", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeCoefficientsX, "ShakeCoefficientsX", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeCoefficientsY, "ShakeCoefficientsY", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeDuration, "ShakeDuration", readOnly);\
-    return changed;\
-  }\
+  RENDER_CAMERA2D\
   private: 
 
-  #define SERIALIZE_SHAKEWAVE _e_SERIALIZE_RECORD \
+
+#if !ENGINE_EDITOR
+#define RENDER_CAMERA2D
+#else
+#define RENDER_CAMERA2D\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(rotationOffset, "Rotation Offset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(damping, "Damping", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(zoomLevel, "Zoom Level", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeCoefficientsX, "Shake Coefficients X", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeCoefficientsY, "Shake Coefficients Y", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeDuration, "Shake Duration", readOnly);\
+    return changed;\
+  }
+#endif
+#define SERIALIZE_SHAKEWAVE _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Rendering::Camera2D::ShakeWave>("Engine2D::Rendering::Camera2D::ShakeWave");\
     return true;\
@@ -76,6 +82,12 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(phase, format, json.At("phase"));\
     }\
   }\
+  RENDER_SHAKEWAVE
+
+#if !ENGINE_EDITOR
+#define RENDER_SHAKEWAVE
+#else
+#define RENDER_SHAKEWAVE\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(amplitude, "Amplitude", readOnly);\
@@ -83,4 +95,4 @@ namespace Engine::Reflection {
     changed |= Engine::Reflection::_e_renderInEditorImpl(phase, "Phase", readOnly);\
     return changed;\
   }
-} // namespace Engine::Reflection
+#endif

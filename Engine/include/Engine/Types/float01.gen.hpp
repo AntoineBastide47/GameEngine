@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_FLOAT01 _e_SERIALIZE_RECORD \
+#define SERIALIZE_FLOAT01 _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine::float01>("Engine::float01");\
     return true;\
@@ -19,10 +18,17 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(value, format, json.At("value"));\
     }\
   }\
+  RENDER_FLOAT01\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_FLOAT01
+#else
+#define RENDER_FLOAT01\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(value, "Value", readOnly);\
     return changed;\
-  }\
-  private: 
-} // namespace Engine::Reflection
+  }
+#endif

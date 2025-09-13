@@ -44,7 +44,7 @@ namespace Engine::Reflection {
 
   std::string Generator::GenerateRecordContent(const std::vector<Record> &records) {
     std::ostringstream content;
-    content.write("// Auto-generated – DO NOT EDIT\n\n#pragma once\n\nnamespace Engine::Reflection {\n", 80);
+    content.write("// Auto-generated – DO NOT EDIT\n\n#pragma once\n\n", 49);
 
     for (auto it = records.begin(); it != records.end(); ++it) {
       GenerateRecordMacro(*it, content);
@@ -61,8 +61,6 @@ namespace Engine::Reflection {
       if (lastRecord && !it->isClass)
         content.put('\n');
     }
-
-    content.write("} // namespace Engine::Reflection\n", 34);
     return content.str();
   }
 
@@ -73,17 +71,20 @@ namespace Engine::Reflection {
     else
       name = record.name.substr(pos + 2);
     std::ranges::transform(name, name.begin(), toupper);
-    output.write("  #define SERIALIZE_", 20);
+    output.write("#define SERIALIZE_", 18);
     output.write(name.c_str(), static_cast<long>(name.size()));
     output.write(" _e_SERIALIZE_RECORD \\\n", 23);
 
     GenerateReflectionFactoryCode(record, output);
     GenerateSaveFunction(record, output);
     GenerateLoadFunction(record, output);
-    GenerateEditorRecordFunction(record, output);
 
+    output.write("\\\n  RENDER_", 11);
+    output.write(name.c_str(), static_cast<long>(name.size()));
     if (record.isClass)
       output.write("\\\n  private: \n", 14);
+
+    GenerateEditorRecordFunction(record, output, name);
   }
 
   void Generator::GenerateReflectionFactoryCode(const Record &record, std::ostream &output) {
@@ -140,11 +141,21 @@ namespace Engine::Reflection {
     output.write("    }\\\n  }", 10);
   }
 
-  void Generator::GenerateEditorRecordFunction(const Record &record, std::ostream &output) {
+  void Generator::GenerateEditorRecordFunction(const Record &record, std::ostream &output, const std::string &name) {
+    output.write(
+      "\n\n#if !ENGINE_EDITOR\n"
+      "#define RENDER_", 36
+    );
+    output.write(name.c_str(), static_cast<long>(name.size()));
+    output.write(
+      "\n#else\n"
+      "#define RENDER_", 22
+    );
+    output.write(name.c_str(), static_cast<long>(name.size()));
     output.write("\\\n  bool _e_renderInEditor(const bool readOnly) override {", 58);
 
     if (record.editorFields.empty()) {
-      output.write("\\\n    return false;\\\n}\\\n", 24);
+      output.write("\\\n    return false;\\\n}\n#endif", 29);
       return;
     }
 
@@ -156,14 +167,21 @@ namespace Engine::Reflection {
       output.write("    changed |= Engine::Reflection::_e_renderInEditorImpl(", 57);
       output.write(field.c_str(), static_cast<long>(field.size()));
       output.write(", \"", 3);
-      output.put(static_cast<char>(std::toupper(static_cast<unsigned char>(field.at(0)))));
-      if (field.size() > 1) {
-        output.write(field.c_str() + 1, static_cast<long>(field.size() - 1));
+      for (size_t i = 0; i < field.size(); ++i) {
+        const unsigned char c = static_cast<unsigned char>(field[i]);
+        if (i == 0)
+          output.put(static_cast<char>(std::toupper(c)));
+        else {
+          if (std::isupper(c))
+            output.put(' ');
+          output.put(static_cast<char>(c));
+        }
       }
+
       output.write("\", readOnly);\\\n", 15);
     }
 
-    output.write("    return changed;\\\n  }", 24);
+    output.write("    return changed;\\\n  }\n#endif", 31);
   }
 
   void Generator::GenerateEnumReflectionMacro(const Enum &enumerator, std::ostream &output, const bool lastEnum) {

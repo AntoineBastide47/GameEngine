@@ -19,7 +19,7 @@
 #define PREPROCESS_CMD_START "clang++ -std=c++20 -E -DHEADER_FORGE_ENABLE_ANNOTATIONS "
 #define PREPROCESS_CMD_END " " OS_INCLUDES " " ALL_IN_ONE_CPP " -o " ALL_IN_ONE_II
 
-constexpr static std::array version = {1, 2, 0};
+constexpr static std::array version = {1, 3, 0};
 
 namespace fs = std::filesystem;
 

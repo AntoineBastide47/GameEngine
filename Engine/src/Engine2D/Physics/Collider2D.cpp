@@ -35,6 +35,12 @@ namespace Engine2D::Physics {
     return type;
   }
 
+  #if ENGINE_EDITOR
+  bool Collider2D::OnRenderInEditor(const std::string &name, bool isConst, bool readOnly) {
+    return false;
+  }
+  #endif
+
   Collider2D::AABB Collider2D::getAABB() {
     const auto matrix = Transform()->WorldMatrix();
     if (!rigidbody)
@@ -52,6 +58,23 @@ namespace Engine2D::Physics {
     return (autoCompute ? Transform()->WorldPosition() : position) + positionOffset;
   }
 
+  #if ENGINE_EDITOR
+  bool CircleCollider2D::OnRenderInEditor(const std::string &name, bool isConst, const bool readOnly) {
+    bool changed = Engine::Reflection::_e_renderInEditorImpl(isTrigger, "Is Trigger", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(elasticity, "Elasticity", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "Auto Compute", readOnly);
+
+    if (!autoCompute) {
+      changed |= Engine::Reflection::_e_renderInEditorImpl(position, "Position", readOnly);
+      changed |= Engine::Reflection::_e_renderInEditorImpl(radius, "Radius", readOnly);
+    }
+
+    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);
+
+    return changed;
+  }
+  #endif
+
   CircleCollider2D::CircleCollider2D()
     : radius(0) {
     type = Circle;
@@ -65,6 +88,23 @@ namespace Engine2D::Physics {
   glm::vec2 CircleCollider2D::getScale() const {
     return autoCompute ? Transform()->WorldHalfScale() : glm::vec2(1) * radius;
   }
+
+  #if ENGINE_EDITOR
+  bool BoxCollider2D::OnRenderInEditor(const std::string &name, bool isConst, const bool readOnly) {
+    bool changed = Engine::Reflection::_e_renderInEditorImpl(isTrigger, "Is Trigger", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(elasticity, "Elasticity", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "Auto Compute", readOnly);
+
+    if (!autoCompute) {
+      changed |= Engine::Reflection::_e_renderInEditorImpl(position, "Position", readOnly);
+      changed |= Engine::Reflection::_e_renderInEditorImpl(size, "Size", readOnly);
+    }
+
+    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);
+
+    return changed;
+  }
+  #endif
 
   BoxCollider2D::BoxCollider2D()
     : size(0) {
@@ -100,6 +140,23 @@ namespace Engine2D::Physics {
   glm::vec2 BoxCollider2D::getScale() const {
     return autoCompute ? Transform()->WorldScale() : size;
   }
+
+  #if ENGINE_EDITOR
+  bool PolygonCollider2D::OnRenderInEditor(const std::string &name, bool isConst, const bool readOnly) {
+    bool changed = Engine::Reflection::_e_renderInEditorImpl(isTrigger, "Is Trigger", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(elasticity, "Elasticity", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "Auto Compute", readOnly);
+
+    if (!autoCompute) {
+      changed |= Engine::Reflection::_e_renderInEditorImpl(position, "Position", readOnly);
+      changed |= Engine::Reflection::_e_renderInEditorImpl(vertices, "Vertices", readOnly);
+    }
+
+    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);
+
+    return changed;
+  }
+  #endif
 
   PolygonCollider2D::PolygonCollider2D() {
     type = Polygon;

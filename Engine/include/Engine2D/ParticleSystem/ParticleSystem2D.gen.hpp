@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_PARTICLESYSTEM2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_PARTICLESYSTEM2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::ParticleSystem2D>("Engine2D::ParticleSystem2D");\
     return true;\
@@ -69,35 +68,42 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(simulationFinished, format, json.At("simulationFinished"));\
     }\
   }\
-  bool _e_renderInEditor(const bool readOnly) override {\
-    bool changed = false;\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(renderOrder, "RenderOrder", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(loop, "Loop", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(restart, "Restart", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(useGlobalVelocities, "UseGlobalVelocities", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(simulateInWorldSpace, "SimulateInWorldSpace", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(startDelay, "StartDelay", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(startPosition, "StartPosition", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(flip, "Flip", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(startVelocity, "StartVelocity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(endVelocity, "EndVelocity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(startAngularVelocity, "StartAngularVelocity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(endAngularVelocity, "EndAngularVelocity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(startScale, "StartScale", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(endScale, "EndScale", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(startColor, "StartColor", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(endColor, "EndColor", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(simulationSpeed, "SimulationSpeed", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(emissionRate, "EmissionRate", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(maxStartPositionOffset, "MaxStartPositionOffset", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(blendMode, "BlendMode", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(duration, "Duration", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(particleLifetime, "ParticleLifetime", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(maxParticles, "MaxParticles", readOnly);\
-    return changed;\
-  }\
+  RENDER_PARTICLESYSTEM2D\
   private: 
 
+
+#if !ENGINE_EDITOR
+#define RENDER_PARTICLESYSTEM2D
+#else
+#define RENDER_PARTICLESYSTEM2D\
+  bool _e_renderInEditor(const bool readOnly) override {\
+    bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(renderOrder, "Render Order", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(loop, "Loop", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(restart, "Restart", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(useGlobalVelocities, "Use Global Velocities", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(simulateInWorldSpace, "Simulate In World Space", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startDelay, "Start Delay", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startPosition, "Start Position", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(flip, "Flip", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startVelocity, "Start Velocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(endVelocity, "End Velocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startAngularVelocity, "Start Angular Velocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(endAngularVelocity, "End Angular Velocity", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startScale, "Start Scale", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(endScale, "End Scale", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(startColor, "Start Color", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(endColor, "End Color", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(simulationSpeed, "Simulation Speed", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(emissionRate, "Emission Rate", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(maxStartPositionOffset, "Max Start Position Offset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(blendMode, "Blend Mode", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(duration, "Duration", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(particleLifetime, "Particle Lifetime", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(maxParticles, "Max Particles", readOnly);\
+    return changed;\
+  }
+#endif
 
   #define REFLECT_BLENDMODE\
   static inline const bool _reg_BLENDMODE = [] {\
@@ -114,4 +120,3 @@ namespace Engine::Reflection {
     );\
     return true;\
   }();
-} // namespace Engine::Reflection

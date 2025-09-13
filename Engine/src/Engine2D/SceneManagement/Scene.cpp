@@ -114,8 +114,7 @@ namespace Engine2D {
       -static_cast<float>(Game2D::instance->width / 2) * Game2D::instance->screenScaleFactor,
       static_cast<float>(Game2D::instance->width / 2) * Game2D::instance->screenScaleFactor,
       -static_cast<float>(Game2D::instance->height / 2) * Game2D::instance->screenScaleFactor,
-      static_cast<float>(Game2D::instance->height / 2) * Game2D::instance->screenScaleFactor,
-      -32768.0f, 32768.0f
+      static_cast<float>(Game2D::instance->height / 2) * Game2D::instance->screenScaleFactor
     );
   }
 

@@ -20,9 +20,10 @@ namespace Engine2D {
 
 namespace Engine::Reflection {
   template<typename T> static void _e_loadImpl(T &result, const Format format, const Engine::JSON &json) {
-    if constexpr (HasLoadFunction<T, Format>)
-      _e_load(result, format, json);
-    else
+    if constexpr (HasLoadFunction<T, Format>) {
+      if constexpr (!IsConst<T>)
+        _e_load(result, format, json);
+    } else
       static_assert(
         _e_f<T>, R"(
 No save overloads were found for the requested type.
@@ -57,6 +58,23 @@ No save overloads were found for the requested type.
         throw std::runtime_error("Non-integral value for enum");
 
       result = static_cast<T>(static_cast<std::underlying_type_t<T>>(value));
+    }
+  }
+
+  template<typename T, size_t N> static void _e_load(T (&result)[N], const Format format, const Engine::JSON &json) {
+    if (format == JSON) {
+      const auto &array = json.GetArray();
+
+      if (array.size() != N) {
+        throw std::runtime_error(
+          "JSON array size mismatch for fixed array: expected " +
+          std::to_string(N) + ", got " + std::to_string(array.size())
+        );
+      }
+
+      for (size_t i = 0; i < N; ++i) {
+        _e_loadImpl(result[i], format, array[i]);
+      }
     }
   }
 
@@ -135,7 +153,7 @@ No save overloads were found for the requested type.
           key = k;
         else {
           using KeyType = typename T::key_type;
-          key = Engine::Reflection::Deserializer::FromJsonString<KeyType>(k);
+          key = Deserializer::FromJsonString<KeyType>(k);
         }
 
         _e_loadImpl(value, format, v);
@@ -237,14 +255,15 @@ No save overloads were found for the requested type.
       const size_t idx = static_cast<size_t>(json["index"].GetNumber());
       const auto &valueJson = json["value"];
 
-      auto loader = [&]<typename T0>([[maybe_unused]] T0 typeTag) {
-        using T = typename T0::type;
-        T temp;
-        _e_loadImpl(temp, format, valueJson);
-        v = std::move(temp);
-      };
-
-      ((idx == std::variant<Ts...>::template index_of<Ts>() ? (loader(std::type_identity<Ts>{}), true) : false) || ...);
+      [&]<size_t... Is>(std::index_sequence<Is...>) {
+        (void)((Is == idx
+                  ? [&] {
+                    std::variant_alternative_t<Is, std::variant<Ts...>> temp;
+                    _e_loadImpl(temp, format, valueJson);
+                    v = std::move(temp);
+                  }(), true
+                  : false) || ...);
+      }(std::index_sequence_for<Ts...>{});
     }
   }
 }

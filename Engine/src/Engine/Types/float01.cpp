@@ -40,4 +40,28 @@ namespace Engine {
     }
     return *this = this->value / value;
   }
+
+  #if ENGINE_EDITOR
+  bool float01::OnRenderInEditor(const std::string &name, const bool isConst, const bool readOnly) {
+    RenderVariableName(name);
+
+    if (isConst) {
+      ImGui::BeginDisabled(true);
+      float temp = value;
+      ImGui::DragFloat(("##" + name).c_str(), &temp);
+      ImGui::EndDisabled();
+      return false;
+    }
+
+    ImGui::BeginDisabled(readOnly);
+    bool changed = false;
+    float temp = value;
+    if (ImGui::DragFloat(("##" + name).c_str(), &temp, 0.01f, 0, 1)) {
+      value = temp;
+      changed = true;
+    }
+    ImGui::EndDisabled();
+    return changed;
+  }
+  #endif
 }

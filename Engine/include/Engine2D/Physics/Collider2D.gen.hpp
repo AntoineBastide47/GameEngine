@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_COLLIDER2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_COLLIDER2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Physics::Collider2D>("Engine2D::Physics::Collider2D");\
     return true;\
@@ -31,17 +30,24 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(type, format, json.At("type"));\
     }\
   }\
+  RENDER_COLLIDER2D\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_COLLIDER2D
+#else
+#define RENDER_COLLIDER2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(elasticity, "Elasticity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "PositionOffset", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(isTrigger, "IsTrigger", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "AutoCompute", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(isTrigger, "Is Trigger", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "Auto Compute", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(position, "Position", readOnly);\
     return changed;\
-  }\
-  private: 
-
+  }
+#endif
 
   #define REFLECT_COLLIDERTYPE\
   static inline const bool _reg_COLLIDERTYPE = [] {\
@@ -56,7 +62,7 @@ namespace Engine::Reflection {
     return true;\
   }();
 
-  #define SERIALIZE_AABB _e_SERIALIZE_RECORD \
+#define SERIALIZE_AABB _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Physics::Collider2D::AABB>("Engine2D::Physics::Collider2D::AABB");\
     return true;\
@@ -74,14 +80,21 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(max, format, json.At("max"));\
     }\
   }\
+  RENDER_AABB
+
+#if !ENGINE_EDITOR
+#define RENDER_AABB
+#else
+#define RENDER_AABB\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(min, "Min", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(max, "Max", readOnly);\
     return changed;\
   }
+#endif
 
-  #define SERIALIZE_CIRCLECOLLIDER2D _e_SERIALIZE_RECORD \
+#define SERIALIZE_CIRCLECOLLIDER2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Physics::CircleCollider2D>("Engine2D::Physics::CircleCollider2D");\
     return true;\
@@ -111,19 +124,26 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(radius, format, json.At("radius"));\
     }\
   }\
+  RENDER_CIRCLECOLLIDER2D\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_CIRCLECOLLIDER2D
+#else
+#define RENDER_CIRCLECOLLIDER2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(elasticity, "Elasticity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "PositionOffset", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(isTrigger, "IsTrigger", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "AutoCompute", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(isTrigger, "Is Trigger", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "Auto Compute", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(position, "Position", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(radius, "Radius", readOnly);\
     return changed;\
-  }\
-  private: 
-
-  #define SERIALIZE_BOXCOLLIDER2D _e_SERIALIZE_RECORD \
+  }
+#endif
+#define SERIALIZE_BOXCOLLIDER2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Physics::BoxCollider2D>("Engine2D::Physics::BoxCollider2D");\
     return true;\
@@ -153,19 +173,26 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(size, format, json.At("size"));\
     }\
   }\
+  RENDER_BOXCOLLIDER2D\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_BOXCOLLIDER2D
+#else
+#define RENDER_BOXCOLLIDER2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(elasticity, "Elasticity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "PositionOffset", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(isTrigger, "IsTrigger", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "AutoCompute", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(isTrigger, "Is Trigger", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "Auto Compute", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(position, "Position", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(size, "Size", readOnly);\
     return changed;\
-  }\
-  private: 
-
-  #define SERIALIZE_POLYGONCOLLIDER2D _e_SERIALIZE_RECORD \
+  }
+#endif
+#define SERIALIZE_POLYGONCOLLIDER2D _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Physics::PolygonCollider2D>("Engine2D::Physics::PolygonCollider2D");\
     return true;\
@@ -195,15 +222,22 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(vertices, format, json.At("vertices"));\
     }\
   }\
+  RENDER_POLYGONCOLLIDER2D\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_POLYGONCOLLIDER2D
+#else
+#define RENDER_POLYGONCOLLIDER2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(elasticity, "Elasticity", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "PositionOffset", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(isTrigger, "IsTrigger", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "AutoCompute", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(isTrigger, "Is Trigger", readOnly);\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(autoCompute, "Auto Compute", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(position, "Position", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(vertices, "Vertices", readOnly);\
     return changed;\
-  }\
-  private: 
-} // namespace Engine::Reflection
+  }
+#endif

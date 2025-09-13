@@ -417,7 +417,7 @@ namespace Engine {
         return false;
       }
 
-      std::string dump(int indentSize = -1, char indentChar = ' ') const;
+      std::string dump(bool prettyPrint, int indentSize = -1, char indentChar = ' ') const;
   };
 }
 

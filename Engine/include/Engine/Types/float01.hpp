@@ -7,11 +7,12 @@
 #ifndef FLOAT01_H
 #define FLOAT01_H
 
+#include "Engine/Reflection/ICustomEditor.hpp"
 #include "Engine/Reflection/Reflectable.hpp"
 #include "float01.gen.hpp"
 
 namespace Engine {
-  class float01 final : public Reflection::Reflectable {
+  class float01 final : public Reflection::Reflectable, public Reflection::ICustomEditor {
   SERIALIZE_FLOAT01
     public:
       /// Default constructor, sets the value to 0
@@ -34,6 +35,10 @@ namespace Engine {
       float01 &operator*=(float value);
       /// Division assignment operator
       float01 &operator/=(float value);
+
+      #if ENGINE_EDITOR
+      bool OnRenderInEditor(const std::string &name, bool isConst, bool readOnly) override;
+      #endif
     private:
       ENGINE_SERIALIZE float value;
   };

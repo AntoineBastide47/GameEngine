@@ -19,20 +19,20 @@ namespace Engine {
         friend class Settings;
         public:
           /// Changes the current screen resolution to the new value
-          static void SetScreenResolution(glm::vec<2, size_t> newValue);
+          static void SetScreenResolution(glm::vec<2, uint> newValue);
           /// Changes the title of the window
           static void SetTitle(const std::string &newTitle);
           /// If true, allows window resizing
           static void SetAllowResize(bool newState);
 
           /// @returns The initial screen resolution (before any resizing)
-          [[nodiscard]] static glm::vec<2, size_t> ScreenResolution();
+          [[nodiscard]] static glm::vec<2, uint> ScreenResolution();
           /// @returns The title of the window
           [[nodiscard]] static std::string Title();
           /// @returns True if the user can resize the window, false if not
           [[nodiscard]] static bool AllowResize();
         private:
-          inline static auto resolution = glm::vec<2, size_t>(800, 600);
+          inline static auto resolution = glm::vec<2, uint>(800, 600);
           inline static std::string title = "Game Window";
           inline static bool allowResize = true;
 

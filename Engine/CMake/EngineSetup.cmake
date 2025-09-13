@@ -130,7 +130,7 @@ function(setup_header_forge)
     if (NOT TARGET HeaderForge)
         add_custom_target(HeaderForge
             COMMAND ${CMAKE_COMMAND} -E echo "Running reflection engine..."
-            COMMAND ../header-forge --parse ../Game/include --compilerArgs ${HEADER_FORGE_COMPILER_ARGS}
+            COMMAND ../${ENGINE_LOCATION}/header-forge --parse ../Game/include --compilerArgs ${HEADER_FORGE_COMPILER_ARGS}
             COMMENT "Engine header-forge step"
         )
         add_dependencies(HeaderForge ${ENGINE_DEPENDENCIES})

@@ -57,7 +57,9 @@ namespace Engine2D::Rendering {
     }
   }
 
+  #if ENGINE_EDITOR
   void Renderable2D::OnEditorValueChanged() {
     dirty = true;
   }
+  #endif
 }

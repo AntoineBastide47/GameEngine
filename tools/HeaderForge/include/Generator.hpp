@@ -32,7 +32,7 @@ namespace Engine::Reflection {
       /// Writes the load function for a user defined record
       static void GenerateLoadFunction(const Record &record, std::ostream &output);
       /// Writes the editor render function for a user defined record
-      static void GenerateEditorRecordFunction(const Record &record, std::ostream &output);
+      static void GenerateEditorRecordFunction(const Record &record, std::ostream &output, const std::string &name);
       /// Writes the macro that enables the enum to be reflected
       static void GenerateEnumReflectionMacro(const Enum &enumerator, std::ostream &output, bool lastEnum);
 

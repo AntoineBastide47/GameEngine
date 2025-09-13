@@ -9,8 +9,9 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine2D/Component2D.hpp"
+#include "Engine/Reflection/ICustomEditor.hpp"
 #include "Engine/Types/float01.hpp"
+#include "Engine2D/Component2D.hpp"
 #include "Rigidbody2D.gen.hpp"
 
 namespace Engine2D {
@@ -27,7 +28,7 @@ namespace Engine2D::Physics {
    * forces, collisions, and interaction with gravity. It supports two types of bodies:
    * Circle and Rectangle.
    */
-  class Rigidbody2D final : public Component2D {
+  class Rigidbody2D final : public Component2D, public Engine::Reflection::ICustomEditor {
     SERIALIZE_RIGIDBODY2D
       friend class Physics2D;
       friend class Engine2D::Entity2D;
@@ -68,6 +69,10 @@ namespace Engine2D::Physics {
       void DefaultFriction();
 
       void OnDeserialize(Engine::Reflection::Format format, const Engine::JSON &json) override;
+
+      #if ENGINE_EDITOR
+      bool OnRenderInEditor(const std::string &name, bool isConst, bool readOnly) override;
+      #endif
     private:
       /// Mass of the rigidbody
       ENGINE_SERIALIZE float mass;
@@ -89,7 +94,9 @@ namespace Engine2D::Physics {
       /// Runs a physics step on this rigidbody
       void step();
 
+      #if ENGINE_EDITOR
       void OnEditorValueChanged() override;
+      #endif
   };
 }
 

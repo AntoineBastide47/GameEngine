@@ -465,7 +465,7 @@ namespace Engine {
   }
 
   std::string JSON::Dump(const bool prettyPrint, const char indentChar) const {
-    return dump(prettyPrint - 1, indentChar);
+    return dump(prettyPrint, prettyPrint - 1, indentChar);
   }
 
   JSON JSON::Array(const std::initializer_list<JSON> &values) {
@@ -486,9 +486,8 @@ namespace Engine {
     return type == object || type == array;
   }
 
-  std::string JSON::dump(const int indentSize, const char indentChar) const {
+  std::string JSON::dump(const bool prettyPrint, const int indentSize, const char indentChar) const {
     std::ostringstream oss;
-    const bool prettyPrint = indentSize > -1;
     const int newIndent = prettyPrint ? indentSize + 1 : -1;
     const int endCharIndent = indentSize > 0 ? indentSize : 0;
 
@@ -526,7 +525,7 @@ namespace Engine {
             oss.put('\n');
             oss.write(std::string(newIndent * 2, indentChar).c_str(), newIndent * 2);
           }
-          dump = item.dump(newIndent, indentChar);
+          dump = item.dump(prettyPrint, newIndent, indentChar);
           oss.write(dump.c_str(), dump.size());
           oss.put(',');
         }
@@ -554,7 +553,7 @@ namespace Engine {
           oss.put(':');
           if (prettyPrint)
             oss.put(' ');
-          dump = value.dump(newIndent, indentChar);
+          dump = value.dump(prettyPrint, newIndent, indentChar);
           oss.write(dump.c_str(), dump.size());
           oss.put(',');
         }

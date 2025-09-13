@@ -45,6 +45,27 @@ namespace Engine2D::Physics {
     SetMass(mass);
   }
 
+  #if ENGINE_EDITOR
+  bool Rigidbody2D::OnRenderInEditor(const std::string &name, const bool isConst, const bool readOnly) {
+    bool changed = false;
+    changed |= Engine::Reflection::_e_renderInEditorImpl(isKinematic, "Is Kinematic", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(affectedByGravity, "Affected By Gravity", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(mass, "Mass", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(angularDamping, "Angular Damping", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(staticFriction, "Static Friction", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(dynamicFriction, "Dynamic Friction", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(linearVelocity, "Linear Velocity", true);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(angularVelocity, "Angular Velocity", true);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(inertia, "Inertia", true);
+    return changed;
+  }
+
+  void Rigidbody2D::OnEditorValueChanged() {
+    SetMass(mass);
+    inertiaInv = 1.0f / inertia;
+  }
+  #endif
+
   void Rigidbody2D::step() {
     if (!IsActive() || isKinematic)
       return;
@@ -67,11 +88,6 @@ namespace Engine2D::Physics {
 
     Transform()->UpdatePositionAndRotation(linearVelocity * dt, angularVelocity * dt * angularDamping);
     force = {};
-  }
-
-  void Rigidbody2D::OnEditorValueChanged() {
-    SetMass(mass);
-    inertiaInv = 1.0f / inertia;
   }
 
   void Rigidbody2D::AddForce(const glm::vec2 &force) {

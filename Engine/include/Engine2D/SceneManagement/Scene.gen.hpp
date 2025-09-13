@@ -2,8 +2,7 @@
 
 #pragma once
 
-namespace Engine::Reflection {
-  #define SERIALIZE_SCENE _e_SERIALIZE_RECORD \
+#define SERIALIZE_SCENE _e_SERIALIZE_RECORD \
   static inline const bool _reg = [] {\
     Engine::Reflection::ReflectionFactory::RegisterType<Engine2D::Scene>("Engine2D::Scene");\
     return true;\
@@ -21,11 +20,18 @@ namespace Engine::Reflection {
       Engine::Reflection::_e_loadImpl(entities, format, json.At("entities"));\
     }\
   }\
+  RENDER_SCENE\
+  private: 
+
+
+#if !ENGINE_EDITOR
+#define RENDER_SCENE
+#else
+#define RENDER_SCENE\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
     changed |= Engine::Reflection::_e_renderInEditorImpl(resources, "Resources", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(entities, "Entities", readOnly);\
     return changed;\
-  }\
-  private: 
-} // namespace Engine::Reflection
+  }
+#endif

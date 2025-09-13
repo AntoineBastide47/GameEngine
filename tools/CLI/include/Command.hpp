@@ -79,7 +79,6 @@ class Command {
       const std::vector<std::string> &args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands
     ) = 0;
 
-    static int GetCoreCount();
     static bool HasNinja();
   private:
     void run(std::vector<std::string> args, const OrderedMap<std::string, std::unique_ptr<Command>> &commands);
