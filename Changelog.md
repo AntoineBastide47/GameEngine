@@ -3,7 +3,26 @@
 All notable changes to this project will be documented in this file.<br>
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.10.7] - 2025-09-DD
+## [0.10.8] - 2025-10-04
+### Added
+- **[[Ptr](Engine/include/Engine/Types/Ptr.hpp)]**: raw pointer wrapper class to prevent user accidental entity or component memory
+- **[[RenderInEditor](Engine/include/Engine/Reflection/RenderInEditor.hpp)]**: entities and components can be dragged into their slots to assign them into the UI
+- **[[Scene](Engine/include/Engine2D/SceneManagement/Scene.hpp)]**: function to mark all the entities in a scene as dirty
+### Fixed
+- **[[Transform2D](Engine/include/Engine2D/Transform2D.hpp)]**: fixed rotation not being correctly computed
+- **[[CreateEntityCommand](Editor/include/History/Commands/CreateEntityCommand.hpp)]**: fixed new entities not having their transform internal values not being set
+- **[[HeaderForge/Parser](tools/HeaderForge/include/Parser.hpp)]**:
+  - parser no longer serializing smart pointers
+  - parser adding private inherited variables to records
+- **[[Serialize](Engine/include/Engine/Reflection/Serializer.hpp)]**: json dumping no longer pretty prints when it shouldn't
+- **[[SceneHierarchy](Editor/include/Panels/SceneHierarchy.hpp)]**:
+  - pressing enter now renames an entity
+  - dragging an entity no longer unselects the previously selected entities
+  - clicking the arrows no longer unselect the previously selected entities
+- **[[Load](Engine/include/Engine/Reflection/Load.hpp)]**: the error message no longer uses "save" instead of "load"
+- **[[Camera2D](Engine/include/Engine2D/Rendering/Camera2D.hpp)]**: zoom level not being applied
+
+## [0.10.7] - 2025-09-13
 ### Added
 - **[[RenderInEditor](Engine/include/Engine/Reflection/RenderInEditor.hpp)]**: all _e_renderInEditor functions are now integrated with the editor command system so that modifications to components can be undone/redone
 - **[[ICustomEditor](Engine/include/Engine/Reflection/ICustomEditor.hpp)]**: interface to allow user defined editor scripts for custom editor rendering, all definitions must be encapsulated in a #if ENGINE_EDITOR block

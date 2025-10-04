@@ -9,6 +9,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Engine/Types/Ptr.hpp"
+
 namespace Engine {
   class JSON;
 }
@@ -36,10 +38,7 @@ namespace Engine::Reflection {
   struct is_glm_vec234<glm::vec<N, T, Q>> : std::bool_constant<N == 2 || N == 3 || N == 4> {};
 
   template<typename T>
-  concept IsGlmVec234Alt = is_glm_vec234<std::remove_cvref_t<T>>::value;
-
-  template<typename T> concept IsNonRecursive =
-      IsNumber<T> || IsString<T> || std::is_same_v<std::remove_cvref_t<T>, bool> || IsGlmVec234Alt<T>;
+  concept IsGlmVec234 = is_glm_vec234<std::remove_cvref_t<T>>::value;
 
   template<typename T> concept IsTuple = requires {
     std::tuple_size_v<std::remove_cvref_t<T>>;
@@ -87,11 +86,12 @@ namespace Engine::Reflection {
 
   template<typename T> concept IsReflectable = std::is_base_of_v<Reflectable, std::remove_cvref_t<T>>;
   template<typename T> concept IsNotReflectable = !IsReflectable<T>;
-  template<typename T>
-  concept IsReflectablePointer = requires {
-    requires std::is_pointer_v<T>;
-    requires std::is_base_of_v<Reflectable, std::remove_pointer_t<T>>;
-  };
+
+  template<typename T> concept IsReflectablePointer = std::is_same_v<std::remove_cvref_t<T>, Ptr<typename T::element_type>> && IsReflectable<typename T::element_type>;
+
+  template<typename T> concept IsNonRecursive =
+      IsNumber<T> || IsString<T> || std::is_same_v<std::remove_cvref_t<T>, bool> || IsGlmVec234<T> ||
+      IsReflectablePointer<T>;
 
   enum Format {
     JSON, TEXT, BINARY

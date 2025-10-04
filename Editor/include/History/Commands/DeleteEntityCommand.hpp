@@ -15,7 +15,9 @@
 namespace Editor::History {
   class DeleteEntityCommand final : public EditorCommand {
     public:
-      DeleteEntityCommand(const std::vector<Engine2D::Entity2D *> &entities, Engine2D::Scene *scene);
+      DeleteEntityCommand(
+        const std::vector<Engine::Ptr<Engine2D::Entity2D>> &entities, const Engine::Ptr<Engine2D::Scene> &scene
+      );
 
       void Execute() override;
       void Undo() override;
@@ -25,12 +27,12 @@ namespace Editor::History {
         int index, childIndex;
         bool wasActive;
         std::unique_ptr<Engine2D::Entity2D> entity;
-        Engine2D::Entity2D *parent;
+        Engine::Ptr<Engine2D::Entity2D> parent;
       };
 
       bool multipleEntitiesDeleted;
-      Engine2D::Scene *scene;
-      std::vector<Engine2D::Entity2D *> entities;
+      Engine::Ptr<Engine2D::Scene> scene;
+      std::vector<Engine::Ptr<Engine2D::Entity2D>> entities;
       std::vector<DeletedEntityData> deletedEntities;
   };
 }

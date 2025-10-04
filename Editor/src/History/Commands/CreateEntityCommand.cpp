@@ -10,20 +10,18 @@
 
 namespace Editor::History {
   CreateEntityCommand::CreateEntityCommand(
-    Engine2D::Scene *scene, const std::vector<Engine2D::Entity2D *> &parents,
-    const std::function<void(Engine2D::Entity2D *)> &createCallback,
-    const std::function<void(Engine2D::Entity2D *)> &deleteCallback, const int insertPos
+    const Engine::Ptr<Engine2D::Scene> &scene, const std::vector<Engine::Ptr<Engine2D::Entity2D>> &parents,
+    const std::function<void(Engine::Ptr<Engine2D::Entity2D>)> &createCallback,
+    const std::function<void(Engine::Ptr<Engine2D::Entity2D>)> &deleteCallback, const int insertPos
   )
     : insertPos(insertPos), scene(scene), parents(parents), createCallback(createCallback),
       deleteCallback(deleteCallback) {}
 
   void CreateEntityCommand::Execute() {
-    auto create = [&](Engine2D::Entity2D *parent, const int index) {
-      auto entity = std::unique_ptr<Engine2D::Entity2D>(new Engine2D::Entity2D("Entity", false, {}, 0, {}, parent));
-      entity->id = Engine2D::Entity2D::nextId++;
-
+    auto create = [&](const Engine::Ptr<Engine2D::Entity2D> &parent, const int index) {
+      const auto entity = Engine2D::Entity2D::instantiateAt("Entity", false, {}, 0, {1, 1}, parent, index);
+      entity->Transform()->onTransformChange();
       createdEntities.emplace_back(entity.get());
-      scene->entities.insert(scene->entities.begin() + index, std::move(entity));
 
       if (createCallback)
         createCallback(createdEntities.back());
@@ -33,13 +31,13 @@ namespace Editor::History {
       create(nullptr, insertPos);
     else {
       createdEntities.resize(parents.size());
-      for (const auto parent: parents)
+      for (const auto &parent: parents)
         create(parent, scene->entities.size() - 1);
     }
   }
 
   void CreateEntityCommand::Undo() {
-    auto del = [&](Engine2D::Entity2D *entity) {
+    auto del = [&](const Engine::Ptr<Engine2D::Entity2D> &entity) {
       if (entity) {
         if (deleteCallback)
           deleteCallback(entity);
@@ -50,7 +48,7 @@ namespace Editor::History {
     if (parents.empty())
       del(createdEntities.front());
     else
-      for (const auto createdEntity: createdEntities)
+      for (const auto &createdEntity: createdEntities)
         del(createdEntity);
     createdEntities.clear();
   }

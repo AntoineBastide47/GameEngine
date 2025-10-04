@@ -23,7 +23,7 @@
 
 namespace Editor {
   std::unique_ptr<History::EditorCommand> SceneHierarchy::ToggleActiveCommand(
-    Engine2D::Entity2D *entity, bool isStatic
+    const Engine::Ptr<Engine2D::Entity2D> &entity, bool isStatic
   ) {
     return History::MakeLambdaCommand(
       "Toggle " + entity->name + (isStatic ? " active" : " inactive"), [entity, isStatic]() {
@@ -34,24 +34,14 @@ namespace Editor {
     );
   }
 
-  static std::unique_ptr<History::EditorCommand> RenameEntityCommand(Engine2D::Entity2D *entity, std::string newName) {
-    return History::MakeLambdaCommand(
-      "Rename " + entity->name + " to " + newName, [entity, newName]() {
-        entity->name = newName;
-      }, [entity, name=entity->name]() {
-        entity->name = name;
-      }
-    );
-  }
-
   static std::unique_ptr<History::EditorCommand> DefaultParentCommand(
-    Engine2D::Entity2D **defaultParent, Engine2D::Entity2D *entity
+    Engine::Ptr<Engine2D::Entity2D> &defaultParent, const Engine::Ptr<Engine2D::Entity2D> &entity
   ) {
     return History::MakeLambdaCommand(
-      "Set Default Parent", [defaultParent,entity]() {
-        *defaultParent = entity;
-      }, [defaultParent, old = *defaultParent]() {
-        *defaultParent = old;
+      entity ? "Set Default Parent to " + entity->name : "Clear Default Parent", [&defaultParent, entity] {
+        defaultParent = entity;
+      }, [&defaultParent, old = defaultParent] {
+        defaultParent = old;
       }
     );
   }
@@ -72,13 +62,13 @@ namespace Editor {
           ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
           ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed;
       const bool contextChanged = History::CommandHistory::HasAffectedScene();
-      const bool opened = ImGui::TreeNodeEx(context, flags, "%s (Scene)", context->name.c_str());
+      const bool opened = ImGui::TreeNodeEx(context.get(), flags, "%s (Scene)", context->name.c_str());
 
       ImGui::PopStyleColor(3);
       ImGui::SameLine();
-      ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 40);
-      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-      if (ImGui::Button("...##scene_menu")) {
+      ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 37.5f);
+      ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
+      if (ImGui::Button("+", ImVec2(19, 19))) {
         ImGui::OpenPopup("SceneContextMenu");
       }
       ImGui::PopStyleVar();
@@ -118,7 +108,7 @@ namespace Editor {
         if (ImGui::InvisibleButton("##empty_space", ImVec2(-1, remainingSpace.y)) && !selectedEntities.empty())
           History::CommandHistory::Create(
             std::make_unique<History::SelectEntityCommand>(
-              selectedEntities, std::vector<Engine2D::Entity2D *>{}, context
+              selectedEntities, std::vector<Engine::Ptr<Engine2D::Entity2D>>{}, context
             )
           );
 
@@ -128,12 +118,12 @@ namespace Editor {
         }
 
         // Handle dropping on empty space (unparent)
+        static const auto name = "_e_DND_PTR";
         if (ImGui::BeginDragDropTarget()) {
-          if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ENTITY_NODE")) {
-            if (const Engine2D::Entity2D *draggedEntity = *static_cast<Engine2D::Entity2D **>(payload->Data)) {
-              draggedEntity->Transform()->SetParent(nullptr);
-            }
-          }
+          if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(name))
+            if (const auto dragPayload = static_cast<Engine::Reflection::DragPayload *>(payload->Data))
+              dragPayload->transform->SetParent(nullptr);
+
           ImGui::EndDragDropTarget();
         }
       }
@@ -146,7 +136,7 @@ namespace Editor {
     History::CommandHistory::executePendingCommands();
   }
 
-  void SceneHierarchy::SetContext(Engine2D::Scene *scene) {
+  void SceneHierarchy::SetContext(const Engine::Ptr<Engine2D::Scene> &scene) {
     if (context != scene) {
       History::CommandHistory::Clear();
       EntityInspector::SetContext(nullptr);
@@ -159,9 +149,7 @@ namespace Editor {
     context = scene;
   }
 
-  static char buffer[256] = {};
-
-  void SceneHierarchy::drawEntityNode(Engine2D::Entity2D *entity) {
+  void SceneHierarchy::drawEntityNode(const Engine::Ptr<Engine2D::Entity2D> &entity) {
     const bool selected = std::ranges::find(selectedEntities, entity) != selectedEntities.end();
     const ImGuiTreeNodeFlags flags =
         (selected ? ImGuiTreeNodeFlags_Selected : 0) |
@@ -189,12 +177,8 @@ namespace Editor {
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() - ImGui::GetStyle().IndentSpacing * 1.2f);
       opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(entity->Id()), flags, "");
 
-      strncpy(buffer, entity->name.c_str(), sizeof(buffer) - 1);
-      buffer[sizeof(buffer) - 1] = '\0';
-
       ImGui::SameLine();
       ImGui::SetKeyboardFocusHere();
-      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
       ImGui::SetCursorPosX(
         ImGui::GetCursorPosX() - ImGui::GetStyle().IndentSpacing * (
           0.8f + entity->Transform()->Children().empty() * 1.2f)
@@ -202,7 +186,6 @@ namespace Editor {
 
       if (Engine::Reflection::InputText("rename", entity->name, 1024 * 1024, true))
         renamingEntity = nullptr;
-      ImGui::PopStyleVar();
     } else {
       if (!entity->Transform()->Children().empty())
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() - ImGui::GetStyle().IndentSpacing * 1.2f);
@@ -221,8 +204,19 @@ namespace Editor {
         );
       }
 
-      if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGui::IsItemToggledOpen()) {
-        std::vector<Engine2D::Entity2D *> newSelection;
+      bool isArrowClick = false;
+      if (entity->Transform()->ChildCount() > 0) {
+        const ImVec2 itemMin = ImGui::GetItemRectMin();
+        const float arrowWidth = ImGui::GetTreeNodeToLabelSpacing() * 1.01f;
+
+        if (const ImVec2 mousePos = ImGui::GetMousePos();
+          mousePos.x >= itemMin.x && mousePos.x < itemMin.x + arrowWidth)
+          isArrowClick = true;
+      }
+
+      if (!isArrowClick && ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !
+          ImGui::IsItemToggledOpen()) {
+        std::vector<Engine::Ptr<Engine2D::Entity2D>> newSelection;
 
         const auto &io = ImGui::GetIO();
         const bool shiftPressed = io.KeyShift;
@@ -245,20 +239,34 @@ namespace Editor {
       }
 
       // Drag and Drop Source
+      static const auto name = "_e_DND_PTR";
       if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-        ImGui::SetDragDropPayload("ENTITY_NODE", &entity, sizeof(Engine2D::Entity2D *));
+        const Engine::Reflection::DragPayload payload{entity, entity->Transform(), entity->components};
+        ImGui::SetDragDropPayload(name, &payload, sizeof(payload));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 6));
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.1f, 0.1f, 0.1f, 0.95f));
+        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 1.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 4.0f);
+
+        ImGui::BeginTooltip();
         ImGui::Text("%s (Entity2D)", entity->name.c_str());
+        ImGui::EndTooltip();
+
+        ImGui::PopStyleVar(3);
+        ImGui::PopStyleColor(2);
+
         ImGui::EndDragDropSource();
       }
 
       // Drag and Drop Target
       if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ENTITY_NODE")) {
-          if (const Engine2D::Entity2D *draggedEntity = *static_cast<Engine2D::Entity2D **>(payload->Data);
-            draggedEntity && draggedEntity != entity && !draggedEntity->Transform()->IsChildOf(entity)) {
-            draggedEntity->Transform()->SetParent(entity);
-          }
-        }
+        if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(name))
+          if (const auto dragPayload = static_cast<Engine::Reflection::DragPayload *>(payload->Data))
+            if (dragPayload->entity != entity && !dragPayload->transform->IsChildOf(entity.get()))
+              dragPayload->transform->SetParent(entity.get());
+
         ImGui::EndDragDropTarget();
       }
     }
@@ -276,7 +284,7 @@ namespace Editor {
     ImGui::SameLine();
 
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 35);
-    bool isActive = entity->active;
+    bool isActive = entity->Transform()->IsVisible();
     ImGui::SetItemAllowOverlap();
     if (ImGui::Checkbox(("##" + std::to_string(entity->Id())).c_str(), &isActive))
       History::CommandHistory::Create(ToggleActiveCommand(entity, isActive));
@@ -291,7 +299,7 @@ namespace Editor {
     }
   }
 
-  void SceneHierarchy::rightClickPopupMenuItems(Engine2D::Entity2D *entity) {
+  void SceneHierarchy::rightClickPopupMenuItems(const Engine::Ptr<Engine2D::Entity2D> &entity) {
     if (entity && std::ranges::find(selectedEntities, entity) == selectedEntities.end()) {
       History::CommandHistory::Create(
         std::make_unique<History::SelectEntityCommand>(selectedEntities, std::vector{entity}, context)
@@ -319,21 +327,26 @@ namespace Editor {
         set ? "Set as Default Parent" : "Clear Default Parent", "", false,
         (!entity && defaultParent) || selectedEntities.size() == 1
       )) {
-      History::CommandHistory::Create(DefaultParentCommand(&defaultParent, set ? entity : nullptr));
+      History::CommandHistory::Create(DefaultParentCommand(defaultParent, set ? entity : nullptr));
     }
 
     ImGui::Separator();
 
-    if (ImGui::MenuItem(entity ? "Create Empty Child" : "Create Empty")) {
+    if (ImGui::MenuItem(!selectedEntities.empty() ? "Create Empty Child" : "Create Empty")) {
       if (!selectedEntities.empty()) {
         History::CommandHistory::Create(
-          std::make_unique<History::CreateEntityCommand>(context, selectedEntities, nullptr, nullptr)
+          std::make_unique<History::CreateEntityCommand>(
+            context, selectedEntities, [](const Engine::Ptr<Engine2D::Entity2D> &newEntity) {
+              renamingEntity = newEntity;
+            }, nullptr
+          )
         );
         forceOpenEntities.insert(selectedEntities.begin(), selectedEntities.end());
       } else {
         History::CommandHistory::Create(
           std::make_unique<History::CreateEntityCommand>(
-            context, std::vector{entity ? entity : defaultParent}, [](Engine2D::Entity2D *newEntity) {
+            context, std::vector{entity ? entity : defaultParent},
+            [](const Engine::Ptr<Engine2D::Entity2D> &newEntity) {
               renamingEntity = newEntity;
             }, nullptr
           )
@@ -343,32 +356,28 @@ namespace Editor {
     }
 
     if (ImGui::MenuItem("Create Empty Parent", "", false, entity || (selectedEntities.size() > 1 && !recurseSelect))) {
-      auto createCallback = [entity](Engine2D::Entity2D *parent) {
-        if (selectedEntities.empty()) {
-          entity->forceSetParent(parent);
-          forceOpenEntities.insert(parent);
-        } else {
-          for (const auto e: selectedEntities)
-            e->forceSetParent(parent);
-          forceOpenEntities.insert(parent);
-        }
+      auto createCallback = [](const Engine::Ptr<Engine2D::Entity2D> &parent) {
+        for (const auto &e: selectedEntities)
+          e->forceSetParent(parent);
+        forceOpenEntities.insert(parent);
+        renamingEntity = parent;
       };
-      auto deleteCallback = [entity](Engine2D::Entity2D *) {
+      auto deleteCallback = [entity](const Engine::Ptr<Engine2D::Entity2D> &) {
         if (selectedEntities.empty() && entity)
           entity->forceSetParent(nullptr);
         else
-          for (const auto e: selectedEntities)
+          for (const auto &e: selectedEntities)
             e->forceSetParent(nullptr);
       };
 
       int insertPos = INT_MAX;
       if (!selectedEntities.empty()) {
         int index = 0;
-        std::unordered_map<Engine2D::Entity2D *, int> entityToIndexMap;
+        std::unordered_map<Engine::Ptr<Engine2D::Entity2D>, int> entityToIndexMap;
         for (const auto &e: context->entities)
           entityToIndexMap.emplace(e.get(), index++);
 
-        for (const auto e: selectedEntities)
+        for (const auto &e: selectedEntities)
           if (entityToIndexMap.at(e) < insertPos)
             insertPos = entityToIndexMap.at(e);
       } else
@@ -376,22 +385,23 @@ namespace Editor {
 
       History::CommandHistory::Create(
         std::make_unique<History::CreateEntityCommand>(
-          context, std::vector<Engine2D::Entity2D *>{}, createCallback, deleteCallback, insertPos
+          context, std::vector<Engine::Ptr<Engine2D::Entity2D>>{}, createCallback, deleteCallback, insertPos
         )
       );
     }
   }
 
-  std::vector<Engine2D::Entity2D *> SceneHierarchy::calculateRangeSelection(Engine2D::Entity2D *targetEntity) {
-    if (selectedEntities.empty()) {
+  std::vector<Engine::Ptr<Engine2D::Entity2D>> SceneHierarchy::calculateRangeSelection(
+    const Engine::Ptr<Engine2D::Entity2D> &targetEntity
+  ) {
+    if (selectedEntities.empty())
       return {targetEntity};
-    }
 
     // Get the last selected entity as the range start
-    const Engine2D::Entity2D *rangeStart = *selectedEntities.rbegin();
+    const Engine::Ptr<Engine2D::Entity2D> &rangeStart = *selectedEntities.rbegin();
 
     // Build a flat list of all visible entities in display order
-    std::vector<Engine2D::Entity2D *> allVisibleEntities;
+    std::vector<Engine::Ptr<Engine2D::Entity2D>> allVisibleEntities;
     std::vector<bool> isChild;
     collectVisibleEntities(context->entities, allVisibleEntities, isChild);
 
@@ -420,8 +430,8 @@ namespace Editor {
   }
 
   void SceneHierarchy::collectVisibleEntities(
-    const std::vector<std::unique_ptr<Engine2D::Entity2D>> &entities, std::vector<Engine2D::Entity2D *> &outList,
-    std::vector<bool> &isChild
+    const std::vector<std::unique_ptr<Engine2D::Entity2D>> &entities,
+    std::vector<Engine::Ptr<Engine2D::Entity2D>> &outList, std::vector<bool> &isChild
   ) {
     for (const auto &entity: entities) {
       if (!entity->destroyed && !entity->Transform()->Parent()) {
@@ -433,7 +443,8 @@ namespace Editor {
   }
 
   void SceneHierarchy::collectVisibleEntitiesRecursive(
-    Engine2D::Entity2D *entity, std::vector<Engine2D::Entity2D *> &outList, std::vector<bool> &isChild
+    const Engine::Ptr<Engine2D::Entity2D> &entity, std::vector<Engine::Ptr<Engine2D::Entity2D>> &outList,
+    std::vector<bool> &isChild
   ) {
     if (openedTreeNodes.contains(entity)) {
       for (const auto &child: *entity->Transform()) {

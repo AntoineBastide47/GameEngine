@@ -14,11 +14,11 @@ namespace Engine2D {
   Component2D::Component2D()
     : active(true), entity(nullptr) {}
 
-  Entity2D *Component2D::Entity() const {
+  Engine::Ptr<Entity2D> Component2D::Entity() const {
     return entity;
   }
 
-  Transform2D *Component2D::Transform() const {
+  Engine::Ptr<Transform2D> Component2D::Transform() const {
     return entity ? entity->Transform() : nullptr;
   }
 

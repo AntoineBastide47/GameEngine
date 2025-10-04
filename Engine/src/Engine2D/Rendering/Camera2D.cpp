@@ -19,13 +19,12 @@ namespace Engine2D::Rendering {
   Camera2D::Camera2D()
     : Camera2D(-1, 1, -1, 1) {}
 
-  Camera2D::Camera2D(
-    const float left, const float right, const float bottom, const float top
-  )
-    : followTarget(), positionOffset(0), rotationOffset(0), damping(1), zoomLevel(1.0f),
-      projection(glm::ortho(left, right, bottom, top, near, far)), view(1.0f), initialized(false), shakeDuration(0),
-      shaking(false), shakeElapsed(0), ubo(0), followTargetIndex(-1), left(left), right(right), bottom(bottom),
-      top(top) {
+  Camera2D::Camera2D(const float left, const float right, const float bottom, const float top)
+    : positionOffset(0), rotationOffset(0), damping(1), zoomLevel(1.0f),
+      projection(glm::ortho(left, right, bottom, top, near, far)), view(1.0f), initialized(false), shaking(false),
+      shakeDuration(0), shakeElapsed(0), ubo(0), followTargetIndex(-1), velocity(),
+      rotationMatrix(), worldRotationLastFrame(std::numeric_limits<float>::quiet_NaN()), invZoom(1), left(left),
+      right(right), bottom(bottom), top(top) {
     viewProjection = projection * view;
   }
 
@@ -43,21 +42,21 @@ namespace Engine2D::Rendering {
   }
 
   bool Camera2D::IsInViewport(const glm::vec2 &position, const glm::vec2 &scale) const {
-    // Get camera world position
-    const glm::vec2 cameraPos = Transform()->WorldPosition();
-
-    // Calculate relative position to camera
-    const float relativeX = position.x - cameraPos.x;
-    const float relativeY = position.y - cameraPos.y;
-
-    // Calculate object bounds
+    const auto rotated = rotationMatrix * (position - Transform()->WorldPosition());
     const float halfWidth = scale.x * 0.5f;
     const float halfHeight = scale.y * 0.5f;
 
-    // Check if object overlaps with camera bounds
+    constexpr float cullMargin = 2.0f;
+    const float zoomedLeft = left * invZoom - cullMargin;
+    const float zoomedRight = right * invZoom + cullMargin;
+    const float zoomedBottom = bottom * invZoom - cullMargin;
+    const float zoomedTop = top * invZoom + cullMargin;
+
     return !(
-      relativeX + halfWidth < left || relativeX - halfWidth > right ||
-      relativeY + halfHeight < bottom || relativeY - halfHeight > top
+      rotated.x + halfWidth < zoomedLeft ||
+      rotated.x - halfWidth > zoomedRight ||
+      rotated.y + halfHeight < zoomedBottom ||
+      rotated.y - halfHeight > zoomedTop
     );
   }
 
@@ -112,12 +111,12 @@ namespace Engine2D::Rendering {
 
   void Camera2D::OnSerialize(const Engine::Reflection::Format format, Engine::JSON &json) const {
     if (format == Engine::Reflection::Format::JSON)
-      json["followTarget"] = index_of_ptr(SceneManager::ActiveScene()->entities, followTarget);
+      json["followTarget"] = index_of_ptr(SceneManager::ActiveScene()->entities, followTarget.get());
   }
 
   void Camera2D::OnDeserialize(const Engine::Reflection::Format format, const Engine::JSON &json) {
     if (format == Engine::Reflection::Format::JSON)
-      followTargetIndex = static_cast<int>(json["followTarget"].GetNumber());
+      followTargetIndex = static_cast<int>(json.At("followTarget").GetNumber());
 
     SetProjection(left, right, bottom, top);
   }
@@ -126,7 +125,7 @@ namespace Engine2D::Rendering {
     // Bind the engine data ubo
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    glBufferData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // Set the binding port
@@ -134,8 +133,6 @@ namespace Engine2D::Rendering {
 
     initialized = true;
   }
-
-  auto velocity = glm::vec2(0.0f);
 
   void Camera2D::updateCamera() {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
@@ -151,11 +148,30 @@ namespace Engine2D::Rendering {
           Transform()->WorldPosition(), target, velocity, std::clamp(damping, 1e-6f, 1.0f), Game2D::DeltaTime()
         )
       );
-      Transform()->SetRotation(rotationOffset + followTarget->Transform()->WorldRotation());
+      const auto increment = glm::degrees(followTarget->Transform()->WorldRotation());
+      Transform()->SetRotation(rotationOffset + increment);
+      if (followTarget == Entity())
+        Transform()->UpdateRotation(-increment);
     }
 
     // Compute the view so that we can apply the camera shake to it
-    glm::mat4 baseView = glm::inverse(Transform()->WorldMatrix());
+    // First negate the world rotation because of matrix inversion
+    Transform()->worldRotation = -Transform()->worldRotation;
+    glm::mat4 baseView = glm::scale(glm::inverse(Transform()->WorldMatrix()), glm::vec3(zoomLevel, zoomLevel, 1.0f));
+    Transform()->worldRotation = -Transform()->worldRotation;
+
+    // Rotate into camera space
+    if (const auto cameraRotation = Transform()->WorldRotation(); cameraRotation != worldRotationLastFrame) {
+      const float c = std::cos(-cameraRotation);
+      const float s = std::sin(-cameraRotation);
+      rotationMatrix = glm::mat2(c, s, -s, c);
+      worldRotationLastFrame = cameraRotation;
+    }
+
+    if (const auto inv = 1.0f / zoomLevel; inv != invZoom) {
+      invZoom = 1.0f / zoomLevel;
+      SceneManager::ActiveScene()->makeAllEntitiesDirty();
+    }
 
     // Run camera shake
     if (shaking) {
@@ -174,10 +190,12 @@ namespace Engine2D::Rendering {
     void *ptr = glMapBufferRange(
       GL_UNIFORM_BUFFER, 0, 3 * sizeof(glm::mat4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT
     );
-    memcpy(ptr, &view, sizeof(glm::mat4));
-    memcpy(static_cast<char *>(ptr) + sizeof(glm::mat4), &projection, sizeof(glm::mat4));
-    memcpy(static_cast<char *>(ptr) + 2 * sizeof(glm::mat4), &viewProjection, sizeof(glm::mat4));
-    glUnmapBuffer(GL_UNIFORM_BUFFER);
+    if (ptr) {
+      memcpy(ptr, &view, sizeof(glm::mat4));
+      memcpy(static_cast<char *>(ptr) + sizeof(glm::mat4), &projection, sizeof(glm::mat4));
+      memcpy(static_cast<char *>(ptr) + 2 * sizeof(glm::mat4), &viewProjection, sizeof(glm::mat4));
+      glUnmapBuffer(GL_UNIFORM_BUFFER);
+    }
   }
 
   glm::vec2 Camera2D::getCameraShake(const float frac) const {
@@ -199,4 +217,22 @@ namespace Engine2D::Rendering {
     const float lim = frac <= mid ? frac / mid : 1.0f - (frac - mid) / (1.0f - mid);
     return glm::vec2(x, y) * lim;
   }
+
+  #if ENGINE_EDITOR
+  bool Camera2D::OnRenderInEditor(const std::string &name, bool, const bool readOnly) {
+    bool changed = Engine::Reflection::_e_renderInEditorImpl(followTarget, "Follow Target", readOnly);
+
+    if (followTarget) {
+      changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);
+      changed |= Engine::Reflection::_e_renderInEditorImpl(rotationOffset, "Rotation Offset", readOnly);
+    }
+
+    changed |= Engine::Reflection::_e_renderInEditorImpl(damping, "Damping", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(zoomLevel, "Zoom Level", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeDuration, "Shake Duration", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeCoefficientsX, "Shake Coefficient X", readOnly);
+    changed |= Engine::Reflection::_e_renderInEditorImpl(shakeCoefficientsY, "Shake Coefficient Y", readOnly);
+    return changed;
+  }
+  #endif
 }

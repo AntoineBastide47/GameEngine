@@ -63,7 +63,6 @@ void BuildEngine::Run(
     const std::string isShared = std::to_string(type == "shared");
     const std::string buildFolder = "_" + type;
     const std::string buildShared = " -DBUILD_ENGINE_SHARED=" + isShared;
-    const std::string editorMacros = " -D_e_WITH_EDITOR=" + isShared;
 
     // Debug
     const std::string debugDir = ENGINE_BUILD "/debug" + buildFolder;
@@ -72,8 +71,8 @@ void BuildEngine::Run(
 
     std::system(
       (hasNinja
-         ? "cmake -G Ninja -B " + debugDir + DEBUG_CMD + buildShared + editorMacros
-         : "cmake -B " + debugDir + DEBUG_CMD + buildShared + editorMacros
+         ? "cmake -G Ninja -B " + debugDir + DEBUG_CMD + buildShared
+         : "cmake -B " + debugDir + DEBUG_CMD + buildShared
       ).c_str()
     );
     std::system(("cmake --build " + debugDir + " --parallel").c_str());
@@ -85,8 +84,8 @@ void BuildEngine::Run(
 
     std::system(
       (hasNinja
-         ? "cmake -G Ninja -B " + profilingDir + PROFILING_CMD + buildShared + editorMacros
-         : "cmake -B " + profilingDir + PROFILING_CMD + buildShared + editorMacros
+         ? "cmake -G Ninja -B " + profilingDir + PROFILING_CMD + buildShared
+         : "cmake -B " + profilingDir + PROFILING_CMD + buildShared
       ).c_str()
     );
     std::system(("cmake --build " + profilingDir + " --parallel").c_str());

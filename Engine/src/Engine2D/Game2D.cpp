@@ -396,7 +396,7 @@ namespace Engine2D {
     glViewport(0, 0, width, height);
 
     if (Engine::Settings::Graphics::MaintainAspectRatio())
-      if (auto *camera = SceneManager::ActiveScene()->MainCamera())
+      if (const auto camera = SceneManager::ActiveScene()->MainCamera())
         camera->Resize(width, height);
   }
 

@@ -9,6 +9,7 @@
 
 #include <unordered_set>
 
+#include "Engine/Types/Ptr.hpp"
 #include "Engine2D/Physics/CollisionGrid.hpp"
 #include "Engine2D/Physics/CollisionManifold.hpp"
 
@@ -23,10 +24,10 @@ namespace Engine2D {
 
 namespace Engine2D::Physics {
   struct ContactPair {
-    Collider2D *collider1;
-    Collider2D *collider2;
-    Rigidbody2D *rigidbody1;
-    Rigidbody2D *rigidbody2;
+    Engine::Ptr<Collider2D> collider1;
+    Engine::Ptr<Collider2D> collider2;
+    Engine::Ptr<Rigidbody2D> rigidbody1;
+    Engine::Ptr<Rigidbody2D> rigidbody2;
 
     bool operator==(const ContactPair &other) const {
       return collider1 == other.collider1 && collider2 == other.collider2 &&
@@ -38,8 +39,8 @@ namespace Engine2D::Physics {
 template<>
 struct std::hash<Engine2D::Physics::ContactPair> {
   size_t operator()(const Engine2D::Physics::ContactPair &pair) const noexcept {
-    const auto h1 = reinterpret_cast<std::uintptr_t>(pair.collider1);
-    const auto h2 = reinterpret_cast<std::uintptr_t>(pair.collider2);
+    const auto h1 = reinterpret_cast<std::uintptr_t>(pair.collider1.get());
+    const auto h2 = reinterpret_cast<std::uintptr_t>(pair.collider2.get());
     // Use a fast bitwise combination
     return h1 ^ h2 << 1;
   }
@@ -62,13 +63,13 @@ namespace Engine2D::Physics {
     CollisionGrid collisionGrid;
 
     /// The list of all the colliders that are in the game
-    std::vector<Collider2D *> colliders;
+    std::vector<Engine::Ptr<Collider2D>> colliders;
     /// The list of colliders to add to the future physics simulations steps
-    std::vector<Collider2D *> collidersToAdd;
+    std::vector<Engine::Ptr<Collider2D>> collidersToAdd;
     /// The list of colliders to remove from the future physics simulations steps
-    std::unordered_set<Collider2D *> collidersToRemove;
+    std::unordered_set<Engine::Ptr<Collider2D>> collidersToRemove;
     /// The list of currently active rigidbodies
-    std::vector<Collider2D *> activeColliders;
+    std::vector<Engine::Ptr<Collider2D>> activeColliders;
 
     /// The list of pairs of rigidbodies that had a contact during this frame
     std::vector<ContactPair> contactPairs;
@@ -88,14 +89,17 @@ namespace Engine2D::Physics {
     /// Filters all the colliders in the game and keeps only the ones that are active
     void findActiveColliders();
     /// Calls the correct behaviour notification function
-    static void notifyCollisions(const Collider2D *sender, const Collider2D *receiver, CollisionEventType eventType);
+    static void notifyCollisions(
+      const Engine::Ptr<Collider2D> &sender, const Engine::Ptr<Collider2D> &receiver, CollisionEventType eventType
+    );
     /// Collision detection
-    void broadPhase(const std::vector<Collider2D *> &collidersToChecks);
+    void broadPhase(const std::vector<Engine::Ptr<Collider2D>> &collidersToChecks);
     /// Collision resolution
     void narrowPhase();
     /// Separates the given bodies using the given Minimum Translation Vector to make sure they are not contained in each other
     static void separateBodies(
-      const Collider2D *col1, const Collider2D *col2, const Rigidbody2D *rb1, const Rigidbody2D *rb2, glm::vec2 mtv
+      const Engine::Ptr<Collider2D> &col1, const Engine::Ptr<Collider2D> &col2, const Engine::Ptr<Rigidbody2D> &rb1,
+      const Engine::Ptr<Rigidbody2D> &rb2, glm::vec2 mtv
     );
     /// Resolves the collision between two rigidbodies
     static void resolveCollision(const CollisionManifold &contact);

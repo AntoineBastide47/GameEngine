@@ -5,6 +5,7 @@
 //
 
 #include <iostream>
+#include <ranges>
 
 #include "Engine2D/SceneManagement/Scene.hpp"
 #include "Engine/Macros/Profiling.hpp"
@@ -14,6 +15,7 @@
 #include "Engine2D/Physics/Physics2D.hpp"
 #include "Engine2D/Rendering/Camera2D.hpp"
 #include "Engine2D/Rendering/Renderer2D.hpp"
+#include "Engine2D/Rendering/SpriteRenderer.hpp"
 #include "Engine2D/SceneManagement/SceneManager.hpp"
 
 namespace Engine2D {
@@ -38,14 +40,19 @@ namespace Engine2D {
     cameraComponent = camera;
   }
 
-  Rendering::Camera2D *Scene::MainCamera() const {
+  Engine::Ptr<Rendering::Camera2D> Scene::MainCamera() const {
     return cameraComponent;
   }
 
-  Entity2D *Scene::Find(const std::string &name) const {
+  Engine::Ptr<Entity2D> Scene::Find(const std::string &name) const {
     for (const auto &entity: entitiesToAdd)
       if (entity->name == name)
         return entity.get();
+    #if ENGINE_EDITOR
+    for (const auto &key: entitiesToAddAt | std::views::keys)
+      if (key->name == name)
+        return key.get();
+    #endif
     for (const auto &entity: entities)
       if (entity->name == name && !entity->destroyed)
         return entity.get();
@@ -58,6 +65,13 @@ namespace Engine2D {
       entities.emplace_back(std::move(entity));
     }
     entitiesToAdd.clear();
+    #if ENGINE_EDITOR
+    for (auto &[entity, index]: entitiesToAddAt) {
+      entity->initialize();
+      entities.insert(entities.begin() + index, std::move(entity));
+    }
+    entitiesToAddAt.clear();
+    #endif
 
     #if MULTI_THREAD
     for (auto entity: entitiesToDestroy) {
@@ -91,7 +105,7 @@ namespace Engine2D {
     entitiesToAdd.emplace_back(std::move(entity));
   }
 
-  void Scene::removeEntity(Entity2D *entity) {
+  void Scene::removeEntity(const Engine::Ptr<Entity2D> &entity) {
     if (!entity)
       return;
     entitiesToRemove.insert(entity);
@@ -208,6 +222,16 @@ namespace Engine2D {
     entitiesToAdd.clear();
   }
 
+  void Scene::makeAllEntitiesDirty() const {
+    for (const auto &entity: entities) {
+      entity->Transform()->dirty = true;
+
+      if (const auto &renderer = entity->GetComponents<Rendering::Renderable2D>(); !renderer.empty())
+        for (const auto &comp: renderer)
+          comp->dirty = true;
+    }
+  }
+
   void Scene::OnDeserialize(const Engine::Reflection::Format format, const Engine::JSON &json) {
     std::erase(entities, nullptr);
 
@@ -225,8 +249,10 @@ namespace Engine2D {
       ++it;
     }
 
-    cameraComponent = Find("Camera")->GetComponent<Rendering::Camera2D>();
-    if (cameraComponent->followTargetIndex > -1)
+    if (const auto entity = Find("Camera"))
+      cameraComponent = entity->GetComponent<Rendering::Camera2D>();
+
+    if (cameraComponent && cameraComponent->followTargetIndex > -1)
       cameraComponent->followTarget = entities.at(cameraComponent->followTargetIndex).get();
   }
 }

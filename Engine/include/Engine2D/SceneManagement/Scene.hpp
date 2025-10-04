@@ -9,6 +9,7 @@
 
 #include <unordered_set>
 
+#include "Engine/Types/Ptr.hpp"
 #include "Engine2D/Entity2D.hpp"
 #include "Engine2D/Animation/AnimationSystem.hpp"
 #include "Engine2D/ParticleSystem/ParticleSystemRegistry2D.hpp"
@@ -79,14 +80,14 @@ namespace Engine2D {
       /// Changes the main camera to the given camera component
       void SetMainCamera(Rendering::Camera2D *camera);
       /// @returns A pointer to the main camera of this scene
-      [[nodiscard]] Rendering::Camera2D *MainCamera() const;
+      [[nodiscard]] Engine::Ptr<Rendering::Camera2D> MainCamera() const;
 
       /// @returns The entity with the given name if it was found, nullptr if not
-      Entity2D *Find(const std::string &name) const;
+      Engine::Ptr<Entity2D> Find(const std::string &name) const;
 
       template<typename T> requires std::is_base_of_v<Component2D, T>
       /// @returns The first entity with the given component, nullptr if no entity is found
-      T *FindObjectOfType() const {
+      Engine::Ptr<T> FindObjectOfType() const {
         if constexpr (std::is_same_v<Transform2D, T>)
           return entities.front()->Transform();
 
@@ -99,8 +100,8 @@ namespace Engine2D {
 
       template<typename T> requires std::is_base_of_v<Component2D, T>
       /// @returns All the entities with the given component, nullptr if no entities are found
-      std::vector<T *> FindObjectsOfType() const {
-        std::vector<T *> res;
+      std::vector<Engine::Ptr<T>> FindObjectsOfType() const {
+        std::vector<Engine::Ptr<T>> res;
         for (const auto &entity: entities)
           if (T *component = nullptr; !entity->destroyed && entity->TryGetComponent<T>(&component))
             res.emplace_back(component);
@@ -117,18 +118,22 @@ namespace Engine2D {
       /// The name of this scene
       std::string name;
       /// The main camera of the game
-      Rendering::Camera2D *cameraComponent;
+      Engine::Ptr<Rendering::Camera2D> cameraComponent;
       /// If the scene has been initialized
       bool initialized;
       /// If the scene has been loaded into memory
       bool loaded;
       /// Entities scheduled to be added to the game
       std::vector<std::unique_ptr<Entity2D>> entitiesToAdd;
+      #if ENGINE_EDITOR
+      /// Entities scheduled to be added to the game at a specific index
+      std::vector<std::pair<std::unique_ptr<Entity2D>, size_t>> entitiesToAddAt;
+      #endif
       /// Entities scheduled to be removed from the game
-      std::unordered_set<Entity2D *> entitiesToRemove;
+      std::unordered_set<Engine::Ptr<Entity2D>> entitiesToRemove;
       #if MULTI_THREAD
       /// Entities that should be removed from memory
-      std::unordered_set<Entity2D *> entitiesToDestroy;
+      std::unordered_set<Engine::Ptr<Entity2D>> entitiesToDestroy;
       #endif
 
       Physics::Physics2D physicsSystem;
@@ -144,7 +149,7 @@ namespace Engine2D {
       /// Add's an entity to the game
       void addEntity(std::unique_ptr<Entity2D> entity);
       /// Removes an entity from the game
-      void removeEntity(Entity2D *entity);
+      void removeEntity(const Engine::Ptr<Entity2D> &entity);
 
       /// Initializes the scene
       void initialize();
@@ -164,6 +169,8 @@ namespace Engine2D {
       void renderHeadless();
       /// Destroys this scene
       void destroy();
+
+      void makeAllEntitiesDirty() const;
   };
 }
 

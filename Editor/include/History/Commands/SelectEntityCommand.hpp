@@ -14,8 +14,8 @@ namespace Editor::History {
   class SelectEntityCommand final : public EditorCommand {
     public:
       SelectEntityCommand(
-        std::vector<Engine2D::Entity2D *> &selectedEntities, const std::vector<Engine2D::Entity2D *> &entities,
-        Engine2D::Scene *scene
+        std::vector<Engine::Ptr<Engine2D::Entity2D>> &selectedEntities,
+        const std::vector<Engine::Ptr<Engine2D::Entity2D>> &entities, const Engine::Ptr<Engine2D::Scene> &scene
       );
 
       void Execute() override;
@@ -28,16 +28,16 @@ namespace Editor::History {
         uint64_t id;
         std::string name;
 
-        explicit EntityInfo(const Engine2D::Entity2D *entity)
+        explicit EntityInfo(const Engine::Ptr<Engine2D::Entity2D> &entity)
           : id(entity->Id()), name(entity->name) {}
       };
 
-      Engine2D::Scene *scene;
+      Engine::Ptr<Engine2D::Scene> scene;
       std::vector<EntityInfo> entities;
       std::vector<EntityInfo> oldSelectedEntities;
-      std::vector<Engine2D::Entity2D *> &selectedEntities;
+      std::vector<Engine::Ptr<Engine2D::Entity2D>> &selectedEntities;
 
-      std::vector<Engine2D::Entity2D *> findEntitiesById(const std::vector<EntityInfo> &entityInfos) const;
+      std::vector<Engine::Ptr<Engine2D::Entity2D>> findEntitiesById(const std::vector<EntityInfo> &entityInfos) const;
   };
 }
 

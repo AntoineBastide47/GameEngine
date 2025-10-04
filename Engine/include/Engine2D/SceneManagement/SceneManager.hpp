@@ -10,7 +10,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "Scene.hpp"
+#include "Engine/Types/Ptr.hpp"
+#include "Engine2D/SceneManagement/Scene.hpp"
 
 namespace Editor {
   class SceneHierarchy;
@@ -30,14 +31,14 @@ namespace Engine2D {
       /// @param name The name of the new scene
       /// @note Returns null if a scene with the given name already exists
       /// @returns A pointer to the newly created scene
-      static Scene *CreateScene(const std::string &name);
+      static Engine::Ptr<Scene> CreateScene(const std::string &name);
 
       /// Load's the scene with the given name into memory
       /// @param name The name of the scene to load
       /// @param path The file in which the scene to load is stored
       /// @note If a scene with the given name already exists, it will be overridden
       /// @returns A pointer to the loaded scene
-      static Scene *LoadScene(const std::string &name, const std::string &path);
+      static Engine::Ptr<Scene> LoadScene(const std::string &name, const std::string &path);
 
       /// Save's the scene with the given name into the given file
       /// @param name The name of the scene to save
@@ -57,7 +58,7 @@ namespace Engine2D {
       /// @param prettyPrint Whether to pretty print the data or not
       /// @param indentChar The indent char to use
       static void SaveScene(
-        const Scene *scene, const std::string &path = "", Engine::Reflection::Format format = Engine::Reflection::JSON,
+        const Engine::Ptr<Scene> &scene, const std::string &path = "", Engine::Reflection::Format format = Engine::Reflection::JSON,
         bool prettyPrint = false, char indentChar = ' '
       );
 
@@ -90,15 +91,15 @@ namespace Engine2D {
       static void SetActiveScene(const std::string &name);
 
       /// @returns A pointer to the currently loaded scene
-      static Scene *ActiveScene();
+      static Engine::Ptr<Scene> ActiveScene();
 
       /// @returns A pointer to the scene with the given name, nullptr if no scene is found
-      static Scene *GetScene(const std::string &name);
+      static Engine::Ptr<Scene> GetScene(const std::string &name);
     private:
       /// All the created or loaded scenes in the game
       inline static std::unordered_map<std::string, std::unique_ptr<Scene>> scenes;
       /// The scene currently displayed
-      inline static Scene *activeScene;
+      inline static Engine::Ptr<Scene> activeScene;
 
       /// Internal call to get the scene unique pointer
       /// @note Does not check if a scene with the given name exists

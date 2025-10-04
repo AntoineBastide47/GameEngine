@@ -8,6 +8,7 @@
 #define SCENE_HIERARCHY_HPP
 #include <unordered_set>
 
+#include "Engine/Types/Ptr.hpp"
 #include "History/CommandHistory.hpp"
 
 namespace Engine2D {
@@ -22,34 +23,39 @@ namespace Editor {
       /// Render's the scene hierarchy
       static void Render(const ImGuiWindowClass *winClass);
       /// Set's the scene to be rendered
-      static void SetContext(Engine2D::Scene *scene);
+      static void SetContext(const Engine::Ptr<Engine2D::Scene> &scene);
 
-      static std::unique_ptr<History::EditorCommand> ToggleActiveCommand(Engine2D::Entity2D *entity, bool isStatic);
+      static std::unique_ptr<History::EditorCommand> ToggleActiveCommand(
+        const Engine::Ptr<Engine2D::Entity2D> &entity, bool isStatic
+      );
     private:
       inline static bool recurseSelect;
-      inline static Engine2D::Scene *context;
-      inline static Engine2D::Entity2D *renamingEntity;
-      inline static Engine2D::Entity2D *defaultParent;
-      inline static std::vector<Engine2D::Entity2D *> selectedEntities;
-      inline static std::unordered_set<Engine2D::Entity2D *> forceOpenEntities;
-      inline static std::unordered_set<Engine2D::Entity2D *> openedTreeNodes;
+      inline static Engine::Ptr<Engine2D::Scene> context;
+      inline static Engine::Ptr<Engine2D::Entity2D> renamingEntity;
+      inline static Engine::Ptr<Engine2D::Entity2D> defaultParent;
+      inline static std::vector<Engine::Ptr<Engine2D::Entity2D>> selectedEntities;
+      inline static std::unordered_set<Engine::Ptr<Engine2D::Entity2D>> forceOpenEntities;
+      inline static std::unordered_set<Engine::Ptr<Engine2D::Entity2D>> openedTreeNodes;
 
       /// Draw's an entity node
-      static void drawEntityNode(Engine2D::Entity2D *entity);
+      static void drawEntityNode(const Engine::Ptr<Engine2D::Entity2D> &entity);
       /// Draws the popup shown when right-clicking the window
-      static void rightClickPopupMenuItems(Engine2D::Entity2D *entity);
+      static void rightClickPopupMenuItems(const Engine::Ptr<Engine2D::Entity2D> &entity);
 
       /// Recursively finds all the selected entities
-      static std::vector<Engine2D::Entity2D *> calculateRangeSelection(Engine2D::Entity2D *targetEntity);
+      static std::vector<Engine::Ptr<Engine2D::Entity2D>> calculateRangeSelection(
+        const Engine::Ptr<Engine2D::Entity2D> &targetEntity
+      );
       /// Finds selected entities
       static void collectVisibleEntities(
-        const std::vector<std::unique_ptr<Engine2D::Entity2D>> &entities, std::vector<Engine2D::Entity2D *> &outList,
-        std::
-        vector<bool> &isChild
+        const std::vector<std::unique_ptr<Engine2D::Entity2D>> &entities,
+        std::vector<Engine::Ptr<Engine2D::Entity2D>> &outList,
+        std::vector<bool> &isChild
       );
       /// Finds selected entities recursively
       static void collectVisibleEntitiesRecursive(
-        Engine2D::Entity2D *entity, std::vector<Engine2D::Entity2D *> &outList, std::vector<bool> &isChild
+        const Engine::Ptr<Engine2D::Entity2D> &entity, std::vector<Engine::Ptr<Engine2D::Entity2D>> &outList,
+        std::vector<bool> &isChild
       );
   };
 } // Editor

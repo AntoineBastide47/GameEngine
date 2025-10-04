@@ -77,8 +77,10 @@ if (NOT DEFINED PROJECT_BUILD_TYPE)
 endif ()
 file(GLOB ENGINE_LIB ${ENGINE_LOCATION}/lib/${PROJECT_BUILD_TYPE}/*)
 
+set(ENGINE_PROFILING 0)
 if (BUILD_TYPE STREQUAL "profile")
     set(CMAKE_BUILD_TYPE "Debug")
+    set(ENGINE_PROFILING 1)
     list(FILTER ENGINE_LIB INCLUDE REGEX "-[0-9]+\\.[0-9]+\\.[0-9]+dp\\.[^.]+$")
 elseif (BUILD_TYPE STREQUAL "release")
     set(CMAKE_BUILD_TYPE "Release")
@@ -187,6 +189,7 @@ function(setup_engine_target TARGET_NAME)
 
     target_compile_definitions(${TARGET_NAME} PUBLIC
         $<$<CONFIG:Debug>:GAME_DEBUG=1>
+        $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
         MULTI_THREAD=1
         ENGINE_EDITOR=$<BOOL:$<STREQUAL:${PROJECT_BUILD_TYPE},shared>>
     )

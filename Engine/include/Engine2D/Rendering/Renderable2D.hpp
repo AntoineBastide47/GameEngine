@@ -17,6 +17,7 @@ namespace Engine::Rendering {
 }
 
 namespace Engine2D {
+  class Scene;
   class Transform2D;
 }
 
@@ -26,6 +27,7 @@ namespace Engine2D::Rendering {
   class Renderable2D : public Component2D {
     SERIALIZE_RENDERABLE2D
       friend class Renderer2D;
+      friend class Engine2D::Scene;
       friend class Engine2D::Transform2D;
     public:
       enum RenderableType {

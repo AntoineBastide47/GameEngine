@@ -28,7 +28,8 @@ namespace Engine::Reflection {
   template<typename T> friend bool _e_renderInEditor(T &, const std::string &, bool, const std::string &); \
   public: \
     [[nodiscard]] std::string_view ClassNameQualified() const override { return ENGINE_CLASS_NAME_FULLY_QUALIFIED; } \
-    [[nodiscard]] std::string_view ClassName() const override { return ENGINE_CLASS_NAME; }
+    [[nodiscard]] std::string_view ClassName() const override { return ENGINE_CLASS_NAME; } \
+    [[nodiscard]] static std::string_view ClassNameStatic() { return ENGINE_CLASS_NAME; }
 #define _e_SERIALIZE_STRING "serialize"
 #define _e_NON_SERIALIZABLE_STRING "non_serializable"
 #define _e_SHOW_IN_INSPECTOR_STRING "show_in_inspector"

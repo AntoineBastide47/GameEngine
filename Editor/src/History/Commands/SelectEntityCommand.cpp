@@ -12,16 +12,16 @@
 
 namespace Editor::History {
   SelectEntityCommand::SelectEntityCommand(
-    std::vector<Engine2D::Entity2D *> &selectedEntities, const std::vector<Engine2D::Entity2D *> &entities,
-    Engine2D::Scene *scene
+    std::vector<Engine::Ptr<Engine2D::Entity2D>> &selectedEntities,
+    const std::vector<Engine::Ptr<Engine2D::Entity2D>> &entities, const Engine::Ptr<Engine2D::Scene> &scene
   )
     : scene(scene), selectedEntities(selectedEntities) {
     this->entities.reserve(entities.size());
-    for (const auto entity: entities)
+    for (const auto &entity: entities)
       this->entities.emplace_back(entity);
 
     oldSelectedEntities.reserve(selectedEntities.size());
-    for (const auto entity: selectedEntities)
+    for (const auto &entity: selectedEntities)
       oldSelectedEntities.emplace_back(entity);
   }
 
@@ -53,10 +53,10 @@ namespace Editor::History {
     return false;
   }
 
-  std::vector<Engine2D::Entity2D *> SelectEntityCommand::findEntitiesById(
+  std::vector<Engine::Ptr<Engine2D::Entity2D>> SelectEntityCommand::findEntitiesById(
     const std::vector<EntityInfo> &entityInfos
   ) const {
-    std::vector<Engine2D::Entity2D *> result;
+    std::vector<Engine::Ptr<Engine2D::Entity2D>> result;
     result.reserve(entities.size());
 
     // Find entities by ID in the current scene

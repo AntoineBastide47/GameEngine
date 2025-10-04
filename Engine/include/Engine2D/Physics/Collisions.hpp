@@ -10,6 +10,8 @@
 #include <vector>
 #include <glm/vec2.hpp>
 
+#include "Engine/Types/Ptr.hpp"
+
 namespace Engine2D::Physics {
   class Collider2D;
 
@@ -18,11 +20,11 @@ namespace Engine2D::Physics {
 
     /// Checks if the given rigidbodies collide
     [[nodiscard]] static bool collide(
-      const Collider2D *col1, const Collider2D *col2, glm::vec<2, double> *normal, double *depth
+      const Engine::Ptr<Collider2D> &col1, const Engine::Ptr<Collider2D> &col2, glm::vec<2, double> *normal, double *depth
     );
     /// Computes the number of contact points between two rigidbodies when they collide
     static void findContactPoints(
-      const Collider2D *col1, const Collider2D *col2, glm::vec2 *contactPoint1, glm::vec2 *contactPoint2,
+      const Engine::Ptr<Collider2D> &col1, const Engine::Ptr<Collider2D> &col2, glm::vec2 *contactPoint1, glm::vec2 *contactPoint2,
       uint8_t *contactCount
     );
 

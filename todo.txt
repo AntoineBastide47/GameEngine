@@ -4,18 +4,22 @@ SDK Changed:
 
 Rendering Changes:
  - Make Renderer2D manage all Renderable2D classes (update and render) and remove ParticleSystemRegistry2D class
+ - when an entity goes out of viewport bounds the particle system stops rendering, instead simulate it to a halt and restart it later if it loops
 
-Game2D Changes:
- - fix viewport not resizing as much as possible
+Shader Changes:
+ - Create a shader default template with all the uncompacted getters
 
- - instead of using raw pointers for entities and components use a wrapper so that they can't accidentally be deleted
- - render entity and component pointers in the editor
- - allow component dragging for setting
+Create a test suite
+
+Editor Changes:
+ - use variable comments for tooltips
  - create in class macros for easier editor rendering changes without needing to override the EditorRendering function
-
  - add UI for adding/removing components
  - allow component reordering
-
  - add a Play/Pause button in the scene viewport
  - add a UI pannel for the animator
  - add a UI popup for simulating particle systems when the game isn't running
+
+Known bugs:
+ - viewport not resizing as much as possible when maintaining aspect ratio
+ - profiler not working

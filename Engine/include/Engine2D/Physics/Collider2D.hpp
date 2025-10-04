@@ -14,6 +14,7 @@
 #include "Engine/Types/float01.hpp"
 #include "Engine2D/Component2D.hpp"
 #include "Collider2D.gen.hpp"
+#include "Engine/Types/Ptr.hpp"
 
 namespace Engine2D {
   class Entity2D;
@@ -85,7 +86,7 @@ namespace Engine2D::Physics {
       /// The model matrix of the rigidbody last time it changed
       glm::mat4 lastModelMatrix;
       /// The rigidbody attached to the entity this collider is attached to
-      Rigidbody2D *rigidbody;
+      Engine::Ptr<Rigidbody2D> rigidbody;
       /// The points at which this rigidbody collided with another rigidbody
       std::vector<glm::vec2> contactPoints;
 

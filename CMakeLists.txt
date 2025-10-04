@@ -40,7 +40,7 @@ setup_imgui(${CMAKE_SOURCE_DIR})
 # Build Configs
 # --------------------------
 
-set(MULTI_THREAD 1)
+set(MULTI_THREAD 1) # Set this to 0 if you have mutex errors or race conditions when modifying the engine
 set(ENGINE_EDITOR $<STREQUAL:${BUILD_ENGINE_SHARED},1>)
 
 if (BUILD_ENGINE)

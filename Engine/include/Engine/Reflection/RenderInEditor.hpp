@@ -21,8 +21,10 @@
 #include "Engine/Reflection/ICustomEditor.hpp"
 #include "Engine/Reflection/ReflectionFactory.hpp"
 
-namespace Engine2D::Physics {
-  class BoxCollider2D;
+namespace Engine2D {
+  class Entity2D;
+  class Component2D;
+  class Transform2D;
 }
 
 namespace Engine::Reflection {
@@ -79,10 +81,8 @@ namespace Engine::Reflection {
     );
     copy.resize(strlen(copy.data()));
 
-    if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-      str = oldValue;
+    if (ImGui::IsKeyPressed(ImGuiKey_Escape))
       return true;
-    }
 
     if (changed || (!ImGui::IsItemActive() && ImGui::IsMouseClicked(0)) || ImGui::IsItemDeactivated()) {
       if (oldValue != copy) {
@@ -99,12 +99,11 @@ namespace Engine::Reflection {
             )
           );
         }
-
-        return true;
       }
+
+      return true;
     }
 
-    str = oldValue;
     return false;
   }
 
@@ -124,9 +123,20 @@ namespace Engine::Reflection {
 
   template<typename T> inline constexpr bool IsGlmVec_v = IsGlmVec<std::remove_cv_t<T>>::value;
 
-  template<typename T> bool ImGuiDrag(
-    const char *label, T *v, const float v_speed = 1.0f, const T *v_min = nullptr, const T *v_max = nullptr
-  ) {
+  template<typename T> constexpr std::pair<T, T> DragLimits() {
+    #define _e_DRAG_SPEED_LIMIT 100000.0L
+    using Lim = std::numeric_limits<T>;
+    using ld = long double;
+    using cld = const ld;
+
+    cld lo_hw = std::is_unsigned_v<T> ? 0.1L : std::max<ld>(static_cast<ld>(Lim::lowest()), -_e_DRAG_SPEED_LIMIT);
+    cld hi_hw = std::min<ld>(static_cast<ld>(Lim::max()), _e_DRAG_SPEED_LIMIT);
+    #undef _e_DRAG_SPEED_LIMIT
+
+    return {static_cast<T>(lo_hw), static_cast<T>(hi_hw)};
+  }
+
+  template<typename T> bool ImGuiDrag(const char *label, T *v, const float v_speed = 1.0f) {
     ImGuiDataType dataType = ImGuiDataType_COUNT;
 
     // Handle floating point types
@@ -160,23 +170,14 @@ namespace Engine::Reflection {
     }
 
     if (dataType != ImGuiDataType_COUNT) {
-      T min_val = v_min
-                    ? *v_min
-                    : std::is_floating_point_v<T>
-                        ? std::numeric_limits<T>::lowest()
-                        : std::numeric_limits<T>::min();
-      T max_val = v_max ? *v_max : std::numeric_limits<T>::max();
-
-      return ImGui::DragScalar(label, dataType, v, v_speed, &min_val, &max_val);
+      static auto [min_val, max_val] = DragLimits<T>();
+      return ImGui::DragScalar(label, dataType, v, v_speed, &min_val, &max_val, nullptr, ImGuiSliderFlags_Logarithmic);
     }
 
     return false;
   }
 
-  template<typename T, size_t N> bool ImGuiDrag(
-    const char *label, T (*v)[N], const float v_speed = 1.0f,
-    const T *v_min = nullptr, const T *v_max = nullptr
-  ) {
+  template<typename T, size_t N> bool ImGuiDrag(const char *label, T (*v)[N], const float v_speed = 1.0f) {
     ImGuiDataType dataType = ImGuiDataType_COUNT;
 
     if constexpr (std::is_floating_point_v<T>) {
@@ -207,22 +208,17 @@ namespace Engine::Reflection {
     }
 
     if (dataType != ImGuiDataType_COUNT && N >= 2 && N <= 4) {
-      T min_val = v_min
-                    ? *v_min
-                    : std::is_floating_point_v<T>
-                        ? std::numeric_limits<T>::lowest()
-                        : std::numeric_limits<T>::min();
-      T max_val = v_max ? *v_max : std::numeric_limits<T>::max();
-
-      return ImGui::DragScalarN(label, dataType, *v, static_cast<int>(N), v_speed, &min_val, &max_val);
+      static auto [min_val, max_val] = DragLimits<T>();
+      return ImGui::DragScalarN(
+        label, dataType, *v, static_cast<int>(N), v_speed, &min_val, &max_val, nullptr, ImGuiSliderFlags_Logarithmic
+      );
     }
 
     return false;
   }
 
   template<glm::length_t N, typename T, glm::qualifier Q> bool ImGuiDrag(
-    const char *label, glm::vec<N, T, Q> *v, const float v_speed = 1.0f,
-    const T *v_min = nullptr, const T *v_max = nullptr
+    const char *label, glm::vec<N, T, Q> *v, const float v_speed = 1.0f
   ) {
     ImGuiDataType dataType = ImGuiDataType_COUNT;
 
@@ -254,14 +250,10 @@ namespace Engine::Reflection {
     }
 
     if (dataType != ImGuiDataType_COUNT && N >= 2 && N <= 4) {
-      T min_val = v_min
-                    ? *v_min
-                    : std::is_floating_point_v<T>
-                        ? std::numeric_limits<T>::lowest()
-                        : std::numeric_limits<T>::min();
-      T max_val = v_max ? *v_max : std::numeric_limits<T>::max();
-
-      return ImGui::DragScalarN(label, dataType, glm::value_ptr(*v), N, v_speed, &min_val, &max_val);
+      static auto [min_val, max_val] = DragLimits<T>();
+      return ImGui::DragScalarN(
+        label, dataType, glm::value_ptr(*v), N, v_speed, &min_val, &max_val, nullptr, ImGuiSliderFlags_Logarithmic
+      );
     }
 
     return false;
@@ -406,7 +398,7 @@ namespace Engine::Reflection {
       return false;
     } else {
       ImGui::BeginDisabled(readOnly);
-      const bool changed = InputText(name, data, 256); // TODO: integrate command
+      const bool changed = InputText(name, data, 256);
       ImGui::EndDisabled();
       return changed;
     }
@@ -826,12 +818,6 @@ namespace Engine::Reflection {
     return changed;
   }
 
-  template<IsSmartPtr T> static bool _e_renderInEditor(
-    T &data, const std::string &name, const bool readOnly, const std::string & = ""
-  ) {
-    return false;
-  }
-
   template<IsReflectable T> static bool _e_renderInEditor(
     T &data, const std::string &name, const bool readOnly, const std::string & = ""
   ) {
@@ -841,10 +827,123 @@ namespace Engine::Reflection {
       return data._e_renderInEditor(readOnly);
   }
 
+  template<typename T> concept HasEntityMethod = requires(T *t) {
+    { t->Entity() } -> std::same_as<Ptr<Engine2D::Entity2D>>;
+  };
+
+  struct DragPayload {
+    Ptr<Engine2D::Entity2D> entity;
+    Ptr<Engine2D::Transform2D> transform;
+    std::vector<Ptr<Engine2D::Component2D>> &components;
+  };
+
   template<IsReflectablePointer T> static bool _e_renderInEditor(
-    T *data, const std::string &name, const bool readOnly, const std::string & = ""
+    T &data, const std::string &name, const bool readOnly, const std::string & = ""
   ) {
-    return false;
+    using ElementType = typename T::element_type;
+    static auto typeName = std::string(ElementType::ClassNameStatic());
+
+    std::string entityName = "";
+    if constexpr (std::is_same_v<std::remove_cvref_t<ElementType>, Engine2D::Entity2D>)
+      entityName = !data ? "None" : data->name;
+    else if constexpr (HasEntityMethod<std::remove_cvref_t<ElementType>>)
+      entityName = !data ? "None" : data->Entity()->name;
+    else
+      return false;
+
+    const std::string displayText = entityName + " (" + typeName + ")";
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.85f, 1.0f, 0.3f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.85f, 1.0f, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.8f, 1.0f, 0.7f));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.2f, 0.4f, 0.8f, 1.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+
+    bool changed = false;
+    const bool disabled = readOnly || IsConst<T>;
+
+    constexpr float buttonSize = 19.0f;
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    const float availWidth = ImGui::GetContentRegionAvail().x;
+    const float mainButtonWidth = availWidth - buttonSize - spacing;
+
+    ImGui::BeginDisabled(disabled);
+    ImGui::PushID(("##" + name + std::string(ElementType::ClassNameStatic())).c_str());
+    ImGui::Button(displayText.c_str(), ImVec2(mainButtonWidth, 0.0f));
+    ImGui::PopID();
+    ImGui::EndDisabled();
+
+    if (!disabled && ImGui::BeginDragDropTarget()) {
+      constexpr auto payloadType = "_e_DND_PTR";
+      if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(payloadType)) {
+        // Extract the pointer from payload
+        const auto dragPayload = static_cast<DragPayload *>(payload->Data);
+        T *droppedPtr = nullptr;
+        Ptr<ElementType> castedPtr = nullptr;
+        if constexpr (std::is_same_v<std::remove_cvref_t<ElementType>, Engine2D::Entity2D>)
+          droppedPtr = &dragPayload->entity;
+        else if constexpr (std::is_same_v<std::remove_cvref_t<ElementType>, Engine2D::Transform2D>)
+          droppedPtr = &dragPayload->transform;
+        else
+          for (const auto &component: dragPayload->components)
+            if (const auto casted = dynamic_cast<ElementType *>(component.get())) {
+              castedPtr = casted;
+              droppedPtr = &castedPtr;
+              break;
+            }
+
+        if (droppedPtr && *droppedPtr) {
+          T oldValue = data;
+          T newValue = *droppedPtr;
+
+          if (_e_createEditorCommand) {
+            Editor::History::CommandHistory::Create(
+              Editor::History::MakeLambdaCommand(
+                "Changed " + name + " in " + _e_currentEntityName,
+                [&data, newValue] {
+                  data = newValue;
+                },
+                [&data, oldValue] {
+                  data = oldValue;
+                }
+              )
+            );
+          } else {
+            data = newValue;
+          }
+          changed = true;
+        }
+      }
+
+      if (ImGui::IsItemHovered()) {
+        const ImVec2 min = ImGui::GetItemRectMin();
+        const ImVec2 max = ImGui::GetItemRectMax();
+        ImGui::GetWindowDrawList()->AddRect(
+          min, max,
+          IM_COL32(100, 150, 255, 255),
+          3.0f, 0, 2.0f
+        );
+      }
+
+      ImGui::EndDragDropTarget();
+    }
+
+    ImGui::SameLine();
+
+    ImGui::BeginDisabled(disabled || !data);
+    ImGui::PushID(("##-_" + name + std::string(ElementType::ClassNameStatic())).c_str());
+    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
+    if (ImGui::Button("-", ImVec2(buttonSize, 0)))
+      data = nullptr;
+    ImGui::PopStyleVar();
+    ImGui::PopID();
+    ImGui::EndDisabled();
+
+    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor(4);
+
+    return changed;
   }
 
   template<IsEnum T> static bool _e_renderInEditor(
@@ -1147,6 +1246,7 @@ namespace Engine::Reflection {
       if (_e_renderInEditor(data, name, readOnly, id))
         return true;
     }
+
     return false;
   }
 }

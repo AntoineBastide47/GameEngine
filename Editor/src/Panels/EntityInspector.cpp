@@ -23,7 +23,7 @@ namespace Editor {
 
       bool isActive = context->active;
       if (ImGui::Checkbox("##active", &isActive)) {
-        History::CommandHistory::Create(SceneHierarchy::ToggleActiveCommand(context, isActive));
+        History::CommandHistory::Create(SceneHierarchy::ToggleActiveCommand(context.get(), isActive));
       }
 
       ImGui::SameLine();
@@ -38,7 +38,7 @@ namespace Editor {
       ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetStyle().IndentSpacing * 0.5f);
 
       int i = 0;
-      drawComponent(context->Transform(), true, i++);
+      drawComponent(context->Transform().get(), true, i++);
       for (auto &component: context->allComponents)
         drawComponent(component.get(), false, i++);
 
@@ -49,12 +49,12 @@ namespace Editor {
     ImGui::End();
   }
 
-  void EntityInspector::SetContext(Engine2D::Entity2D *entity) {
+  void EntityInspector::SetContext(const Engine::Ptr<Engine2D::Entity2D> &entity) {
     context = entity;
   }
 
   std::unique_ptr<History::EditorCommand> EntityInspector::toggleStaticCommand(
-    Engine2D::Entity2D *entity, bool isStatic
+    const Engine::Ptr<Engine2D::Entity2D> &entity, bool isStatic
   ) {
     return History::MakeLambdaCommand(
       "Toggle " + entity->name + (isStatic ? " active" : " inactive"), [entity, isStatic]() {
@@ -66,8 +66,8 @@ namespace Editor {
   }
 
   void EntityInspector::drawComponent(Engine2D::Component2D *comp, const bool isTransformComponent, const int index) {
-    const auto id = std::string(comp->ClassName()) + "_" + std::to_string(index);
-    const std::string_view name(id.data(), id.find('_'));
+    const std::string name(comp->ClassName());
+    const auto id = name + "_" + std::to_string(index);
 
     ImGui::PushID((comp->Entity()->name + "_" + id).c_str());
     const bool opened = ImGui::TreeNodeEx(
@@ -76,6 +76,31 @@ namespace Editor {
       ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_AllowItemOverlap,
       ""
     );
+
+    static auto noComps = std::vector<Engine::Ptr<Engine2D::Component2D>>{};
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+      constexpr auto payloadType = "_e_DND_PTR";
+      const Engine::Reflection::DragPayload payload{
+        nullptr, isTransformComponent ? comp->Transform() : nullptr,
+        isTransformComponent ? noComps : comp->Entity()->components
+      };
+      ImGui::SetDragDropPayload(payloadType, &payload, sizeof(payload));
+
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 6));
+      ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.1f, 0.1f, 0.1f, 0.95f));
+      ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
+      ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 1.0f);
+      ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 4.0f);
+
+      ImGui::BeginTooltip();
+      ImGui::Text("%s (%s)", comp->Entity()->name.c_str(), name.c_str());
+      ImGui::EndTooltip();
+
+      ImGui::PopStyleVar(3);
+      ImGui::PopStyleColor(2);
+
+      ImGui::EndDragDropSource();
+    }
 
     if (!isTransformComponent) {
       ImGui::SameLine();
@@ -88,8 +113,7 @@ namespace Editor {
     }
 
     ImGui::SameLine();
-
-    ImGui::Text("%.*s", static_cast<int>(name.size()), name.data() ? name.data() : "(empty)");
+    ImGui::Text("%s", name.empty() ? "(empty)" : name.c_str());
 
     if (opened) {
       if (ImGui::BeginTable((id + "Table").c_str(), 2, ImGuiTableFlags_SizingFixedFit)) {

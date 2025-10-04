@@ -39,7 +39,7 @@ namespace Engine::Reflection {
     template<typename T> static std::string ToJsonString(
       const T &data, const bool prettyPrint = false, const char indentChar = ' '
     ) {
-      return ToJson(data).Dump(prettyPrint - 1, indentChar);
+      return ToJson(data).Dump(prettyPrint, indentChar);
     }
 
     /**
@@ -56,7 +56,7 @@ namespace Engine::Reflection {
       const T &data, const std::string &filePath, const bool prettyPrint = false, const char indentChar = ' '
     ) {
       std::ofstream file(filePath);
-      file << ToJson(data).Dump(prettyPrint - 1, indentChar);
+      file << ToJson(data).Dump(prettyPrint, indentChar);
     }
   };
 }

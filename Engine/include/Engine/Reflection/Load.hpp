@@ -23,10 +23,11 @@ namespace Engine::Reflection {
     if constexpr (HasLoadFunction<T, Format>) {
       if constexpr (!IsConst<T>)
         _e_load(result, format, json);
-    } else
+    }
+    else
       static_assert(
         _e_f<T>, R"(
-No save overloads were found for the requested type.
+No load overloads were found for the requested type.
  - if the type is a part of the STL, convert it to a supported STL type before the load call
  - if the type is not a part of the STL, make sure the type publicly inherits from Engine::Reflection::Reflectable
 )"
@@ -265,6 +266,16 @@ No save overloads were found for the requested type.
                   : false) || ...);
       }(std::index_sequence_for<Ts...>{});
     }
+  }
+
+  template<typename T> static void _e_load(T &, Format, const Engine::JSON &) {
+    static_assert(
+      _e_f<T>, R"(
+No load overloads were found for the requested type.
+ - if the type is a part of the STL, convert it to a supported STL type before the load call
+ - if the type is not a part of the STL, make sure the type publicly inherits from Engine::Reflection::Reflectable
+)"
+    );
   }
 }
 

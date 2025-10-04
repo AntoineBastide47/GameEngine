@@ -5,7 +5,6 @@
 //
 
 #include "Engine/Profiling/Instrumentor.hpp"
-
 #include "Engine/Settings.hpp"
 
 namespace Engine::Profiling {

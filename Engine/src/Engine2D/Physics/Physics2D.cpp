@@ -57,8 +57,8 @@ namespace Engine2D::Physics {
     // Skip the collision detection if there are no active colliders
     findActiveColliders();
     if (!activeColliders.empty()) {
-      for (const auto collider: activeColliders)
-        if (const auto rb = collider->rigidbody; rb && rb->IsActive())
+      for (const auto &collider: activeColliders)
+        if (const auto &rb = collider->rigidbody; rb && rb->IsActive())
           rb->step();
 
       if (Engine::Settings::Physics::UseScreenPartitioning()) {
@@ -83,13 +83,13 @@ namespace Engine2D::Physics {
 
   void Physics2D::findActiveColliders() {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
-    for (const auto collider: colliders)
+    for (const auto &collider: colliders)
       if (collider->IsActive())
         activeColliders.push_back(collider);
   }
 
   void Physics2D::notifyCollisions(
-    const Collider2D *sender, const Collider2D *receiver,
+    const Engine::Ptr<Collider2D> &sender, const Engine::Ptr<Collider2D> &receiver,
     const CollisionEventType eventType
   ) {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
@@ -127,13 +127,13 @@ namespace Engine2D::Physics {
     }
   }
 
-  void Physics2D::broadPhase(const std::vector<Collider2D *> &collidersToChecks) {
+  void Physics2D::broadPhase(const std::vector<Engine::Ptr<Collider2D>> &collidersToChecks) {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
     // Precompute AABBs
-    std::vector<std::pair<Collider2D *, Collider2D::AABB>> colliderPairs;
+    std::vector<std::pair<Engine::Ptr<Collider2D>, Collider2D::AABB>> colliderPairs;
     colliderPairs.reserve(collidersToChecks.size());
-    for (const auto col: collidersToChecks)
+    for (const auto &col: collidersToChecks)
       colliderPairs.push_back({col, col->getAABB()});
 
     // Sweep and Prune: Sort colliders by AABB min.x
@@ -163,8 +163,8 @@ namespace Engine2D::Physics {
           continue;
 
         // Parent-child relationship check, making sure that both have a rigidbody
-        const auto rb1 = col1->rigidbody;
-        const auto rb2 = col2->rigidbody;
+        const auto &rb1 = col1->rigidbody;
+        const auto &rb2 = col2->rigidbody;
         const bool col1ChildCol2 = col1->Entity()->Transform()->IsChildOf(col2->Entity()) && !(rb1 && rb2);
         const bool col2ChildCol1 = col2->Entity()->Transform()->IsChildOf(col1->Entity()) && !(rb1 && rb2);
         if ((!rb1 && !rb2) || col1ChildCol2 || col2ChildCol1)
@@ -236,7 +236,8 @@ namespace Engine2D::Physics {
   }
 
   void Physics2D::separateBodies(
-    const Collider2D *col1, const Collider2D *col2, const Rigidbody2D *rb1, const Rigidbody2D *rb2, const glm::vec2 mtv
+    const Engine::Ptr<Collider2D> &col1, const Engine::Ptr<Collider2D> &col2, const Engine::Ptr<Rigidbody2D> &rb1,
+    const Engine::Ptr<Rigidbody2D> &rb2, const glm::vec2 mtv
   ) {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerFunction);
 

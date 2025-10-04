@@ -9,6 +9,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Engine/Reflection/ICustomEditor.hpp"
+#include "Engine/Types/Ptr.hpp"
 #include "Engine2D/Component2D.hpp"
 #include "Camera2D.gen.hpp"
 
@@ -23,7 +25,7 @@ namespace Engine {
 }
 
 namespace Engine2D::Rendering {
-  class Camera2D final : public Component2D {
+  class Camera2D final : public Component2D, public Engine::Reflection::ICustomEditor {
     SERIALIZE_CAMERA2D
       friend class Engine2D::Scene;
       friend class Engine2D::Game2D;
@@ -44,7 +46,7 @@ namespace Engine2D::Rendering {
       };
 
       /// The entity the camera follows
-      Entity2D *followTarget;
+      Engine::Ptr<Entity2D> followTarget;
       /// The offset position of the camera
       glm::vec2 positionOffset;
       /// The offset rotation of the camera
@@ -91,16 +93,21 @@ namespace Engine2D::Rendering {
       glm::mat4 viewProjection;
       /// Whether the camera is initialized or not
       bool initialized;
-      /// How long the camera should shake for
-      ENGINE_SERIALIZE float shakeDuration;
       /// If the camera is currently shaking
       bool shaking;
+      /// How long the camera should shake for
+      ENGINE_SERIALIZE float shakeDuration;
       /// How long the camera has been shaking for
       float shakeElapsed;
       /// UBO used to send data to all shaders
       uint ubo;
       /// The index of the entity in the entities vector the camera is following
       int followTargetIndex;
+      /// The velocity of the follow camera velocity
+      glm::vec2 velocity;
+      glm::mat2 rotationMatrix;
+      float worldRotationLastFrame;
+      float invZoom;
 
       ENGINE_SERIALIZE_HIDDEN float left, right, bottom, top;
 
@@ -114,6 +121,10 @@ namespace Engine2D::Rendering {
       void initialize();
       void updateCamera();
       glm::vec2 getCameraShake(float frac) const;
+
+      #if ENGINE_EDITOR
+      bool OnRenderInEditor(const std::string &name, bool isConst, bool readOnly) override;
+      #endif
   };
 }
 

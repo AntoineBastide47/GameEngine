@@ -13,7 +13,7 @@
 #include "Engine2D/Game2D.hpp"
 
 namespace Engine2D {
-  Scene *SceneManager::CreateScene(const std::string &name) {
+  Engine::Ptr<Scene> SceneManager::CreateScene(const std::string &name) {
     if (scenes.contains(name))
       return Engine::Log::Error("Scene with name: " + name + " already exists!");
 
@@ -24,7 +24,7 @@ namespace Engine2D {
 
   std::mutex syncMutex;
 
-  Scene *SceneManager::LoadScene(const std::string &name, const std::string &path) {
+  Engine::Ptr<Scene> SceneManager::LoadScene(const std::string &name, const std::string &path) {
     {
       std::unique_lock controlLock(Game2D::instance->controlMutex); {
         std::scoped_lock syncLock(syncMutex);
@@ -71,7 +71,8 @@ namespace Engine2D {
   }
 
   void SceneManager::SaveScene(
-    const Scene *scene, const std::string &path, const Engine::Reflection::Format format, const bool prettyPrint,
+    const Engine::Ptr<Scene> &scene, const std::string &path, const Engine::Reflection::Format format,
+    const bool prettyPrint,
     const char indentChar
   ) {
     for (const auto &s: scenes | std::views::values)
@@ -85,7 +86,8 @@ namespace Engine2D {
   void SceneManager::SaveActiveScene(
     const std::string &path, const Engine::Reflection::Format format, const bool prettyPrint, const char indentChar
   ) {
-    SaveScene(activeScene, path.empty() ? activeScene->name + ".json" : path, format, prettyPrint, indentChar);
+    if (activeScene)
+      SaveScene(activeScene, path.empty() ? activeScene->name + ".json" : path, format, prettyPrint, indentChar);
   }
 
   void SceneManager::UnloadScene(const std::string &name) {
@@ -116,11 +118,11 @@ namespace Engine2D {
       activeScene = nullptr;
   }
 
-  Scene *SceneManager::ActiveScene() {
+  Engine::Ptr<Scene> SceneManager::ActiveScene() {
     return activeScene;
   }
 
-  Scene *SceneManager::GetScene(const std::string &name) {
+  Engine::Ptr<Scene> SceneManager::GetScene(const std::string &name) {
     for (const auto &[n, scene]: scenes)
       if (n == name)
         return scene.get();

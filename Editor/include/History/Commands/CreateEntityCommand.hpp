@@ -21,9 +21,9 @@ namespace Editor::History {
   class CreateEntityCommand final : public EditorCommand {
     public:
       CreateEntityCommand(
-        Engine2D::Scene *scene, const std::vector<Engine2D::Entity2D *> &parents,
-        const std::function<void(Engine2D::Entity2D *)> &createCallback,
-        const std::function<void(Engine2D::Entity2D *)> &deleteCallback, int insertPos = -1
+        const Engine::Ptr<Engine2D::Scene> &scene, const std::vector<Engine::Ptr<Engine2D::Entity2D>> &parents,
+        const std::function<void(Engine::Ptr<Engine2D::Entity2D>)> &createCallback,
+        const std::function<void(Engine::Ptr<Engine2D::Entity2D>)> &deleteCallback, int insertPos = -1
       );
 
       void Execute() override;
@@ -31,12 +31,12 @@ namespace Editor::History {
       std::string Name() const override;
     private:
       int insertPos;
-      Engine2D::Scene *scene;
-      std::vector<Engine2D::Entity2D *> parents;
-      std::vector<Engine2D::Entity2D *> createdEntities;
-      std::unordered_map<Engine2D::Entity2D *, int> indexes;
-      std::function<void(Engine2D::Entity2D *)> createCallback;
-      std::function<void(Engine2D::Entity2D *)> deleteCallback;
+      Engine::Ptr<Engine2D::Scene> scene;
+      std::vector<Engine::Ptr<Engine2D::Entity2D>> parents;
+      std::vector<Engine::Ptr<Engine2D::Entity2D>> createdEntities;
+      std::unordered_map<Engine::Ptr<Engine2D::Entity2D>, int> indexes;
+      std::function<void(Engine::Ptr<Engine2D::Entity2D>)> createCallback;
+      std::function<void(Engine::Ptr<Engine2D::Entity2D>)> deleteCallback;
   };
 }
 

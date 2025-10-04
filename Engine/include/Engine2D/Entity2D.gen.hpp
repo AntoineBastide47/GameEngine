@@ -15,8 +15,6 @@
       Engine::Reflection::_e_saveImpl(parentsActive, format, json["parentsActive"]);\
       Engine::Reflection::_e_saveImpl(isStatic, format, json["isStatic"]);\
       Engine::Reflection::_e_saveImpl(destroyed, format, json["destroyed"]);\
-      Engine::Reflection::_e_saveImpl(transform, format, json["transform"]);\
-      Engine::Reflection::_e_saveImpl(allComponents, format, json["allComponents"]);\
     }\
   }\
   void _e_load(const Engine::Reflection::Format format, const Engine::JSON &json) override { \
@@ -26,8 +24,6 @@
       Engine::Reflection::_e_loadImpl(parentsActive, format, json.At("parentsActive"));\
       Engine::Reflection::_e_loadImpl(isStatic, format, json.At("isStatic"));\
       Engine::Reflection::_e_loadImpl(destroyed, format, json.At("destroyed"));\
-      Engine::Reflection::_e_loadImpl(transform, format, json.At("transform"));\
-      Engine::Reflection::_e_loadImpl(allComponents, format, json.At("allComponents"));\
     }\
   }\
   RENDER_ENTITY2D\
@@ -45,8 +41,6 @@
     changed |= Engine::Reflection::_e_renderInEditorImpl(parentsActive, "Parents Active", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(isStatic, "Is Static", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(destroyed, "Destroyed", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(transform, "Transform", readOnly);\
-    changed |= Engine::Reflection::_e_renderInEditorImpl(allComponents, "All Components", readOnly);\
     return changed;\
   }
 #endif

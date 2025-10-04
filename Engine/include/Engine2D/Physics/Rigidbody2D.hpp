@@ -9,6 +9,7 @@
 
 #include <glm/glm.hpp>
 
+#include "Engine/Types/Ptr.hpp"
 #include "Engine/Reflection/ICustomEditor.hpp"
 #include "Engine/Types/float01.hpp"
 #include "Engine2D/Component2D.hpp"
@@ -90,7 +91,7 @@ namespace Engine2D::Physics {
       Rigidbody2D();
 
       /// Calculates the inertia of this body using the given collider
-      void computeInertia(const Collider2D *collider);
+      void computeInertia(const Engine::Ptr<Collider2D> &collider);
       /// Runs a physics step on this rigidbody
       void step();
 

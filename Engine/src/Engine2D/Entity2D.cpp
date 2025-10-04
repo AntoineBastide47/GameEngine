@@ -7,7 +7,6 @@
 #include <ranges>
 
 #include "Engine2D/Entity2D.hpp"
-#include "Engine/Reflection/Deserializer.hpp"
 #include "Engine2D/Game2D.hpp"
 #include "Engine2D/Rendering/SpriteRenderer.hpp"
 #include "Engine2D/SceneManagement/SceneManager.hpp"
@@ -18,7 +17,7 @@ namespace Engine2D {
 
   Entity2D::Entity2D(
     std::string name, const bool isStatic, const glm::vec2 position, const float rotation, const glm::vec2 scale,
-    Entity2D *parent
+    const Engine::Ptr<Entity2D> &parent
   )
     : name(std::move(name)), active(true), parentsActive(true), isStatic(isStatic), destroyed(false),
       timeToLive(0.1f), id(0),
@@ -38,7 +37,7 @@ namespace Engine2D {
     return !(*this == entity);
   }
 
-  Transform2D *Entity2D::Transform() const {
+  Engine::Ptr<Transform2D> Entity2D::Transform() const {
     return transform.get();
   }
 
@@ -50,13 +49,15 @@ namespace Engine2D {
     return id;
   }
 
-  Entity2D *Entity2D::Instantiate(
+  Engine::Ptr<Entity2D> Entity2D::Instantiate(
     const std::string &name, const bool isStatic, const glm::vec2 position, const float rotation, const glm::vec2 scale,
-    Entity2D *parent
+    const Engine::Ptr<Entity2D> &parent
   ) {
     const auto entity = new Entity2D(name, isStatic, position, rotation, scale, parent);
+    const auto scene = SceneManager::ActiveScene();
     entity->id = nextId++;
-    SceneManager::ActiveScene()->addEntity(std::unique_ptr<Entity2D>(entity));
+    entity->scene = scene;
+    SceneManager::ActiveScene()->entitiesToAdd.emplace_back(std::move(entity));
     return entity;
   }
 
@@ -69,7 +70,7 @@ namespace Engine2D {
       return;
 
     this->active = active;
-    for (const auto child: *transform) {
+    for (const auto &child: *transform) {
       if (child && child->transform) {
         child->transform->onParentHierarchyChange();
 
@@ -95,9 +96,23 @@ namespace Engine2D {
       SceneManager::ActiveScene()->removeEntity(this);
   }
 
-  Scene *Entity2D::Scene() const {
+  Engine::Ptr<Scene> Entity2D::Scene() const {
     return scene;
   }
+
+  #if ENGINE_EDITOR
+  Engine::Ptr<Entity2D> Entity2D::instantiateAt(
+    const std::string &name, const bool isStatic, const glm::vec2 position, const float rotation, const glm::vec2 scale,
+    const Engine::Ptr<Entity2D> &parent, const size_t index
+    ) {
+    const auto entity = new Entity2D(name, isStatic, position, rotation, scale, parent);
+    const auto scene = SceneManager::ActiveScene();
+    entity->id = nextId++;
+    entity->scene = scene;
+    SceneManager::ActiveScene()->entitiesToAddAt.emplace_back(std::move(entity), index);
+    return entity;
+  }
+  #endif
 
   void Entity2D::initialize() {
     transform->entity = this;
@@ -119,7 +134,7 @@ namespace Engine2D {
     destroyed = true;
 
     if (transform) {
-      for (const auto child: *transform) {
+      for (const auto &child: *transform) {
         child->Transform()->parent = nullptr;
         child->destroy();
       }
@@ -137,7 +152,7 @@ namespace Engine2D {
     transform.reset();
   }
 
-  void Entity2D::forceSetParent(Entity2D *parent) {
+  void Entity2D::forceSetParent(const Engine::Ptr<Entity2D> &parent) {
     const bool isStatic = this->isStatic;
     this->isStatic = false;
     transform->SetParent(parent);
@@ -145,7 +160,7 @@ namespace Engine2D {
   }
 
   void Entity2D::onDeserialize(
-    const Engine::Reflection::Format format, const Engine::JSON &json, Engine2D::Scene *scene
+    const Engine::Reflection::Format format, const Engine::JSON &json, const Engine::Ptr<Engine2D::Scene> &scene
   ) {
     this->scene = scene;
     transform->entity = this;

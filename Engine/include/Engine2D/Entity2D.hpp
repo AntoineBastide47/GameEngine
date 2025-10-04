@@ -12,6 +12,7 @@
 
 #include "Engine/Event.hpp"
 #include "Engine/Reflection/Reflectable.hpp"
+#include "Engine/Types/Ptr.hpp"
 #include "Engine2D/Behaviour.hpp"
 #include "Engine2D/Component2D.hpp"
 #include "Engine2D/Transform2D.hpp"
@@ -63,7 +64,7 @@ namespace Engine2D {
       bool operator!=(const Entity2D &entity) const;
 
       /// @returns The pointer to this entity's transform component
-      [[nodiscard]] Transform2D *Transform() const;
+      [[nodiscard]] Engine::Ptr<Transform2D> Transform() const;
 
       /// @returns The id of this entity
       [[nodiscard]] uint64_t Id() const;
@@ -74,7 +75,7 @@ namespace Engine2D {
       template<typename T, typename... Args> requires
         std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>) &&
         (!std::is_same_v<T, Physics::Collider2D>) && (!std::is_same_v<T, Rendering::Renderable2D>)
-      T *AddComponent(Args &&... args) {
+      Engine::Ptr<T> AddComponent(Args &&... args) {
         auto component = std::unique_ptr<T>(new T(std::forward<Args>(args)...));
         component->entity = this;
         T *ptr = component.get();
@@ -96,16 +97,16 @@ namespace Engine2D {
        * @return The first component that matches the given type found on the current entity, nullptr if none were found
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] T *GetComponent() const {
+      [[nodiscard]] Engine::Ptr<T> GetComponent() const {
         if constexpr (std::is_same_v<T, Transform2D>)
           return transform.get();
         if constexpr (std::is_base_of_v<Behaviour, T>) {
           for (auto &component: behaviours)
-            if (auto casted = dynamic_cast<T *>(component))
+            if (auto casted = dynamic_cast<T *>(component.get()))
               return casted;
         } else {
           for (auto &component: components)
-            if (auto casted = dynamic_cast<T *>(component))
+            if (auto casted = dynamic_cast<T *>(component.get()))
               return casted;
         }
         return nullptr;
@@ -117,7 +118,7 @@ namespace Engine2D {
        * @return The first component that matches the given type found in the current entity's children, nullptr if none were found
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] T *GetComponentInChildren() const {
+      [[nodiscard]] Engine::Ptr<T> GetComponentInChildren() const {
         if (T *local = GetComponent<T>(); local)
           return local;
 
@@ -155,34 +156,34 @@ namespace Engine2D {
        * @return The first component that matches the given type found on the current entity, nullptr if none were found
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] bool TryGetComponent(T **component) const {
-        *component = GetComponent<T>();
-        return *component != nullptr;
+      [[nodiscard]] bool TryGetComponent(Engine::Ptr<T> &component) const {
+        component = GetComponent<T>();
+        return component != nullptr;
       }
 
       /// Removes the given component to the current entity
       template<typename T> requires std::is_base_of_v<Component2D, T> && (!std::is_same_v<T, Transform2D>)
-      void RemoveComponent(const T *component) {
+      void RemoveComponent(const Engine::Ptr<T> &component) {
         if constexpr (std::is_base_of_v<Behaviour, T>) {
-          const auto behaviour = static_cast<Behaviour *>(component);
+          const auto behaviour = static_cast<Behaviour *>(*component);
           behaviour->OnDestroy();
           std::erase_if(
             behaviours, [component](const std::unique_ptr<Component2D> &comp) {
-              return comp.get() == component;
+              return comp.get() == *component;
             }
           );
         } else {
           component->recall();
           std::erase_if(
             components, [component](const std::unique_ptr<Component2D> &comp) {
-              return comp.get() == component;
+              return comp.get() == *component;
             }
           );
         }
 
         std::erase_if(
           allComponents, [component](const std::unique_ptr<Component2D> &comp) {
-            return comp.get() == component;
+            return comp.get() == *component;
           }
         );
       }
@@ -193,17 +194,17 @@ namespace Engine2D {
        * @return The list of  components that match the given type found on the current entity
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] std::vector<T *> GetComponents() const {
+      [[nodiscard]] std::vector<Engine::Ptr<T>> GetComponents() const {
         if constexpr (std::is_same_v<T, Transform2D>)
           return {transform.get()};
-        std::vector<T *> res;
+        std::vector<Engine::Ptr<T>> res;
         if constexpr (std::is_base_of_v<Behaviour, T>) {
           for (auto &component: behaviours)
-            if (auto casted = dynamic_cast<T *>(component))
+            if (auto casted = dynamic_cast<T *>(component.get()))
               res.push_back(casted);
         } else {
           for (auto &component: components)
-            if (auto casted = dynamic_cast<T *>(component))
+            if (auto casted = dynamic_cast<T *>(component.get()))
               res.push_back(casted);
         }
         return res;
@@ -215,10 +216,10 @@ namespace Engine2D {
        * @return The list of components that match the given type found in the current entity's children
        */
       template<typename T> requires std::is_base_of_v<Component2D, T>
-      [[nodiscard]] std::vector<T *> GetComponentsInChildren() const {
-        std::vector<T *> res;
+      [[nodiscard]] std::vector<Engine::Ptr<T>> GetComponentsInChildren() const {
+        std::vector<Engine::Ptr<T>> res;
 
-        std::function<void(const Entity2D *)> recurse = [&](const Entity2D *entity) {
+        std::function<void(const Engine::Ptr<Entity2D> &)> recurse = [&](const Engine::Ptr<Entity2D> &entity) {
           auto components = entity->GetComponents<T>();
           res.insert(res.end(), components.begin(), components.end());
 
@@ -239,7 +240,7 @@ namespace Engine2D {
       /// @returns True if this entity is static, false if not
       [[nodiscard]] bool IsStatic() const;
       /// The scene this entity is a part of
-      [[nodiscard]] Scene *Scene() const;
+      [[nodiscard]] Engine::Ptr<Scene> Scene() const;
       /// Removes this Entity2D and all it's attached components from the game
       void Destroy();
 
@@ -268,9 +269,9 @@ namespace Engine2D {
       }
 
       /// Creates an entity of with the given name
-      static Entity2D *Instantiate(
+      static Engine::Ptr<Entity2D> Instantiate(
         const std::string &name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
-        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), Entity2D *parent = nullptr
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), const Engine::Ptr<Entity2D> &parent = {}
       );
 
       void OnSerialize(Engine::Reflection::Format format, Engine::JSON &json) const override;
@@ -288,8 +289,7 @@ namespace Engine2D {
        */
       explicit Entity2D(
         std::string name, bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
-        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f),
-        Entity2D *parent = nullptr
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), const Engine::Ptr<Entity2D> &parent = {}
       );
     private:
       /// If the current entity is active in the scene
@@ -312,15 +312,24 @@ namespace Engine2D {
       /// The list of components linked to this entity
       ENGINE_SERIALIZE std::vector<std::unique_ptr<Component2D>> allComponents;
       /// The list of engine defined components linked to this entity
-      std::vector<Component2D *> components;
+      std::vector<Engine::Ptr<Component2D>> components;
       /// The list of user defined components linked to this entity
-      std::vector<Behaviour *> behaviours;
+      std::vector<Engine::Ptr<Behaviour>> behaviours;
       /// The list of behaviours to initialize
-      std::vector<Behaviour *> behavioursToInitialize;
+      std::vector<Engine::Ptr<Behaviour>> behavioursToInitialize;
       /// The scene this entity is in
-      Engine2D::Scene *scene;
+      Engine::Ptr<Engine2D::Scene> scene;
       /// All the user defined input callbacks
       std::vector<std::function<void()>> inputCallbackRemovers;
+
+      #if ENGINE_EDITOR
+      /// Creates an entity of with the given name
+      static Engine::Ptr<Entity2D> instantiateAt(
+        const std::string &name = "Entity", bool isStatic = false, glm::vec2 position = glm::vec2(0.0f, 0.0f),
+        float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f, 1.0f), const Engine::Ptr<Entity2D> &parent = {},
+        size_t index = -1
+      );
+      #endif
 
       /// Initializes the entity, setting its parent to the main parent if none is set.
       void initialize();
@@ -329,8 +338,10 @@ namespace Engine2D {
       /// Free's up all the memory used by this entity
       void free();
 
-      void forceSetParent(Entity2D *parent);
-      void onDeserialize(Engine::Reflection::Format format, const Engine::JSON &json, Engine2D::Scene *scene);
+      void forceSetParent(const Engine::Ptr<Entity2D> &parent);
+      void onDeserialize(
+        Engine::Reflection::Format format, const Engine::JSON &json, const Engine::Ptr<Engine2D::Scene> &scene
+      );
   };
 }
 

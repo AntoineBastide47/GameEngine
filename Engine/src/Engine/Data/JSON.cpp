@@ -465,7 +465,7 @@ namespace Engine {
   }
 
   std::string JSON::Dump(const bool prettyPrint, const char indentChar) const {
-    return dump(prettyPrint, prettyPrint - 1, indentChar);
+    return dump(prettyPrint, 0, indentChar);
   }
 
   JSON JSON::Array(const std::initializer_list<JSON> &values) {
@@ -488,7 +488,7 @@ namespace Engine {
 
   std::string JSON::dump(const bool prettyPrint, const int indentSize, const char indentChar) const {
     std::ostringstream oss;
-    const int newIndent = prettyPrint ? indentSize + 1 : -1;
+    const int newIndent = prettyPrint ? indentSize + 1 : 0;
     const int endCharIndent = indentSize > 0 ? indentSize : 0;
 
     switch (type) {
@@ -501,8 +501,7 @@ namespace Engine {
         break;
       }
       case Number: {
-        const auto value = GetNumber();
-        if (std::isnan(value))
+        if (const auto value = GetNumber(); std::isnan(value))
           oss.write("NaN", 3);
         else if (std::isinf(value))
           oss.write("Inf", 3);

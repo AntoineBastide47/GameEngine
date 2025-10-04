@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "Engine/Reflection/Reflectable.hpp"
+#include "Engine/Types/Ptr.hpp"
 #include "Component2D.gen.hpp"
 
 namespace Engine2D {
@@ -35,9 +36,9 @@ namespace Engine2D {
       [[nodiscard]] bool IsActive() const;
 
       /// @returns The entity this component is attached to
-      [[nodiscard]] Entity2D *Entity() const;
+      [[nodiscard]] Engine::Ptr<Entity2D> Entity() const;
       /// @returns The transform attached to the entity this component is attached to
-      [[nodiscard]] Transform2D *Transform() const;
+      [[nodiscard]] Engine::Ptr<Transform2D> Transform() const;
 
       friend std::ostream &operator<<(std::ostream &os, const Component2D &component);
     protected:
@@ -53,7 +54,7 @@ namespace Engine2D {
       virtual void recall() {}
     private:
       /// The entity this component is attached to
-      Entity2D *entity;
+      Engine::Ptr<Entity2D> entity;
   };
 }
 

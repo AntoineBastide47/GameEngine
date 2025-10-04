@@ -15,7 +15,7 @@
 
 namespace Engine2D::Physics {
   bool Collisions::collide(
-    const Collider2D *col1, const Collider2D *col2, glm::vec<2, double> *normal, double *depth
+    const Engine::Ptr<Collider2D> &col1, const Engine::Ptr<Collider2D> &col2, glm::vec<2, double> *normal, double *depth
   ) {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);
 
@@ -41,7 +41,8 @@ namespace Engine2D::Physics {
   }
 
   void Collisions::findContactPoints(
-    const Collider2D *col1, const Collider2D *col2, glm::vec2 *contactPoint1, glm::vec2 *contactPoint2,
+    const Engine::Ptr<Collider2D> &col1, const Engine::Ptr<Collider2D> &col2, glm::vec2 *contactPoint1,
+    glm::vec2 *contactPoint2,
     uint8_t *contactCount
   ) {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSystem);

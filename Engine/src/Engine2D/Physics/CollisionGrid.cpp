@@ -18,7 +18,7 @@ namespace Engine2D::Physics {
     this->topRight = -bottomLeft;
     this->gridSize = gridSize;
     this->cellSize = glm::vec2(Game2D::ViewportWidth() / gridSize.x, Game2D::ViewportHeight() / gridSize.y);
-    grid.resize(gridSize.x, std::vector<std::vector<Collider2D *>>(gridSize.y));
+    grid.resize(gridSize.x, std::vector<std::vector<Engine::Ptr<Collider2D>>>(gridSize.y));
   }
 
   void CollisionGrid::setGridSize(const glm::vec<2, size_t> gridSize) {
@@ -28,10 +28,10 @@ namespace Engine2D::Physics {
     for (auto &col: grid)
       for (auto &cell: col)
         cell.clear();
-    grid.resize(gridSize.x, std::vector<std::vector<Collider2D *>>(gridSize.y));
+    grid.resize(gridSize.x, std::vector<std::vector<Engine::Ptr<Collider2D>>>(gridSize.y));
   }
 
-  void CollisionGrid::update(const std::vector<Collider2D *> &colliders) {
+  void CollisionGrid::update(const std::vector<Engine::Ptr<Collider2D>> &colliders) {
     ENGINE_PROFILE_FUNCTION(ProfilingLevel::PerSubSystem);
 
     // Clear the cells
@@ -39,7 +39,7 @@ namespace Engine2D::Physics {
       for (auto &cell: col)
         cell.clear();
 
-    for (const auto collider: colliders) {
+    for (const auto &collider: colliders) {
       const auto [min, max] = collider->getAABB();
 
       const int xBodyMin = std::clamp(

@@ -89,27 +89,19 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
           continue;
 
         // Start recursive check on this field's type
-        bool isNonSerializableType = false;
-        bool isPointerLike = false;
-        checkType(field->getType(), isNonSerializableType, isPointerLike);
-        if (isNonSerializableType)
+        bool isSkipType = false, isEnginePointer = false;
+        checkType(field->getType(), isSkipType, isEnginePointer);
+        if (isSkipType)
           continue;
 
         // Check custom annotation attributes on the field
-        bool isSerializable = false;
-        bool isNonSerializable = false;
-        bool isShowInInspector = false;
-        bool isHideInInspector = false;
+        bool isSerializable = false, isNonSerializable = false, isShowInInspector = false, isHideInInspector = false;
         findAnnotations(field, isSerializable, isNonSerializable, isShowInInspector, isHideInInspector);
 
-        if (!isNonSerializable) {
-          if ((field->getAccessUnsafe() != AS_public || isPointerLike) && !isSerializable)
-            continue;
-
+        if (!isNonSerializable && !isEnginePointer && (field->getAccessUnsafe() == AS_public || isSerializable))
           rec.fields.push_back(field->getNameAsString());
-        }
 
-        if (!isHideInInspector && (isShowInInspector || field->getAccessUnsafe() == AS_public))
+        if (!isHideInInspector && (field->getAccessUnsafe() == AS_public || isShowInInspector))
           rec.editorFields.push_back(field->getNameAsString());
       }
 
@@ -128,22 +120,16 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
           findAnnotations(usingDecl, isSerializable, isNonSerializable, isShowInInspector, isHideInInspector);
 
           for (const auto field: usingFields) {
-            bool isNonSerializableType = false;
-            bool isPointerLike = false;
-
             // Start recursive check on this field's type
-            checkType(field->getType(), isNonSerializableType, isPointerLike);
-            if (isNonSerializableType)
+            bool isSkipType = false, isEnginePointer = false;
+            checkType(field->getType(), isSkipType, isEnginePointer);
+            if (isSkipType)
               continue;
 
-            if (!isNonSerializable) {
-              if ((field->getAccessUnsafe() != AS_public || isPointerLike) && !isSerializable)
-                continue;
-
+            if (!isNonSerializable && !isEnginePointer && (field->getAccessUnsafe() == AS_public || isSerializable))
               rec.fields.push_back(field->getNameAsString());
-            }
 
-            if (!isHideInInspector && (isShowInInspector || field->getAccessUnsafe() == AS_public))
+            if (!isHideInInspector && (field->getAccessUnsafe() == AS_public || isShowInInspector))
               rec.editorFields.push_back(field->getNameAsString());
           }
         }
@@ -204,7 +190,7 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
       }
     }
 
-    static void collectAllFields(const CXXRecordDecl *decl, std::vector<const FieldDecl *> &out) { // NOLINT(*-no-recursion)
+    static void collectAllFields(const CXXRecordDecl *decl, std::vector<const FieldDecl *> &out, const int depth = 0) { // NOLINT(*-no-recursion)
       decl = decl->getDefinition();
       if (!decl || !decl->isCompleteDefinition())
         return;
@@ -212,15 +198,16 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
       // Find all inherited fields first
       for (const auto &B: decl->bases())
         if (const auto *BaseRD = B.getType()->getAsCXXRecordDecl())
-          collectAllFields(BaseRD->getDefinition(), out);
+          collectAllFields(BaseRD->getDefinition(), out, depth + 1);
 
       // Extract each field
       for (const auto *FD: decl->fields())
-        out.emplace_back(FD);
+        if (depth == 0 || FD->getAccessUnsafe() != AS_private)
+          out.emplace_back(FD);
     }
 
-    static void checkType(const QualType T, bool &isNonSerializableType, bool &isPointerLike) { // NOLINT(*-no-recursion)
-      if (T.isNull() || isNonSerializableType)
+    static void checkType(const QualType T, bool &isSkipType, bool &isEnginePointer) { // NOLINT(*-no-recursion)
+      if (T.isNull() || isSkipType)
         return;
 
       const Type *typePtr = T.getTypePtr();
@@ -228,38 +215,40 @@ class SerializableVisitor final : public RecursiveASTVisitor<SerializableVisitor
         return;
 
       if (typePtr->isReferenceType()) {
-        isNonSerializableType = true;
+        isSkipType = true;
         return;
       }
 
       // Skip raw pointers and pointers to members
       if (typePtr->isPointerType() || typePtr->isMemberPointerType())
-        isNonSerializableType = true;
+        isSkipType = true;
         // Template specialization types (e.g., containers or smart pointers)
       else if (const auto *specType = T->getAs<TemplateSpecializationType>()) {
         const TemplateName tmplName = specType->getTemplateName();
         if (const TemplateDecl *td = tmplName.getAsTemplateDecl()) {
           const std::string name = td->getQualifiedNameAsString();
-          if (name == "std::function" || name == "std::weak_ptr") {
-            isNonSerializableType = true;
+          if (name == "std::function" || name == "std::weak_ptr" || name == "std::shared_ptr" || name ==
+              "std::unique_ptr") {
+            isSkipType = true;
             return;
           }
-          if (name == "std::shared_ptr" || name == "std::unique_ptr")
-            isPointerLike = true;
+
+          if (name == "Engine::Ptr")
+            isEnginePointer = true;
         }
 
         // Recursively check all template type arguments directly
         for (const TemplateArgument &arg: specType->template_arguments()) {
-          if (isNonSerializableType)
+          if (isSkipType)
             break;
 
           if (arg.getKind() == TemplateArgument::Type)
-            checkType(arg.getAsType(), isNonSerializableType, isPointerLike);
+            checkType(arg.getAsType(), isSkipType, isEnginePointer);
         }
       }
       // Array types: check element type
       else if (auto *arrType = llvm::dyn_cast<ArrayType>(typePtr))
-        checkType(arrType->getElementType(), isNonSerializableType, isPointerLike);
+        checkType(arrType->getElementType(), isSkipType, isEnginePointer);
     }
   private:
     std::vector<Record> &records;

@@ -10,7 +10,9 @@
 #include "Engine2D/SceneManagement/Scene.hpp"
 
 namespace Editor::History {
-  DeleteEntityCommand::DeleteEntityCommand(const std::vector<Engine2D::Entity2D *> &entities, Engine2D::Scene *scene)
+  DeleteEntityCommand::DeleteEntityCommand(
+    const std::vector<Engine::Ptr<Engine2D::Entity2D>> &entities, const Engine::Ptr<Engine2D::Scene> &scene
+  )
     : multipleEntitiesDeleted(false), scene(scene), entities(entities) {}
 
   void DeleteEntityCommand::Execute() {

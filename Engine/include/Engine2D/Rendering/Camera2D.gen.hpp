@@ -52,6 +52,7 @@
 #define RENDER_CAMERA2D\
   bool _e_renderInEditor(const bool readOnly) override {\
     bool changed = false;\
+    changed |= Engine::Reflection::_e_renderInEditorImpl(followTarget, "Follow Target", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(positionOffset, "Position Offset", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(rotationOffset, "Rotation Offset", readOnly);\
     changed |= Engine::Reflection::_e_renderInEditorImpl(damping, "Damping", readOnly);\

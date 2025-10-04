@@ -94,7 +94,7 @@ namespace Engine2D::Physics {
     this->force += force;
   }
 
-  void Rigidbody2D::computeInertia(const Collider2D *collider) {
+  void Rigidbody2D::computeInertia(const Engine::Ptr<Collider2D> &collider) {
     switch (collider->type) {
       case Collider2D::None:
         inertia = inertiaInv = 0.0f;

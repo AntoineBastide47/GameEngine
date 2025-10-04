@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(Engine VERSION 0.10.7)
+project(Engine VERSION 0.10.8)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -109,6 +109,7 @@ add_library(Engine2D ${ENGINE_LIB_TYPE}
     src/Engine/Reflection/ICustomEditor.cpp
     include/Engine/Reflection/ICustomEditor.hpp
     src/Engine/Reflection/Reflectable.cpp
+    include/Engine/Types/Ptr.hpp
 )
 
 # Set prefix at configure time instead of using generator expressions
@@ -173,9 +174,8 @@ add_custom_target(copy_engine_library ALL
 target_compile_definitions(Engine2D PUBLIC
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<BOOL:${PROFILE}>:ENGINE_PROFILING=1>
-    MULTI_THREAD=${MULTI_THREAD} # Set this to 0 if you have mutex errors or race conditions when modifying the engine
+    MULTI_THREAD=${MULTI_THREAD}
     ENGINE_EDITOR=${ENGINE_EDITOR}
-    $<$<BOOL:${_e_WITH_EDITOR}>:_e_WITH_EDITOR=1>
 )
 
 # Setup all the per platform macros

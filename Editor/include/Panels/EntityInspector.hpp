@@ -19,11 +19,11 @@ namespace Editor {
       /// Render's the scene hierarchy
       static void Render(const ImGuiWindowClass *winClass);
       /// Set's the scene to be rendered
-      static void SetContext(Engine2D::Entity2D *entity);
+      static void SetContext(const Engine::Ptr<Engine2D::Entity2D> &entity);
     private:
-      inline static Engine2D::Entity2D *context;
+      inline static Engine::Ptr<Engine2D::Entity2D> context;
 
-      static std::unique_ptr<History::EditorCommand> toggleStaticCommand(Engine2D::Entity2D *entity, bool isStatic);
+      static std::unique_ptr<History::EditorCommand> toggleStaticCommand(const Engine::Ptr<Engine2D::Entity2D> &entity, bool isStatic);
 
       static void drawComponent(Engine2D::Component2D *comp, bool isTransformComponent, int index);
   };
